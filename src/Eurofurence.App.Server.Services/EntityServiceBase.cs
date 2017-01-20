@@ -24,9 +24,11 @@ namespace Eurofurence.App.Server.Services
             return _entityRepository.FindOneAsync(id);
         }
 
-        public Task<IEnumerable<T>> FindAllAsync()
+        public Task<IEnumerable<T>> FindAllAsync(DateTime? minLastDateTimeChangedUtc = null)
         {
-            return _entityRepository.FindAllAsync();
+            return _entityRepository.FindAllAsync(
+                includeDeletedRecords: minLastDateTimeChangedUtc.HasValue,
+                minLastDateTimeChangedUtc: minLastDateTimeChangedUtc);
         }
 
         public Task ReplaceOneAsync(T entity)

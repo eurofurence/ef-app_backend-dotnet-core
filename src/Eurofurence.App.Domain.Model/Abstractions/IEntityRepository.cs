@@ -8,7 +8,9 @@ namespace Eurofurence.App.Domain.Model.Abstractions
     public interface IEntityRepository<TEntity> where TEntity: EntityBase
     {
         Task<TEntity> FindOneAsync(Guid id, bool includeDeletedRecords = false);
-        Task<IEnumerable<TEntity>> FindAllAsync(bool includeDeletedRecords = false);
+        Task<IEnumerable<TEntity>> FindAllAsync(
+            bool includeDeletedRecords = false, 
+            DateTime? minLastDateTimeChangedUtc = null);
         Task ReplaceOneAsync(TEntity entity);
         Task InsertOneAsync(TEntity entity);
         Task DeleteOneAsync(Guid id);
