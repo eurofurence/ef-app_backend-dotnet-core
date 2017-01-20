@@ -1,0 +1,81 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7AC305D7-5603-4073-8893-5104847367AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F032D331-FED4-48CF-A3EF-2105ABFF6992}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Server.KestrelHost", "src\Eurofurence.App.Server.KestrelHost\Eurofurence.App.Server.KestrelHost.xproj", "{D6432E12-5BE2-49B9-90B9-B727DF4B62E5}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Server.Web", "src\Eurofurence.App.Server.Web\Eurofurence.App.Server.Web.xproj", "{CD4ECEF1-E1FA-41B5-A020-546E9FDB8903}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Domain.Model", "src\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.xproj", "{85792B74-D668-4DBA-A23A-759BFFE77176}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Domain.Model.MongoDb", "src\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.xproj", "{A89FE2A4-BE79-4F42-954D-F757DA3C967E}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Tools.EventScheduleImporter", "src\Eurofurence.App.Tools.EventScheduleImporter\Eurofurence.App.Tools.EventScheduleImporter.xproj", "{E47D7A6C-5A06-4704-B5F8-DC6C85926B54}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Domain.Model.MySql", "src\Eurofurence.App.Domain.Model.MySql\Eurofurence.App.Domain.Model.MySql.xproj", "{319FC8A8-B62C-435C-9F62-F7F4836BD319}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Server.Services", "src\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.xproj", "{98DE1C6C-DEBE-4CFB-9FF4-5A61F65EA7E9}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Eurofurence.App.Common", "src\Eurofurence.App.Common\Eurofurence.App.Common.xproj", "{68FDE7F6-9129-45CF-B524-C71E025D4AF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6432E12-5BE2-49B9-90B9-B727DF4B62E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6432E12-5BE2-49B9-90B9-B727DF4B62E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6432E12-5BE2-49B9-90B9-B727DF4B62E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6432E12-5BE2-49B9-90B9-B727DF4B62E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD4ECEF1-E1FA-41B5-A020-546E9FDB8903}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD4ECEF1-E1FA-41B5-A020-546E9FDB8903}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD4ECEF1-E1FA-41B5-A020-546E9FDB8903}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD4ECEF1-E1FA-41B5-A020-546E9FDB8903}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85792B74-D668-4DBA-A23A-759BFFE77176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85792B74-D668-4DBA-A23A-759BFFE77176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85792B74-D668-4DBA-A23A-759BFFE77176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85792B74-D668-4DBA-A23A-759BFFE77176}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A89FE2A4-BE79-4F42-954D-F757DA3C967E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A89FE2A4-BE79-4F42-954D-F757DA3C967E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A89FE2A4-BE79-4F42-954D-F757DA3C967E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A89FE2A4-BE79-4F42-954D-F757DA3C967E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E47D7A6C-5A06-4704-B5F8-DC6C85926B54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E47D7A6C-5A06-4704-B5F8-DC6C85926B54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E47D7A6C-5A06-4704-B5F8-DC6C85926B54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E47D7A6C-5A06-4704-B5F8-DC6C85926B54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{319FC8A8-B62C-435C-9F62-F7F4836BD319}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{319FC8A8-B62C-435C-9F62-F7F4836BD319}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{319FC8A8-B62C-435C-9F62-F7F4836BD319}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{319FC8A8-B62C-435C-9F62-F7F4836BD319}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98DE1C6C-DEBE-4CFB-9FF4-5A61F65EA7E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98DE1C6C-DEBE-4CFB-9FF4-5A61F65EA7E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98DE1C6C-DEBE-4CFB-9FF4-5A61F65EA7E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98DE1C6C-DEBE-4CFB-9FF4-5A61F65EA7E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68FDE7F6-9129-45CF-B524-C71E025D4AF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68FDE7F6-9129-45CF-B524-C71E025D4AF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68FDE7F6-9129-45CF-B524-C71E025D4AF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68FDE7F6-9129-45CF-B524-C71E025D4AF5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D6432E12-5BE2-49B9-90B9-B727DF4B62E5} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{CD4ECEF1-E1FA-41B5-A020-546E9FDB8903} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{85792B74-D668-4DBA-A23A-759BFFE77176} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{A89FE2A4-BE79-4F42-954D-F757DA3C967E} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{E47D7A6C-5A06-4704-B5F8-DC6C85926B54} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{319FC8A8-B62C-435C-9F62-F7F4836BD319} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{98DE1C6C-DEBE-4CFB-9FF4-5A61F65EA7E9} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{68FDE7F6-9129-45CF-B524-C71E025D4AF5} = {7AC305D7-5603-4073-8893-5104847367AB}
+	EndGlobalSection
+EndGlobal
