@@ -4,6 +4,7 @@ using System.Reflection;
 using Autofac;
 using Autofac.Core.Activators.Reflection;
 using Autofac.Extensions.DependencyInjection;
+using Eurofurence.App.Server.Web.Swagger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -55,6 +56,7 @@ namespace Eurofurence.App.Server.Web
                     TermsOfService = "None"
                 });
                 options.DescribeAllEnumsAsStrings();
+                options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
 
                 options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
             });

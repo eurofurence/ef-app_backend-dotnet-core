@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All events in the event schedule.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(EventRecord[]), 200)]
+        [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
         public Task<IEnumerable<EventRecord>> GetEventsAsync(DateTime? since = null)
         {
             return _eventService.FindAllAsync(minLastDateTimeChangedUtc: since);
