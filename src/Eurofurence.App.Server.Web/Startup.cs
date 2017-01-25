@@ -1,15 +1,17 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Text;
 using Autofac;
-using Autofac.Core.Activators.Reflection;
 using Autofac.Extensions.DependencyInjection;
 using Eurofurence.App.Server.Web.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using Swashbuckle.Swagger.Model;
@@ -57,9 +59,19 @@ namespace Eurofurence.App.Server.Web
                 });
                 options.DescribeAllEnumsAsStrings();
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
+                options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
 
                 options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
             });
+
+
+            var oAuthBearerAuthenticationPolicy =
+                new AuthorizationPolicyBuilder().AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+
+            services.AddAuthorization(auth => {
+                auth.AddPolicy("OAuth-AllAuthenticated", oAuthBearerAuthenticationPolicy); });
 
             var builder = new ContainerBuilder();
             builder.Populate(services);
@@ -79,6 +91,22 @@ namespace Eurofurence.App.Server.Web
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyOrigin().AllowAnyMethod());
+
+            app.UseJwtBearerAuthentication(new JwtBearerOptions()
+            {  
+                TokenValidationParameters = new TokenValidationParameters()
+                {
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.ASCII.GetBytes(Configuration["oAuth:secretKey"])),
+                    ValidAudience = Configuration["oAuth:Audience"],
+                    ValidIssuer = Configuration["oAuth:Issuer"],
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.FromSeconds(0)
+                }, 
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true
+            });
+
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

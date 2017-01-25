@@ -9,6 +9,8 @@
     "Microsoft.Extensions.Configuration": "1.1.0",
     "Microsoft.Extensions.Configuration.FileExtensions": "1.1.0",
     "Microsoft.Extensions.Configuration.Json": "1.1.0",
+    "Microsoft.AspNetCore.Authentication": "1.1.0",
+    "Microsoft.AspNetCore.Authentication.JwtBearer": "1.1.0",
     "Serilog": "2.3.0",
     "Serilog.Extensions.Logging": "1.1.0", 
     "Serilog.Sinks.ColoredConsole": "2.0.0",
