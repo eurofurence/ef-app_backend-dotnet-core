@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Sync;
 
 namespace Eurofurence.App.Domain.Model.Abstractions
 {
@@ -14,6 +16,7 @@ namespace Eurofurence.App.Domain.Model.Abstractions
         Task ReplaceOneAsync(TEntity entity);
         Task InsertOneAsync(TEntity entity);
         Task DeleteOneAsync(Guid id);
+        Task DeleteAllAsync();
     }
 
 
@@ -25,6 +28,11 @@ namespace Eurofurence.App.Domain.Model.Abstractions
     public interface IEventConferenceTrackRepository : IEntityRepository<EventConferenceTrackRecord>
     {
 
+    }
+
+    public interface IEntityStorageInfoRepository : IEntityRepository<EntityStorageInfoRecord>
+    {
+        Task<EntityStorageInfoRecord> FindOneAsync(string entityType);
     }
 
 }

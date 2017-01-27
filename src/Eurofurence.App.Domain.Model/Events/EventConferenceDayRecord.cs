@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Eurofurence.App.Domain.Model
+namespace Eurofurence.App.Domain.Model.Events
 {
     public class EventConferenceDayRecord : EntityBase
     {

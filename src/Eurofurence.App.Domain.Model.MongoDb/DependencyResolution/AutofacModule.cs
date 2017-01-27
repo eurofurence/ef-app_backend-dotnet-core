@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
+using Eurofurence.App.Domain.Model.Sync;
 using MongoDB.Driver;
 
 namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
@@ -16,6 +18,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 
         protected override void Load(ContainerBuilder moduleBuilder)
         {
+            moduleBuilder.Register(r =>
+                    new EntityStorageInfoRepository(
+                        _mongoDatabase.GetCollection<EntityStorageInfoRecord>("EntityStorageInfoRecord")))
+                .As<IEntityStorageInfoRepository>();
+
             moduleBuilder.Register(r =>
                     new EventRepository(
                         _mongoDatabase.GetCollection<EventRecord>("EventRecord")))

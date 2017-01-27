@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Eurofurence.App.Domain.Model.Events;
+using Microsoft.EntityFrameworkCore;
 using MySQL.Data.EntityFrameworkCore.Extensions;
 
 namespace Eurofurence.App.Domain.Model.MySql

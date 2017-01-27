@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Eurofurence.App.Domain.Model
+namespace Eurofurence.App.Domain.Model.Events
 {
     public class EventRecord : EntityBase
     {

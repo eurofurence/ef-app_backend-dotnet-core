@@ -7,6 +7,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model;
+using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions;
 using MongoDB.Driver;
 

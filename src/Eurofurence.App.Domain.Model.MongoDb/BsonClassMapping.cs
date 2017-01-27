@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization;
+﻿using Eurofurence.App.Domain.Model.Events;
+using MongoDB.Bson.Serialization;
 
 namespace Eurofurence.App.Domain.Model.MongoDb
 {

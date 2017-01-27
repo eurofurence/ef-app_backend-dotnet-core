@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using Eurofurence.App.Domain.Model.Events;
+using MongoDB.Driver;
 
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 {
