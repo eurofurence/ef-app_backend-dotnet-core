@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Eurofurence.App.Domain.Model.Sync
 {
     public class AggregatedDeltaResponse
     {
-        public DateTime Since { get; set; }
+        public DateTime? Since { get; set; }
+        public DateTime CurrentDateTimeUtc { get; set; }
+
+        public DeltaResponse<Events.EventRecord> Events { get; set; }
+        public DeltaResponse<Events.EventConferenceDayRecord> EventConferenceDays { get; set; }
+        public DeltaResponse<Events.EventConferenceRoomRecord> EventConferenceRooms { get; set; }
+        public DeltaResponse<Events.EventConferenceTrackRecord> EventConferenceTracks { get; set; }
     }
 
 
