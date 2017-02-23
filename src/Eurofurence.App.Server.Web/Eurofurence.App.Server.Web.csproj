@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyName>Eurofurence.App.Server.Web</AssemblyName>
+    <PackageId>Eurofurence.App.Server.Web</PackageId>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <RuntimeFrameworkVersion>1.0.3</RuntimeFrameworkVersion>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="1.1.0" />
+    <PackageReference Include="Serilog" Version="2.3.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="1.1.0" />
+    <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
+    <PackageReference Include="MongoDB.Driver" Version="2.4.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.0.2" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="*" />
+    <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
+    <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
+  </ItemGroup>
+
+</Project>
