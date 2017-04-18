@@ -46,7 +46,11 @@ namespace Eurofurence.App.Server.Web
 
             Domain.Model.MongoDb.BsonClassMapping.Register();
 
-            services.AddMvc();
+            services.AddMvc()
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                });
             services.AddSwaggerGen();
             services.ConfigureSwaggerGen(options =>
             {
