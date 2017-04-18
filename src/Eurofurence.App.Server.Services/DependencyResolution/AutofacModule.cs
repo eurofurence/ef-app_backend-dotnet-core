@@ -7,13 +7,15 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 {
     public class AutofacModule : Module
     {
-        protected override void Load(ContainerBuilder moduleBuilder)
+        protected override void Load(ContainerBuilder builder)
         {
-            moduleBuilder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
-            moduleBuilder.RegisterType<EventService>().As<IEventService>();
-            moduleBuilder.RegisterType<EventConferenceTrackService>().As<IEventConferenceTrackService>();
-            moduleBuilder.RegisterType<EventConferenceRoomService>().As<IEventConferenceRoomService>();
-            moduleBuilder.RegisterType<EventConferenceDayService>().As<IEventConferenceDayService>();
+            builder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
+            builder.RegisterType<EventService>().As<IEventService>();
+            builder.RegisterType<EventConferenceTrackService>().As<IEventConferenceTrackService>();
+            builder.RegisterType<EventConferenceRoomService>().As<IEventConferenceRoomService>();
+            builder.RegisterType<EventConferenceDayService>().As<IEventConferenceDayService>();
+            builder.RegisterType<KnowledgeGroupService>().As<IKnowledgeGroupService>();
+            builder.RegisterType<KnowledgeEntryService>().As<IKnowledgeEntryService>();
         }
     }
 }

@@ -13,18 +13,24 @@ namespace Eurofurence.App.Server.Web.Controllers
         readonly IEventConferenceDayService _eventConferenceDayService;
         readonly IEventConferenceRoomService _eventConferenceRoomService;
         readonly IEventConferenceTrackService _eventConferenceTrackService;
+        readonly IKnowledgeGroupService _knowledgeGroupService;
+        readonly IKnowledgeEntryService _knowledgeEntryService;
 
         public SyncController(
             IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
-            IEventConferenceTrackService eventConferenceTrackService
+            IEventConferenceTrackService eventConferenceTrackService,
+            IKnowledgeGroupService knowledgeGroupService,
+            IKnowledgeEntryService knowledgeEntryService
             )
         {
             _eventConferenceTrackService = eventConferenceTrackService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceDayService = eventConferenceDayService;
             _eventService = eventService;
+            _knowledgeGroupService = knowledgeGroupService;
+            _knowledgeEntryService = knowledgeEntryService;
         }
 
         /// <summary>
@@ -42,7 +48,9 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Events = await _eventService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
                 EventConferenceDays = await _eventConferenceDayService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
                 EventConferenceRooms = await _eventConferenceRoomService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                EventConferenceTracks = await _eventConferenceTrackService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
+                EventConferenceTracks = await _eventConferenceTrackService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
+                KnowledgeGroups = await _knowledgeGroupService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
+                KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
             };
 
             return response;

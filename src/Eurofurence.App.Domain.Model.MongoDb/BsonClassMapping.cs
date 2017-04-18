@@ -1,4 +1,5 @@
 ﻿using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Knowledge;
 using MongoDB.Bson.Serialization;
 
 namespace Eurofurence.App.Domain.Model.MongoDb
@@ -24,6 +25,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb
             DefaultMap<EventConferenceTrackRecord>();
             DefaultMap<EventConferenceDayRecord>();
             DefaultMap<EventConferenceRoomRecord>();
+            DefaultMap<KnowledgeGroupRecord>();
+            DefaultMap<KnowledgeEntryRecord>();
         }
     }
 }
