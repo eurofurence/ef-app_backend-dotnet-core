@@ -23,6 +23,7 @@ namespace Eurofurence.App.Server.Services
             _entityRepository = entityRepository;
             _storageService = storageServiceFactory.CreateStorageService<T>();
         }
+
         public Task<T> FindOneAsync(Guid id)
         {
             return _entityRepository.FindOneAsync(id);
@@ -33,15 +34,16 @@ namespace Eurofurence.App.Server.Services
             return _entityRepository.FindAllAsync();
         }
 
-
         public async Task ReplaceOneAsync(T entity)
         {
+            entity.Touch();
             await _entityRepository.ReplaceOneAsync(entity);
             await _storageService.TouchAsync();
         }
 
         public async Task InsertOneAsync(T entity)
         {
+            entity.Touch();
             await _entityRepository.InsertOneAsync(entity);
             await _storageService.TouchAsync();
         }

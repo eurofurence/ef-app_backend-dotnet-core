@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7AC305D7-5603-4073-8893-5104847367AB}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eurofurence.App.Server.Web", "src\Eurofurence.App.Server.Web\Eurofurence.App.Server.Web.csproj", "{16CBDB12-56E7-4B6C-BDF6-7B55FC35BE27}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eurofurence.App.Tools.EventScheduleImporter", "src\Eurofurence.App.Tools.EventScheduleImporter\Eurofurence.App.Tools.EventScheduleImporter.csproj", "{3CD0F3BC-AC7B-4B49-A8B3-A50A7E8EB886}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eurofurence.App.Tools.KnowledgeBaseImporter", "Eurofurence.App.Tools.KnowledgeBaseImporter\Eurofurence.App.Tools.KnowledgeBaseImporter.csproj", "{4A6B65C8-3D4B-461F-9004-45E865F8F83C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,6 +131,18 @@ Global
 		{3CD0F3BC-AC7B-4B49-A8B3-A50A7E8EB886}.Release|x64.Build.0 = Release|Any CPU
 		{3CD0F3BC-AC7B-4B49-A8B3-A50A7E8EB886}.Release|x86.ActiveCfg = Release|Any CPU
 		{3CD0F3BC-AC7B-4B49-A8B3-A50A7E8EB886}.Release|x86.Build.0 = Release|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Debug|x64.Build.0 = Debug|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Debug|x86.Build.0 = Debug|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Release|x64.ActiveCfg = Release|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Release|x64.Build.0 = Release|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Release|x86.ActiveCfg = Release|Any CPU
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,5 +156,6 @@ Global
 		{F313B95E-6166-4D34-B4B5-E86B44926299} = {7AC305D7-5603-4073-8893-5104847367AB}
 		{16CBDB12-56E7-4B6C-BDF6-7B55FC35BE27} = {7AC305D7-5603-4073-8893-5104847367AB}
 		{3CD0F3BC-AC7B-4B49-A8B3-A50A7E8EB886} = {7AC305D7-5603-4073-8893-5104847367AB}
+		{4A6B65C8-3D4B-461F-9004-45E865F8F83C} = {7AC305D7-5603-4073-8893-5104847367AB}
 	EndGlobalSection
 EndGlobal
