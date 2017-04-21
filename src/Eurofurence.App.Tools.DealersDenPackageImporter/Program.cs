@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Autofac;
+using Eurofurence.App.Server.Services.Abstractions;
+using MongoDB.Driver;
+using System;
 
 namespace Eurofurence.App.Tools.DealersDenPackageImporter
 {
@@ -6,7 +9,20 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var _client = new MongoClient("mongodb://127.0.0.1:27017");
+            var _database = _client.GetDatabase("app_dev");
+
+            Domain.Model.MongoDb.BsonClassMapping.Register();
+
+            var builder = new ContainerBuilder();
+            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(_database));
+            builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
+
+            var container = builder.Build();
+
+            var importer = new Importer(container.Resolve<IImageService>());
+
+            importer.ImportZipPackage(@"c:\temp\AppData_2016-08-02-amended-v2.zip");
         }
     }
 }

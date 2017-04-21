@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
 using Eurofurence.App.Domain.Model.Sync;
@@ -53,6 +54,16 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                     new KnowledgeEntryRepository(
                         _mongoDatabase.GetCollection<KnowledgeEntryRecord>("KnowledgeEntryRecord")))
                 .As<IEntityRepository<KnowledgeEntryRecord>>();
+
+            builder.Register(r =>
+                    new ImageRepository(
+                        _mongoDatabase.GetCollection<ImageRecord>("ImageRecord")))
+                .As<IEntityRepository<ImageRecord>>();
+
+            builder.Register(r =>
+                    new ImageContentRepository(
+                        _mongoDatabase.GetCollection<ImageContentRecord>("ImageContentRecord")))
+                .As<IEntityRepository<ImageContentRecord>>();
         }
     }
 }

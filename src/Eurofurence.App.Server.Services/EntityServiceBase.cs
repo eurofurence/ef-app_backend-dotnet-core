@@ -24,31 +24,31 @@ namespace Eurofurence.App.Server.Services
             _storageService = storageServiceFactory.CreateStorageService<T>();
         }
 
-        public Task<T> FindOneAsync(Guid id)
+        public virtual Task<T> FindOneAsync(Guid id)
         {
             return _entityRepository.FindOneAsync(id);
         }
 
-        public Task<IEnumerable<T>> FindAllAsync()
+        public virtual Task<IEnumerable<T>> FindAllAsync()
         {
             return _entityRepository.FindAllAsync();
         }
 
-        public async Task ReplaceOneAsync(T entity)
+        public virtual async Task ReplaceOneAsync(T entity)
         {
             entity.Touch();
             await _entityRepository.ReplaceOneAsync(entity);
             await _storageService.TouchAsync();
         }
 
-        public async Task InsertOneAsync(T entity)
+        public virtual async Task InsertOneAsync(T entity)
         {
             entity.Touch();
             await _entityRepository.InsertOneAsync(entity);
             await _storageService.TouchAsync();
         }
 
-        public async Task DeleteOneAsync(Guid id)
+        public virtual async Task DeleteOneAsync(Guid id)
         {
             var entity = await _entityRepository.FindOneAsync(id);
             entity.IsDeleted = 1;
@@ -58,7 +58,7 @@ namespace Eurofurence.App.Server.Services
             await _storageService.TouchAsync();
         }
 
-        public async Task ApplyPatchOperationAsync(IEnumerable<PatchOperation<T>> patchResults)
+        public virtual async Task ApplyPatchOperationAsync(IEnumerable<PatchOperation<T>> patchResults)
         {
             foreach (var item in patchResults)
             {
@@ -77,18 +77,18 @@ namespace Eurofurence.App.Server.Services
             }
         }
 
-        public async Task DeleteAllAsync()
+        public virtual async Task DeleteAllAsync()
         {
             await _entityRepository.DeleteAllAsync();
             await _storageService.ResetDeltaStartAsync();
         }
 
-        public Task<EntityStorageInfoRecord> GetStorageInfoAsync()
+        public virtual Task<EntityStorageInfoRecord> GetStorageInfoAsync()
         {
             return _storageService.GetStorageInfoAsync();
         }
 
-        public async Task<DeltaResponse<T>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
+        public virtual async Task<DeltaResponse<T>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
         {
             var storageInfo = await GetStorageInfoAsync();
             var response = new DeltaResponse<T>()

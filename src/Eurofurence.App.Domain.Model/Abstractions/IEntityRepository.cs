@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Sync;
+using System.Linq.Expressions;
 
 namespace Eurofurence.App.Domain.Model.Abstractions
 {
@@ -13,6 +14,7 @@ namespace Eurofurence.App.Domain.Model.Abstractions
         Task<IEnumerable<TEntity>> FindAllAsync(
             bool includeDeletedRecords = false, 
             DateTime? minLastDateTimeChangedUtc = null);
+        Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter);
         Task ReplaceOneAsync(TEntity entity);
         Task InsertOneAsync(TEntity entity);
         Task DeleteOneAsync(Guid id);

@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Events;
+using Eurofurence.App.Server.Services.Images;
 using Eurofurence.App.Server.Services.Storage;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
@@ -16,6 +17,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<EventConferenceDayService>().As<IEventConferenceDayService>();
             builder.RegisterType<KnowledgeGroupService>().As<IKnowledgeGroupService>();
             builder.RegisterType<KnowledgeEntryService>().As<IKnowledgeEntryService>();
+            builder.RegisterType<ImageService>().As<IImageService>();
         }
     }
 }

@@ -8,10 +8,6 @@ namespace Eurofurence.App.Domain.Model.Images
     {
         [Required]
         [DataMember]
-        public string Title { get; set; }
-
-        [Required]
-        [DataMember]
         public string InternalReference { get; set; }
 
         [Required]
@@ -29,5 +25,9 @@ namespace Eurofurence.App.Domain.Model.Images
         [Required]
         [DataMember]
         public string MimeType{ get; set; }
+
+        [Required]
+        [DataMember]
+        public string ContentHashSha1 { get; set; }
     }
 }

@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.5.0" />
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha6-00066" />
   </ItemGroup>
 
 </Project>

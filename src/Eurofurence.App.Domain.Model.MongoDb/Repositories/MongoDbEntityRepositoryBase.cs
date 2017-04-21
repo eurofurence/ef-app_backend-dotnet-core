@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Abstractions;
 using MongoDB.Driver;
@@ -23,12 +24,18 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
             return await results.FirstOrDefaultAsync();
         }
 
+        public virtual async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter)
+        {
+            var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().Where(filter));
+            return await results.ToListAsync();
+        }
+
         public virtual async Task<IEnumerable<TEntity>> FindAllAsync(
             bool includeDeletedRecords = false,
             DateTime? minLastDateTimeChangedUtc = null)
         {
             var filters = new List<FilterDefinition<TEntity>>();
-
+            
             if (!includeDeletedRecords)
             {
                 filters.Add(new FilterDefinitionBuilder<TEntity>()
@@ -64,5 +71,6 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
         {
             return Collection.DeleteManyAsync(entity => true);
         }
+
     }
 }
