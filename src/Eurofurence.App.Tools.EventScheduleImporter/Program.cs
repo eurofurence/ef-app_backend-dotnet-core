@@ -120,7 +120,7 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
 
         public static void Main(string[] args)
         {
-            var _client = new MongoClient("mongodb://127.0.0.1:27017");
+            var _client = new MongoClient("mongodb://database:27017");
             var _database = _client.GetDatabase("app_dev");
 
             Eurofurence.App.Domain.Model.MongoDb.BsonClassMapping.Register();
@@ -137,7 +137,7 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             var eventService = container.Resolve<IEventService>();
 
 
-            var stream = new FileStream(@"/tmp/ef.csv", FileMode.Open);
+            var stream = new FileStream(@"/app/ef.csv", FileMode.Open);
             TextReader r = new StreamReader(stream);
 
             var csv = new CsvReader(r);
