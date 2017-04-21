@@ -18,4 +18,8 @@
     <ProjectReference Include="..\src\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NETCore.App" Version="1.1.1" />
+  </ItemGroup>
+
 </Project>

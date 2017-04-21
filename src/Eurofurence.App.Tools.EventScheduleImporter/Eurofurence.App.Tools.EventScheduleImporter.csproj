@@ -20,9 +20,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.3.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.4.1" />
-    <PackageReference Include="CsvHelper" Version="3.0.0-beta7" />
+    <PackageReference Include="Autofac" Version="4.5.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.4.3" />
+    <PackageReference Include="CsvHelper" Version="3.0.0-beta8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NETCore.App" Version="1.1.1" />
   </ItemGroup>
 
 </Project>
