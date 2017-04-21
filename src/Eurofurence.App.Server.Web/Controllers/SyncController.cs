@@ -15,6 +15,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         readonly IEventConferenceTrackService _eventConferenceTrackService;
         readonly IKnowledgeGroupService _knowledgeGroupService;
         readonly IKnowledgeEntryService _knowledgeEntryService;
+        readonly IImageService _imageService;
+        readonly IDealerService _dealerService;
 
         public SyncController(
             IEventService eventService,
@@ -22,7 +24,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             IEventConferenceRoomService eventConferenceRoomService,
             IEventConferenceTrackService eventConferenceTrackService,
             IKnowledgeGroupService knowledgeGroupService,
-            IKnowledgeEntryService knowledgeEntryService
+            IKnowledgeEntryService knowledgeEntryService,
+            IImageService imageService,
+            IDealerService dealerService
             )
         {
             _eventConferenceTrackService = eventConferenceTrackService;
@@ -31,6 +35,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             _eventService = eventService;
             _knowledgeGroupService = knowledgeGroupService;
             _knowledgeEntryService = knowledgeEntryService;
+            _imageService = imageService;
+            _dealerService = dealerService;
         }
 
         /// <summary>
@@ -50,7 +56,9 @@ namespace Eurofurence.App.Server.Web.Controllers
                 EventConferenceRooms = await _eventConferenceRoomService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
                 EventConferenceTracks = await _eventConferenceTrackService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
                 KnowledgeGroups = await _knowledgeGroupService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
+                KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
+                Images = await _imageService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
+                Dealers = await _dealerService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
             };
 
             return response;
