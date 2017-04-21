@@ -10,7 +10,7 @@ namespace Eurofurence.App.Server.KestrelHost
             var host = new WebHostBuilder()
                 .UseStartup<Startup>()
                 .UseKestrel()
-                .UseUrls("http://localhost:30001")
+                .UseUrls("http://*:30001")
                 .Build();
 
 

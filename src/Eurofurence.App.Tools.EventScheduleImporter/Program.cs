@@ -137,7 +137,7 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             var eventService = container.Resolve<IEventService>();
 
 
-            var stream = new FileStream(@"c:\temp\EF22-events-public-20160821T122601.541262456-v2.5.csv", FileMode.Open);
+            var stream = new FileStream(@"/tmp/ef.csv", FileMode.Open);
             TextReader r = new StreamReader(stream);
 
             var csv = new CsvReader(r);
