@@ -12,10 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
-    <ProjectReference Include="..\src\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.csproj" />
-    <ProjectReference Include="..\src\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
-    <ProjectReference Include="..\src\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
