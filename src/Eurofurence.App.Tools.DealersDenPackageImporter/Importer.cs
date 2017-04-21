@@ -1,31 +1,41 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using Eurofurence.App.Common.DataDiffUtils;
+using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Server.Services.Abstractions;
 using System;
+using System.Text;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Tools.DealersDenPackageImporter
 {
     public class Importer
     {
-        private IImageService _imageService;
+        readonly IImageService _imageService;
+        readonly IDealerService _dealerService;
 
-        public Importer(IImageService imageService)
+        public Importer(IImageService imageService, IDealerService dealerService)
         {
+            _dealerService = dealerService;
             _imageService = imageService;
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        public void ImportZipPackage(string fileName)
+        public async Task ImportZipPackageAsync(string fileName)
         {
+            var importRecords = new List<DealerRecord>();
+
             using (var fileStream = File.OpenRead(fileName))
             using (var archive = new ZipArchive(fileStream))
             {
                 var csvEntry = archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase));
 
-                TextReader reader = new StreamReader(csvEntry.Open());
+                TextReader reader = new StreamReader(csvEntry.Open(), Encoding.GetEncoding(1252));
 
                 var csvReader = new CsvReader(reader);
                 csvReader.Configuration.RegisterClassMap<DealerImportRowClassMap>();
@@ -33,23 +43,66 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
 
                 foreach(var record in csvRecords)
                 {
-                    var artistThumbnailImage = archive.Entries.SingleOrDefault(a => a.Name.StartsWith($"artist_{record.RegNo}.", StringComparison.CurrentCultureIgnoreCase));
+                    var dealerRecord = new DealerRecord()
+                    {
+                        RegistrationNumber = record.RegNo,
+                        AttendeeNickname = record.Nickname,
+                        AboutTheArtistText = record.AboutTheArtist,
+                        AboutTheArtText = record.AboutTheArt,
+                        ArtPreviewCaption = record.ArtPreviewCaption,
+                        DisplayName = record.DisplayName,
+                        ShortDescription = record.ShortDescription
+                    };
 
-                    if (artistThumbnailImage != null) {
+                    dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{record.RegNo}.", $"dealer:artist:{record.RegNo}");
+                    dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(archive, $"thumbnail_{record.RegNo}.", $"dealer:thumbnail:{record.RegNo}");
+                    dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
-                        using (var s = artistThumbnailImage.Open())
-                        using (var br = new BinaryReader(s))
-                        {
-                            var imageByteArray = br.ReadBytes((int)artistThumbnailImage.Length);
-                            _imageService.InsertOrUpdateImageAsync($"dealer:artistThumbnailImage:{record.RegNo}", imageByteArray).Wait();
-                        }
+                    importRecords.Add(dealerRecord);
+
+                    if (dealerRecord.RegistrationNumber == 397)
+                    {
+
                     }
-
-
-
                 }
-
             }
+
+            var existingRecords = await _dealerService.FindAllAsync();
+
+            var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) => 
+                list.SingleOrDefault(a => a.RegistrationNumber == source.RegistrationNumber));
+
+            patch
+                .Map(s => s.RegistrationNumber, t => t.RegistrationNumber)
+                .Map(s => s.AttendeeNickname, t => t.AttendeeNickname)
+                .Map(s => s.AboutTheArtistText, t => t.AboutTheArtistText)
+                .Map(s => s.AboutTheArtText, t => t.AboutTheArtText)
+                .Map(s => s.ArtPreviewCaption, t => t.ArtPreviewCaption)
+                .Map(s => s.DisplayName, t => t.DisplayName)
+                .Map(s => s.ShortDescription, t => t.ShortDescription)
+                .Map(s => s.ArtistImageId, t => t.ArtistImageId)
+                .Map(s => s.ArtistThumbnailImageId, t => t.ArtistThumbnailImageId)
+                .Map(s => s.ArtPreviewImageId, t => t.ArtPreviewImageId);
+
+            var diff = patch.Patch(importRecords, existingRecords);
+            await _dealerService.ApplyPatchOperationAsync(diff);
+        }
+
+        async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith, string internalReference)
+        {
+            var imageEntry = archive.Entries.SingleOrDefault(a => a.Name.StartsWith(fileNameStartsWith, StringComparison.CurrentCultureIgnoreCase));
+
+            if (imageEntry != null)
+            {
+                using (var s = imageEntry.Open())
+                using (var br = new BinaryReader(s))
+                {
+                    var imageByteArray = br.ReadBytes((int)imageEntry.Length);
+                    return _imageService.InsertOrUpdateImageAsync(internalReference, imageByteArray).Result;
+                }
+            }
+
+            return null;
         }
     }
 

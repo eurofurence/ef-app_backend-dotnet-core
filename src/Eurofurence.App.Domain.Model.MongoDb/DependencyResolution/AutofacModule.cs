@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
@@ -64,6 +65,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                     new ImageContentRepository(
                         _mongoDatabase.GetCollection<ImageContentRecord>("ImageContentRecord")))
                 .As<IEntityRepository<ImageContentRecord>>();
+
+            builder.Register(r =>
+                    new DealerRepository(
+                        _mongoDatabase.GetCollection<DealerRecord>("DealerRecord")))
+                .As<IEntityRepository<DealerRecord>>();
         }
     }
 }

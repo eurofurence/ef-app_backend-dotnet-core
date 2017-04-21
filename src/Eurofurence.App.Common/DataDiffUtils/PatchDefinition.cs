@@ -26,8 +26,14 @@ namespace Eurofurence.App.Common.DataDiffUtils
             var patchOperator = new PatchOperator<TSource, TTarget>()
             {
                 FieldName = (targetSelector.Body as MemberExpression)?.Member.Name,
-                IsEqual = (source, target) => sourceValueSelector(source)
-                    ?.Equals(targetSelector.Compile().Invoke(target)) ?? false,
+                IsEqual = (source, target) => {
+                    var sourceValue = sourceValueSelector(source);
+                    var targetValue = targetSelector.Compile().Invoke(target);
+
+                    return ((sourceValue == null && targetValue == null) ||
+                        (sourceValue?.Equals(targetValue) ?? false));
+
+                    },
                 ApplySourceValueToTarget =
                 (source, target) =>
                 {

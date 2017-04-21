@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Eurofurence.App.Server.Services.Abstractions;
 using MongoDB.Driver;
-using System;
 
 namespace Eurofurence.App.Tools.DealersDenPackageImporter
 {
@@ -20,9 +19,9 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
 
             var container = builder.Build();
 
-            var importer = new Importer(container.Resolve<IImageService>());
+            var importer = new Importer(container.Resolve<IImageService>(), container.Resolve<IDealerService>());
 
-            importer.ImportZipPackage(@"c:\temp\AppData_2016-08-02-amended-v2.zip");
+            importer.ImportZipPackageAsync(@"c:\temp\AppData_2016-08-02-amended-v2.zip").Wait();
         }
     }
 }
