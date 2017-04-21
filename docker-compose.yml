@@ -7,7 +7,7 @@ services:
     depends_on:
       - "mongo"
     links:
-      - mongo
+      - 'mongo:database'
   mongo:
     image: mongo
     volumes:
