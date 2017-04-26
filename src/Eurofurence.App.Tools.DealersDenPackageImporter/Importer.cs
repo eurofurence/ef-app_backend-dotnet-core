@@ -59,11 +59,6 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
                     dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
                     importRecords.Add(dealerRecord);
-
-                    if (dealerRecord.RegistrationNumber == 397)
-                    {
-
-                    }
                 }
             }
 
