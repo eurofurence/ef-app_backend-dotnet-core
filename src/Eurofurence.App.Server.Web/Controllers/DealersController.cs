@@ -9,7 +9,7 @@ using Eurofurence.App.Domain.Model.Dealers;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("Api/v2/[controller]")]
     public class DealersController : Controller
     {
         readonly IDealerService _dealerService;

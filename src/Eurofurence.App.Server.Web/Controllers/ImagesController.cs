@@ -9,7 +9,7 @@ using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("Api/v2/[controller]")]
     public class ImagesController : Controller
     {
         readonly IImageService _imageService;

@@ -9,7 +9,7 @@ using Eurofurence.App.Server.Web.Extensions;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("Api/v2/[controller]")]
     public class EventConferenceDaysController : Controller
     {
         readonly IEventConferenceDayService _eventConferenceDayService;

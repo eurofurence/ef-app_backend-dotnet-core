@@ -9,7 +9,7 @@ using Eurofurence.App.Domain.Model.Knowledge;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("Api/v2/[controller]")]
     public class KnowledgeGroupsController : Controller
     {
         readonly IKnowledgeGroupService _knowledgeGroupService;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("Api/v2/[controller]")]
     public class TestController
     {
         /// <summary>

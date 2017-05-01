@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Eurofurence.App.Common.Abstractions;
+using System.Collections;
 
 namespace Eurofurence.App.Common.DataDiffUtils
 {
@@ -30,10 +31,26 @@ namespace Eurofurence.App.Common.DataDiffUtils
                     var sourceValue = sourceValueSelector(source);
                     var targetValue = targetSelector.Compile().Invoke(target);
 
-                    return ((sourceValue == null && targetValue == null) ||
-                        (sourceValue?.Equals(targetValue) ?? false));
+                    if (sourceValue == null && targetValue == null)
+                    {
+                        return true;
+                    }
 
-                    },
+                    if ((sourceValue == null && targetValue != null) || (sourceValue != null && targetValue == null))
+                    {
+                        return false;
+                    }
+
+                    if (sourceValue.GetType().IsArray)
+                    {
+                        return Enumerable.SequenceEqual(
+                            sourceValue as IEnumerable<object>,
+                            targetValue as IEnumerable<object>
+                            );
+                    }
+
+                    return sourceValue?.Equals(targetValue) ?? false;
+                },
                 ApplySourceValueToTarget =
                 (source, target) =>
                 {

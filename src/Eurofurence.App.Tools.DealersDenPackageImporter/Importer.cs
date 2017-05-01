@@ -10,6 +10,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Tools.DealersDenPackageImporter
 {
@@ -58,6 +59,8 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
                     dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(archive, $"thumbnail_{record.RegNo}.", $"dealer:thumbnail:{record.RegNo}");
                     dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
+                    ImportLinks(dealerRecord, record.WebsiteUrl);
+
                     importRecords.Add(dealerRecord);
                 }
             }
@@ -77,10 +80,49 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
                 .Map(s => s.ShortDescription, t => t.ShortDescription)
                 .Map(s => s.ArtistImageId, t => t.ArtistImageId)
                 .Map(s => s.ArtistThumbnailImageId, t => t.ArtistThumbnailImageId)
-                .Map(s => s.ArtPreviewImageId, t => t.ArtPreviewImageId);
+                .Map(s => s.ArtPreviewImageId, t => t.ArtPreviewImageId)
+                .Map(s => s.Links, t => t.Links);
 
             var diff = patch.Patch(importRecords, existingRecords);
             await _dealerService.ApplyPatchOperationAsync(diff);
+        }
+
+        private void ImportLinks(DealerRecord dealerRecord, string websiteUrls)
+        {
+            if (string.IsNullOrWhiteSpace(websiteUrls)) return;
+
+            var linkFragments = new List<LinkFragment>();
+            if (dealerRecord.Links != null)
+            {
+                linkFragments.AddRange(dealerRecord.Links);
+            }
+
+            var sanitizedParts = websiteUrls
+                .Replace(" / ", ";")
+                .Split(new char[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var part in sanitizedParts)
+            {
+                var assumedUri = part;
+                if (part.Length < 10) continue; 
+
+                if (!assumedUri.StartsWith("http://", StringComparison.CurrentCultureIgnoreCase) &&
+                    !assumedUri.StartsWith("https://", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    assumedUri = $"http://{part}";
+                }
+
+                if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute))
+                {
+                    linkFragments.Add(new LinkFragment()
+                    {
+                        FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
+                        Target = assumedUri
+                    });
+                }
+            }
+
+            dealerRecord.Links = linkFragments.ToArray();
         }
 
         async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith, string internalReference)
@@ -93,7 +135,8 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
                 using (var br = new BinaryReader(s))
                 {
                     var imageByteArray = br.ReadBytes((int)imageEntry.Length);
-                    return _imageService.InsertOrUpdateImageAsync(internalReference, imageByteArray).Result;
+                    var result = await _imageService.InsertOrUpdateImageAsync(internalReference, imageByteArray);
+                    return result;
                 }
             }
 

@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using Swashbuckle.Swagger.Model;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -50,13 +51,15 @@ namespace Eurofurence.App.Server.Web
                 .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 });
+
             services.AddSwaggerGen();
             services.ConfigureSwaggerGen(options =>
             {
                 options.SingleApiVersion(new Info
                 {
-                    Version = "v1",
+                    Version = "v2",
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
                     TermsOfService = "None"
@@ -119,7 +122,7 @@ namespace Eurofurence.App.Server.Web
             });
 
             app.UseSwagger();
-            app.UseSwaggerUi();
+            app.UseSwaggerUi("swagger/v2/ui", "/swagger/v2/swagger.json");
         }
     }
 }

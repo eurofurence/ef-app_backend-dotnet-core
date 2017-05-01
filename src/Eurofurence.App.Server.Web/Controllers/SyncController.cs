@@ -6,7 +6,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("Api/v2/[controller]")]
     public class SyncController
     {
         readonly IEventService _eventService;
