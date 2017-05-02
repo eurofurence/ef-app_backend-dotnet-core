@@ -16,6 +16,7 @@ using MongoDB.Driver;
 using Serilog;
 using Swashbuckle.Swagger.Model;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Serialization;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -50,6 +51,7 @@ namespace Eurofurence.App.Server.Web
             services.AddMvc()
                 .AddJsonOptions(options =>
                 {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                     options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 });
