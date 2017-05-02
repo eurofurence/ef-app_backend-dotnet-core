@@ -32,6 +32,8 @@ namespace Eurofurence.App.Domain.Model.Events
         public TimeSpan EndTime { get; set; }
         [DataMember]
         public string PanelHosts { get; set; }
+        [DataMember]
+        public bool IsDeviatingFromConBook { get; set; }
 
         [IgnoreDataMember]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }
