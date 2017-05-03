@@ -7,6 +7,8 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Microsoft.AspNetCore.Authorization;
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -66,6 +68,27 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
             await _announcementService.DeleteOneAsync(id);
 
+            return Ok();
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "System,Developer")]
+        public async Task<ActionResult> PostAnnouncementAsync([FromBody] AnnouncementRecord record)
+        {
+            record.Touch();
+            record.NewId();
+
+            await _announcementService.InsertOneAsync(record);
+
+            return Ok();
+        }
+
+        [HttpDelete]
+        [Authorize(Roles = "System,Developer")]
+        public async Task<ActionResult> ClearAnnouncementAsync()
+        {
+            await _announcementService.DeleteAllAsync();
             return Ok();
         }
     }

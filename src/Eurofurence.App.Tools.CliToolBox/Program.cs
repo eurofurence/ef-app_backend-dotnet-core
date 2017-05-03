@@ -39,7 +39,7 @@ namespace Eurofurence.App.Tools.CliToolBox
 
                 command.OnExecute(() =>
                 {
-                    int hours = 1
+                    int hours = 1;
                     int.TryParse(hoursArgument.Value(), out hours);
 
                     Console.WriteLine($"User: {userArgument.Value}");
