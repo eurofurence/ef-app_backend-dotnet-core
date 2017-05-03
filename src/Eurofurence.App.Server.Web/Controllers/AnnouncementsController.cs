@@ -60,7 +60,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpDelete("{Id}")]
-        [Authorize]
+        [Authorize(Roles = "System,Developer")]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
