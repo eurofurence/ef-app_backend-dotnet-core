@@ -13,69 +13,34 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 {
     public class AutofacModule : Module
     {
-        private readonly IMongoDatabase _mongoDatabase;
+        readonly IMongoDatabase _mongoDatabase;
 
         public AutofacModule(IMongoDatabase mongoDatabase)
         {
             _mongoDatabase = mongoDatabase;
         }
 
+        void Register<TRepository, IRepository, TRecord>(ContainerBuilder builder)
+        {
+            // By default, we store entities in a collection that matches the class name.
+            builder.Register(r => _mongoDatabase.GetCollection<TRecord>(typeof(TRecord).Name))
+                .As<IMongoCollection<TRecord>>();
+            builder.RegisterType<TRepository>().As<IRepository>();
+        }
+
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(r =>
-                    new EntityStorageInfoRepository(
-                        _mongoDatabase.GetCollection<EntityStorageInfoRecord>("EntityStorageInfoRecord")))
-                .As<IEntityStorageInfoRepository>();
-
-            builder.Register(r =>
-                    new EventRepository(
-                        _mongoDatabase.GetCollection<EventRecord>("EventRecord")))
-                .As<IEntityRepository<EventRecord>>();
-
-            builder.Register(r =>
-                    new EventConferenceDayRepository(
-                        _mongoDatabase.GetCollection<EventConferenceDayRecord>("EventConferenceDayRecord")))
-                .As<IEntityRepository<EventConferenceDayRecord>>();
-
-            builder.Register(r =>
-                    new EventConferenceRoomRepository(
-                        _mongoDatabase.GetCollection<EventConferenceRoomRecord>("EventConferenceRoomRecord")))
-                .As<IEntityRepository<EventConferenceRoomRecord>>();
-
-            builder.Register(r =>
-                    new EventConferenceTrackRepository(
-                        _mongoDatabase.GetCollection<EventConferenceTrackRecord>("EventConferenceTrackRecord")))
-                .As<IEntityRepository<EventConferenceTrackRecord>>();
-
-            builder.Register(r =>
-                    new KnowledgeGroupRepository(
-                        _mongoDatabase.GetCollection<KnowledgeGroupRecord>("KnowledgeGroupRecord")))
-                .As<IEntityRepository<KnowledgeGroupRecord>>();
-
-            builder.Register(r =>
-                    new KnowledgeEntryRepository(
-                        _mongoDatabase.GetCollection<KnowledgeEntryRecord>("KnowledgeEntryRecord")))
-                .As<IEntityRepository<KnowledgeEntryRecord>>();
-
-            builder.Register(r =>
-                    new ImageRepository(
-                        _mongoDatabase.GetCollection<ImageRecord>("ImageRecord")))
-                .As<IEntityRepository<ImageRecord>>();
-
-            builder.Register(r =>
-                    new ImageContentRepository(
-                        _mongoDatabase.GetCollection<ImageContentRecord>("ImageContentRecord")))
-                .As<IEntityRepository<ImageContentRecord>>();
-
-            builder.Register(r =>
-                    new DealerRepository(
-                        _mongoDatabase.GetCollection<DealerRecord>("DealerRecord")))
-                .As<IEntityRepository<DealerRecord>>();
-
-            builder.Register(r =>
-                    new AnnouncementRepository(
-                        _mongoDatabase.GetCollection<AnnouncementRecord>("AnnouncementRecord")))
-                .As<IEntityRepository<AnnouncementRecord>>();
+            Register<EntityStorageInfoRepository, IEntityStorageInfoRepository, EntityStorageInfoRecord>(builder);
+            Register<EventRepository, IEntityRepository<EventRecord>, EventRecord>(builder);
+            Register<EventConferenceDayRepository, IEntityRepository<EventConferenceDayRecord>, EventConferenceDayRecord>(builder);
+            Register<EventConferenceRoomRepository, IEntityRepository<EventConferenceRoomRecord>, EventConferenceRoomRecord>(builder);
+            Register<EventConferenceTrackRepository, IEntityRepository<EventConferenceTrackRecord>, EventConferenceTrackRecord>(builder);
+            Register<KnowledgeGroupRepository, IEntityRepository<KnowledgeGroupRecord>, KnowledgeGroupRecord>(builder);
+            Register<KnowledgeEntryRepository, IEntityRepository<KnowledgeEntryRecord>, KnowledgeEntryRecord>(builder);
+            Register<ImageRepository, IEntityRepository<ImageRecord>, ImageRecord>(builder);
+            Register<ImageContentRepository, IEntityRepository<ImageContentRecord>, ImageContentRecord>(builder);
+            Register<DealerRepository, IEntityRepository<DealerRecord>, DealerRecord>(builder);
+            Register<AnnouncementRepository, IEntityRepository<AnnouncementRecord>, AnnouncementRecord>(builder);
         }
     }
 }
