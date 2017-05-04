@@ -18,6 +18,8 @@ using Swashbuckle.Swagger.Model;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
 using Eurofurence.App.Server.Services.Security;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -56,6 +58,8 @@ namespace Eurofurence.App.Server.Web
                     options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 });
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSwaggerGen();
             services.ConfigureSwaggerGen(options =>
@@ -98,6 +102,9 @@ namespace Eurofurence.App.Server.Web
                 ConventionNumber = 23,
                 DefaultTokenLifeTime = TimeSpan.FromDays(30)
             });
+
+            builder.Register(c => new ApiPrincipal((c.Resolve<IHttpContextAccessor>().HttpContext.User as ClaimsPrincipal)))
+                .As<ApiPrincipal>();
 
             var container = builder.Build();
             return container.Resolve<IServiceProvider>();

@@ -18,6 +18,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<EventConferenceTrackService>().As<IEventConferenceTrackService>();
             builder.RegisterType<EventConferenceRoomService>().As<IEventConferenceRoomService>();
             builder.RegisterType<EventConferenceDayService>().As<IEventConferenceDayService>();
+            builder.RegisterType<EventFeedbackService>().As<IEventFeedbackService>();
             builder.RegisterType<KnowledgeGroupService>().As<IKnowledgeGroupService>();
             builder.RegisterType<KnowledgeEntryService>().As<IKnowledgeEntryService>();
             builder.RegisterType<ImageService>().As<IImageService>();

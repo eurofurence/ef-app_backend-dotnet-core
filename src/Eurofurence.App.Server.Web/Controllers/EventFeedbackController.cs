@@ -1,0 +1,61 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Security;
+using Microsoft.AspNetCore.Authorization;
+
+namespace Eurofurence.App.Server.Web.Controllers
+{
+    [Route("Api/v2/[controller]")]
+    public class EventFeedbackController : Controller
+    {
+        readonly IEventFeedbackService _eventFeedbackService;
+        readonly ApiPrincipal _apiPrincipal;
+        readonly IEventService _eventService;
+
+        public EventFeedbackController(
+            IEventFeedbackService eventFeedbackService, 
+            IEventService eventService,            
+            ApiPrincipal apiPrincipal)
+        {
+            _eventService = eventService;
+            _apiPrincipal = apiPrincipal;
+            _eventFeedbackService = eventFeedbackService;
+        }
+
+        [HttpGet]
+        [Authorize(Roles="System,Developer,Attendee")]
+        [ProducesResponseType(typeof(IEnumerable<EventFeedbackRecord>), 200)]
+        public Task<IEnumerable<EventFeedbackRecord>> GetEventFeedbackAsync()
+        {
+            if (_apiPrincipal.IsAttendee)
+            {
+                return _eventFeedbackService.FindAllAsync(a => a.AuthorUid == _apiPrincipal.Uid);
+            }
+
+            return null;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "System,Developer,Attendee")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        public async Task<ActionResult> PostEventFeedbackAsync([FromBody] EventFeedbackRecord record)
+        {
+            if (record == null) return BadRequest();
+
+            if (await _eventService.FindOneAsync(record.EventId) == null)
+                return BadRequest($"No event with id {record.EventId}");
+
+            record.Touch();
+            record.NewId();
+            record.AuthorUid = _apiPrincipal.Uid;
+
+            await _eventFeedbackService.InsertOneAsync(record);
+
+            return Ok();
+        }
+    }
+}

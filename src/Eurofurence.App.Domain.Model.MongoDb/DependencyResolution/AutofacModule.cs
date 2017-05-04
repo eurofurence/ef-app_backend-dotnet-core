@@ -35,6 +35,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<EventConferenceDayRepository, IEntityRepository<EventConferenceDayRecord>, EventConferenceDayRecord>(builder);
             Register<EventConferenceRoomRepository, IEntityRepository<EventConferenceRoomRecord>, EventConferenceRoomRecord>(builder);
             Register<EventConferenceTrackRepository, IEntityRepository<EventConferenceTrackRecord>, EventConferenceTrackRecord>(builder);
+            Register<EventFeedbackRepository, IEntityRepository<EventFeedbackRecord>, EventFeedbackRecord>(builder);
             Register<KnowledgeGroupRepository, IEntityRepository<KnowledgeGroupRecord>, KnowledgeGroupRecord>(builder);
             Register<KnowledgeEntryRepository, IEntityRepository<KnowledgeEntryRecord>, KnowledgeEntryRecord>(builder);
             Register<ImageRepository, IEntityRepository<ImageRecord>, ImageRecord>(builder);

@@ -50,11 +50,12 @@ namespace Eurofurence.App.Server.Services.Security
 
             var claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Name, $"{_authenticationSettings.ConventionNumber}:{request.RegNo}"),
+                new Claim(ClaimTypes.Name, $"RegSys:{_authenticationSettings.ConventionNumber}:{request.RegNo}"),
                 new Claim(ClaimTypes.GivenName, request.Username.ToLower()),
                 new Claim(ClaimTypes.PrimarySid, request.RegNo.ToString()),
                 new Claim(ClaimTypes.GroupSid, _authenticationSettings.ConventionNumber.ToString()),
-                new Claim(ClaimTypes.Role, "Attendee")
+                new Claim(ClaimTypes.Role, "Attendee"),
+                new Claim(ClaimTypes.System, "RegSys")
             };
 
             var expiration = DateTime.UtcNow.Add(_authenticationSettings.DefaultTokenLifeTime);

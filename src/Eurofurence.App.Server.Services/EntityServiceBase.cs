@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model;
@@ -32,6 +33,11 @@ namespace Eurofurence.App.Server.Services
         public virtual Task<IEnumerable<T>> FindAllAsync()
         {
             return _entityRepository.FindAllAsync();
+        }
+
+        public Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> filter)
+        {
+            return _entityRepository.FindAllAsync(filter);
         }
 
         public virtual async Task ReplaceOneAsync(T entity)
