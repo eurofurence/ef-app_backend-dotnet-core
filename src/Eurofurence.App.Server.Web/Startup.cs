@@ -17,6 +17,7 @@ using Serilog;
 using Swashbuckle.Swagger.Model;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
+using Eurofurence.App.Server.Services.Security;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -86,6 +87,17 @@ namespace Eurofurence.App.Server.Web
             builder.Populate(services);
             builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(database));
             builder.RegisterModule(new Services.DependencyResolution.AutofacModule());
+            builder.RegisterInstance(new TokenFactorySettings()
+            {
+                SecretKey = Configuration["oAuth:secretKey"],
+                Audience = Configuration["oAuth:Audience"],
+                Issuer = Configuration["oAuth:Issuer"]
+            });
+            builder.RegisterInstance(new AuthenticationSettings()
+            {
+                ConventionNumber = 23,
+                DefaultTokenLifeTime = TimeSpan.FromDays(30)
+            });
 
             var container = builder.Build();
             return container.Resolve<IServiceProvider>();

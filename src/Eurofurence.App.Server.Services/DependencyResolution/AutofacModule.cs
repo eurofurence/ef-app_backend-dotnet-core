@@ -4,6 +4,7 @@ using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
 using Eurofurence.App.Server.Services.Images;
+using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
@@ -22,6 +23,10 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<ImageService>().As<IImageService>();
             builder.RegisterType<DealerService>().As<IDealerService>();
             builder.RegisterType<AnnouncementService>().As<IAnnouncementService>();
+
+            builder.RegisterType<TokenFactory>().As<ITokenFactory>();
+            builder.RegisterType<RegSysAuthenticationBridge>().As<IRegSysAuthenticationBridge>();
+            builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();
         }
     }
 }
