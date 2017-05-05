@@ -15,11 +15,11 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using Swashbuckle.Swagger.Model;
-using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
 using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Eurofurence.App.Server.Services.PushNotifications;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -94,13 +94,18 @@ namespace Eurofurence.App.Server.Web
             builder.RegisterInstance(new TokenFactorySettings()
             {
                 SecretKey = Configuration["oAuth:secretKey"],
-                Audience = Configuration["oAuth:Audience"],
-                Issuer = Configuration["oAuth:Issuer"]
+                Audience = Configuration["oAuth:audience"],
+                Issuer = Configuration["oAuth:issuer"]
             });
             builder.RegisterInstance(new AuthenticationSettings()
             {
                 ConventionNumber = 23,
                 DefaultTokenLifeTime = TimeSpan.FromDays(30)
+            });
+            builder.RegisterInstance(new WnsConfiguration()
+            {
+                ClientId = Configuration["wns:clientId"],
+                ClientSecret = Configuration["wns:clientSecret"]
             });
 
             builder.Register(c => new ApiPrincipal((c.Resolve<IHttpContextAccessor>().HttpContext.User as ClaimsPrincipal)))

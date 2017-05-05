@@ -16,9 +16,11 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class AnnouncementsController : Controller
     {
         readonly IAnnouncementService _announcementService;
+        readonly IWnsChannelManager _wnsChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService)
+        public AnnouncementsController(IAnnouncementService announcementService, IWnsChannelManager wnsChannelManager)
         {
+            _wnsChannelManager = wnsChannelManager;
             _announcementService = announcementService;
         }
 
@@ -68,6 +70,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
             await _announcementService.DeleteOneAsync(id);
 
+            _wnsChannelManager.PushSyncUpdateRequestAsync("Debug");
+
             return Ok();
         }
 
@@ -80,6 +84,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             record.NewId();
 
             await _announcementService.InsertOneAsync(record);
+            _wnsChannelManager.PushSyncUpdateRequestAsync("Debug");
 
             return Ok();
         }
@@ -89,6 +94,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> ClearAnnouncementAsync()
         {
             await _announcementService.DeleteAllAsync();
+            _wnsChannelManager.PushSyncUpdateRequestAsync("Debug");
             return Ok();
         }
     }

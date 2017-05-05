@@ -1,9 +1,8 @@
 ﻿using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -20,6 +19,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
+        }
+
+        public class ToastTest
+        {
+            public string Topic { get; set; }
+            public string Message { get; set; }
+        }
+
+        [HttpPost("WnsToast")]
+        [Authorize(Roles="Developer")]
+        public async Task<ActionResult> PostWnsToastAsync([FromBody] ToastTest request)
+        {
+            await _wnsChannelManager.SendToastAsync(request.Topic, request.Message);
+            return Ok();
         }
 
         public class PostWnsChannelRegistrationRequest

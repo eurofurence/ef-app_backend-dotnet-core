@@ -48,7 +48,7 @@ namespace Eurofurence.App.Tools.CliToolBox
 
                     var claims = new List<Claim>();
                     claims.Add(new Claim(ClaimTypes.Name, userArgument.Value));
-                    foreach (var role in rolesArgument.Values) claims.Add(new Claim(ClaimTypes.Role, role.ToUpper()));
+                    foreach (var role in rolesArgument.Values) claims.Add(new Claim(ClaimTypes.Role, role));
 
                     var token = CreateOAuthBearerToken(claims, DateTime.UtcNow.AddHours(hours));
 
