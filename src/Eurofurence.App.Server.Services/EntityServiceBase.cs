@@ -18,11 +18,16 @@ namespace Eurofurence.App.Server.Services
     {
         private readonly IEntityRepository<T> _entityRepository;
         private readonly IStorageService _storageService;
+        readonly bool _useSoftDelete;
 
-        public EntityServiceBase(IEntityRepository<T> entityRepository, IStorageServiceFactory storageServiceFactory)
+        public EntityServiceBase(
+            IEntityRepository<T> entityRepository, 
+            IStorageServiceFactory storageServiceFactory,
+            bool useSoftDelete = true)
         {
             _entityRepository = entityRepository;
             _storageService = storageServiceFactory.CreateStorageService<T>();
+            _useSoftDelete = useSoftDelete;
         }
 
         public virtual Task<T> FindOneAsync(Guid id)
@@ -56,11 +61,18 @@ namespace Eurofurence.App.Server.Services
 
         public virtual async Task DeleteOneAsync(Guid id)
         {
-            var entity = await _entityRepository.FindOneAsync(id);
-            entity.IsDeleted = 1;
-            entity.Touch();
+            if (_useSoftDelete)
+            {
+                var entity = await _entityRepository.FindOneAsync(id);
+                entity.IsDeleted = 1;
+                entity.Touch();
 
-            await _entityRepository.ReplaceOneAsync(entity);
+                await _entityRepository.ReplaceOneAsync(entity);
+            }
+            else
+            {
+                await _entityRepository.DeleteOneAsync(id);
+            }
             await _storageService.TouchAsync();
         }
 
