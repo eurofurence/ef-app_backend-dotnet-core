@@ -60,6 +60,7 @@ namespace Eurofurence.App.Server.Web
                 });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddCors();
 
             services.AddSwaggerGen();
             services.ConfigureSwaggerGen(options =>
@@ -146,6 +147,13 @@ namespace Eurofurence.App.Server.Web
                     name: "default",
                     template: "{controller=Test}/{action=Index}/{id?}");
             });
+
+            app.UseCors(builder =>
+                builder
+                    .WithMethods("GET", "POST", "HEAD")
+                    .AllowAnyHeader()
+                    .AllowAnyOrigin());
+
 
             app.UseSwagger();
             app.UseSwaggerUi("swagger/v2/ui", "/swagger/v2/swagger.json");
