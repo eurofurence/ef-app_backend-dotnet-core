@@ -43,6 +43,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             foreach (var recipient in recipients)
             {
+                #pragma warning disable CS4014
                 Task.Run(async () =>
                 {
                     using (var client = new HttpClient())
@@ -54,12 +55,13 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
                         var result = await client.PostAsync(recipient.ChannelUri, payload);
 
-                        if (!result.IsSuccessStatusCode)
+                        if (!result.IsSuccessStatusCode)    
                         {
                             _pushNotificationRepository.DeleteOneAsync(recipient.Id);
                         }
                     }
                 });
+                #pragma warning restore CS4014
             }
 
         }
@@ -71,6 +73,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             foreach(var recipient in recipients)
             {
+                #pragma warning disable CS4014
                 Task.Run(async () =>
                 {
                     using (var client = new HttpClient())
@@ -89,6 +92,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         }
                     }
                 });
+                #pragma warning restore CS4014
             }
 
         }
