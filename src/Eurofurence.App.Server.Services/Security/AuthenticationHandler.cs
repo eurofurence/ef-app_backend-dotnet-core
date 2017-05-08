@@ -15,7 +15,6 @@ namespace Eurofurence.App.Server.Services.Security
 
     public class AuthenticationResponse
     {
-        public bool IsSuccessful { get; set; }
         public string Username { get; set; }
         public string Token { get; set; }
         public DateTime TokenValidUntil { get; set; }
@@ -45,7 +44,7 @@ namespace Eurofurence.App.Server.Services.Security
 
             if (!isValid)
             {
-                return new AuthenticationResponse() { IsSuccessful = false };
+                return null;
             }
 
             var claims = new List<Claim>()
@@ -63,7 +62,6 @@ namespace Eurofurence.App.Server.Services.Security
 
             var response = new AuthenticationResponse()
             {
-                IsSuccessful = true,
                 Token = token,
                 TokenValidUntil = expiration,
                 Username = $"{request.Username.ToLower()} ({request.RegNo})"

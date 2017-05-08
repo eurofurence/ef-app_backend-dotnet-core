@@ -13,5 +13,15 @@ namespace Eurofurence.App.Server.Web.Extensions
 
             return obj;
         }
+
+        public static T Transient403<T>(this T obj, HttpContext context)
+        {
+            if (obj == null)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            }
+
+            return obj;
+        }
     }
 }

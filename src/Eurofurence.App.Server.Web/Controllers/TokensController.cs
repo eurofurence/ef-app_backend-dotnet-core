@@ -2,6 +2,7 @@
 using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Web.Extensions;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -16,9 +17,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPost("RegSys")]
-        public Task<AuthenticationResponse> PostRegSysAuthenticationRequest([FromBody] RegSysAuthenticationRequest request)
+        [ProducesResponseType(typeof(AuthenticationResponse), 200)]
+        [ProducesResponseType(403)]
+        public async Task<AuthenticationResponse> PostRegSysAuthenticationRequest([FromBody] RegSysAuthenticationRequest request)
         {
-            return  _authenticationHandler.AuthorizeViaRegSys(request);
+            return (await _authenticationHandler.AuthorizeViaRegSys(request))
+                .Transient403(HttpContext);
         }
     }
 }

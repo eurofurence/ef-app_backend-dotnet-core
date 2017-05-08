@@ -20,6 +20,9 @@ using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using Eurofurence.App.Server.Services.PushNotifications;
+using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Cors.Internal;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -51,6 +54,15 @@ namespace Eurofurence.App.Server.Web
 
             Domain.Model.MongoDb.BsonClassMapping.Register();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    cpb => cpb.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+            });
+
             services.AddMvc()
                 .AddJsonOptions(options =>
                 {
@@ -60,7 +72,7 @@ namespace Eurofurence.App.Server.Web
                 });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
+             
             services.AddSwaggerGen();
             services.ConfigureSwaggerGen(options =>
             {
@@ -123,7 +135,7 @@ namespace Eurofurence.App.Server.Web
             loggerfactory.AddSerilog();
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
-            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyOrigin().AllowAnyMethod());
+            app.UseCors("CorsPolicy");
 
             app.UseJwtBearerAuthentication(new JwtBearerOptions()
             {  
@@ -140,12 +152,16 @@ namespace Eurofurence.App.Server.Web
                 AutomaticChallenge = true
             });
 
+
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Test}/{action=Index}/{id?}");
             });
+
+
+
 
             app.UseSwagger();
             app.UseSwaggerUi("swagger/v2/ui", "/swagger/v2/swagger.json");
