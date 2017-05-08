@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Server.Web\Eurofurence.App.Server.Web.csproj" />
   </ItemGroup>
 
