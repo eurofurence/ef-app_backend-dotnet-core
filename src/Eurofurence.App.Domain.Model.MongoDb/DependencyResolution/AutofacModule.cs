@@ -5,6 +5,7 @@ using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Sync;
@@ -44,6 +45,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<DealerRepository, IEntityRepository<DealerRecord>, DealerRecord>(builder);
             Register<AnnouncementRepository, IEntityRepository<AnnouncementRecord>, AnnouncementRecord>(builder);
             Register<PushNotificationChannelRepository, IEntityRepository<PushNotificationChannelRecord>, PushNotificationChannelRecord>(builder);
+            Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
         }
     }
 }

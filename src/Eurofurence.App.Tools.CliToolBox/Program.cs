@@ -1,6 +1,11 @@
-﻿using Microsoft.Extensions.CommandLineUtils;
+﻿using Autofac;
+using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Maps;
+using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,11 +21,22 @@ namespace Eurofurence.App.Tools.CliToolBox
 
         static void Main(string[] args)
         {
-            var builder = new ConfigurationBuilder()
+            var configurationBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json");
 
-            Configuration = builder.Build();
+            Configuration = configurationBuilder.Build();
+
+            var client = new MongoClient(Configuration["mongoDb:url"]);
+            var database = client.GetDatabase(Configuration["mongoDb:database"]);
+
+            Domain.Model.MongoDb.BsonClassMapping.Register();
+
+            var builder = new ContainerBuilder();
+            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(database));
+            builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
+
+            var container = builder.Build();
 
             var app = new CommandLineApplication();
 

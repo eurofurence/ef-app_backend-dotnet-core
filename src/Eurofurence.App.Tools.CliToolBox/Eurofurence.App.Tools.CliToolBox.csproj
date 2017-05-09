@@ -6,13 +6,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.1" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="5.1.3" />
+    <PackageReference Include="MongoDB.Driver" Version="2.4.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.3" />
     <PackageReference Include="System.Security.Claims" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
   </ItemGroup>
 
 </Project>

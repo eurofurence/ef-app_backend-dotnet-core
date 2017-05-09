@@ -11,7 +11,8 @@ namespace Eurofurence.App.Domain.Model.Fragments
         {
             WebExternal,
             MapExternal,
-            MapInternal
+            MapInternal,
+            DealerDetail
         }
 
         [Required]

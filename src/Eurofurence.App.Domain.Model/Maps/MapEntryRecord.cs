@@ -1,0 +1,23 @@
+﻿using Eurofurence.App.Domain.Model.Fragments;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
+
+namespace Eurofurence.App.Domain.Model.Maps
+{
+    [DataContract]
+    public class MapEntryRecord
+    {
+        [DataMember]
+        public double RelativeX { get; set; }
+        [DataMember]
+        public double RelativeY { get; set; }
+        [DataMember]
+        public double RelativeTapRadius { get; set; }
+        [DataMember]
+        public LinkFragment Link { get; set; }
+
+        [IgnoreDataMember]
+        public virtual MapRecord Map { get; set; }
+    }
+}
