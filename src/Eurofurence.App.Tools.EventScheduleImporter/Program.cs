@@ -108,6 +108,10 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
                 .Map(s => s.Duration, t => t.Duration)
                 .Map(s => s.StartTime, t => t.StartTime)
                 .Map(s => s.EndTime, t => t.EndTime)
+                .Map(s => DateTime.SpecifyKind(CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
+                        .Date.Add(s.StartTime), DateTimeKind.Utc).AddHours(-2), t => t.StartDateTimeUtc)
+                .Map(s => DateTime.SpecifyKind(CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
+                        .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc), t => t.EndDateTimeUtc)
                 .Map(s => s.PanelHosts, t => t.PanelHosts);
 
             var diff = patch.Patch(ImportEventEntries, eventRecords);
@@ -120,7 +124,7 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
 
         public static void Main(string[] args)
         {
-            var _client = new MongoClient("mongodb://database:27017");
+            var _client = new MongoClient("mongodb://localhost:27018");
             var _database = _client.GetDatabase("app_dev");
 
             Eurofurence.App.Domain.Model.MongoDb.BsonClassMapping.Register();
