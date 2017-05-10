@@ -92,8 +92,8 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
 
             patch.Map(s => s.EventId, t => t.SourceEventId)
                 .Map(s => s.Slug, t => t.Slug)
-                .Map(s => s.Title.Split('|')[0], t => t.Title)
-                .Map(s => (s.Title + '|').Split('|')[1], t => t.SubTitle)
+                .Map(s => s.Title.Split('–')[0]?.Trim(), t => t.Title)
+                .Map(s => (s.Title + '–').Split('–')[1]?.Trim(), t => t.SubTitle)
                 .Map(s => s.Abstract, t => t.Abstract)
                 .Map(
                     s => CurrentConferenceTracks.Single(a => a.Name == s.ConferenceTrack).Id,
@@ -148,6 +148,13 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             csv.Configuration.RegisterClassMap<EventImportRowClassMap>();
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
 
+            foreach(var record in csvRecords)
+            {
+                record.ConferenceDayName = record.ConferenceDayName.Contains(" - ") ?
+                        record.ConferenceDayName.Split(new string[] { " - " }, StringSplitOptions.None)[1].Trim()
+                        : record.ConferenceDayName.Trim();
+            }
+
             var conferenceTracks = csvRecords.Select(a => a.ConferenceTrack)
                 .Distinct().OrderBy(a => a).ToList();
 
@@ -157,7 +164,6 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             var conferenceDays = csvRecords.Select(a => 
                 new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay), DateTimeKind.Utc), a.ConferenceDayName))
                 .Distinct().OrderBy(a => a).ToList();
-
 
             var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, eventConferenceTrackService);
             var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, eventConferenceRoomService);
