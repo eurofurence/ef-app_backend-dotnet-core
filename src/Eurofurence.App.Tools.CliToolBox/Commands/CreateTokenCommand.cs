@@ -9,18 +9,24 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
-    public class CreateTokenCommand : ICommand
+    public class TokenCommand : ICommand
     {
-        public string Name => "createToken";
+        public string Name => "token";
 
         readonly TokenFactorySettings _settings;
 
-        public CreateTokenCommand(TokenFactorySettings settings)
+        public TokenCommand(TokenFactorySettings settings)
         {
             _settings = settings;
         }
 
         public void Register(CommandLineApplication command)
+        {
+            command.HelpOption("-?|-h|--help");
+            command.Command("create", createTokenCommand);
+        }
+
+        private void createTokenCommand(CommandLineApplication command)
         {
             command.Description = "Create a JWT bearer token for authentication against the API";
             command.HelpOption("-?|-h|--help");
@@ -32,8 +38,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
             command.OnExecute(() =>
             {
-                int hours = 1;
-                int.TryParse(hoursArgument.Value(), out hours);
+                if (!int.TryParse(hoursArgument.Value(), out int hours)) hours = 1;
 
                 Console.WriteLine($"User: {userArgument.Value}");
                 Console.WriteLine($"Roles: {String.Join(",", rolesArgument.Values)}");

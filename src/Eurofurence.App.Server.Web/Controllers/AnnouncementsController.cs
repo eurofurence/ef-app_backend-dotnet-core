@@ -48,20 +48,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
-        /// <summary>
-        /// Retrieves a delta of announcement entries since a given timestamp.
-        /// </summary>
-        /// <param name="since" type="query">Delta reference, date time in ISO 8610. If set, only items with a 
-        /// LastChangeDateTimeUtc >= the specified value will be returned. If not set, API will return the current set 
-        /// of records without deleted items. If set, items deleted since the delta specified will be returned with an 
-        /// IsDeleted flag set.</param>
-        [HttpGet("Delta")]
-        [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(DeltaResponse<AnnouncementRecord>), 200)]
-        public Task<DeltaResponse<AnnouncementRecord>> GetAnnouncementEntriesDeltaAsync([FromQuery] DateTime? since = null)
-        {
-            return _announcementService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since);
-        }
+        
 
         [HttpDelete("{Id}")]
         [Authorize(Roles = "System,Developer")]

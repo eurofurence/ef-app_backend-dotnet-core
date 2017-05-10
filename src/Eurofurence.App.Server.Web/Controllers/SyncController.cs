@@ -18,6 +18,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         readonly IImageService _imageService;
         readonly IDealerService _dealerService;
         readonly IAnnouncementService _announcementService;
+        readonly IMapService _mapService;
 
         public SyncController(
             IEventService eventService,
@@ -28,7 +29,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IKnowledgeEntryService knowledgeEntryService,
             IImageService imageService,
             IDealerService dealerService,
-            IAnnouncementService announcementService
+            IAnnouncementService announcementService,
+            IMapService mapService
             )
         {
             _eventConferenceTrackService = eventConferenceTrackService;
@@ -40,6 +42,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _imageService = imageService;
             _dealerService = dealerService;
             _announcementService = announcementService;
+            _mapService = mapService;
         }
 
         /// <summary>
@@ -62,7 +65,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                 KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
                 Images = await _imageService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
                 Dealers = await _dealerService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                Announcements = await _announcementService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
+                Announcements = await _announcementService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
+                Maps = await _mapService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
             };
 
             return response;
