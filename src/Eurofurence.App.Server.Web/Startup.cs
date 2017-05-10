@@ -23,6 +23,7 @@ using Eurofurence.App.Server.Services.PushNotifications;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
+using Eurofurence.App.Server.Web.Extensions;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -66,7 +67,7 @@ namespace Eurofurence.App.Server.Web
             services.AddMvc()
                 .AddJsonOptions(options =>
                 {
-                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
                     options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 });
