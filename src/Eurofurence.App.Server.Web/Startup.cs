@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Filter;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
@@ -130,10 +131,18 @@ namespace Eurofurence.App.Server.Web
 
         public void Configure(
             IApplicationBuilder app,
+            IHostingEnvironment env,
             ILoggerFactory loggerfactory,
             IApplicationLifetime appLifetime)
         {
-            loggerfactory.AddSerilog();
+            loggerfactory
+                .WithFilter(new FilterLoggerSettings
+                {
+                    { "Microsoft", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning },
+                    { "System",  env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning }
+                })
+                .AddSerilog();
+                    
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             app.UseCors("CorsPolicy");
