@@ -9,6 +9,10 @@ namespace Eurofurence.App.Domain.Model.Maps
     public class MapEntryRecord
     {
         [DataMember]
+        [Required]
+        public Guid Id { get; set; }
+
+        [DataMember]
         public double RelativeX { get; set; }
         [DataMember]
         public double RelativeY { get; set; }
