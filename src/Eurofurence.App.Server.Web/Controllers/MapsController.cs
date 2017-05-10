@@ -14,10 +14,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class MapsController : Controller
     {
         readonly IMapService _mapService;
+        readonly ILinkFragmentValidator _linkFragmentValidator;
 
-        public MapsController(IMapService mapService)
+        public MapsController(IMapService mapService, ILinkFragmentValidator linkFragmentValidator)
         {
             _mapService = mapService;
+            _linkFragmentValidator = linkFragmentValidator;
         }
 
         /// <summary>
@@ -143,8 +145,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (record == null) return BadRequest();
             if (record.Id != entryId) return BadRequest("Entity id must match resource id");
+
             var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
+
+            var linkValidation = await _linkFragmentValidator.ValidateAsync(record.Link);
+            if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
 
             map.Entries.Remove(map.Entries.SingleOrDefault(a => a.Id == entryId));
             map.Entries.Add(record);
@@ -152,6 +158,5 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _mapService.ReplaceOneAsync(map);
             return Ok(record.Id);
         }
-
     }
 }

@@ -3,6 +3,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
+using Eurofurence.App.Server.Services.Validation;
 using Eurofurence.App.Server.Services.Images;
 using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
@@ -33,6 +34,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
             builder.RegisterType<WnsChannelManager>().As<IWnsChannelManager>();
+            builder.RegisterType<LinkFragmentValidator>().As<ILinkFragmentValidator>();
         }
     }
 }
