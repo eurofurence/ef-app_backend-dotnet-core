@@ -22,19 +22,35 @@ namespace Eurofurence.App.Domain.Model.Dealers
 
         [Required]
         [DataMember]
+        public string Merchandise { get; set; }
+
+        [DataMember]
         public string ShortDescription { get; set; }
 
-        [Required]
         [DataMember]
         public string AboutTheArtistText { get; set; }
 
-        [Required]
         [DataMember]
         public string AboutTheArtText { get; set; }
 
         [Required]
         [DataMember]
         public LinkFragment[] Links { get; set; }
+
+        [DataMember]
+        public string TwitterHandle { get; set; }
+
+        [DataMember]
+        public string TelegramHandle { get; set; }
+
+        [DataMember]
+        public bool AttendsOnThursday { get; set; }
+
+        [DataMember]
+        public bool AttendsOnFriday { get; set; }
+
+        [DataMember]
+        public bool AttendsOnSaturday { get; set; }
 
         [DataMember]
         public string ArtPreviewCaption { get; set; }
