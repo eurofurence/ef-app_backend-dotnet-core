@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Eurofurence.App.Domain.Model.Announcements;
+using System;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Abstractions
@@ -10,5 +11,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
         Task SendToastAsync(string topic, string message);
 
         Task PushSyncUpdateRequestAsync(string topic);
+
+        Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement);
     }
 }

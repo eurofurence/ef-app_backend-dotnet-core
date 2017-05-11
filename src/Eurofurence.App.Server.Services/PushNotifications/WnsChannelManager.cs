@@ -1,4 +1,5 @@
 ﻿using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions;
 using System;
@@ -33,6 +34,17 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public Task PushSyncUpdateRequestAsync(string topic)
         {
             return SendRawAsync(topic, "update");
+        }
+
+        public Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement)
+        {
+            var message = new
+            {
+                Event = "NewAnnouncement",
+                Content = announcement
+            };
+
+            return SendRawAsync(topic, Newtonsoft.Json.JsonConvert.SerializeObject(message));
         }
 
 
