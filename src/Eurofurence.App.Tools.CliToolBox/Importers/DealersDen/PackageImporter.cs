@@ -25,8 +25,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             _output = output;
             _dealerService = dealerService;
             _imageService = imageService;
-
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
         public async Task ImportZipPackageAsync(string fileName)
@@ -38,10 +36,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             {
                 var csvEntry = archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase));
 
-                TextReader reader = new StreamReader(csvEntry.Open(), Encoding.UTF8);
+                TextReader reader = new StreamReader(csvEntry.Open(), true);
 
                 var csvReader = new CsvReader(reader);
                 csvReader.Configuration.RegisterClassMap<DealerImportRowClassMap>();
+                csvReader.Configuration.Delimiter = ";";
                 var csvRecords = csvReader.GetRecords<DealerImportRow>().ToList();
 
                 _output?.WriteLine($"Parsed {csvRecords.Count} records from CSV");
