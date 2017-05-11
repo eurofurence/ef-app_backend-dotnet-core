@@ -38,7 +38,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             {
                 var csvEntry = archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase));
 
-                TextReader reader = new StreamReader(csvEntry.Open(), Encoding.GetEncoding(1252));
+                TextReader reader = new StreamReader(csvEntry.Open(), Encoding.UTF8);
 
                 var csvReader = new CsvReader(reader);
                 csvReader.Configuration.RegisterClassMap<DealerImportRowClassMap>();
