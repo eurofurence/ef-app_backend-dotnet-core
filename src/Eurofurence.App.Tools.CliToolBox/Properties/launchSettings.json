@@ -1,7 +1,8 @@
 {
   "profiles": {
     "Eurofurence.App.Tools.CliToolBox": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "dealers importZipPackage  -inputPath=c:\\temp\\appdata23.zip"
     }
   }
 }
