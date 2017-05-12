@@ -11,20 +11,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Filter;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
+using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.Swagger.Model;
-using Newtonsoft.Json.Serialization;
 using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using Eurofurence.App.Server.Services.PushNotifications;
-using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Eurofurence.App.Server.Web.Extensions;
+using Amazon.CloudWatchLogs;
+using Amazon.Runtime;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -36,11 +34,6 @@ namespace Eurofurence.App.Server.Web
         public Startup(IHostingEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
-
-            Log.Logger = new LoggerConfiguration()
-              .Enrich.FromLogContext()
-              .WriteTo.ColoredConsole()
-              .CreateLogger();
 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -132,16 +125,31 @@ namespace Eurofurence.App.Server.Web
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
-            ILoggerFactory loggerfactory,
+            ILoggerFactory loggerFactory,
             IApplicationLifetime appLifetime)
         {
-            loggerfactory
-                .WithFilter(new FilterLoggerSettings
-                {
-                    { "Microsoft", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning },
-                    { "System",  env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning }
-                })
-                .AddSerilog();
+            var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();
+
+            if (env.IsDevelopment())
+            {
+                loggerConfiguration.WriteTo.ColoredConsole();
+            }
+            else
+            {
+                var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + env.EnvironmentName;
+
+                AWSCredentials credentials = new BasicAWSCredentials(Configuration["aws:accessKey"], Configuration["aws:secret"]);
+                IAmazonCloudWatchLogs client = new AmazonCloudWatchLogsClient(credentials, Amazon.RegionEndpoint.EUCentral1);
+                CloudWatchSinkOptions options = new CloudWatchSinkOptions {
+                    LogGroupName = logGroupName,
+                    LogEventRenderer = new CustomLogEventRenderer()
+                };
+
+                loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
+            }
+
+            Log.Logger = loggerConfiguration.CreateLogger();
+            loggerFactory.AddSerilog();
                     
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
@@ -162,16 +170,12 @@ namespace Eurofurence.App.Server.Web
                 AutomaticChallenge = true
             });
 
-
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Test}/{action=Index}/{id?}");
             });
-
-
-
 
             app.UseSwagger();
             app.UseSwaggerUi("swagger/v2/ui", "/swagger/v2/swagger.json");
