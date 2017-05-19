@@ -64,7 +64,9 @@ namespace Eurofurence.App.Server.Web
                     options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
                     options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                });
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.IsoDateTimeConverter()
+                        { DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffK" });
+                    });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
              
