@@ -26,7 +26,6 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         public SyncController(
             ILoggerFactory loggerFactory,
-            IHttpContextAccessor httpContextAccessor,
             IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
@@ -39,7 +38,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             IMapService mapService
             )
         {
-            _httpContextAccessor = httpContextAccessor;
             _logger = loggerFactory.CreateLogger(GetType());
             _eventConferenceTrackService = eventConferenceTrackService;
             _eventConferenceRoomService = eventConferenceRoomService;
@@ -60,7 +58,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
-            _logger.LogInformation("Execute=Sync, Since={since}, Ip={ip}", since, _httpContextAccessor.HttpContext.Connection.RemoteIpAddress);
+            _logger.LogInformation("Execute=Sync, Since={since}", since);
 
             var response = new AggregatedDeltaResponse()
             {
