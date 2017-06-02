@@ -151,8 +151,15 @@ namespace Eurofurence.App.Server.Web
             }
 
             Log.Logger = loggerConfiguration.CreateLogger();
-            loggerFactory.AddSerilog();
-                    
+            loggerFactory
+                .WithFilter(new FilterLoggerSettings
+                {
+                    { "Microsoft", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning },
+                    { "System",  env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning }
+                })
+               .AddSerilog();
+
+
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             app.UseCors("CorsPolicy");

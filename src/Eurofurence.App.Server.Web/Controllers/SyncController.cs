@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -19,8 +21,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         readonly IDealerService _dealerService;
         readonly IAnnouncementService _announcementService;
         readonly IMapService _mapService;
+        readonly ILogger _logger;
+        readonly IHttpContextAccessor _httpContextAccessor;
 
         public SyncController(
+            ILoggerFactory loggerFactory,
+            IHttpContextAccessor httpContextAccessor,
             IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
@@ -33,6 +39,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IMapService mapService
             )
         {
+            _httpContextAccessor = httpContextAccessor;
+            _logger = loggerFactory.CreateLogger(GetType());
             _eventConferenceTrackService = eventConferenceTrackService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceDayService = eventConferenceDayService;
@@ -50,8 +58,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<AggregatedDeltaResponse> GetDeltaAsync(DateTime? since = null)
+        public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
+            _logger.LogInformation("Execute=Sync, Since={since}, Ip={ip}", since, _httpContextAccessor.HttpContext.Connection.RemoteIpAddress);
+
             var response = new AggregatedDeltaResponse()
             {
                 Since = since,
