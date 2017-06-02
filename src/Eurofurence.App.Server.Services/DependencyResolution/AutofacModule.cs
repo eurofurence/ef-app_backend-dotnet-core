@@ -9,6 +9,7 @@ using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
+using Eurofurence.App.Server.Services.Communication;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
 {
@@ -35,6 +36,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
             builder.RegisterType<WnsChannelManager>().As<IWnsChannelManager>();
             builder.RegisterType<LinkFragmentValidator>().As<ILinkFragmentValidator>();
+            builder.RegisterType<PrivateMessageService>().As<IPrivateMessageService>();
         }
     }
 }

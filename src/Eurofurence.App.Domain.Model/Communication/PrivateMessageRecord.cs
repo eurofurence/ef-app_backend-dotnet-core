@@ -1,0 +1,27 @@
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
+
+namespace Eurofurence.App.Domain.Model.Communication
+{
+    [DataContract]
+    public class PrivateMessageRecord : EntityBase
+    {
+        [DataMember]
+        [Required]
+        public string RecipientUid { get; set; }
+
+        [DataMember]
+        [Required]
+        public DateTime CreatedDateTimeUtc { get; set; }
+
+        [DataMember]
+        public string AuthorName { get; set; }
+
+        [DataMember]
+        public string Subject { get; set; }
+
+        [DataMember]
+        public string Message { get; set; }
+    }
+}

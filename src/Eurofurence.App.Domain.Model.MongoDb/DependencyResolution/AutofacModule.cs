@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Images;
@@ -46,6 +47,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<AnnouncementRepository, IEntityRepository<AnnouncementRecord>, AnnouncementRecord>(builder);
             Register<PushNotificationChannelRepository, IEntityRepository<PushNotificationChannelRecord>, PushNotificationChannelRecord>(builder);
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
+            Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
         }
     }
 }
