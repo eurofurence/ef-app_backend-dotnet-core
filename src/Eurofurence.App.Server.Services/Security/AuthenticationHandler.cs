@@ -15,6 +15,7 @@ namespace Eurofurence.App.Server.Services.Security
 
     public class AuthenticationResponse
     {
+        public string Uid { get; set; }
         public string Username { get; set; }
         public string Token { get; set; }
         public DateTime TokenValidUntil { get; set; }
@@ -47,9 +48,11 @@ namespace Eurofurence.App.Server.Services.Security
                 return null;
             }
 
+            var uid = $"RegSys:{_authenticationSettings.ConventionNumber}:{request.RegNo}";
+
             var claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Name, $"RegSys:{_authenticationSettings.ConventionNumber}:{request.RegNo}"),
+                new Claim(ClaimTypes.Name, uid),
                 new Claim(ClaimTypes.GivenName, request.Username.ToLower()),
                 new Claim(ClaimTypes.PrimarySid, request.RegNo.ToString()),
                 new Claim(ClaimTypes.GroupSid, _authenticationSettings.ConventionNumber.ToString()),
@@ -62,6 +65,7 @@ namespace Eurofurence.App.Server.Services.Security
 
             var response = new AuthenticationResponse()
             {
+                Uid = uid,
                 Token = token,
                 TokenValidUntil = expiration,
                 Username = $"{request.Username.ToLower()} ({request.RegNo})"
