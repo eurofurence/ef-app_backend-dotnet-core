@@ -34,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync([FromRoute] Guid messageId)
         {
             var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(messageId, _apiPrincipal.Uid);
-            return result ? (ActionResult)NoContent() : (ActionResult)BadRequest();
+            return result ? (ActionResult)Json(DateTime.UtcNow) : (ActionResult)BadRequest();
         }
 
         [Authorize(Roles = "Developer")]
