@@ -13,5 +13,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
         Task PushSyncUpdateRequestAsync(string topic);
 
         Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement);
+
+        Task PushPrivateMessageNotificationAsync(string recipientUid);
     }
 }

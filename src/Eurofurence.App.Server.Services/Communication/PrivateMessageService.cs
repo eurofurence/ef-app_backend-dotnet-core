@@ -11,12 +11,16 @@ namespace Eurofurence.App.Server.Services.Communication
     public class PrivateMessageService : EntityServiceBase<PrivateMessageRecord>,
         IPrivateMessageService
     {
+        readonly IWnsChannelManager _wnsChannelManager;
+
         public PrivateMessageService(
             IEntityRepository<PrivateMessageRecord> entityRepository,
-            IStorageServiceFactory storageServiceFactory
+            IStorageServiceFactory storageServiceFactory,
+            IWnsChannelManager wnsChannelManager
             )
             : base(entityRepository, storageServiceFactory)
         {
+            _wnsChannelManager = wnsChannelManager;
         }
 
         public async Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(string recipientUid)
@@ -60,6 +64,7 @@ namespace Eurofurence.App.Server.Services.Communication
             entity.NewId();
 
             await InsertOneAsync(entity);
+            await _wnsChannelManager.PushPrivateMessageNotificationAsync(request.RecipientUid);
 
             return entity.Id;
         }

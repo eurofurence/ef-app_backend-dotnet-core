@@ -31,12 +31,27 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _pushNotificationRepository = pushNotificationRepository;
         }
 
-        public Task PushSyncUpdateRequestAsync(string topic)
+        public async Task PushSyncUpdateRequestAsync(string topic)
         {
-            return SendRawAsync(topic, "update");
+            var recipients = await GetAllRecipientsAsyncByTopic(topic);
+            await SendRawAsync(recipients, "update");
         }
 
-        public Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement)
+        private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsync()
+        {
+            return _pushNotificationRepository.FindAllAsync();
+        }
+
+        private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsyncByTopic(string topic)
+        {
+            return _pushNotificationRepository.FindAllAsync(a => a.Topics.Contains(topic));
+        }
+        private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsyncByUid(string uid)
+        {
+            return _pushNotificationRepository.FindAllAsync(a => a.Uid == uid);
+        }
+
+        public async Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement)
         {
             var message = new
             {
@@ -44,16 +59,20 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 Content = announcement
             };
 
-            return SendRawAsync(topic, Newtonsoft.Json.JsonConvert.SerializeObject(message));
+            var recipients = await GetAllRecipientsAsyncByTopic(topic);
+            
+            await  SendRawAsync(recipients, Newtonsoft.Json.JsonConvert.SerializeObject(message));
         }
 
 
-        private async Task SendRawAsync(string topic, string rawContent)
+        private async Task SendRawAsync(IEnumerable<PushNotificationChannelRecord> recipients, string rawContent)
         {
-            var recipients = await _pushNotificationRepository.FindAllAsync(a => a.Topics.Contains(topic));
+            var recipientsList = recipients.ToList();
+            if (recipientsList.Count == 0) return;
+
             var accessToken = await GetWnsAccessTokenAsync();
 
-            foreach (var recipient in recipients)
+            foreach (var recipient in recipientsList)
             {
                 #pragma warning disable CS4014
                 Task.Run(async () =>
@@ -78,9 +97,43 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         }
 
+
+        private async Task SendToastAsync(IEnumerable<PushNotificationChannelRecord> recipients, string title, string message)
+        {
+            var recipientsList = recipients.ToList();
+            if (recipientsList.Count == 0) return;
+
+            var accessToken = await GetWnsAccessTokenAsync();
+
+            foreach (var recipient in recipientsList)
+            {
+                #pragma warning disable CS4014
+                Task.Run(async () =>
+                {
+                    using (var client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+                        client.DefaultRequestHeaders.Add("X-WNS-TYPE", "wns/toast");
+
+                        var xml = $"<?xml version=\"1.0\" encoding=\"utf-8\"?><toast><visual><binding template=\"ToastText01\"><text id=\"1\">{message}</text></binding></visual></toast>";
+                        var payload = new StringContent(xml, Encoding.UTF8, "text/xml");
+
+                        var result = await client.PostAsync(recipient.ChannelUri, payload);
+
+                        if (!result.IsSuccessStatusCode)
+                        {
+                            _pushNotificationRepository.DeleteOneAsync(recipient.Id);
+                        }
+                    }
+                });
+                #pragma warning restore CS4014
+            }
+
+        }
+
         public async Task SendToastAsync(string topic, string message)
         {
-            var recipients = await _pushNotificationRepository.FindAllAsync(a => a.Topics.Contains(topic));
+            var recipients = await GetAllRecipientsAsyncByTopic(topic);
             var accessToken = await GetWnsAccessTokenAsync();
 
             foreach(var recipient in recipients)
@@ -161,5 +214,10 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
         }
 
+        public async Task PushPrivateMessageNotificationAsync(string recipientUid)
+        {
+            var recipients = await GetAllRecipientsAsyncByUid(recipientUid);
+            await SendRawAsync(recipients, "privatemessage_received");
+        }
     }
 }
