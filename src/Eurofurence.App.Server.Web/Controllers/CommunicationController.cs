@@ -29,6 +29,14 @@ namespace Eurofurence.App.Server.Web.Controllers
             return _privateMessageService.GetPrivateMessagesForRecipientAsync(_apiPrincipal.Uid);
         }
 
+        [Authorize(Roles = "Attendee")]
+        [HttpPost("PrivateMessages/{messageId}/Read")]
+        public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync([FromRoute] Guid messageId)
+        {
+            var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(messageId, _apiPrincipal.Uid);
+            return result ? (ActionResult)NoContent() : (ActionResult)BadRequest();
+        }
+
         [Authorize(Roles = "Developer")]
         [HttpPost("PrivateMessages")]
         public Task<Guid> SendPrivateMessageAsync([FromBody] SendPrivateMessageRequest request)

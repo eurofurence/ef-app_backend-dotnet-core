@@ -16,6 +16,12 @@ namespace Eurofurence.App.Domain.Model.Communication
         public DateTime CreatedDateTimeUtc { get; set; }
 
         [DataMember]
+        public DateTime? ReceivedDateTimeUtc { get; set; }
+
+        [DataMember]
+        public DateTime? ReadDateTimeUtc { get; set; }
+
+        [DataMember]
         public string AuthorName { get; set; }
 
         [DataMember]
