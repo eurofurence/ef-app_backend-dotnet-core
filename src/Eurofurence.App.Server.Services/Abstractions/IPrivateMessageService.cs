@@ -10,7 +10,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
     {
         Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(string recipientUid);
 
-        Task<bool> MarkPrivateMessageAsReadAsync(Guid messageId, string recipientUid = null);
+        Task<DateTime?> MarkPrivateMessageAsReadAsync(Guid messageId, string recipientUid = null);
 
         Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request);
     }

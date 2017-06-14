@@ -36,11 +36,11 @@ namespace Eurofurence.App.Server.Services.Communication
             return messages;
         }
 
-        public async Task<bool> MarkPrivateMessageAsReadAsync(Guid messageId, string recipientUid = null)
+        public async Task<DateTime?> MarkPrivateMessageAsReadAsync(Guid messageId, string recipientUid = null)
         {
             var message = await FindOneAsync(messageId);
-            if (message == null) return false;
-            if (!String.IsNullOrWhiteSpace(recipientUid) && message.RecipientUid != recipientUid) return false;
+            if (message == null) return null;
+            if (!String.IsNullOrWhiteSpace(recipientUid) && message.RecipientUid != recipientUid) return null;
 
             if (!message.ReadDateTimeUtc.HasValue)
             {
@@ -48,7 +48,7 @@ namespace Eurofurence.App.Server.Services.Communication
                 await ReplaceOneAsync(message);
             }
 
-            return true;
+            return message.ReadDateTimeUtc;
         }
 
         public async Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request)
