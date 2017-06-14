@@ -58,7 +58,7 @@ namespace Eurofurence.App.Server.Web
                         .AllowCredentials());
             });
 
-            services.AddMvc()
+            services.AddMvc(options => options.MaxModelValidationErrors = 0)
                 .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
@@ -80,11 +80,20 @@ namespace Eurofurence.App.Server.Web
                     Description = "",
                     TermsOfService = "None"
                 });
+
+                options.AddSecurityDefinition("Bearer", new ApiKeyScheme()
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+                    Name = "Authorization",
+                    In = "header",
+                    Type = "apiKey"
+                });
+
                 options.DescribeAllEnumsAsStrings();
+                options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
+
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
-
-                options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
             });
 
 
