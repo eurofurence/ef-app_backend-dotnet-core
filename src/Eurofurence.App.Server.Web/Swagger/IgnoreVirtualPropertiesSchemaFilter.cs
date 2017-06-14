@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Swashbuckle.AspNetCore.SwaggerGen;
+using System;
 using System.Linq;
 using System.Reflection;
-using Swashbuckle.Swagger.Model;
-using Swashbuckle.SwaggerGen.Generator;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace Eurofurence.App.Server.Web.Swagger
 {

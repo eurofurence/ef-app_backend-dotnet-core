@@ -2,8 +2,8 @@
 using System.Linq;
 using Autofac;
 using Microsoft.AspNetCore.Authorization;
-using Swashbuckle.Swagger.Model;
-using Swashbuckle.SwaggerGen.Generator;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace Eurofurence.App.Server.Web.Swagger
 {

@@ -15,7 +15,6 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using Serilog.Sinks.AwsCloudWatch;
-using Swashbuckle.Swagger.Model;
 using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
@@ -23,6 +22,7 @@ using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
 using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -70,16 +70,16 @@ namespace Eurofurence.App.Server.Web
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
              
-            services.AddSwaggerGen();
-            services.ConfigureSwaggerGen(options =>
+            services.AddSwaggerGen(options =>
             {
-                options.SingleApiVersion(new Info
+                options.SwaggerDoc("v2", new Info
                 {
                     Version = "v2",
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
-                    TermsOfService = "None"
-                });
+                    TermsOfService = "None",
+                    Contact = new Contact() { Name = "Luchs", Url = "https://telegram.me/pinselohrkater" }
+                    });
 
                 options.AddSecurityDefinition("Bearer", new ApiKeyScheme()
                 {
@@ -92,6 +92,7 @@ namespace Eurofurence.App.Server.Web
                 options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
 
+                
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
             });
@@ -196,7 +197,13 @@ namespace Eurofurence.App.Server.Web
             });
 
             app.UseSwagger();
-            app.UseSwaggerUi("swagger/v2/ui", "/swagger/v2/swagger.json");
+
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "swagger/v2/ui";
+                c.DocExpansion("none");
+                c.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
+            });
         }
     }
 }
