@@ -54,6 +54,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(DateTime), 200)]
         public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync([FromRoute] Guid MessageId)
         {
+            if (MessageId == Guid.Empty) return BadRequest();
+
             var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(MessageId, _apiPrincipal.Uid);
             return result.HasValue ? (ActionResult)Json(result) : BadRequest();
         }
@@ -69,12 +71,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </remarks>
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
+        /// <response code="400">Unable to parse `Request`</response>
         [Authorize(Roles = "Developer")]
         [HttpPost("PrivateMessages")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public Task<Guid> SendPrivateMessageAsync([FromBody] SendPrivateMessageRequest Request)
+        public async Task<ActionResult> SendPrivateMessageAsync([FromBody] SendPrivateMessageRequest Request)
         {
-            return _privateMessageService.SendPrivateMessageAsync(Request);
+            if (Request == null) return BadRequest();
+
+            return Json(await _privateMessageService.SendPrivateMessageAsync(Request));
         }
     }
 }
