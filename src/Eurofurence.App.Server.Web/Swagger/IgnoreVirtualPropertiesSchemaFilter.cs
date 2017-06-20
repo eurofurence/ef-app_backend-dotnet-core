@@ -1,7 +1,4 @@
 ﻿using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
-using System.Linq;
-using System.Reflection;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Eurofurence.App.Server.Web.Swagger

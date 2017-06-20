@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.CommandLineUtils;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands

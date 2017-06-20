@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.Events;
-using Eurofurence.App.Domain.Model.Images;
+﻿using Eurofurence.App.Domain.Model.Images;
 using MongoDB.Driver;
 
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories

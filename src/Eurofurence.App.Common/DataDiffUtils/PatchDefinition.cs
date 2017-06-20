@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Eurofurence.App.Common.Abstractions;
-using System.Collections;
 
 namespace Eurofurence.App.Common.DataDiffUtils
 {

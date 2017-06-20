@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Server.Services.Abstractions;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Security;

@@ -1,6 +1,4 @@
 ﻿using Eurofurence.App.Domain.Model.Communication;
-using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Services.Communication;
 using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

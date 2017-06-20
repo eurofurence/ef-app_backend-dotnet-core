@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Services.Security;
+﻿using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Web.Extensions;

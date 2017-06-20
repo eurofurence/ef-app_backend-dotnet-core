@@ -1,7 +1,6 @@
 ﻿using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Server.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

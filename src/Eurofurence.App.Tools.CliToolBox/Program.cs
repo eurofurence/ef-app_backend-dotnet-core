@@ -1,21 +1,12 @@
 ﻿using Autofac;
-using Eurofurence.App.Domain.Model.Maps;
-using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Services.Maps;
-using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Tools.CliToolBox.Commands;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Claims;
-using System.Text;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Tools.CliToolBox

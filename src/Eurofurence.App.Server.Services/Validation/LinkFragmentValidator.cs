@@ -1,5 +1,4 @@
 ﻿using Eurofurence.App.Domain.Model.Fragments;
-using Eurofurence.App.Server.Services.Abstractions;
 using System;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;

@@ -2,14 +2,10 @@
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Common.Utility;
 using Eurofurence.App.Domain.Model.Knowledge;
-using Eurofurence.App.Server.Services.Abstractions;
 using MongoDB.Driver;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 

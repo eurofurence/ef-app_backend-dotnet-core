@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Eurofurence.App.Domain.Model;
+﻿using Eurofurence.App.Domain.Model;
 
 namespace Eurofurence.App.Server.Services.Abstractions
 {

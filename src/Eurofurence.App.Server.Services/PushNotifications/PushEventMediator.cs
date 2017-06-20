@@ -1,8 +1,5 @@
 ﻿using Eurofurence.App.Domain.Model.Announcements;
-using Eurofurence.App.Server.Services.Abstractions;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
