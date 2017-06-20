@@ -124,7 +124,13 @@ namespace Eurofurence.App.Server.Web
             builder.RegisterInstance(new WnsConfiguration()
             {
                 ClientId = Configuration["wns:clientId"],
-                ClientSecret = Configuration["wns:clientSecret"]
+                ClientSecret = Configuration["wns:clientSecret"],
+                TargetTopic = Configuration["wns:targetTopic"]
+            });
+            builder.RegisterInstance(new FirebaseConfiguration()
+            {
+                AuthorizationKey = Configuration["firebase:authorizationKey"],
+                TargetTopic = Configuration["firebase:targetTopic"]
             });
 
             builder.Register(c => new ApiPrincipal((c.Resolve<IHttpContextAccessor>().HttpContext.User as ClaimsPrincipal)))

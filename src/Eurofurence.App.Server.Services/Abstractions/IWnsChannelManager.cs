@@ -10,9 +10,9 @@ namespace Eurofurence.App.Server.Services.Abstractions
 
         Task SendToastAsync(string topic, string message);
 
-        Task PushSyncUpdateRequestAsync(string topic);
+        Task PushSyncRequestAsync();
 
-        Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement);
+        Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement);
 
         Task PushPrivateMessageNotificationAsync(string recipientUid);
     }

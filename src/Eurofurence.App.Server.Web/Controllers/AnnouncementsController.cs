@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Microsoft.AspNetCore.Authorization;
-using System.Runtime.Serialization;
-using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -16,12 +13,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class AnnouncementsController : Controller
     {
         readonly IAnnouncementService _announcementService;
-        readonly IWnsChannelManager _wnsChannelManager;
+        readonly IPushEventMediator _eventMediator;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IWnsChannelManager wnsChannelManager)
+        public AnnouncementsController(IAnnouncementService announcementService, IPushEventMediator eventMediator)
         {
-            _wnsChannelManager = wnsChannelManager;
             _announcementService = announcementService;
+            _eventMediator = eventMediator;
         }
 
         /// <summary>
@@ -48,16 +45,14 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
-        
-
         [HttpDelete("{Id}")]
         [Authorize(Roles = "System,Developer")]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
-            await _announcementService.DeleteOneAsync(id);
 
-            await _wnsChannelManager.PushSyncUpdateRequestAsync("Debug");
+            await _announcementService.DeleteOneAsync(id);
+            await _eventMediator.PushSyncRequestAsync();
 
             return Ok();
         }
@@ -71,9 +66,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             record.NewId();
 
             await _announcementService.InsertOneAsync(record);
-
-            await _wnsChannelManager.PushSyncUpdateRequestAsync("Debug");
-            await _wnsChannelManager.PushAnnouncementAsync("Debug", record);
+            await _eventMediator.PushSyncRequestAsync();
+            await _eventMediator.PushAnnouncementNotificationAsync(record);
 
             return Ok();
         }
@@ -83,7 +77,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> ClearAnnouncementAsync()
         {
             await _announcementService.DeleteAllAsync();
-            await _wnsChannelManager.PushSyncUpdateRequestAsync("Debug");
+            await _eventMediator.PushSyncRequestAsync();
+
             return Ok();
         }
     }

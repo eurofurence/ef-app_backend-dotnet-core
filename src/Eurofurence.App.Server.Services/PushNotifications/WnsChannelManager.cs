@@ -15,6 +15,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
     {
         public string ClientId { get; set; }
         public string ClientSecret { get; set; }
+        public string TargetTopic { get; set; }
     }
 
     public class WnsChannelManager : IWnsChannelManager
@@ -31,9 +32,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _pushNotificationRepository = pushNotificationRepository;
         }
 
-        public async Task PushSyncUpdateRequestAsync(string topic)
+        public async Task PushSyncRequestAsync()
         {
-            var recipients = await GetAllRecipientsAsyncByTopic(topic);
+            var recipients = await GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
             await SendRawAsync(recipients, "update");
         }
 
@@ -51,7 +52,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             return _pushNotificationRepository.FindAllAsync(a => a.Uid == uid);
         }
 
-        public async Task PushAnnouncementAsync(string topic, AnnouncementRecord announcement)
+        public async Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement)
         {
             var message = new
             {
@@ -59,7 +60,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 Content = announcement
             };
 
-            var recipients = await GetAllRecipientsAsyncByTopic(topic);
+            var recipients = await GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
             
             await  SendRawAsync(recipients, Newtonsoft.Json.JsonConvert.SerializeObject(message));
         }
