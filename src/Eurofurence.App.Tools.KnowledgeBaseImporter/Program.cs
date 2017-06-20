@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 
 namespace Eurofurence.App.Tools.KnowledgeBaseImporter
 {

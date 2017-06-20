@@ -2,6 +2,8 @@
 using Eurofurence.App.Server.Services.Abstractions;
 using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Validation;
 
 namespace Eurofurence.App.Server.Services.Validation
 {

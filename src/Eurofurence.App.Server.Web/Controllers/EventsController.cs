@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Web.Extensions;
 
 namespace Eurofurence.App.Server.Web.Controllers

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Eurofurence.App.Server.Services.Communication
+﻿namespace Eurofurence.App.Server.Services.Abstractions.Communication
 {
     public class SendPrivateMessageRequest
     {

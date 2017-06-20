@@ -1,10 +1,9 @@
-﻿using Eurofurence.App.Domain.Model.Communication;
-using Eurofurence.App.Server.Services.Communication;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Communication;
 
-namespace Eurofurence.App.Server.Services.Abstractions
+namespace Eurofurence.App.Server.Services.Abstractions.Communication
 {
     public interface IPrivateMessageService
     {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {

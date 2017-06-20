@@ -1,6 +1,7 @@
 ﻿using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Announcements;
 
 namespace Eurofurence.App.Server.Services.Announcements
 {

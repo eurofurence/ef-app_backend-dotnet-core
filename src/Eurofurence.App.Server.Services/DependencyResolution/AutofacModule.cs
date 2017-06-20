@@ -1,5 +1,15 @@
 ﻿using Autofac;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Services.Abstractions.Maps;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
@@ -10,6 +20,7 @@ using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Communication;
+using Eurofurence.App.Server.Services.Knowledge;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
 {

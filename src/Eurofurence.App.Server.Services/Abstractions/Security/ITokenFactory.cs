@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 
-namespace Eurofurence.App.Server.Services.Abstractions
+namespace Eurofurence.App.Server.Services.Abstractions.Security
 {
     public interface ITokenFactory
     {

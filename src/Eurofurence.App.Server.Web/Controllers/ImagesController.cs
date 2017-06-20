@@ -6,6 +6,7 @@ using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {

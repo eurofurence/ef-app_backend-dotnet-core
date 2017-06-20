@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Server.Services.Security
 {
-    public class ApiPrincipal
+    public class ApiPrincipal : IApiPrincipal
     {
         readonly ClaimsPrincipal _principal;
         readonly ClaimsIdentity _identity;

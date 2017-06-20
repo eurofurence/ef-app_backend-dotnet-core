@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 
 namespace Eurofurence.App.Server.Services.Images
 {

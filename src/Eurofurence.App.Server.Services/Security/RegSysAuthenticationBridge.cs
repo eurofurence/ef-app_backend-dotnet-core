@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Server.Services.Security
 {

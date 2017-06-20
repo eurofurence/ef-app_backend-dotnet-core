@@ -1,7 +1,6 @@
-﻿using Eurofurence.App.Server.Services.Security;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace Eurofurence.App.Server.Services.Abstractions
+namespace Eurofurence.App.Server.Services.Abstractions.Security
 {
     public interface IAuthenticationHandler
     {

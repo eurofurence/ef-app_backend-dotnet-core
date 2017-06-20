@@ -22,6 +22,7 @@ using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
 using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Eurofurence.App.Server.Web

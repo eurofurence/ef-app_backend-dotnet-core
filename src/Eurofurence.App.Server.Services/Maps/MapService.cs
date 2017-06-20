@@ -1,6 +1,7 @@
 ﻿using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Maps;
 
 namespace Eurofurence.App.Server.Services.Maps
 {

@@ -2,7 +2,7 @@
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Server.Services.Validation;
 
-namespace Eurofurence.App.Server.Services.Abstractions
+namespace Eurofurence.App.Server.Services.Abstractions.Validation
 {
     public interface ILinkFragmentValidator
     {

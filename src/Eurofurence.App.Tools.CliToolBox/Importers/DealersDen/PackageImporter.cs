@@ -11,6 +11,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 
 namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 {

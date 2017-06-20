@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Eurofurence.App.Server.Services.Security
+namespace Eurofurence.App.Server.Services.Abstractions.Security
 {
     public class AuthenticationSettings
     {

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {

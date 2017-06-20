@@ -1,8 +1,8 @@
-﻿using Eurofurence.App.Domain.Model.Images;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Images;
 
-namespace Eurofurence.App.Server.Services.Abstractions
+namespace Eurofurence.App.Server.Services.Abstractions.Images
 {
     public interface IImageService : IEntityServiceOperations<ImageRecord>
     {

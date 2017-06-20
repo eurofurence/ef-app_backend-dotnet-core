@@ -3,24 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Server.Services.Security
 {
-    public class RegSysAuthenticationRequest
-    {
-        public int RegNo { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-    }
-
-    public class AuthenticationResponse
-    {
-        public string Uid { get; set; }
-        public string Username { get; set; }
-        public string Token { get; set; }
-        public DateTime TokenValidUntil { get; set; }
-    }
-
     public class AuthenticationHandler : IAuthenticationHandler
     {
         readonly IRegSysAuthenticationBridge _registrationSystemAuthenticationBridge;

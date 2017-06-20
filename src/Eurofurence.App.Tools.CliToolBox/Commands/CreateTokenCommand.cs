@@ -6,6 +6,7 @@ using Eurofurence.App.Server.Services.Security;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {

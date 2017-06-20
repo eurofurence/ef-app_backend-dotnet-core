@@ -1,5 +1,7 @@
 ﻿using Autofac;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 

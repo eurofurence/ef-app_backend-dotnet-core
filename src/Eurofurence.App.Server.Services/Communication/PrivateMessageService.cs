@@ -5,6 +5,8 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions;
 using System.Linq;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.Communication
 {

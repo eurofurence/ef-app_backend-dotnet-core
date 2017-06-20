@@ -6,6 +6,7 @@ using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {

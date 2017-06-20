@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {

@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.Extensions.CommandLineUtils;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {

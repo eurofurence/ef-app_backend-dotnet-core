@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {

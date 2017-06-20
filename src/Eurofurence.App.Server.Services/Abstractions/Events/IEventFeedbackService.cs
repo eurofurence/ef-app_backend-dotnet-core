@@ -1,6 +1,6 @@
 ﻿using Eurofurence.App.Domain.Model.Events;
 
-namespace Eurofurence.App.Server.Services.Abstractions
+namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
     public interface IEventFeedbackService :
      IEntityServiceOperations<EventFeedbackRecord>,

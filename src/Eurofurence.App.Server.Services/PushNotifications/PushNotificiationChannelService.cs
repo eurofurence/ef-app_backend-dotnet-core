@@ -1,6 +1,7 @@
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
