@@ -14,7 +14,6 @@ namespace Eurofurence.App.Server.KestrelHost
                 .Build();
 
 
-            
             host.Run();
         }
     }

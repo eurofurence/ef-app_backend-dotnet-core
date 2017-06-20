@@ -3,9 +3,8 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Knowledge
 {
     public interface IKnowledgeEntryService :
-    IEntityServiceOperations<KnowledgeEntryRecord>,
-    IPatchOperationProcessor<KnowledgeEntryRecord>
+        IEntityServiceOperations<KnowledgeEntryRecord>,
+        IPatchOperationProcessor<KnowledgeEntryRecord>
     {
-
     }
 }

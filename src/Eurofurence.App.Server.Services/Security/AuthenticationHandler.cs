@@ -8,15 +8,15 @@ namespace Eurofurence.App.Server.Services.Security
 {
     public class AuthenticationHandler : IAuthenticationHandler
     {
-        readonly IRegSysAuthenticationBridge _registrationSystemAuthenticationBridge;
-        readonly ITokenFactory _tokenFactory;
-        readonly AuthenticationSettings _authenticationSettings;
+        private readonly AuthenticationSettings _authenticationSettings;
+        private readonly IRegSysAuthenticationBridge _registrationSystemAuthenticationBridge;
+        private readonly ITokenFactory _tokenFactory;
 
         public AuthenticationHandler(
             AuthenticationSettings authenticationSettings,
             IRegSysAuthenticationBridge registrationSystemAuthenticationBridge,
-            ITokenFactory tokenFactory         
-            )
+            ITokenFactory tokenFactory
+        )
         {
             _authenticationSettings = authenticationSettings;
             _registrationSystemAuthenticationBridge = registrationSystemAuthenticationBridge;
@@ -33,13 +33,11 @@ namespace Eurofurence.App.Server.Services.Security
             var isValid = request.Password == request.RegNo.ToString();
 
             if (!isValid)
-            {
                 return null;
-            }
 
             var uid = $"RegSys:{_authenticationSettings.ConventionNumber}:{request.RegNo}";
 
-            var claims = new List<Claim>()
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, uid),
                 new Claim(ClaimTypes.GivenName, request.Username.ToLower()),
@@ -52,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Security
             var expiration = DateTime.UtcNow.Add(_authenticationSettings.DefaultTokenLifeTime);
             var token = _tokenFactory.CreateTokenFromClaims(claims, expiration);
 
-            var response = new AuthenticationResponse()
+            var response = new AuthenticationResponse
             {
                 Uid = uid,
                 Token = token,
@@ -62,6 +60,5 @@ namespace Eurofurence.App.Server.Services.Security
 
             return response;
         }
-
     }
 }

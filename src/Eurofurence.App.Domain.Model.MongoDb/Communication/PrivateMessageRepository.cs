@@ -4,12 +4,11 @@ using MongoDB.Driver;
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 {
     public class PrivateMessageRepository :
-    MongoDbEntityRepositoryBase<PrivateMessageRecord>
+        MongoDbEntityRepositoryBase<PrivateMessageRecord>
     {
         public PrivateMessageRepository(IMongoCollection<PrivateMessageRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

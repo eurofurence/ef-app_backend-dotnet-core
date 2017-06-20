@@ -11,17 +11,17 @@ using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Services
 {
-    public class EntityServiceBase<T> : 
+    public class EntityServiceBase<T> :
         IEntityServiceOperations<T>,
         IPatchOperationProcessor<T>
         where T : EntityBase
     {
         private readonly IEntityRepository<T> _entityRepository;
         private readonly IStorageService _storageService;
-        readonly bool _useSoftDelete;
+        private readonly bool _useSoftDelete;
 
         public EntityServiceBase(
-            IEntityRepository<T> entityRepository, 
+            IEntityRepository<T> entityRepository,
             IStorageServiceFactory storageServiceFactory,
             bool useSoftDelete = true)
         {
@@ -76,25 +76,6 @@ namespace Eurofurence.App.Server.Services
             await _storageService.TouchAsync();
         }
 
-        public virtual async Task ApplyPatchOperationAsync(IEnumerable<PatchOperation<T>> patchResults)
-        {
-            foreach (var item in patchResults)
-            {
-                switch (item.Action)
-                {
-                    case ActionEnum.Add:
-                        await InsertOneAsync(item.Entity);
-                        break;
-                    case ActionEnum.Update:
-                        await ReplaceOneAsync(item.Entity);
-                        break;
-                    case ActionEnum.Delete:
-                        await DeleteOneAsync(item.Entity.Id);
-                        break;
-                }
-            }
-        }
-
         public virtual async Task DeleteAllAsync()
         {
             await _entityRepository.DeleteAllAsync();
@@ -109,7 +90,7 @@ namespace Eurofurence.App.Server.Services
         public virtual async Task<DeltaResponse<T>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
         {
             var storageInfo = await GetStorageInfoAsync();
-            var response = new DeltaResponse<T>()
+            var response = new DeltaResponse<T>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
                 StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
@@ -120,20 +101,37 @@ namespace Eurofurence.App.Server.Services
                 response.RemoveAllBeforeInsert = true;
                 response.DeletedEntities = new Guid[0];
                 response.ChangedEntities =
-                    (await _entityRepository.FindAllAsync(includeDeletedRecords: false)).ToArray();
+                    (await _entityRepository.FindAllAsync(false)).ToArray();
             }
             else
             {
                 response.RemoveAllBeforeInsert = false;
 
-                var entities = (await _entityRepository.FindAllAsync(includeDeletedRecords: true,
-                    minLastDateTimeChangedUtc: minLastDateTimeChangedUtc)).ToList();
+                var entities = (await _entityRepository.FindAllAsync(true,
+                    minLastDateTimeChangedUtc)).ToList();
 
                 response.ChangedEntities = entities.Where(a => a.IsDeleted == 0).ToArray();
                 response.DeletedEntities = entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArray();
             }
 
             return response;
+        }
+
+        public virtual async Task ApplyPatchOperationAsync(IEnumerable<PatchOperation<T>> patchResults)
+        {
+            foreach (var item in patchResults)
+                switch (item.Action)
+                {
+                    case ActionEnum.Add:
+                        await InsertOneAsync(item.Entity);
+                        break;
+                    case ActionEnum.Update:
+                        await ReplaceOneAsync(item.Entity);
+                        break;
+                    case ActionEnum.Delete:
+                        await DeleteOneAsync(item.Entity.Id);
+                        break;
+                }
         }
     }
 }

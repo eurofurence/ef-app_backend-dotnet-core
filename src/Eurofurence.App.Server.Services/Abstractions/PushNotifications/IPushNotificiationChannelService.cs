@@ -6,6 +6,5 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
         IEntityServiceOperations<PushNotificationChannelRecord>,
         IPatchOperationProcessor<PushNotificationChannelRecord>
     {
-
     }
 }

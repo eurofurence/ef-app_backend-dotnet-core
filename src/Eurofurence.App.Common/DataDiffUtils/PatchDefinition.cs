@@ -9,11 +9,13 @@ namespace Eurofurence.App.Common.DataDiffUtils
 {
     public class PatchDefinition<TSource, TTarget> where TTarget : IEntityBase, new()
     {
-        private readonly Func<TSource, IEnumerable<TTarget>, TTarget> _targetItemLocator;
         private readonly List<PatchOperator<TSource, TTarget>> _operators = new List<PatchOperator<TSource, TTarget>>();
+        private readonly Func<TSource, IEnumerable<TTarget>, TTarget> _targetItemLocator;
 
-        /// <param name="targetItemLocator">A selector that, inside an enumerable of TTarget, finds the
-        /// single TTarget that corresponds to the provided TSource</param>
+        /// <param name="targetItemLocator">
+        ///     A selector that, inside an enumerable of TTarget, finds the
+        ///     single TTarget that corresponds to the provided TSource
+        /// </param>
         public PatchDefinition(Func<TSource, IEnumerable<TTarget>, TTarget> targetItemLocator)
         {
             _targetItemLocator = targetItemLocator;
@@ -23,41 +25,34 @@ namespace Eurofurence.App.Common.DataDiffUtils
             Func<TSource, TField> sourceValueSelector,
             Expression<Func<TTarget, TField>> targetSelector)
         {
-            var patchOperator = new PatchOperator<TSource, TTarget>()
+            var patchOperator = new PatchOperator<TSource, TTarget>
             {
                 FieldName = (targetSelector.Body as MemberExpression)?.Member.Name,
-                IsEqual = (source, target) => {
+                IsEqual = (source, target) =>
+                {
                     var sourceValue = sourceValueSelector(source);
                     var targetValue = targetSelector.Compile().Invoke(target);
 
                     if (sourceValue == null && targetValue == null)
-                    {
                         return true;
-                    }
 
-                    if ((sourceValue == null && targetValue != null) || (sourceValue != null && targetValue == null))
-                    {
+                    if (sourceValue == null && targetValue != null || sourceValue != null && targetValue == null)
                         return false;
-                    }
 
                     if (sourceValue.GetType().IsArray)
-                    {
-                        return Enumerable.SequenceEqual(
-                            sourceValue as IEnumerable<object>,
-                            targetValue as IEnumerable<object>
-                            );
-                    }
+                        return (sourceValue as IEnumerable<object>).SequenceEqual(targetValue as IEnumerable<object>
+                        );
 
                     return sourceValue?.Equals(targetValue) ?? false;
                 },
                 ApplySourceValueToTarget =
-                (source, target) =>
-                {
-                    var value = sourceValueSelector(source);
-                    var memberSelectorExpression = targetSelector.Body as MemberExpression;
-                    var property = memberSelectorExpression.Member as PropertyInfo;
-                    property.SetValue(target, value, null);
-                }
+                    (source, target) =>
+                    {
+                        var value = sourceValueSelector(source);
+                        var memberSelectorExpression = targetSelector.Body as MemberExpression;
+                        var property = memberSelectorExpression.Member as PropertyInfo;
+                        property.SetValue(target, value, null);
+                    }
             };
 
             _operators.Add(patchOperator);
@@ -75,9 +70,9 @@ namespace Eurofurence.App.Common.DataDiffUtils
 
             foreach (var sourceItem in sources)
             {
-                TTarget target = default(TTarget);
+                var target = default(TTarget);
 
-                var result = new PatchOperation<TTarget>() { Action = ActionEnum.NotModified };
+                var result = new PatchOperation<TTarget> {Action = ActionEnum.NotModified};
 
                 var existingTarget = _targetItemLocator(sourceItem, unprocessedTargets);
                 if (existingTarget != null)
@@ -100,9 +95,7 @@ namespace Eurofurence.App.Common.DataDiffUtils
                     if (o.IsEqual(sourceItem, target)) continue;
 
                     if (result.Action == ActionEnum.NotModified)
-                    {
                         result.Action = ActionEnum.Update;
-                    }
 
                     o.ApplySourceValueToTarget(sourceItem, target);
                 }
@@ -111,13 +104,11 @@ namespace Eurofurence.App.Common.DataDiffUtils
             }
 
             foreach (var targetItem in unprocessedTargets)
-            {
-                patchResults.Add(new PatchOperation<TTarget>()
+                patchResults.Add(new PatchOperation<TTarget>
                 {
                     Action = ActionEnum.Delete,
                     Entity = targetItem
                 });
-            }
 
             return patchResults;
         }

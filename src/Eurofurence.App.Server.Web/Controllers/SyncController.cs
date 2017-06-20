@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
@@ -8,26 +7,27 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class SyncController
     {
-        readonly IEventService _eventService;
-        readonly IEventConferenceDayService _eventConferenceDayService;
-        readonly IEventConferenceRoomService _eventConferenceRoomService;
-        readonly IEventConferenceTrackService _eventConferenceTrackService;
-        readonly IKnowledgeGroupService _knowledgeGroupService;
-        readonly IKnowledgeEntryService _knowledgeEntryService;
-        readonly IImageService _imageService;
-        readonly IDealerService _dealerService;
-        readonly IAnnouncementService _announcementService;
-        readonly IMapService _mapService;
-        readonly ILogger _logger;
-        readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAnnouncementService _announcementService;
+        private readonly IDealerService _dealerService;
+        private readonly IEventConferenceDayService _eventConferenceDayService;
+        private readonly IEventConferenceRoomService _eventConferenceRoomService;
+        private readonly IEventConferenceTrackService _eventConferenceTrackService;
+        private readonly IEventService _eventService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IImageService _imageService;
+        private readonly IKnowledgeEntryService _knowledgeEntryService;
+        private readonly IKnowledgeGroupService _knowledgeGroupService;
+        private readonly ILogger _logger;
+        private readonly IMapService _mapService;
 
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -41,7 +41,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IDealerService dealerService,
             IAnnouncementService announcementService,
             IMapService mapService
-            )
+        )
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _eventConferenceTrackService = eventConferenceTrackService;
@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Returns everything you could ever wish for.
+        ///     Returns everything you could ever wish for.
         /// </summary>
         /// <returns></returns>
         [HttpGet]
@@ -65,21 +65,21 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             _logger.LogInformation("Execute=Sync, Since={since}", since);
 
-            var response = new AggregatedDeltaResponse()
+            var response = new AggregatedDeltaResponse
             {
                 Since = since,
                 CurrentDateTimeUtc = DateTime.UtcNow,
 
-                Events = await _eventService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                EventConferenceDays = await _eventConferenceDayService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                EventConferenceRooms = await _eventConferenceRoomService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                EventConferenceTracks = await _eventConferenceTrackService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                KnowledgeGroups = await _knowledgeGroupService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                Images = await _imageService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                Dealers = await _dealerService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                Announcements = await _announcementService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since),
-                Maps = await _mapService.GetDeltaResponseAsync(minLastDateTimeChangedUtc: since)
+                Events = await _eventService.GetDeltaResponseAsync(since),
+                EventConferenceDays = await _eventConferenceDayService.GetDeltaResponseAsync(since),
+                EventConferenceRooms = await _eventConferenceRoomService.GetDeltaResponseAsync(since),
+                EventConferenceTracks = await _eventConferenceTrackService.GetDeltaResponseAsync(since),
+                KnowledgeGroups = await _knowledgeGroupService.GetDeltaResponseAsync(since),
+                KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(since),
+                Images = await _imageService.GetDeltaResponseAsync(since),
+                Dealers = await _dealerService.GetDeltaResponseAsync(since),
+                Announcements = await _announcementService.GetDeltaResponseAsync(since),
+                Maps = await _mapService.GetDeltaResponseAsync(since)
             };
 
             return response;

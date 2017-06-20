@@ -1,27 +1,29 @@
-﻿using Autofac;
-using Eurofurence.App.Common.DataDiffUtils;
-using Eurofurence.App.Common.Utility;
-using Eurofurence.App.Domain.Model.Knowledge;
-using MongoDB.Driver;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Autofac;
+using Eurofurence.App.Common.DataDiffUtils;
+using Eurofurence.App.Common.Utility;
+using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.MongoDb;
+using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using MongoDB.Driver;
 
 namespace Eurofurence.App.Tools.KnowledgeBaseImporter
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var _client = new MongoClient("mongodb://127.0.0.1:27017");
             var _database = _client.GetDatabase("app_dev");
 
-            Domain.Model.MongoDb.BsonClassMapping.Register();
+            BsonClassMapping.Register();
 
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(_database));
+            builder.RegisterModule(new AutofacModule(_database));
             builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
 
             var container = builder.Build();
@@ -46,7 +48,6 @@ namespace Eurofurence.App.Tools.KnowledgeBaseImporter
             //    //var loginPayload = new StringContent($@"u=ef_app&p={password}");
 
 
-
             //    client.PostAsync(loginUri, loginPayload).Wait();
             //    var response = client.GetAsync(requestUri).Result;
             //    var content = response.Content.ReadAsStringAsync().Result;
@@ -60,17 +61,18 @@ namespace Eurofurence.App.Tools.KnowledgeBaseImporter
 
             MatchCollection m;
 
-            m = Regex.Matches(content, @"<WRAP.*?>PARSE_START</WRAP>(.*)?<WRAP.*?>PARSE_END</WRAP>", RegexOptions.Singleline);
+            m = Regex.Matches(content, @"<WRAP.*?>PARSE_START</WRAP>(.*)?<WRAP.*?>PARSE_END</WRAP>",
+                RegexOptions.Singleline);
             if (m.Count != 1) throw new InvalidDataException();
 
-            m = Regex.Matches((m[0] as Match).Groups[1].Value, @"====([^=]+)====(.+?)((?=====)|$)", RegexOptions.Singleline);
+            m = Regex.Matches(m[0].Groups[1].Value, @"====([^=]+)====(.+?)((?=====)|$)", RegexOptions.Singleline);
             if (m.Count == 0) throw new InvalidDataException();
 
-            int i = 0;
-            foreach(Match matchGroup in m)
+            var i = 0;
+            foreach (Match matchGroup in m)
             {
                 var titleParts = matchGroup.Groups[1].Value.Split('|').Select(a => a.Trim()).ToArray();
-                var knowledgeGroup = new KnowledgeGroupRecord()
+                var knowledgeGroup = new KnowledgeGroupRecord
                 {
                     Id = titleParts[0].AsHashToGuid(),
                     Name = titleParts[0],
@@ -80,12 +82,14 @@ namespace Eurofurence.App.Tools.KnowledgeBaseImporter
                 importedKnowledgeGroups.Add(knowledgeGroup);
 
                 var entriesContent = matchGroup.Groups[2].Value;
-                var entriesMatches = Regex.Matches(entriesContent, @"===([^=]+)===.+?<WRAP box[^>]*>(.+?)<\/WRAP>([^\<]*<WRAP lo[^>]*>([^\<]+)<\/WRAP>){0,1}", RegexOptions.Singleline);
+                var entriesMatches = Regex.Matches(entriesContent,
+                    @"===([^=]+)===.+?<WRAP box[^>]*>(.+?)<\/WRAP>([^\<]*<WRAP lo[^>]*>([^\<]+)<\/WRAP>){0,1}",
+                    RegexOptions.Singleline);
 
-                int j = 0;
-                foreach(Match entryMatch in entriesMatches)
+                var j = 0;
+                foreach (Match entryMatch in entriesMatches)
                 {
-                    var knowledgeEntry = new KnowledgeEntryRecord()
+                    var knowledgeEntry = new KnowledgeEntryRecord
                     {
                         Id = entryMatch.Groups[1].Value.Trim().AsHashToGuid(),
                         KnowledgeGroupId = knowledgeGroup.Id,
@@ -105,13 +109,13 @@ namespace Eurofurence.App.Tools.KnowledgeBaseImporter
         public static List<KnowledgeGroupRecord> UpdateKnowledgeGroups(
             IList<KnowledgeGroupRecord> importKnowledgeGroups,
             IKnowledgeGroupService service
-            )
+        )
         {
             var knowledgeGroupRecords = service.FindAllAsync().Result;
 
             var patch = new PatchDefinition<KnowledgeGroupRecord, KnowledgeGroupRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Id == source.Id)
-                );
+            );
 
             patch
                 .Map(s => s.Id, t => t.Id)
@@ -129,13 +133,13 @@ namespace Eurofurence.App.Tools.KnowledgeBaseImporter
         public static List<KnowledgeEntryRecord> UpdateKnowledgeEntries(
             IList<KnowledgeEntryRecord> importKnowledgeEntries,
             IKnowledgeEntryService service
-            )
+        )
         {
             var knowledgeEntryRecords = service.FindAllAsync().Result;
 
             var patch = new PatchDefinition<KnowledgeEntryRecord, KnowledgeEntryRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Id == source.Id)
-                );
+            );
 
             patch
                 .Map(s => s.Id, t => t.Id)

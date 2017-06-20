@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.Extensions.CommandLineUtils;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Microsoft.Extensions.CommandLineUtils;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
     public class TokenCommand : ICommand
     {
-        public string Name => "token";
-
-        readonly TokenFactorySettings _settings;
+        private readonly TokenFactorySettings _settings;
 
         public TokenCommand(TokenFactorySettings settings)
         {
             _settings = settings;
         }
+
+        public string Name => "token";
 
         public void Register(CommandLineApplication command)
         {
@@ -34,14 +34,15 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
             var userArgument = command.Argument("[user]", "Name of the user");
             var rolesArgument = command.Option("-addRole", "Role to add", CommandOptionType.MultipleValue);
-            var hoursArgument = command.Option("-validHours", "How many hours the token should be valid (from now on)", CommandOptionType.SingleValue);
+            var hoursArgument = command.Option("-validHours", "How many hours the token should be valid (from now on)",
+                CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
             {
                 if (!int.TryParse(hoursArgument.Value(), out int hours)) hours = 1;
 
                 Console.WriteLine($"User: {userArgument.Value}");
-                Console.WriteLine($"Roles: {String.Join(",", rolesArgument.Values)}");
+                Console.WriteLine($"Roles: {string.Join(",", rolesArgument.Values)}");
                 Console.WriteLine($"Hours: {hours}");
 
                 var claims = new List<Claim>();
@@ -56,12 +57,12 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             });
         }
 
-        string CreateOAuthBearerToken(IEnumerable<Claim> claims, DateTime expiration)
+        private string CreateOAuthBearerToken(IEnumerable<Claim> claims, DateTime expiration)
         {
             var identity = new ClaimsIdentity(claims);
             var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_settings.SecretKey));
 
-            var descriptor = new SecurityTokenDescriptor()
+            var descriptor = new SecurityTokenDescriptor
             {
                 SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature),
                 Audience = _settings.Audience,

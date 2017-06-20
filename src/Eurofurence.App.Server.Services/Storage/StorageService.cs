@@ -17,22 +17,6 @@ namespace Eurofurence.App.Server.Services.Storage
             _entityType = entityType;
         }
 
-        private async Task<EntityStorageInfoRecord> GetEntityStorageRecordAsync()
-        {
-            var record = await _entityStorageInfoRepository.FindOneAsync(_entityType);
-
-            if (record == null)
-            {
-                record = new EntityStorageInfoRecord() {EntityType = _entityType};
-                record.NewId();
-                record.Touch();
-
-                await _entityStorageInfoRepository.InsertOneAsync(record);
-            }
-
-            return record;
-        }
-
 
         public async Task TouchAsync()
         {
@@ -51,6 +35,22 @@ namespace Eurofurence.App.Server.Services.Storage
         public Task<EntityStorageInfoRecord> GetStorageInfoAsync()
         {
             return GetEntityStorageRecordAsync();
+        }
+
+        private async Task<EntityStorageInfoRecord> GetEntityStorageRecordAsync()
+        {
+            var record = await _entityStorageInfoRepository.FindOneAsync(_entityType);
+
+            if (record == null)
+            {
+                record = new EntityStorageInfoRecord {EntityType = _entityType};
+                record.NewId();
+                record.Touch();
+
+                await _entityStorageInfoRepository.InsertOneAsync(record);
+            }
+
+            return record;
         }
     }
 }

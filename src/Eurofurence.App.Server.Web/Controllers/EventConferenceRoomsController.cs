@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class EventConferenceRoomsController : Controller
     {
-        readonly IEventConferenceRoomService _eventConferenceRoomService;
+        private readonly IEventConferenceRoomService _eventConferenceRoomService;
 
         public EventConferenceRoomsController(IEventConferenceRoomService eventConferenceRoomService)
         {
@@ -19,7 +19,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all event conference Rooms in the event schedule.
+        ///     Retrieves a list of all event conference Rooms in the event schedule.
         /// </summary>
         /// <returns>All events in the event schedule.</returns>
         [HttpGet]
@@ -29,9 +29,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             return _eventConferenceRoomService.FindAllAsync();
         }
-        
+
         /// <summary>
-        /// Retrieve a single event conference room in the event schedule.
+        ///     Retrieve a single event conference room in the event schedule.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{Id}")]

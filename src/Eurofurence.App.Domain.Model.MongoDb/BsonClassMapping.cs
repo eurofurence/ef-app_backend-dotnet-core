@@ -10,7 +10,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb
     {
         private static void DefaultMap<T>()
         {
-            BsonClassMap.RegisterClassMap<T>(c => {
+            BsonClassMap.RegisterClassMap<T>(c =>
+            {
                 c.AutoMap();
                 c.SetIgnoreExtraElements(true);
             });
@@ -24,7 +25,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb
             };
             ConventionRegistry.Register("EnumStringConvention", pack, t => true);
 
-            BsonClassMap.RegisterClassMap<EntityBase>(c => {
+            BsonClassMap.RegisterClassMap<EntityBase>(c =>
+            {
                 c.MapIdField(a => a.Id);
                 c.AutoMap();
             });

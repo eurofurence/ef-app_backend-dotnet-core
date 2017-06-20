@@ -9,7 +9,7 @@ namespace Eurofurence.App.Domain.Model.Sync
         {
             var enumerable = entities as IList<T> ?? entities.ToList();
 
-            var response = new DeltaResponse<T>()
+            var response = new DeltaResponse<T>
             {
                 ChangedEntities = enumerable.Where(a => a.IsDeleted == 0).ToArray(),
                 DeletedEntities = enumerable.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArray()

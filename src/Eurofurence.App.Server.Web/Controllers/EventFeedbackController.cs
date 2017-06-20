@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Security;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class EventFeedbackController : Controller
     {
-        readonly IEventFeedbackService _eventFeedbackService;
-        readonly ApiPrincipal _apiPrincipal;
-        readonly IEventService _eventService;
+        private readonly ApiPrincipal _apiPrincipal;
+        private readonly IEventFeedbackService _eventFeedbackService;
+        private readonly IEventService _eventService;
 
         public EventFeedbackController(
-            IEventFeedbackService eventFeedbackService, 
-            IEventService eventService,            
+            IEventFeedbackService eventFeedbackService,
+            IEventService eventService,
             ApiPrincipal apiPrincipal)
         {
             _eventService = eventService;
@@ -26,14 +26,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles="System,Developer,Attendee")]
+        [Authorize(Roles = "System,Developer,Attendee")]
         [ProducesResponseType(typeof(IEnumerable<EventFeedbackRecord>), 200)]
         public Task<IEnumerable<EventFeedbackRecord>> GetEventFeedbackAsync()
         {
             if (_apiPrincipal.IsAttendee)
-            {
                 return _eventFeedbackService.FindAllAsync(a => a.AuthorUid == _apiPrincipal.Uid);
-            }
 
             return null;
         }

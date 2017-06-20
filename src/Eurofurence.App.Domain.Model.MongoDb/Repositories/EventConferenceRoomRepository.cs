@@ -9,7 +9,6 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
         public EventConferenceRoomRepository(IMongoCollection<EventConferenceRoomRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

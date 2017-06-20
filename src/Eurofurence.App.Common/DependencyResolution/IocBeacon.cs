@@ -4,18 +4,18 @@ namespace Eurofurence.App.Common.DependencyResolution
 {
     public class IocBeacon : Attribute
     {
-        public enum ScopeEnum
-        {
-            AlwaysUnique,
-            Singleton,
-            Transient
-        }
-
         public enum EnvironmentEnum
         {
             Any,
             DesignTimeOnly,
             RunTimeOnly
+        }
+
+        public enum ScopeEnum
+        {
+            AlwaysUnique,
+            Singleton,
+            Transient
         }
 
         public Type TargetType { get; set; }

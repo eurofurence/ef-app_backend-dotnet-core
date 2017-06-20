@@ -11,7 +11,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
         public KnowledgeGroupService(
             IEntityRepository<KnowledgeGroupRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
         }

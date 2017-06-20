@@ -1,16 +1,16 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Eurofurence.App.Server.Services.Security
 {
     public class TokenFactory : ITokenFactory
     {
-        readonly TokenFactorySettings _tokenFactorySettings;
+        private readonly TokenFactorySettings _tokenFactorySettings;
 
         public TokenFactory(TokenFactorySettings tokenFactorySettings)
         {
@@ -22,7 +22,7 @@ namespace Eurofurence.App.Server.Services.Security
             var identity = new ClaimsIdentity(claims);
             var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_tokenFactorySettings.SecretKey));
 
-            var descriptor = new SecurityTokenDescriptor()
+            var descriptor = new SecurityTokenDescriptor
             {
                 SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature),
                 Audience = _tokenFactorySettings.Audience,

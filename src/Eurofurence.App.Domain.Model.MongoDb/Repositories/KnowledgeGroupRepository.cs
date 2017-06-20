@@ -4,12 +4,11 @@ using MongoDB.Driver;
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 {
     public class KnowledgeGroupRepository :
-    MongoDbEntityRepositoryBase<KnowledgeGroupRecord>
+        MongoDbEntityRepositoryBase<KnowledgeGroupRecord>
     {
         public KnowledgeGroupRepository(IMongoCollection<KnowledgeGroupRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

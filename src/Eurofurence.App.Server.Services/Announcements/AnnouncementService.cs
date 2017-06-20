@@ -11,7 +11,7 @@ namespace Eurofurence.App.Server.Services.Announcements
         public AnnouncementService(
             IEntityRepository<AnnouncementRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
         }

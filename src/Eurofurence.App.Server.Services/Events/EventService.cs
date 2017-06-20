@@ -11,7 +11,7 @@ namespace Eurofurence.App.Server.Services.Events
         public EventService(
             IEntityRepository<EventRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
         }

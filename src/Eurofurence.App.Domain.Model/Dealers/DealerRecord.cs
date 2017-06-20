@@ -1,7 +1,7 @@
-﻿using Eurofurence.App.Domain.Model.Fragments;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Domain.Model.Dealers
 {

@@ -4,12 +4,11 @@ using MongoDB.Driver;
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 {
     public class DealerRepository :
-    MongoDbEntityRepositoryBase<DealerRecord>
+        MongoDbEntityRepositoryBase<DealerRecord>
     {
         public DealerRepository(IMongoCollection<DealerRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

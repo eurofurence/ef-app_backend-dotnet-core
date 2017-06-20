@@ -1,21 +1,23 @@
 ﻿using Autofac;
+using Eurofurence.App.Domain.Model.MongoDb;
+using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using MongoDB.Driver;
 
 namespace Eurofurence.App.Tools.DealersDenPackageImporter
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var _client = new MongoClient("mongodb://127.0.0.1:27017");
             var _database = _client.GetDatabase("app_dev");
 
-            Domain.Model.MongoDb.BsonClassMapping.Register();
+            BsonClassMapping.Register();
 
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(_database));
+            builder.RegisterModule(new AutofacModule(_database));
             builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
 
             var container = builder.Build();

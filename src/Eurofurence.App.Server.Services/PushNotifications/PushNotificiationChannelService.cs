@@ -12,8 +12,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public PushNotificiationChannelService(
             IEntityRepository<PushNotificationChannelRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
-            : base(entityRepository, storageServiceFactory, useSoftDelete: false)
+        )
+            : base(entityRepository, storageServiceFactory, false)
         {
         }
     }

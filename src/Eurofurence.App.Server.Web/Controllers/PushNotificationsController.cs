@@ -1,24 +1,43 @@
-﻿using Eurofurence.App.Server.Services.Security;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Services.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class PushNotificationsController : Controller
     {
-        readonly IWnsChannelManager _wnsChannelManager;
-        readonly ApiPrincipal _apiPrincipal;
+        private readonly ApiPrincipal _apiPrincipal;
+        private readonly IWnsChannelManager _wnsChannelManager;
 
         public PushNotificationsController(
-            IWnsChannelManager wnsChannelManager, 
+            IWnsChannelManager wnsChannelManager,
             ApiPrincipal apiPrincipal)
         {
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
+        }
+
+        [HttpPost("WnsToast")]
+        [Authorize(Roles = "Developer")]
+        public async Task<ActionResult> PostWnsToastAsync([FromBody] ToastTest request)
+        {
+            await _wnsChannelManager.SendToastAsync(request.Topic, request.Message);
+            return Ok();
+        }
+
+        [HttpPost("WnsChannelRegistration")]
+        public async Task<ActionResult> PostWnsChannelRegistrationAsync(
+            [FromBody] PostWnsChannelRegistrationRequest request)
+        {
+            if (request == null) return BadRequest();
+
+            await _wnsChannelManager.RegisterChannelAsync(request.DeviceId, request.ChannelUri, _apiPrincipal.Uid,
+                request.Topics);
+            return Ok();
         }
 
         public class ToastTest
@@ -27,29 +46,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             public string Message { get; set; }
         }
 
-        [HttpPost("WnsToast")]
-        [Authorize(Roles="Developer")]
-        public async Task<ActionResult> PostWnsToastAsync([FromBody] ToastTest request)
-        {
-            await _wnsChannelManager.SendToastAsync(request.Topic, request.Message);
-            return Ok();
-        }
-
         public class PostWnsChannelRegistrationRequest
         {
             public Guid DeviceId { get; set; }
             public string ChannelUri { get; set; }
             public string[] Topics { get; set; }
         }
-
-        [HttpPost("WnsChannelRegistration")]
-        public async Task<ActionResult> PostWnsChannelRegistrationAsync([FromBody] PostWnsChannelRegistrationRequest request)
-        {
-            if (request == null) return BadRequest();
-
-            await _wnsChannelManager.RegisterChannelAsync(request.DeviceId, request.ChannelUri, _apiPrincipal.Uid, request.Topics);
-            return Ok();
-        }
-
     }
 }

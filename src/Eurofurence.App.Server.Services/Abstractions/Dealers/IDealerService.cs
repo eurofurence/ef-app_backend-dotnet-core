@@ -6,6 +6,5 @@ namespace Eurofurence.App.Server.Services.Abstractions.Dealers
         IEntityServiceOperations<DealerRecord>,
         IPatchOperationProcessor<DealerRecord>
     {
-
     }
 }

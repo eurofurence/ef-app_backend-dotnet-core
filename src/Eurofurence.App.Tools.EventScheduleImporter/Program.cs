@@ -7,6 +7,8 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.MongoDb;
+using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using MongoDB.Driver;
 
@@ -14,17 +16,16 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
 {
     public class Program
     {
-
         public static List<EventConferenceDayRecord> UpdateEventConferenceDays(
             IList<Tuple<DateTime, string>> importConferenceDays,
             IEventConferenceDayService service
-            )
+        )
         {
             var eventConferenceDayRecords = service.FindAllAsync().Result;
 
             var patch = new PatchDefinition<Tuple<DateTime, string>, EventConferenceDayRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Date == source.Item1)
-                );
+            );
 
             patch.Map(s => s.Item1, t => t.Date)
                 .Map(s => s.Item2, t => t.Name);
@@ -40,32 +41,32 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
         public static List<EventConferenceTrackRecord> UpdateEventConferenceTracks(
             IList<string> importConferenceTracks,
             IEventConferenceTrackService service
-            )
+        )
         {
             var eventConferenceTrackRecords = service.FindAllAsync().Result;
 
             var patch = new PatchDefinition<string, EventConferenceTrackRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
-                );
+            );
 
             patch.Map(s => s, t => t.Name);
             var diff = patch.Patch(importConferenceTracks, eventConferenceTrackRecords);
 
             service.ApplyPatchOperationAsync(diff).Wait();
-            
+
             return diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList();
         }
 
         public static List<EventConferenceRoomRecord> UpdateEventConferenceRooms(
             IList<string> importConferenceRooms,
             IEventConferenceRoomService service
-            )
+        )
         {
             var eventConferenceRoomRecords = service.FindAllAsync().Result;
 
             var patch = new PatchDefinition<string, EventConferenceRoomRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
-                );
+            );
 
             patch.Map(s => s, t => t.Name);
             var diff = patch.Patch(importConferenceRooms, eventConferenceRoomRecords);
@@ -81,13 +82,13 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             IList<EventConferenceRoomRecord> CurrentConferenceRooms,
             IList<EventConferenceDayRecord> CurrentConferenceDays,
             IEventService service
-            )
+        )
         {
             var eventRecords = service.FindAllAsync().Result;
 
             var patch = new PatchDefinition<EventImportRow, EventRecord>(
                 (source, list) => list.SingleOrDefault(a => a.SourceEventId == source.EventId)
-                );
+            );
 
             patch.Map(s => s.EventId, t => t.SourceEventId)
                 .Map(s => s.Slug, t => t.Slug)
@@ -108,9 +109,10 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
                 .Map(s => s.StartTime, t => t.StartTime)
                 .Map(s => s.EndTime, t => t.EndTime)
                 .Map(s => DateTime.SpecifyKind(CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
-                        .Date.Add(s.StartTime), DateTimeKind.Utc).AddHours(-2), t => t.StartDateTimeUtc)
+                    .Date.Add(s.StartTime), DateTimeKind.Utc).AddHours(-2), t => t.StartDateTimeUtc)
                 .Map(s => DateTime.SpecifyKind(CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
-                        .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc), t => t.EndDateTimeUtc)
+                        .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc),
+                    t => t.EndDateTimeUtc)
                 .Map(s => s.PanelHosts, t => t.PanelHosts);
 
             var diff = patch.Patch(ImportEventEntries, eventRecords);
@@ -126,10 +128,10 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             var _client = new MongoClient("mongodb://localhost:27018");
             var _database = _client.GetDatabase("app_dev");
 
-            Eurofurence.App.Domain.Model.MongoDb.BsonClassMapping.Register();
-            
+            BsonClassMapping.Register();
+
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(_database));
+            builder.RegisterModule(new AutofacModule(_database));
             builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
 
             var container = builder.Build();
@@ -147,12 +149,10 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             csv.Configuration.RegisterClassMap<EventImportRowClassMap>();
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
 
-            foreach(var record in csvRecords)
-            {
-                record.ConferenceDayName = record.ConferenceDayName.Contains(" - ") ?
-                        record.ConferenceDayName.Split(new string[] { " - " }, StringSplitOptions.None)[1].Trim()
-                        : record.ConferenceDayName.Trim();
-            }
+            foreach (var record in csvRecords)
+                record.ConferenceDayName = record.ConferenceDayName.Contains(" - ")
+                    ? record.ConferenceDayName.Split(new[] {" - "}, StringSplitOptions.None)[1].Trim()
+                    : record.ConferenceDayName.Trim();
 
             var conferenceTracks = csvRecords.Select(a => a.ConferenceTrack)
                 .Distinct().OrderBy(a => a).ToList();
@@ -160,14 +160,15 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
             var conferenceRooms = csvRecords.Select(a => a.ConferenceRoom)
                 .Distinct().OrderBy(a => a).ToList();
 
-            var conferenceDays = csvRecords.Select(a => 
-                new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay), DateTimeKind.Utc), a.ConferenceDayName))
+            var conferenceDays = csvRecords.Select(a =>
+                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay), DateTimeKind.Utc),
+                        a.ConferenceDayName))
                 .Distinct().OrderBy(a => a).ToList();
 
             var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, eventConferenceTrackService);
             var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, eventConferenceRoomService);
             var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, eventConferenceDayService);
-            var eventEntries = UpdateEventEntries(csvRecords, 
+            var eventEntries = UpdateEventEntries(csvRecords,
                 eventConferenceTracks,
                 eventConferenceRooms,
                 eventConferenceDays,

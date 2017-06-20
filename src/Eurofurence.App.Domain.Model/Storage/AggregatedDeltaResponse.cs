@@ -1,4 +1,10 @@
 ﻿using System;
+using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.Dealers;
+using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.Maps;
 
 namespace Eurofurence.App.Domain.Model.Sync
 {
@@ -7,20 +13,20 @@ namespace Eurofurence.App.Domain.Model.Sync
         public DateTime? Since { get; set; }
         public DateTime CurrentDateTimeUtc { get; set; }
 
-        public DeltaResponse<Events.EventRecord> Events { get; set; }
-        public DeltaResponse<Events.EventConferenceDayRecord> EventConferenceDays { get; set; }
-        public DeltaResponse<Events.EventConferenceRoomRecord> EventConferenceRooms { get; set; }
-        public DeltaResponse<Events.EventConferenceTrackRecord> EventConferenceTracks { get; set; }
-        public DeltaResponse<Knowledge.KnowledgeGroupRecord> KnowledgeGroups { get; set; }
-        public DeltaResponse<Knowledge.KnowledgeEntryRecord> KnowledgeEntries { get; set; }
-        public DeltaResponse<Images.ImageRecord> Images { get; set; }
-        public DeltaResponse<Dealers.DealerRecord> Dealers { get; set; }
-        public DeltaResponse<Announcements.AnnouncementRecord> Announcements { get; set; }
-        public DeltaResponse<Maps.MapRecord> Maps { get; set; }
+        public DeltaResponse<EventRecord> Events { get; set; }
+        public DeltaResponse<EventConferenceDayRecord> EventConferenceDays { get; set; }
+        public DeltaResponse<EventConferenceRoomRecord> EventConferenceRooms { get; set; }
+        public DeltaResponse<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
+        public DeltaResponse<KnowledgeGroupRecord> KnowledgeGroups { get; set; }
+        public DeltaResponse<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
+        public DeltaResponse<ImageRecord> Images { get; set; }
+        public DeltaResponse<DealerRecord> Dealers { get; set; }
+        public DeltaResponse<AnnouncementRecord> Announcements { get; set; }
+        public DeltaResponse<MapRecord> Maps { get; set; }
     }
 
 
-    public class DeltaResponse<T> where T: EntityBase
+    public class DeltaResponse<T> where T : EntityBase
     {
         public DateTime StorageLastChangeDateTimeUtc { get; set; }
         public DateTime StorageDeltaStartChangeDateTimeUtc { get; set; }

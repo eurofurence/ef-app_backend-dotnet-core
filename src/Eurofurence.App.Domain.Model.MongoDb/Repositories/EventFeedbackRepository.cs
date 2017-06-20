@@ -4,12 +4,11 @@ using MongoDB.Driver;
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 {
     public class EventFeedbackRepository :
-    MongoDbEntityRepositoryBase<EventFeedbackRecord>
+        MongoDbEntityRepositoryBase<EventFeedbackRecord>
     {
         public EventFeedbackRepository(IMongoCollection<EventFeedbackRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

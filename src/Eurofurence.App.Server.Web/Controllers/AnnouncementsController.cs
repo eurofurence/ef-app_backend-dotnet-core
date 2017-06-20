@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class AnnouncementsController : Controller
     {
-        readonly IAnnouncementService _announcementService;
-        readonly IPushEventMediator _eventMediator;
+        private readonly IAnnouncementService _announcementService;
+        private readonly IPushEventMediator _eventMediator;
 
         public AnnouncementsController(IAnnouncementService announcementService, IPushEventMediator eventMediator)
         {
@@ -23,7 +23,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all announcement entries.
+        ///     Retrieves a list of all announcement entries.
         /// </summary>
         /// <returns>All Announcement Entries.</returns>
         [HttpGet]
@@ -35,7 +35,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieve a single announcement.
+        ///     Retrieve a single announcement.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{Id}")]

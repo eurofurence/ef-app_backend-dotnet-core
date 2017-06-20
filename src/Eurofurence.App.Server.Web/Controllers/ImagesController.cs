@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class ImagesController : Controller
     {
-        readonly IImageService _imageService;
+        private readonly IImageService _imageService;
 
         public ImagesController(IImageService imageService)
         {
@@ -19,7 +19,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all images.
+        ///     Retrieves a list of all images.
         /// </summary>
         /// <returns>All knowledge groups.</returns>
         [HttpGet]
@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieve a single image.
+        ///     Retrieve a single image.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{Id}")]
@@ -43,7 +43,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieve a single image content.
+        ///     Retrieve a single image content.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{Id}/Content")]
@@ -57,6 +57,5 @@ namespace Eurofurence.App.Server.Web.Controllers
             var content = await _imageService.GetImageContentByIdAsync(id);
             return File(content, record.MimeType);
         }
-
     }
 }

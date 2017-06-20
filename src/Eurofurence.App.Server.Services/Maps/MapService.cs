@@ -11,7 +11,7 @@ namespace Eurofurence.App.Server.Services.Maps
         public MapService(
             IEntityRepository<MapRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
         }

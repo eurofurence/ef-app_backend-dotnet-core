@@ -1,14 +1,14 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using Eurofurence.App.Common.DataDiffUtils;
-using Eurofurence.App.Domain.Model.Dealers;
-using Eurofurence.App.Domain.Model.Fragments;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Eurofurence.App.Common.DataDiffUtils;
+using Eurofurence.App.Domain.Model.Dealers;
+using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 
@@ -16,9 +16,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 {
     public class PackageImporter
     {
-        readonly IImageService _imageService;
-        readonly IDealerService _dealerService;
-        readonly TextWriter _output;
+        private readonly IDealerService _dealerService;
+        private readonly IImageService _imageService;
+        private readonly TextWriter _output;
 
         public PackageImporter(IImageService imageService, IDealerService dealerService, TextWriter output = null)
         {
@@ -34,7 +34,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             using (var fileStream = File.OpenRead(fileName))
             using (var archive = new ZipArchive(fileStream))
             {
-                var csvEntry = archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase));
+                var csvEntry =
+                    archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase));
 
                 TextReader reader = new StreamReader(csvEntry.Open(), true);
 
@@ -47,7 +48,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 
                 foreach (var record in csvRecords)
                 {
-                    var dealerRecord = new DealerRecord()
+                    var dealerRecord = new DealerRecord
                     {
                         RegistrationNumber = record.RegNo,
                         AttendeeNickname = record.Nickname,
@@ -57,16 +58,19 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                         DisplayName = record.DisplayName,
                         ShortDescription = record.ShortDescription,
                         Merchandise = record.Merchandise,
-                        AttendsOnThursday = !String.IsNullOrWhiteSpace(record.AttendsThu),
-                        AttendsOnFriday = !String.IsNullOrWhiteSpace(record.AttendsFri),
-                        AttendsOnSaturday = !String.IsNullOrWhiteSpace(record.AttendsSat),
+                        AttendsOnThursday = !string.IsNullOrWhiteSpace(record.AttendsThu),
+                        AttendsOnFriday = !string.IsNullOrWhiteSpace(record.AttendsFri),
+                        AttendsOnSaturday = !string.IsNullOrWhiteSpace(record.AttendsSat),
                         TelegramHandle = record.Telegram,
                         TwitterHandle = record.Twitter
                     };
 
-                    dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{record.RegNo}.", $"dealer:artist:{record.RegNo}");
-                    dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(archive, $"thumbnail_{record.RegNo}.", $"dealer:thumbnail:{record.RegNo}");
-                    dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
+                    dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{record.RegNo}.",
+                        $"dealer:artist:{record.RegNo}");
+                    dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(archive, $"thumbnail_{record.RegNo}.",
+                        $"dealer:thumbnail:{record.RegNo}");
+                    dealerRecord.ArtPreviewImageId =
+                        await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
                     ImportLinks(dealerRecord, record.Website);
 
@@ -113,13 +117,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 
             var linkFragments = new List<LinkFragment>();
             if (dealerRecord.Links != null)
-            {
                 linkFragments.AddRange(dealerRecord.Links);
-            }
 
             var sanitizedParts = websiteUrls
                 .Replace(" / ", ";")
-                .Split(new char[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                .Split(new[] {' ', ',', ';'}, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var part in sanitizedParts)
             {
@@ -128,37 +130,34 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 
                 if (!assumedUri.StartsWith("http://", StringComparison.CurrentCultureIgnoreCase) &&
                     !assumedUri.StartsWith("https://", StringComparison.CurrentCultureIgnoreCase))
-                {
                     assumedUri = $"http://{part}";
-                }
 
                 if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute))
-                {
-                    linkFragments.Add(new LinkFragment()
+                    linkFragments.Add(new LinkFragment
                     {
                         FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
                         Target = assumedUri
                     });
-                }
             }
 
             dealerRecord.Links = linkFragments.ToArray();
         }
 
-        async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith, string internalReference)
+        private async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
+            string internalReference)
         {
-            var imageEntry = archive.Entries.SingleOrDefault(a => a.Name.StartsWith(fileNameStartsWith, StringComparison.CurrentCultureIgnoreCase));
+            var imageEntry =
+                archive.Entries.SingleOrDefault(
+                    a => a.Name.StartsWith(fileNameStartsWith, StringComparison.CurrentCultureIgnoreCase));
 
             if (imageEntry != null)
-            {
                 using (var s = imageEntry.Open())
                 using (var br = new BinaryReader(s))
                 {
-                    var imageByteArray = br.ReadBytes((int)imageEntry.Length);
+                    var imageByteArray = br.ReadBytes((int) imageEntry.Length);
                     var result = await _imageService.InsertOrUpdateImageAsync(internalReference, imageByteArray);
                     return result;
                 }
-            }
 
             return null;
         }

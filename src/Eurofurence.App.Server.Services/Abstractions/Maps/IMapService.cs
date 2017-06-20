@@ -3,9 +3,8 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Maps
 {
     public interface IMapService :
-    IEntityServiceOperations<MapRecord>,
-    IPatchOperationProcessor<MapRecord>
+        IEntityServiceOperations<MapRecord>,
+        IPatchOperationProcessor<MapRecord>
     {
-
     }
 }

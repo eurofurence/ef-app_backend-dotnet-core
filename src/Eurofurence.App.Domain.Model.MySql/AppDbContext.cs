@@ -6,13 +6,12 @@ namespace Eurofurence.App.Domain.Model.MySql
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<EventRecord> Events { get; set; }
-
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
-
         }
+
+        public DbSet<EventRecord> Events { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,8 +34,6 @@ namespace Eurofurence.App.Domain.Model.MySql
                 {
                     entity.ToTable("EventConferenceTrack");
                     entity.HasKey(a => a.Id);
-
-
                 });
         }
     }

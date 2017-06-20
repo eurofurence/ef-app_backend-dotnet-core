@@ -9,6 +9,7 @@ namespace Eurofurence.App.Domain.Model.Events
     {
         [DataMember]
         public string Name { get; set; }
+
         [DataMember]
         public DateTime Date { get; set; }
 

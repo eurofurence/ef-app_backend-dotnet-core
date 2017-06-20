@@ -7,16 +7,16 @@ namespace Eurofurence.App.Server.Services.Security
 {
     public class ApiPrincipal : IApiPrincipal
     {
-        readonly ClaimsPrincipal _principal;
-        readonly ClaimsIdentity _identity;
+        private readonly ClaimsIdentity _identity;
+        private readonly ClaimsPrincipal _principal;
 
         public ApiPrincipal(ClaimsPrincipal principal)
         {
             _principal = principal;
-            _identity = (ClaimsIdentity)principal.Identity;
+            _identity = (ClaimsIdentity) principal.Identity;
         }
 
-        public string[] Roles => 
+        public string[] Roles =>
             _identity?.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToArray() ?? new string[0];
 
         public List<KeyValuePair<string, string>> Claims =>

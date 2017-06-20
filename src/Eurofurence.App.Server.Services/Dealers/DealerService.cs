@@ -11,7 +11,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         public DealerService(
             IEntityRepository<DealerRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
         }

@@ -1,14 +1,14 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
     public class PushEventMediator : IPushEventMediator
     {
-        readonly IFirebaseChannelManager _firebaseChannelManager;
-        readonly IWnsChannelManager _wnsChannelManager;
+        private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IWnsChannelManager _wnsChannelManager;
 
         public PushEventMediator(IWnsChannelManager wnsChannelManager, IFirebaseChannelManager firebaseChannelManager)
         {
@@ -21,9 +21,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             await _wnsChannelManager.PushAnnouncementNotificationAsync(announcement);
 
             if (announcement.ValidFromDateTimeUtc <= DateTime.UtcNow)
-            {
                 await _firebaseChannelManager.PushAnnouncementNotificationAsync(announcement);
-            }
         }
 
         public async Task PushSyncRequestAsync()

@@ -11,16 +11,16 @@ namespace Eurofurence.App.Server.Services.Security
         {
             using (var client = new HttpClient())
             {
-                var payload = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+                var payload = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("id", regNo.ToString()),
                     new KeyValuePair<string, string>("nick", username),
-                    new KeyValuePair<string, string>("password", password),
+                    new KeyValuePair<string, string>("password", password)
                 });
 
                 var response = await client.PostAsync("https://reg.eurofurence.org/regsys/api/authcheck", payload);
 
-                return response.IsSuccessStatusCode;               
+                return response.IsSuccessStatusCode;
             }
         }
     }

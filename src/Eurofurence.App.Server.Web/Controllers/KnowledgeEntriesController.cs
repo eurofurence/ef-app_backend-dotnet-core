@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class KnowledgeEntriesController : Controller
     {
-        readonly IKnowledgeEntryService _knowledgeEntriyService;
+        private readonly IKnowledgeEntryService _knowledgeEntriyService;
 
         public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService)
         {
@@ -19,7 +19,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all knowledge entries.
+        ///     Retrieves a list of all knowledge entries.
         /// </summary>
         /// <returns>All knowledge Entries.</returns>
         [HttpGet]
@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieve a single knowledge entry.
+        ///     Retrieve a single knowledge entry.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{Id}")]
@@ -41,6 +41,5 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             return (await _knowledgeEntriyService.FindOneAsync(id)).Transient404(HttpContext);
         }
-
     }
 }

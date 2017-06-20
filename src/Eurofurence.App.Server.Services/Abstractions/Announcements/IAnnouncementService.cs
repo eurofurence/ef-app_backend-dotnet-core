@@ -6,6 +6,5 @@ namespace Eurofurence.App.Server.Services.Abstractions.Announcements
         IEntityServiceOperations<AnnouncementRecord>,
         IPatchOperationProcessor<AnnouncementRecord>
     {
-
     }
 }

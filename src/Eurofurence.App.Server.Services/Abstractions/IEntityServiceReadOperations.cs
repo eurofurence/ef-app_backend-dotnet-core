@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model;
-using System.Linq.Expressions;
 
 namespace Eurofurence.App.Server.Services.Abstractions
 {

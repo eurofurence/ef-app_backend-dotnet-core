@@ -4,12 +4,11 @@ using MongoDB.Driver;
 namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 {
     public class PushNotificationChannelRepository :
-    MongoDbEntityRepositoryBase<PushNotificationChannelRecord>
+        MongoDbEntityRepositoryBase<PushNotificationChannelRecord>
     {
         public PushNotificationChannelRepository(IMongoCollection<PushNotificationChannelRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

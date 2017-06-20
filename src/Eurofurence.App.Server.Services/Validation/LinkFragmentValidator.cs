@@ -1,6 +1,6 @@
-﻿using Eurofurence.App.Domain.Model.Fragments;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 
@@ -8,23 +8,7 @@ namespace Eurofurence.App.Server.Services.Validation
 {
     public class LinkFragmentValidator : ILinkFragmentValidator
     {
-        public class ValidationResult
-        {
-            public bool IsValid { get; set; }
-            public string ErrorMessage { get; set; }
-
-            public static ValidationResult Valid()
-            {
-                return new ValidationResult() { IsValid = true };
-            }
-
-            public static ValidationResult Error(string message)
-            {
-                return new ValidationResult() { IsValid = false, ErrorMessage = message };
-            }
-        }
-
-        readonly IDealerService _dealerService;
+        private readonly IDealerService _dealerService;
 
         public LinkFragmentValidator(IDealerService dealerService)
         {
@@ -57,6 +41,21 @@ namespace Eurofurence.App.Server.Services.Validation
 
             return ValidationResult.Valid();
         }
-        
+
+        public class ValidationResult
+        {
+            public bool IsValid { get; set; }
+            public string ErrorMessage { get; set; }
+
+            public static ValidationResult Valid()
+            {
+                return new ValidationResult {IsValid = true};
+            }
+
+            public static ValidationResult Error(string message)
+            {
+                return new ValidationResult {IsValid = false, ErrorMessage = message};
+            }
+        }
     }
 }

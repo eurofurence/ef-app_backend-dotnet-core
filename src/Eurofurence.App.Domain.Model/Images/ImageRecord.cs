@@ -24,7 +24,7 @@ namespace Eurofurence.App.Domain.Model.Images
 
         [Required]
         [DataMember]
-        public string MimeType{ get; set; }
+        public string MimeType { get; set; }
 
         [Required]
         [DataMember]

@@ -11,16 +11,16 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
+using Eurofurence.App.Server.Services.Communication;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
-using Eurofurence.App.Server.Services.Validation;
 using Eurofurence.App.Server.Services.Images;
+using Eurofurence.App.Server.Services.Knowledge;
 using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
-using Eurofurence.App.Server.Services.Communication;
-using Eurofurence.App.Server.Services.Knowledge;
+using Eurofurence.App.Server.Services.Validation;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
 {

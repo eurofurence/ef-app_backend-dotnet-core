@@ -1,22 +1,23 @@
 ﻿using System;
-using Microsoft.Extensions.CommandLineUtils;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Tools.CliToolBox.Importers.DealersDen;
+using Microsoft.Extensions.CommandLineUtils;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
     public class DealersCommand : ICommand
     {
-        public string Name => "dealers";
-
-        readonly IDealerService _dealerService;
-        readonly IImageService _imageService;
+        private readonly IDealerService _dealerService;
+        private readonly IImageService _imageService;
 
         public DealersCommand(IDealerService dealerService, IImageService imageService)
         {
             _dealerService = dealerService;
             _imageService = imageService;
         }
+
+        public string Name => "dealers";
 
         public void Register(CommandLineApplication command)
         {
@@ -31,7 +32,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var dealers = _dealerService.FindAllAsync().Result;
 
 
-                Action<Guid?> dropImage = (imageId) =>
+                Action<Guid?> dropImage = imageId =>
                 {
                     if (imageId.HasValue)
                     {
@@ -40,7 +41,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     }
                 };
 
-                foreach(var dealer in dealers)
+                foreach (var dealer in dealers)
                 {
                     Console.WriteLine($"Deleting images for dealer {dealer.Id} ({dealer.RegistrationNumber})");
                     dropImage(dealer.ArtistImageId);
@@ -55,13 +56,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             });
         }
 
-        void importZipPackageCommand(CommandLineApplication command)
+        private void importZipPackageCommand(CommandLineApplication command)
         {
             var inputPathOption = command.Option("-inputPath", "Zip file to import", CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
             {
-                var importer = new Importers.DealersDen.PackageImporter(_imageService, _dealerService, command.Out);
+                var importer = new PackageImporter(_imageService, _dealerService, command.Out);
                 importer.ImportZipPackageAsync(inputPathOption.Value()).Wait();
                 return 0;
             });

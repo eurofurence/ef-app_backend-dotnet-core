@@ -6,12 +6,12 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 namespace Eurofurence.App.Server.Services.Events
 {
     public class EventFeedbackService : EntityServiceBase<EventFeedbackRecord>,
-    IEventFeedbackService
+        IEventFeedbackService
     {
         public EventFeedbackService(
             IEntityRepository<EventFeedbackRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
         }

@@ -14,7 +14,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 Console.WriteLine("Testing");
 
                 return 0;
-            }); 
+            });
         }
     }
 }

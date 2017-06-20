@@ -8,6 +8,11 @@ namespace Eurofurence.App.Domain.Model.Maps
     [DataContract]
     public class MapRecord : EntityBase
     {
+        public MapRecord()
+        {
+            Entries = new List<MapEntryRecord>();
+        }
+
         [DataMember]
         [Required]
         public Guid ImageId { get; set; }
@@ -23,10 +28,5 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember]
         [Required]
         public IList<MapEntryRecord> Entries { get; set; }
-
-        public MapRecord()
-        {
-            Entries = new List<MapEntryRecord>();
-        }
     }
 }

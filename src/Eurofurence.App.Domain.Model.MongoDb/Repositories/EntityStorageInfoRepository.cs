@@ -11,7 +11,6 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
         public EntityStorageInfoRepository(IMongoCollection<EntityStorageInfoRecord> collection)
             : base(collection)
         {
-
         }
 
         public async Task<EntityStorageInfoRecord> FindOneAsync(string entityType)

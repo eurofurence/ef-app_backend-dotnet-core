@@ -1,5 +1,5 @@
-﻿using Swashbuckle.AspNetCore.SwaggerGen;
-using Swashbuckle.AspNetCore.Swagger;
+﻿using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Eurofurence.App.Server.Web.Swagger
 {
@@ -17,7 +17,7 @@ namespace Eurofurence.App.Server.Web.Swagger
 
 
             //if (model.Properties == null) return;
-            
+
             //foreach (var propertyName in model.Properties.Where
             //    (p => virtualPropertyNames.Contains(p.Key, StringComparer.OrdinalIgnoreCase)).ToArray())
             //{

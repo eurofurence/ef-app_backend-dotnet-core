@@ -1,5 +1,5 @@
-﻿using Serilog.Sinks.AwsCloudWatch;
-using Serilog.Events;
+﻿using Serilog.Events;
+using Serilog.Sinks.AwsCloudWatch;
 
 namespace Eurofurence.App.Server.Web.Extensions
 {

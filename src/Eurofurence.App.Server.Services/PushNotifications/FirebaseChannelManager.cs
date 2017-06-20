@@ -1,9 +1,10 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
@@ -15,7 +16,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
     public class FirebaseChannelManager : IFirebaseChannelManager
     {
-        readonly FirebaseConfiguration _configuration;
+        private readonly FirebaseConfiguration _configuration;
 
         public FirebaseChannelManager(FirebaseConfiguration configuration)
         {
@@ -27,7 +28,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             return SendPushNotificationAsync(new
             {
                 Event = "Announcement",
-                Title = announcement.Title,
+                announcement.Title,
                 Text = announcement.Content
             });
         }
@@ -45,14 +46,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var payload = new
             {
                 to = $"/topics/{_configuration.TargetTopic}",
-                data = data
+                data
             };
 
-            var jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
+            var jsonPayload = JsonConvert.SerializeObject(payload);
 
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Key", $"={_configuration.AuthorizationKey}");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Key", $"={_configuration.AuthorizationKey}");
 
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
@@ -60,6 +62,5 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 result.EnsureSuccessStatusCode();
             }
         }
-
     }
 }

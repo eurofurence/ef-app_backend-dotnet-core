@@ -1,21 +1,23 @@
-﻿using Autofac;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Autofac;
+using Eurofurence.App.Domain.Model.MongoDb;
+using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Tools.CliToolBox.Commands;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
-using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 
 namespace Eurofurence.App.Tools.CliToolBox
 {
-    class Program
+    internal class Program
     {
-        static IConfiguration Configuration;
+        private static IConfiguration Configuration;
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var configurationBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -23,27 +25,28 @@ namespace Eurofurence.App.Tools.CliToolBox
 
             Configuration = configurationBuilder.Build();
 
-            var self = typeof(CliToolBox.Program).GetTypeInfo().Assembly;
+            var self = typeof(Program).GetTypeInfo().Assembly;
             var client = new MongoClient(Configuration["mongoDb:url"]);
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
-            Domain.Model.MongoDb.BsonClassMapping.Register();
+            BsonClassMapping.Register();
 
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule(database));
+            builder.RegisterModule(new AutofacModule(database));
             builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
 
-            builder.RegisterInstance(new TokenFactorySettings()
+            builder.RegisterInstance(new TokenFactorySettings
             {
                 SecretKey = Configuration["oAuth:secretKey"],
                 Audience = Configuration["oAuth:audience"],
                 Issuer = Configuration["oAuth:issuer"]
             });
 
-            var commands = self.GetTypes().Where(a => typeof(ICommand).IsAssignableFrom(a) && !a.GetTypeInfo().IsAbstract);
+            var commands = self.GetTypes()
+                .Where(a => typeof(ICommand).IsAssignableFrom(a) && !a.GetTypeInfo().IsAbstract);
 
-            foreach (var @type in commands)
-                builder.RegisterType(@type).AsSelf();
+            foreach (var type in commands)
+                builder.RegisterType(type).AsSelf();
 
             var container = builder.Build();
 
@@ -53,9 +56,9 @@ namespace Eurofurence.App.Tools.CliToolBox
             app.Name = "toolbox";
             app.HelpOption("-?|-h|--help");
 
-            foreach (var @type in commands)
+            foreach (var type in commands)
             {
-                ICommand command = (ICommand)container.Resolve(@type);
+                var command = (ICommand) container.Resolve(type);
                 app.Command(command.Name, command.Register);
             }
 
@@ -68,7 +71,5 @@ namespace Eurofurence.App.Tools.CliToolBox
                 Console.WriteLine(ex.Message);
             }
         }
-
-        
     }
 }

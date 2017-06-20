@@ -9,7 +9,6 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
         public ImageRepository(IMongoCollection<ImageRecord> collection)
             : base(collection)
         {
-
         }
     }
 }

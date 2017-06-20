@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/v2/[controller]")]
     public class KnowledgeGroupsController : Controller
     {
-        readonly IKnowledgeGroupService _knowledgeGroupService;
+        private readonly IKnowledgeGroupService _knowledgeGroupService;
 
         public KnowledgeGroupsController(IKnowledgeGroupService knowledgeGroupService)
         {
@@ -19,7 +19,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list of all knowledge groups.
+        ///     Retrieves a list of all knowledge groups.
         /// </summary>
         /// <returns>All knowledge groups.</returns>
         [HttpGet]
@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieve a single knowledge group.
+        ///     Retrieve a single knowledge group.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{Id}")]

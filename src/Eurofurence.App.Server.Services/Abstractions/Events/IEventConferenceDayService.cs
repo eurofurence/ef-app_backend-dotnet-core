@@ -6,6 +6,5 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         IEntityServiceOperations<EventConferenceDayRecord>,
         IPatchOperationProcessor<EventConferenceDayRecord>
     {
-
     }
 }

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions;
-using System.Linq;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
@@ -13,13 +13,13 @@ namespace Eurofurence.App.Server.Services.Communication
     public class PrivateMessageService : EntityServiceBase<PrivateMessageRecord>,
         IPrivateMessageService
     {
-        readonly IWnsChannelManager _wnsChannelManager;
+        private readonly IWnsChannelManager _wnsChannelManager;
 
         public PrivateMessageService(
             IEntityRepository<PrivateMessageRecord> entityRepository,
             IStorageServiceFactory storageServiceFactory,
             IWnsChannelManager wnsChannelManager
-            )
+        )
             : base(entityRepository, storageServiceFactory)
         {
             _wnsChannelManager = wnsChannelManager;
@@ -29,7 +29,7 @@ namespace Eurofurence.App.Server.Services.Communication
         {
             var messages = (await FindAllAsync(msg => msg.RecipientUid == recipientUid && msg.IsDeleted == 0)).ToList();
 
-            foreach(var message in messages.Where(a => !a.ReceivedDateTimeUtc.HasValue))
+            foreach (var message in messages.Where(a => !a.ReceivedDateTimeUtc.HasValue))
             {
                 message.ReceivedDateTimeUtc = DateTime.UtcNow;
                 await ReplaceOneAsync(message);
@@ -42,7 +42,7 @@ namespace Eurofurence.App.Server.Services.Communication
         {
             var message = await FindOneAsync(messageId);
             if (message == null) return null;
-            if (!String.IsNullOrWhiteSpace(recipientUid) && message.RecipientUid != recipientUid) return null;
+            if (!string.IsNullOrWhiteSpace(recipientUid) && message.RecipientUid != recipientUid) return null;
 
             if (!message.ReadDateTimeUtc.HasValue)
             {
@@ -55,7 +55,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
         public async Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request)
         {
-            var entity = new PrivateMessageRecord()
+            var entity = new PrivateMessageRecord
             {
                 AuthorName = request.AuthorName,
                 RecipientUid = request.RecipientUid,

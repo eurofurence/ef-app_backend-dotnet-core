@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Fragments
 {
     [DataContract]
-    public class LinkFragment 
+    public class LinkFragment
     {
         public enum FragmentTypeEnum
         {
@@ -30,12 +30,12 @@ namespace Eurofurence.App.Domain.Model.Fragments
             if (obj == null || GetType() != obj.GetType())
                 return false;
 
-            LinkFragment f = (LinkFragment)obj;
+            var f = (LinkFragment) obj;
 
             return
-                (f.FragmentType == this.FragmentType)
-                && (f.Name == this.Name)
-                && (f.Target == this.Target);            
+                f.FragmentType == FragmentType
+                && f.Name == Name
+                && f.Target == Target;
         }
     }
 }
