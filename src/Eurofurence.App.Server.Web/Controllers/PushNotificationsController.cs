@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
-using Eurofurence.App.Server.Services.Security;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,12 +10,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/v2/[controller]")]
     public class PushNotificationsController : Controller
     {
-        private readonly ApiPrincipal _apiPrincipal;
+        private readonly IApiPrincipal _apiPrincipal;
         private readonly IWnsChannelManager _wnsChannelManager;
 
         public PushNotificationsController(
             IWnsChannelManager wnsChannelManager,
-            ApiPrincipal apiPrincipal)
+            IApiPrincipal apiPrincipal)
         {
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;

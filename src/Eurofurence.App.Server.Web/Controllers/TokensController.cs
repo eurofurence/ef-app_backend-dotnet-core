@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +10,10 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/v2/[controller]")]
     public class TokensController : Controller
     {
-        private readonly ApiPrincipal _apiPrincipal;
+        private readonly IApiPrincipal _apiPrincipal;
         private readonly IAuthenticationHandler _authenticationHandler;
 
-        public TokensController(IAuthenticationHandler authenticationHandler, ApiPrincipal apiPrincipal)
+        public TokensController(IAuthenticationHandler authenticationHandler, IApiPrincipal apiPrincipal)
         {
             _authenticationHandler = authenticationHandler;
             _apiPrincipal = apiPrincipal;

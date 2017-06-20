@@ -8,12 +8,6 @@ using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
-    public class FirebaseConfiguration
-    {
-        public string AuthorizationKey { get; set; }
-        public string TargetTopic { get; set; }
-    }
-
     public class FirebaseChannelManager : IFirebaseChannelManager
     {
         private readonly FirebaseConfiguration _configuration;

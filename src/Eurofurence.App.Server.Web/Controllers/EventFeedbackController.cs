@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Eurofurence.App.Server.Services.Security;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,14 +11,14 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/v2/[controller]")]
     public class EventFeedbackController : Controller
     {
-        private readonly ApiPrincipal _apiPrincipal;
+        private readonly IApiPrincipal _apiPrincipal;
         private readonly IEventFeedbackService _eventFeedbackService;
         private readonly IEventService _eventService;
 
         public EventFeedbackController(
             IEventFeedbackService eventFeedbackService,
             IEventService eventService,
-            ApiPrincipal apiPrincipal)
+            IApiPrincipal apiPrincipal)
         {
             _eventService = eventService;
             _apiPrincipal = apiPrincipal;

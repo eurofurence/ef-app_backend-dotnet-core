@@ -8,8 +8,8 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Swagger;
@@ -144,7 +144,7 @@ namespace Eurofurence.App.Server.Web
             });
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
-                .As<ApiPrincipal>();
+                .As<IApiPrincipal>();
 
             var container = builder.Build();
             return container.Resolve<IServiceProvider>();

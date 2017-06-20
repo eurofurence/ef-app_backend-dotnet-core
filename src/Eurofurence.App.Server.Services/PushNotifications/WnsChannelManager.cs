@@ -12,13 +12,6 @@ using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
-    public class WnsConfiguration
-    {
-        public string ClientId { get; set; }
-        public string ClientSecret { get; set; }
-        public string TargetTopic { get; set; }
-    }
-
     public class WnsChannelManager : IWnsChannelManager
     {
         private readonly WnsConfiguration _configuration;
