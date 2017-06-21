@@ -10,15 +10,27 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/v2/[controller]")]
     public class PushNotificationsController : Controller
     {
+        private readonly IPushEventMediator _pushEventMediator;
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IWnsChannelManager _wnsChannelManager;
 
         public PushNotificationsController(
+            IPushEventMediator pushEventMediator,
             IWnsChannelManager wnsChannelManager,
             IApiPrincipal apiPrincipal)
         {
+            _pushEventMediator = pushEventMediator;
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
+        }
+
+        [HttpPost("SyncRequest")]
+        [Authorize(Roles = "System,Developer")]
+        [ProducesResponseType(204)]
+        public async Task<ActionResult> PushSyncRequestAsync()
+        {
+            await _pushEventMediator.PushSyncRequestAsync();
+            return NoContent();
         }
 
         [HttpPost("WnsToast")]

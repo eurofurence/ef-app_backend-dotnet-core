@@ -17,7 +17,7 @@ namespace Eurofurence.App.Tools.CliToolBox
     {
         private static IConfiguration Configuration;
 
-        private static void Main(string[] args)
+        private static int Main(string[] args)
         {
             var configurationBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -64,12 +64,14 @@ namespace Eurofurence.App.Tools.CliToolBox
 
             try
             {
-                app.Execute(args);
+                return app.Execute(args);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+
+            return 0;
         }
     }
 }
