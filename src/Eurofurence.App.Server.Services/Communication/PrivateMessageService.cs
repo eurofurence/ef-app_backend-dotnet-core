@@ -66,7 +66,10 @@ namespace Eurofurence.App.Server.Services.Communication
             entity.NewId();
 
             await InsertOneAsync(entity);
-            await _wnsChannelManager.PushPrivateMessageNotificationAsync(request.RecipientUid);
+            await _wnsChannelManager.PushPrivateMessageNotificationAsync(
+                request.RecipientUid,
+                request.ToastTitle,
+                request.ToastMessage);
 
             return entity.Id;
         }
