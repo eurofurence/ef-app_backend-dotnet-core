@@ -99,10 +99,18 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _pushNotificationRepository.ReplaceOneAsync(record);
         }
 
-        public async Task PushPrivateMessageNotificationAsync(string recipientUid)
+        public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
         {
             var recipients = await GetAllRecipientsAsyncByUid(recipientUid);
-            await SendRawAsync(recipients, "privatemessage_received");
+            await SendRawAsync(recipients, new
+            {
+                Event = "PrivateMessage_Received",
+                Content = new
+                {
+                    ToastTitle = toastTitle,
+                    ToastMessage = toastMessage
+                }
+            });
         }
 
         private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsync()
@@ -120,6 +128,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             return _pushNotificationRepository.FindAllAsync(a => a.Uid == uid);
         }
 
+
+        private Task SendRawAsync(IEnumerable<PushNotificationChannelRecord> recipients, object rawContent)
+        {
+            return SendRawAsync(recipients, JsonConvert.SerializeObject(rawContent));
+        }
 
         private async Task SendRawAsync(IEnumerable<PushNotificationChannelRecord> recipients, string rawContent)
         {
