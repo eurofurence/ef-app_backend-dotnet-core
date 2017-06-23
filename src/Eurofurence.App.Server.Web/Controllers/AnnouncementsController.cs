@@ -88,7 +88,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _announcementService.ReplaceOneAsync(record);
             await _eventMediator.PushSyncRequestAsync();
 
-            return Ok();
+            return NoContent();
         }
 
         [HttpDelete]
