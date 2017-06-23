@@ -73,6 +73,24 @@ namespace Eurofurence.App.Server.Web.Controllers
             return Ok();
         }
 
+        [HttpPut]
+        [Authorize(Roles = "System,Developer")]
+        public async Task<ActionResult> PutAnnouncementAsync([FromBody] AnnouncementRecord record)
+        {
+            if (record == null) return BadRequest("Error parsing Record");
+            if (record.Id == Guid.Empty) return BadRequest("Error parsing Record.Id");
+
+            var existingRecord = await _announcementService.FindOneAsync(record.Id);
+            if (existingRecord == null) return NotFound($"No record found with it {record.Id}");
+
+            record.Touch();
+
+            await _announcementService.ReplaceOneAsync(record);
+            await _eventMediator.PushSyncRequestAsync();
+
+            return Ok();
+        }
+
         [HttpDelete]
         [Authorize(Roles = "System,Developer")]
         public async Task<ActionResult> ClearAnnouncementAsync()
