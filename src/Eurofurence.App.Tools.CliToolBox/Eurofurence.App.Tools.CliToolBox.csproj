@@ -6,9 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
+    <None Remove="appsettings.json" />
   </ItemGroup>
 
   <ItemGroup>
