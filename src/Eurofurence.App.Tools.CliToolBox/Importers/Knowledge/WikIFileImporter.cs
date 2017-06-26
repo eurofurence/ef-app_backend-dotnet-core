@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -152,12 +151,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
 
         private async Task<byte[]> GetImageAsync(string url)
         {
-            var handler = new HttpClientHandler()
-            {
-                UseProxy = true,
-                Proxy = new MyProxy()
-            };
-            using (var client = new HttpClient(handler))
+            using (var client = new HttpClient())
             {
                 var result = await client.GetByteArrayAsync(url);
                 return result;
@@ -218,20 +212,5 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             modifiedRecords += diff.Count(a => a.Action != ActionEnum.NotModified);
             return diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList();
         }
-    }
-
-    public class MyProxy : IWebProxy
-    {
-        public Uri GetProxy(Uri destination)
-        {
-            return new Uri("http://10.64.5.6:8080");
-        }
-
-        public bool IsBypassed(Uri host)
-        {
-            return false;
-        }
-
-        public ICredentials Credentials { get; set; }
     }
 }
