@@ -2,7 +2,7 @@
   "profiles": {
     "Eurofurence.App.Tools.CliToolBox": {
       "commandName": "Project",
-      "commandLineArgs": "events importCsvFile -inputPath=c:\\temp\\EF23-events-public-20170619T233901.199840896-v0.100.csv"
+      "commandLineArgs": "knowledge importWikiFile -inputPath=c:\\temp\\coninfo.txt"
     }
   }
 }

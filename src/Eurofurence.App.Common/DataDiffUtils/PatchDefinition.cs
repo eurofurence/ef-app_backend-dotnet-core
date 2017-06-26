@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -21,6 +22,23 @@ namespace Eurofurence.App.Common.DataDiffUtils
             _targetItemLocator = targetItemLocator;
         }
 
+        private bool ArraysEqual(Array a1, Array a2)
+        {
+            if (a1.Length == a2.Length)
+            {
+                var a1e = a1.GetEnumerator();
+                var a2e = a2.GetEnumerator();
+
+                for (int i = 0; i < a1.Length; i++)
+                {
+                    if (!a1e.MoveNext() || !a2e.MoveNext() || !a1e.Current.Equals(a2e.Current))
+                        return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
         public PatchDefinition<TSource, TTarget> Map<TField>(
             Func<TSource, TField> sourceValueSelector,
             Expression<Func<TTarget, TField>> targetSelector)
@@ -40,8 +58,7 @@ namespace Eurofurence.App.Common.DataDiffUtils
                         return false;
 
                     if (sourceValue.GetType().IsArray)
-                        return (sourceValue as IEnumerable<object>).SequenceEqual(targetValue as IEnumerable<object>
-                        );
+                        return ArraysEqual((sourceValue as Array), (targetValue as Array));
 
                     return sourceValue?.Equals(targetValue) ?? false;
                 },
