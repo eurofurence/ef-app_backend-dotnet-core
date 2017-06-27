@@ -46,12 +46,15 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             var i = 0;
             foreach (Match matchGroup in m)
             {
-                var titleParts = matchGroup.Groups[1].Value.Split('|').Select(a => a.Trim()).ToArray();
+                var titleParts = matchGroup.Groups[1].Value.Split('|').Select(a => a.Trim()).ToList();
+                while (titleParts.Count < 3) titleParts.Add("");
+
                 var knowledgeGroup = new KnowledgeGroupRecord
                 {
                     Id = titleParts[0].AsHashToGuid(),
                     Name = titleParts[0],
                     Description = titleParts[1],
+                    FontAwesomeIconCharacterUnicodeAddress = titleParts[2],
                     Order = i++
                 };
                 importedKnowledgeGroups.Add(knowledgeGroup);
@@ -174,6 +177,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                 .Map(s => s.Id, t => t.Id)
                 .Map(s => s.Name, t => t.Name)
                 .Map(s => s.Description, t => t.Description)
+                .Map(s => s.FontAwesomeIconCharacterUnicodeAddress, t => t.FontAwesomeIconCharacterUnicodeAddress)
                 .Map(s => s.Order, t => t.Order);
 
             var diff = patch.Patch(importKnowledgeGroups, knowledgeGroupRecords);
