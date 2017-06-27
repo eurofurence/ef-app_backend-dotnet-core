@@ -22,6 +22,6 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         public bool ShowInHamburgerMenu { get; set; }
 
         [DataMember]
-        public char FontAwesomeIconCharacter { get; set; }
+        public string FontAwesomeIconCharacterUnicodeAddress { get; set; }
     }
 }
