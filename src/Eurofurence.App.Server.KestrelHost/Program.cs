@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Server.Web;
+﻿using Eurofurence.App.Server.Services.Telegram;
+using Eurofurence.App.Server.Web;
 using Microsoft.AspNetCore.Hosting;
 
 namespace Eurofurence.App.Server.KestrelHost
@@ -13,6 +14,8 @@ namespace Eurofurence.App.Server.KestrelHost
                 .UseUrls("http://*:30001")
                 .Build();
 
+            var botManager = (BotManager)host.Services.GetService(typeof(BotManager));
+            botManager.Start();
 
             host.Run();
         }

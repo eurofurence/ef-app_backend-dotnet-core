@@ -142,6 +142,11 @@ namespace Eurofurence.App.Server.Web
                 AuthorizationKey = Configuration["firebase:authorizationKey"],
                 TargetTopic = Configuration["firebase:targetTopic"]
             });
+            builder.RegisterInstance(new Services.Telegram.TelegramConfiguration
+            {
+                AccessToken = Configuration["telegram:accessToken"],
+                Proxy = Configuration["telegram:proxy"]
+            });
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
                 .As<IApiPrincipal>();
