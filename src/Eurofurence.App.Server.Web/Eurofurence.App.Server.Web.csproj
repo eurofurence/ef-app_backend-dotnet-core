@@ -13,6 +13,10 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;1705;1591</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
     <ProjectReference Include="..\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.csproj" />
