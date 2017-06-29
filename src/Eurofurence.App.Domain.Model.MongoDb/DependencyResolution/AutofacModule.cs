@@ -9,6 +9,7 @@ using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using MongoDB.Driver;
 
@@ -52,6 +53,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                 PushNotificationChannelRecord>(builder);
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
+            Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
         }
     }
 }

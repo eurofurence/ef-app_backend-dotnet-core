@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Validation;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +13,14 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IAuthenticationHandler _authenticationHandler;
+        private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
 
-        public TokensController(IAuthenticationHandler authenticationHandler, IApiPrincipal apiPrincipal)
+        public TokensController(IAuthenticationHandler authenticationHandler,
+            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
+            IApiPrincipal apiPrincipal)
         {
             _authenticationHandler = authenticationHandler;
+            _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _apiPrincipal = apiPrincipal;
         }
 
@@ -27,6 +32,22 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             return (await _authenticationHandler.AuthorizeViaRegSys(request))
                 .Transient403(HttpContext);
+        }
+
+
+        [Authorize(Roles = "Developer,System,Security,ConOps,Registration")]
+        [HttpPost("RegSys/AlternativePin")]
+        [ProducesResponseType(typeof(RegSysAlternativePinResponse), 200)]
+        public async Task<ActionResult> PostRegSysAlternativePinRequest(
+            [FromBody] RegSysAlternativePinRequest request)
+        {
+            if (request == null) return BadRequest("Unable to parse request");
+            if (!BadgeChecksum.IsValid(request.RegNoOnBadge)) return BadRequest("Invalid Badge No.");
+
+            var result =  await _regSysAlternativePinAuthenticationProvider
+                .RequestAlternativePinAsync(request, _apiPrincipal.Uid);
+
+            return Json(result);
         }
 
 

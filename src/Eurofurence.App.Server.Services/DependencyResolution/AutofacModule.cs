@@ -43,7 +43,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<MapService>().As<IMapService>();
 
             builder.RegisterType<TokenFactory>().As<ITokenFactory>();
-            builder.RegisterType<RegSysAuthenticationBridge>().As<IRegSysAuthenticationBridge>();
             builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
             builder.RegisterType<WnsChannelManager>().As<IWnsChannelManager>();
@@ -51,6 +50,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<FirebaseChannelManager>().As<IFirebaseChannelManager>();
             builder.RegisterType<LinkFragmentValidator>().As<ILinkFragmentValidator>();
             builder.RegisterType<PrivateMessageService>().As<IPrivateMessageService>();
+            builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
+                .As<IRegSysAlternativePinAuthenticationProvider>();
             builder.RegisterType<BotManager>().As<BotManager>();
         }
     }
