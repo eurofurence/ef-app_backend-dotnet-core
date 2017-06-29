@@ -58,7 +58,22 @@ namespace Eurofurence.App.Server.Services.Images
                 .SingleOrDefault();
 
             if (existingRecord != null && existingRecord.ContentHashSha1 == hash)
+            {
+                // Ensure we still have the image!
+                var existingContentRecord = await _imageContentRepository.FindOneAsync(existingRecord.Id);
+                if (existingContentRecord == null)
+                {
+                    await _imageContentRepository.InsertOneAsync(new ImageContentRecord
+                    {
+                        Id = existingRecord.Id,
+                        IsDeleted = 0,
+                        Content = imageBytes
+                    });
+                }
+
                 return existingRecord.Id;
+            }
+                
 
             var image = Image.Load(imageBytes);
 
