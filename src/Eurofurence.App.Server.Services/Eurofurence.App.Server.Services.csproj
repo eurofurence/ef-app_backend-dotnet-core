@@ -16,10 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="ImageSharp" Version="1.0.0-alpha6-00066" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="5.1.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.3" />
+    <PackageReference Include="Autofac" Version="4.6.0" />
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha9-00152" />
+    <PackageReference Include="ImageSharp.Drawing" Version="1.0.0-alpha9-00147" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="5.1.4" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.4" />
     <PackageReference Include="Telegram.Bot" Version="12.0.0-beta-04" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-namespace Eurofurence.App.Server.Services.Telegram
+namespace Eurofurence.App.Server.Services.Abstraction.Telegram
 {
     public class TelegramConfiguration
     {

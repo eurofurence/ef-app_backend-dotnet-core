@@ -8,6 +8,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
+using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Security;
@@ -142,7 +143,7 @@ namespace Eurofurence.App.Server.Web
                 AuthorizationKey = Configuration["firebase:authorizationKey"],
                 TargetTopic = Configuration["firebase:targetTopic"]
             });
-            builder.RegisterInstance(new Services.Telegram.TelegramConfiguration
+            builder.RegisterInstance(new TelegramConfiguration
             {
                 AccessToken = Configuration["telegram:accessToken"],
                 Proxy = Configuration["telegram:proxy"]
