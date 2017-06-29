@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Services.Security
 {
     public class AuthenticationHandler : IAuthenticationHandler
     {
+        private readonly ILogger _logger;
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IRegSysAuthenticationBridge _registrationSystemAuthenticationBridge;
         private readonly ITokenFactory _tokenFactory;
 
         public AuthenticationHandler(
+            ILoggerFactory loggerFactory,
             AuthenticationSettings authenticationSettings,
             IRegSysAuthenticationBridge registrationSystemAuthenticationBridge,
             ITokenFactory tokenFactory
         )
         {
+            _logger = loggerFactory.CreateLogger(GetType().Name);
             _authenticationSettings = authenticationSettings;
             _registrationSystemAuthenticationBridge = registrationSystemAuthenticationBridge;
             _tokenFactory = tokenFactory;
@@ -29,7 +33,10 @@ namespace Eurofurence.App.Server.Services.Security
               request.RegNo, request.Username, request.Password);
 
             if (!isValid)
+            {
+                _logger.LogWarning("AuthorizeViaRegSys failed for {Username} {RegNo}", request.Username, request.RegNo);
                 return null;
+            }
 
             var uid = $"RegSys:{_authenticationSettings.ConventionNumber}:{request.RegNo}";
 
@@ -53,6 +60,8 @@ namespace Eurofurence.App.Server.Services.Security
                 TokenValidUntil = expiration,
                 Username = $"{request.Username.ToLower()} ({request.RegNo})"
             };
+
+            _logger.LogInformation("AuthorizeViaRegSys successful for {Username} {RegNo}", request.Username, request.RegNo);
 
             return response;
         }

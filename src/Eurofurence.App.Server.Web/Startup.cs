@@ -193,7 +193,6 @@ namespace Eurofurence.App.Server.Web
                 })
                 .AddSerilog();
 
-
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             app.UseCors("CorsPolicy");
