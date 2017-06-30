@@ -5,7 +5,7 @@ namespace Eurofurence.App.Domain.Model.Security
 {
     public class RegSysAlternativePinRecord : EntityBase
     {
-        public class RequestRecord
+        public class IssueRecord
         {
             public string RequesterUid { get; set; }
             public string NameOnBadge { get; set; }
@@ -19,13 +19,13 @@ namespace Eurofurence.App.Domain.Model.Security
         public DateTime IssuedDateTimeUtc { get; set; }
         public string IssuedByUid { get; set; }
 
-        public IList<RequestRecord> RequestLog { get; set; }
+        public IList<IssueRecord> IssueLog { get; set; }
         public IList<DateTime> PinConsumptionDatesUtc { get; set; }
 
         public RegSysAlternativePinRecord()
         {
             PinConsumptionDatesUtc = new List<DateTime>();
-            RequestLog = new List<RequestRecord>();
+            IssueLog = new List<IssueRecord>();
         }
     }
 }

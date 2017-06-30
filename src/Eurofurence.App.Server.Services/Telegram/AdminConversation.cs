@@ -33,7 +33,9 @@ namespace Eurofurence.App.Server.Services.Telegram
         enum PermissionFlags
         {
             None = 0, 
-            RequestPin = 1
+            PinCreate = 1 << 0,
+            PinQuery = 2 << 0,
+            PinAdmin = PinCreate | PinQuery
         }
 
         private User _user;
@@ -42,11 +44,15 @@ namespace Eurofurence.App.Server.Services.Telegram
         {
             await Task.Delay(0); // Lookup.
 
-            var tempAccessUsers = new string[] {"pinselohrkater", "zefirodragon", "fenrikur", "requinard "};
+            var tempAccessAdmins = new string[] { "pinselohrkater", "zefirodragon" };
+            var tempAccessUsers = new string[] { "fenrikur", "requinard " };
 
-            if (tempAccessUsers.Any(a => a.Equals(_user.Username, StringComparison.CurrentCulture)))
-                return PermissionFlags.RequestPin;
-            
+            if (tempAccessAdmins.Any(a => a.Equals(_user.Username, StringComparison.CurrentCultureIgnoreCase)))
+                return PermissionFlags.PinAdmin;
+
+            if (tempAccessUsers.Any(a => a.Equals(_user.Username, StringComparison.CurrentCultureIgnoreCase)))
+                return PermissionFlags.PinCreate;
+
             return PermissionFlags.None;
         }
 
@@ -69,8 +75,15 @@ namespace Eurofurence.App.Server.Services.Telegram
                 {
                     Command = "/pin",
                     Description = "Create an alternative password for an attendee to login",
-                    RequiredPermission = PermissionFlags.RequestPin,
+                    RequiredPermission = PermissionFlags.PinCreate,
                     CommandHandler = CommandPinRequest
+                },
+                new CommandInfo()
+                {
+                    Command = "/pinInfo",
+                    Description = "Show the pin & issue log for a given registration number",
+                    RequiredPermission = PermissionFlags.PinQuery,
+                    CommandHandler = CommandPinInfo
                 }
             };
         }
@@ -96,6 +109,54 @@ namespace Eurofurence.App.Server.Services.Telegram
         public async Task OnCallbackQueryAsync(CallbackQueryEventArgs callbackQueryEventArgs)
         {
             await Task.Delay(0);
+        }
+
+        private async Task CommandPinInfo()
+        {
+            Func<Task> c1 = null, c2 = null, c3 = null;
+            var title = "PIN Info";
+
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge? (or /cancel)",
+                async c1a =>
+                {
+                    int regNo = 0;
+                    var regNoWithLetter = c1a.Message.Text.Trim().ToUpper();
+                    if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
+                    {
+                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await c1();
+                        return;
+                    }
+
+                    var record = await _regSysAlternativePinAuthenticationProvider.GetAlternativePinAsync(regNo);
+                    
+                    if (record == null)
+                    {
+                        await ReplyAsync($"Sorry, there is no pin record for RegNo {regNo}.");
+                        return;
+                    }
+
+                    var response = new StringBuilder();
+                    response.AppendLine($"RegNo: *{record.RegNo}*");
+                    response.AppendLine($"NameOnBadge: *{record.NameOnBadge}*");
+                    response.AppendLine($"Pin: *{record.Pin}*");
+                    response.AppendLine("\n```\nAll times are UTC.\n");
+                    response.AppendLine($"Issued on {record.IssuedDateTimeUtc} by {record.IssuedByUid}");
+                    response.AppendLine("");
+                    response.AppendLine("Issue Log:");
+                    response.AppendLine(string.Join("\n",
+                        record.IssueLog.Select(a => $"- {a.RequestDateTimeUtc} {a.RequesterUid}")));
+
+                    response.AppendLine("\nUsed for login at:");
+                    response.AppendLine(string.Join("\n", record.PinConsumptionDatesUtc.Select(a => $"- {a}")));
+
+                    response.AppendLine("```");
+
+                    await ReplyAsync(response.ToString());
+                });
+            await c1();
+
+
         }
 
         private async Task CommandPinRequest()
@@ -213,7 +274,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 return;
             }
 
-            var matchingCommand = _commands.SingleOrDefault(a => a.Command == e.Message.Text);
+            var matchingCommand = _commands.SingleOrDefault(a => a.Command.Equals(e.Message.Text, StringComparison.CurrentCultureIgnoreCase));
             if (matchingCommand != null && HasPermission(userPermissions, matchingCommand.RequiredPermission))
             {
                 await matchingCommand.CommandHandler();

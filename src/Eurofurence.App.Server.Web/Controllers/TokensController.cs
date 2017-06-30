@@ -34,23 +34,6 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .Transient403(HttpContext);
         }
 
-
-        [Authorize(Roles = "Developer,System,Security,ConOps,Registration")]
-        [HttpPost("RegSys/AlternativePin")]
-        [ProducesResponseType(typeof(RegSysAlternativePinResponse), 200)]
-        public async Task<ActionResult> PostRegSysAlternativePinRequest(
-            [FromBody] RegSysAlternativePinRequest request)
-        {
-            if (request == null) return BadRequest("Unable to parse request");
-            if (!BadgeChecksum.IsValid(request.RegNoOnBadge)) return BadRequest("Invalid Badge No.");
-
-            var result =  await _regSysAlternativePinAuthenticationProvider
-                .RequestAlternativePinAsync(request, _apiPrincipal.Uid);
-
-            return Json(result);
-        }
-
-
         [HttpGet("WhoAmI")]
         [Authorize("OAuth-AllAuthenticated")]
         [ProducesResponseType(typeof(string), 200)]

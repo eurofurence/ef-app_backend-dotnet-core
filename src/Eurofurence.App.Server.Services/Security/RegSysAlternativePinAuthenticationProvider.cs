@@ -43,15 +43,15 @@ namespace Eurofurence.App.Server.Services.Security
                 alternativePin = new RegSysAlternativePinRecord()
                 {
                     RegNo = regNo,
-                    Pin = GeneratePin(),
-                    IssuedByUid = requesterUid,
-                    IssuedDateTimeUtc = DateTime.UtcNow
                 };
                 alternativePin.NewId();
             }
 
+            alternativePin.IssuedByUid = requesterUid;
+            alternativePin.IssuedDateTimeUtc = DateTime.UtcNow;
+            alternativePin.Pin = GeneratePin();
             alternativePin.NameOnBadge = request.NameOnBadge;
-            alternativePin.RequestLog.Add(new RegSysAlternativePinRecord.RequestRecord()
+            alternativePin.IssueLog.Add(new RegSysAlternativePinRecord.IssueRecord()
             {
                 RequestDateTimeUtc = DateTime.UtcNow,
                 NameOnBadge = request.NameOnBadge,
@@ -71,6 +71,11 @@ namespace Eurofurence.App.Server.Services.Security
                 Pin = alternativePin.Pin,
                 RegNo = alternativePin.RegNo
             };
+        }
+
+        public async Task<RegSysAlternativePinRecord> GetAlternativePinAsync(int regNo)
+        {
+            return (await _regSysAlternativePinRepository.FindAllAsync(a => a.RegNo == regNo)).SingleOrDefault();
         }
 
 
