@@ -21,7 +21,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class BotManager
     {
-        private readonly IUserManager _userManager;
+        private readonly ITelegramUserManager _telegramUserManager;
         private readonly IDealerService _dealerService;
         private readonly IImageService _imageService;
         private readonly IEventService _eventService;
@@ -55,7 +55,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public BotManager(
             TelegramConfiguration telegramConfiguration,
-            IUserManager userManager,
+            ITelegramUserManager telegramUserManager,
             IDealerService dealerService,
             IImageService imageService,
             IEventService eventService,
@@ -65,7 +65,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider
             )
         {
-            _userManager = userManager;
+            _telegramUserManager = telegramUserManager;
             _dealerService = dealerService;
             _imageService = imageService;
             _eventService = eventService;
@@ -82,7 +82,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             _conversationManager = new ConversationManager(
                 _botClient,
-                (chatId) => new AdminConversation(_userManager, _regSysAlternativePinAuthenticationProvider)
+                (chatId) => new AdminConversation(_telegramUserManager, _regSysAlternativePinAuthenticationProvider)
                 );
 
             _botClient.OnMessage += BotClientOnOnMessage;
@@ -209,13 +209,26 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private async void BotClientOnOnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
-            await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
-            await _botClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
+            try
+            {
+                await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
+                await _botClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
+
+            }
+            catch (Exception exception)
+            {
+            }
         }
 
         private async void BotClientOnOnMessage(object sender, MessageEventArgs e)
         {
-            await _conversationManager[e.Message.From.Id].OnMessageAsync(e);
+            try
+            {
+                await _conversationManager[e.Message.From.Id].OnMessageAsync(e);
+            }
+            catch (Exception exception)
+            {
+            }
         }
     }
 }

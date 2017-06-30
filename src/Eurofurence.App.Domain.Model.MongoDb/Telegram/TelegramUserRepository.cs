@@ -4,10 +4,10 @@ using MongoDB.Driver;
 
 namespace Eurofurence.App.Domain.Model.MongoDb.Telegram
 {
-    public class UserRepository :
-        MongoDbEntityRepositoryBase<UserRecord>
+    public class TelegramUserRepository :
+        MongoDbEntityRepositoryBase<TelegramUserRecord>
     {
-        public UserRepository(IMongoCollection<UserRecord> collection)
+        public TelegramUserRepository(IMongoCollection<TelegramUserRecord> collection)
             : base(collection)
         {
         }

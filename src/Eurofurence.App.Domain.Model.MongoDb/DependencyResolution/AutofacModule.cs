@@ -56,7 +56,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
-            Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
+            Register<TelegramUserRepository, IEntityRepository<TelegramUserRecord>, TelegramUserRecord>(builder);
         }
     }
 }

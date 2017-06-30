@@ -17,7 +17,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class AdminConversation : Conversation, IConversation
     {
-        private readonly IUserManager _userManager;
+        private readonly ITelegramUserManager _telegramUserManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
 
 
@@ -34,28 +34,17 @@ namespace Eurofurence.App.Server.Services.Telegram
         [Flags]
         enum PermissionFlags
         {
-            None,
-            UserAdmin,
-            PinCreate,
-            PinQuery
+            None = 0,
+            UserAdmin = 1 << 0,
+            PinCreate = 1 << 1,
+            PinQuery = 1 << 2
         }
 
         private User _user;
 
-        private async Task<PermissionFlags> GetPermissionsAsync()
+        private Task<PermissionFlags> GetPermissionsAsync()
         {
-            await Task.Delay(0); // Lookup.
-
-            var tempAccessAdmins = new string[] { "pinselohrkater", "zefirodragon" };
-            var tempAccessUsers = new string[] { "fenrikur", "requinard " };
-
-            if (tempAccessAdmins.Any(a => a.Equals(_user.Username, StringComparison.CurrentCultureIgnoreCase)))
-                return PermissionFlags.PinQuery;
-
-            if (tempAccessUsers.Any(a => a.Equals(_user.Username, StringComparison.CurrentCultureIgnoreCase)))
-                return PermissionFlags.PinCreate;
-
-            return PermissionFlags.None;
+            return _telegramUserManager.GetAclForUserAsync<PermissionFlags>(_user.Username);
         }
 
         private bool HasPermission(PermissionFlags userPermissionFlags, PermissionFlags requiredPermission)
@@ -69,10 +58,10 @@ namespace Eurofurence.App.Server.Services.Telegram
         private Func<MessageEventArgs, Task> _awaitingResponseCallback = null;
 
         public AdminConversation(
-            IUserManager userManager,
+            ITelegramUserManager telegramUserManager,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider)
         {
-            _userManager = userManager;
+            _telegramUserManager = telegramUserManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
 
             _commands = new List<CommandInfo>()
@@ -93,18 +82,93 @@ namespace Eurofurence.App.Server.Services.Telegram
                 },
                 new CommandInfo()
                 {
-                    Command = "/foo",
-                    RequiredPermission = PermissionFlags.None,
-                    CommandHandler = CommandFoo
+                    Command = "/users",
+                    Description = "Manage Users",
+                    RequiredPermission = PermissionFlags.UserAdmin,
+                    CommandHandler = CommandUserAdmin
                 }
             };
-        }
+        }  
 
-        public async Task CommandFoo()
+        public async Task CommandUserAdmin()
         {
-            await _userManager.SetAclForUserAsync(_user.Username, (PermissionFlags.PinAdmin | PermissionFlags.PinFoo).ToString());
-            await _userManager.GetAclForUserAsync(_user.Username);
+            Func<Task> c1 = null, c2 = null, c3 = null, c4 = null;
+            var title = "User Management";
 
+            c1 = () => AskAsync($"*{title}*\nWhat do you want to do?\n\n/listUsers\n/editUser\n\n/cancel",
+                async c1a =>
+                {
+                    switch (c1a.Message.Text.ToLower())
+                    {
+                        case ("/edituser"):
+                            c2 = () => AskAsync($"*{title}*\nPlease type the user name (without @ prefix)", async c2a =>
+                            {
+                                var username = c2a.Message.Text;
+                                var acl = await _telegramUserManager.GetAclForUserAsync<PermissionFlags>(username);
+
+                                c3 = () => AskAsync($"*{title}*\nUser @{username} has flags: `{acl}`\n\n/add or /remove a flag\n/cancel (changes are already saved)",
+                                    async c3a =>
+                                    {
+                                        var verbs = new[] {"/add", "/remove"}.ToList();
+                                        var verb = c3a.Message.Text;
+                                        if (!verbs.Contains(verb))
+                                        {
+                                            await c3();
+                                            return;
+                                        }
+
+                                        verb = verb.Replace("/", "");
+
+                                        var values = Enum.GetValues(typeof(PermissionFlags)).Cast<PermissionFlags>()
+                                            .Where(a => acl.HasFlag(a) == (verb == "remove"))
+                                            .ToList();
+
+                                        await ReplyAsync(
+                                            $"*{title}*\nModifying: @{username}\n\nAvailable flags to *{verb}*: `{string.Join(",", values.Select(a => $"{a}"))}`");
+
+                                        c4 = () => AskAsync($"Please type which flag to *{verb}* or /cancel.", async c4a =>
+                                        {
+                                            var selectedFlag = c4a.Message.Text;
+                                            PermissionFlags typedFlag;
+                                            if (!Enum.TryParse(selectedFlag, out typedFlag))
+                                            {
+                                                await ReplyAsync("Invalid flag.");
+                                                await c4();
+                                                return;
+                                            }
+
+                                            if (verb == "add") acl |= typedFlag;
+                                            if (verb == "remove") acl &= ~typedFlag;
+
+                                            await _telegramUserManager.SetAclForUserAsync(username, acl);
+
+                                            await c3();
+                                        });
+                                        await c4();
+
+                                    });
+                                await c3();
+
+                            });
+                            await c2();
+                            break;
+
+                        case ("/listusers"):
+                            var users = await _telegramUserManager.GetUsersAsync();
+
+                            var response = new StringBuilder();
+                            response.AppendLine($"*{title}*\nCurrent Users in Database:\n");
+                            foreach (var user in users)
+                            {
+                                response.AppendLine($"@{user.Username} - `{user.Acl}`");
+                            }
+
+                            await ReplyAsync(response.ToString());
+                            await c1();
+                            break;
+                    }
+                });
+            await c1();
         }
 
         public async Task AskAsync(string question, Func<MessageEventArgs, Task> responseCallBack)
