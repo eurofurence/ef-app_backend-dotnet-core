@@ -11,11 +11,13 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
     public class AdminConversation : Conversation, IConversation
     {
+        private readonly IUserManager _userManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
 
 
@@ -32,10 +34,10 @@ namespace Eurofurence.App.Server.Services.Telegram
         [Flags]
         enum PermissionFlags
         {
-            None = 0, 
-            PinCreate = 1 << 0,
-            PinQuery = 2 << 0,
-            PinAdmin = PinCreate | PinQuery
+            None,
+            UserAdmin,
+            PinCreate,
+            PinQuery
         }
 
         private User _user;
@@ -48,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             var tempAccessUsers = new string[] { "fenrikur", "requinard " };
 
             if (tempAccessAdmins.Any(a => a.Equals(_user.Username, StringComparison.CurrentCultureIgnoreCase)))
-                return PermissionFlags.PinAdmin;
+                return PermissionFlags.PinQuery;
 
             if (tempAccessUsers.Any(a => a.Equals(_user.Username, StringComparison.CurrentCultureIgnoreCase)))
                 return PermissionFlags.PinCreate;
@@ -66,9 +68,13 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private Func<MessageEventArgs, Task> _awaitingResponseCallback = null;
 
-        public AdminConversation(IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider)
+        public AdminConversation(
+            IUserManager userManager,
+            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider)
         {
+            _userManager = userManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
+
             _commands = new List<CommandInfo>()
             {
                 new CommandInfo()
@@ -84,8 +90,21 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Show the pin & issue log for a given registration number",
                     RequiredPermission = PermissionFlags.PinQuery,
                     CommandHandler = CommandPinInfo
+                },
+                new CommandInfo()
+                {
+                    Command = "/foo",
+                    RequiredPermission = PermissionFlags.None,
+                    CommandHandler = CommandFoo
                 }
             };
+        }
+
+        public async Task CommandFoo()
+        {
+            await _userManager.SetAclForUserAsync(_user.Username, (PermissionFlags.PinAdmin | PermissionFlags.PinFoo).ToString());
+            await _userManager.GetAclForUserAsync(_user.Username);
+
         }
 
         public async Task AskAsync(string question, Func<MessageEventArgs, Task> responseCallBack)

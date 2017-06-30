@@ -13,6 +13,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputMessageContents;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 
 // ReSharper disable CoVariantArrayConversion
 
@@ -20,6 +21,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class BotManager
     {
+        private readonly IUserManager _userManager;
         private readonly IDealerService _dealerService;
         private readonly IImageService _imageService;
         private readonly IEventService _eventService;
@@ -53,6 +55,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public BotManager(
             TelegramConfiguration telegramConfiguration,
+            IUserManager userManager,
             IDealerService dealerService,
             IImageService imageService,
             IEventService eventService,
@@ -62,6 +65,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider
             )
         {
+            _userManager = userManager;
             _dealerService = dealerService;
             _imageService = imageService;
             _eventService = eventService;
@@ -78,7 +82,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             _conversationManager = new ConversationManager(
                 _botClient,
-                (chatId) => new AdminConversation(_regSysAlternativePinAuthenticationProvider)
+                (chatId) => new AdminConversation(_userManager, _regSysAlternativePinAuthenticationProvider)
                 );
 
             _botClient.OnMessage += BotClientOnOnMessage;

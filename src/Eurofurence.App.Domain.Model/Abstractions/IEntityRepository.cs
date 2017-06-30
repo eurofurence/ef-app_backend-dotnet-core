@@ -10,6 +10,7 @@ namespace Eurofurence.App.Domain.Model.Abstractions
     public interface IEntityRepository<TEntity> where TEntity : EntityBase
     {
         Task<TEntity> FindOneAsync(Guid id, bool includeDeletedRecords = false);
+        Task<TEntity> FindOneAsync(Expression<Func<TEntity, bool>> filter);
 
         Task<IEnumerable<TEntity>> FindAllAsync(
             bool includeDeletedRecords = false,

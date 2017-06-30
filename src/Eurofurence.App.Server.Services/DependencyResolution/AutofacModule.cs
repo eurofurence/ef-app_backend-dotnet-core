@@ -9,6 +9,7 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.Communication;
@@ -53,6 +54,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
                 .As<IRegSysAlternativePinAuthenticationProvider>();
             builder.RegisterType<BotManager>().As<BotManager>();
+            builder.RegisterType<UserManager>().As<IUserManager>();
         }
     }
 }

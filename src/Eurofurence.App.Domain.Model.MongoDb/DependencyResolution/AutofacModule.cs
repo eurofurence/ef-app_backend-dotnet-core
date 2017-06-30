@@ -8,9 +8,11 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
+using Eurofurence.App.Domain.Model.MongoDb.Telegram;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Domain.Model.Telegram;
 using MongoDB.Driver;
 
 namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
@@ -54,6 +56,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
+            Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
         }
     }
 }

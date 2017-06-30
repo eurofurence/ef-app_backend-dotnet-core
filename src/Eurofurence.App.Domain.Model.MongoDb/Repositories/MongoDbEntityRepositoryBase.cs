@@ -24,6 +24,12 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
             return await results.FirstOrDefaultAsync();
         }
 
+        public virtual async Task<TEntity> FindOneAsync(Expression<Func<TEntity, bool>> filter)
+        {
+            var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().Where(filter));
+            return await results.FirstOrDefaultAsync();
+        }
+
         public virtual async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter)
         {
             var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().Where(filter));
