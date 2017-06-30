@@ -17,6 +17,14 @@ namespace Eurofurence.App.Server.Services.Security
             _regSysAlternativePinRepository = regSysAlternativePinRepository;
         }
 
+        private string GeneratePin()
+        {
+            var validLetters = "ABCDEFGHJKLNPQRSTUVWXYZ";
+            var r = new Random();
+
+            return $"{r.Next(100000, 999999)}";
+        }
+
         public async Task<RegSysAlternativePinResponse> RequestAlternativePinAsync(RegSysAlternativePinRequest request, string requesterUid)
         {
             int regNo = 0;
@@ -35,7 +43,7 @@ namespace Eurofurence.App.Server.Services.Security
                 alternativePin = new RegSysAlternativePinRecord()
                 {
                     RegNo = regNo,
-                    Pin = new Random().Next(1000, 9999).ToString(),
+                    Pin = GeneratePin(),
                     IssuedByUid = requesterUid,
                     IssuedDateTimeUtc = DateTime.UtcNow
                 };

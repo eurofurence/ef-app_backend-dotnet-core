@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Eurofurence.App.Server.Services.Abstractions.Events;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -8,47 +7,48 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class ConversationManager
     {
+        private readonly ITelegramBotClient _botClient;
+        private readonly Func<ChatId, IConversation> _conversationFactory;
+
         private object _syncRoot = new object();
 
-        public  ITelegramBotClient BotClient { get; }
-        public IEventService EventService { get; }
-        public IEventConferenceDayService EventConferenceDayService { get; }
-
-        private Dictionary<int, Conversation> _conversations = new Dictionary<int, Conversation>();
+        private Dictionary<string, IConversation> _conversations = new Dictionary<string, IConversation>();
 
         public ConversationManager(
             ITelegramBotClient botClient, 
-            IEventService eventService,
-            IEventConferenceDayService eventConferenceDayService
+            Func<ChatId, IConversation> conversationFactory
             )
         {
-            BotClient = botClient;
-            EventService = eventService;
-            EventConferenceDayService = eventConferenceDayService;
+            _conversationFactory = conversationFactory;
+            _botClient = botClient;
         }
 
-        public Conversation this[ChatId chatId]
+        public IConversation this[string chatId]
         {
-            get { return GetConversation(chatId.GetHashCode()); }
+            get { return GetConversation(chatId); }
         }
 
-        private Conversation GetConversation(int chatIdHashCode)
+        private IConversation GetConversation(string chatId)
         {
             lock (_syncRoot)
             {
-                if (_conversations.ContainsKey(chatIdHashCode))
+                if (_conversations.ContainsKey(chatId))
                 {
-                    if (_conversations[chatIdHashCode].LastActivity > DateTime.Now.AddSeconds(-30))
+                    if (_conversations[chatId].LastActivityUtc > DateTime.UtcNow.AddSeconds(-90))
                     {
-                        _conversations[chatIdHashCode].LastActivity = DateTime.Now;
-                        return _conversations[chatIdHashCode];
+                        _conversations[chatId].LastActivityUtc = DateTime.UtcNow;
+                        return _conversations[chatId];
                     }
-                    _conversations.Remove(chatIdHashCode);
+                    _conversations.Remove(chatId);
                 }
 
-                var conf = new Conversation(this) { ChatId = chatIdHashCode, LastActivity = DateTime.Now };
-                _conversations.Add(chatIdHashCode, conf);
-                return conf;
+                var newConversation = _conversationFactory(chatId);
+                newConversation.ChatId = chatId;
+                newConversation.BotClient = _botClient;
+                newConversation.LastActivityUtc = DateTime.UtcNow;
+
+                _conversations.Add(chatId, newConversation);
+                return newConversation;
             }
         }
     }

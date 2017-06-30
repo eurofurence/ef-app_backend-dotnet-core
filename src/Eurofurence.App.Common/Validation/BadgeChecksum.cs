@@ -33,8 +33,15 @@ namespace Eurofurence.App.Common.Validation
             var numberPart = id.Substring(0, id.Length - 1);
             var checksumLetter = id[id.Length-1];
 
+            if (CHECKSUM_LETTER_MAP.IndexOf(checksumLetter) == -1)
+            {
+                regNo = 0;
+                return false;
+            }
+
             if (!Int32.TryParse(numberPart, out regNo)) return false;
 
+            return true; // Until we fix the hashing.
             return checksumLetter == CalculateChecksum(regNo);
         }
     }

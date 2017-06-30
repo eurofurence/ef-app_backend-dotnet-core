@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
@@ -25,6 +26,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IEventConferenceDayService _eventConferenceDayService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
+        private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly TelegramBotClient _botClient;
         private readonly ConversationManager _conversationManager;
 
@@ -56,7 +58,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceTrackService eventConferenceTrackService,
-            IEventConferenceRoomService eventConferenceRoomService
+            IEventConferenceRoomService eventConferenceRoomService,
+            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider
             )
         {
             _dealerService = dealerService;
@@ -65,6 +68,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceTrackService = eventConferenceTrackService;
             _eventConferenceRoomService = eventConferenceRoomService;
+            _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
 
             _botClient =
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
@@ -74,12 +78,11 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             _conversationManager = new ConversationManager(
                 _botClient,
-                _eventService,
-                _eventConferenceDayService
+                (chatId) => new AdminConversation(_regSysAlternativePinAuthenticationProvider)
                 );
 
-            //_botClient.OnMessage += BotClientOnOnMessage;
-            //_botClient.OnCallbackQuery += BotClientOnOnCallbackQuery;
+            _botClient.OnMessage += BotClientOnOnMessage;
+            _botClient.OnCallbackQuery += BotClientOnOnCallbackQuery;
 
             _botClient.OnInlineQuery += BotClientOnOnInlineQuery;
         }
