@@ -73,6 +73,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                         await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
                     ImportLinks(dealerRecord, record.Website);
+                    SanitizeField(dealerRecord);
 
                     importRecords.Add(dealerRecord);
                 }
@@ -109,6 +110,21 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             _output?.WriteLine($"Deleted: {diff.Count(a => a.Action == ActionEnum.Delete)}");
             _output?.WriteLine($"Updated: {diff.Count(a => a.Action == ActionEnum.Update)}");
             _output?.WriteLine($"Not Modified: {diff.Count(a => a.Action == ActionEnum.NotModified)}");
+        }
+
+        private void SanitizeFields(DealerRecord dealerRecord)
+        {
+            dealerRecord.TwitterHandle =
+                dealerRecord.TwitterHandle
+                    .Replace("@", "")
+                    .Replace("http://twitter.com/", "")
+                    .Replace("https://twitter.com/", "");
+
+            dealerRecord.TelegramHandle =
+                dealerRecord.TelegramHandle
+                    .Replace("@", "")
+                    .Replace("https://t.me/", "")
+                    .Replace("https://telegram.me/", "");
         }
 
         private void ImportLinks(DealerRecord dealerRecord, string websiteUrls)
