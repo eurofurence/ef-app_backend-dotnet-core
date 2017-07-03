@@ -13,15 +13,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IPushEventMediator _pushEventMediator;
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IWnsChannelManager _wnsChannelManager;
-        private readonly IFcmChannelManager _fcmChannelManager;
+        private readonly IFirebaseChannelManager _firebaseChannelManager;
 
         public PushNotificationsController(
             IPushEventMediator pushEventMediator,
             IWnsChannelManager wnsChannelManager,
-            IFcmChannelManager fcmChannelManager,
+            IFirebaseChannelManager firebaseChannelManager,
             IApiPrincipal apiPrincipal)
         {
-            _fcmChannelManager = fcmChannelManager;
+            _firebaseChannelManager = firebaseChannelManager;
             _pushEventMediator = pushEventMediator;
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
@@ -63,7 +63,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (request == null) return BadRequest();
 
-            await _fcmChannelManager.RegisterDeviceAsync(request.DeviceId, _apiPrincipal.Uid, request.Topics);
+            await _firebaseChannelManager.RegisterDeviceAsync(request.DeviceId, _apiPrincipal.Uid, request.Topics);
             return NoContent();
         }
             

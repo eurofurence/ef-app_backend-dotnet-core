@@ -8,5 +8,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
         Task PushSyncRequestAsync();
 
         Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement);
+
+        Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage);
     }
 }
