@@ -65,6 +65,7 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
                         await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
                     ImportLinks(dealerRecord, record.WebsiteUrl);
+                    SanitizeFields(dealerRecord);
 
                     importRecords.Add(dealerRecord);
                 }
@@ -90,6 +91,21 @@ namespace Eurofurence.App.Tools.DealersDenPackageImporter
 
             var diff = patch.Patch(importRecords, existingRecords);
             await _dealerService.ApplyPatchOperationAsync(diff);
+        }
+
+        private void SanitizeFields(DealerRecord dealerRecord)
+        {
+            dealerRecord.TwitterHandle =
+                dealerRecord.TwitterHandle
+                    .Replace("@", "")
+                    .Replace("http://twitter.com/", "")
+                    .Replace("https://twitter.com/", "");
+
+            dealerRecord.TelegramHandle =
+                dealerRecord.TelegramHandle
+                    .Replace("@", "")
+                    .Replace("https://t.me/", "")
+                    .Replace("https://telegram.me/", "");
         }
 
         private void ImportLinks(DealerRecord dealerRecord, string websiteUrls)
