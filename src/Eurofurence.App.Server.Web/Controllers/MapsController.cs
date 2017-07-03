@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
+    /// <summary>
+    /// FindMe1
+    /// </summary>
     [Route("Api/v2/[controller]")]
     public class MapsController : Controller
     {
@@ -156,6 +159,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     model (request body) must match the {EntryId} part of the uri.
         /// </remarks>
         /// <param name="Record">"Id" property must match the {EntryId} part of the uri</param>
+        /// <param>FindMeAgain</param>
         /// <response code="400">
         ///     * Unable to parse `Record`, `Id` or `EntryId`
         ///     * `Record.Id` does not match `EntryId` from uri.

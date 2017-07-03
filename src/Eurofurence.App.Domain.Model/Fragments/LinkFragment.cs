@@ -21,6 +21,9 @@ namespace Eurofurence.App.Domain.Model.Fragments
         [DataMember]
         public string Name { get; set; }
 
+        /// <summary>
+        ///   * For FragmentType `DealerDetail`: The `Id` of the dealer record the link is referencing to.
+        /// </summary>
         [Required]
         [DataMember]
         public string Target { get; set; }

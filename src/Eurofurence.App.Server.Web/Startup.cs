@@ -100,6 +100,7 @@ namespace Eurofurence.App.Server.Web
 
                 options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
+                options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Domain.Model.xml");
 
 
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
