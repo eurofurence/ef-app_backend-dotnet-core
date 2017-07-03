@@ -73,7 +73,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                         await GetImageIdAsync(archive, $"art_{record.RegNo}.", $"dealer:art:{record.RegNo}");
 
                     ImportLinks(dealerRecord, record.Website);
-                    SanitizeField(dealerRecord);
+                    SanitizeFields(dealerRecord);
 
                     importRecords.Add(dealerRecord);
                 }
