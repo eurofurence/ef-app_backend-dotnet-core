@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -24,9 +25,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _pushNotificationRepository = pushNotificationRepository;
         }
 
-        private Task<PushNotificationChannelRecord> GetRecipientChannelAsync(string recipientUid)
+        private Task<IEnumerable<PushNotificationChannelRecord>> GetRecipientChannelAsync(string recipientUid)
         {
-            return _pushNotificationRepository.FindOneAsync(
+            return _pushNotificationRepository.FindAllAsync(
                 a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Firebase && a.Uid == recipientUid);
         }
 
@@ -42,15 +43,17 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
         {
-            var recipient = await GetRecipientChannelAsync(recipientUid);
-            if (recipient == null) return;
+            var recipients = await GetRecipientChannelAsync(recipientUid);
 
-            await SendPushNotificationAsync(new
+            foreach (var recipient in recipients)
             {
-                Event = "Notification",
-                Title = toastTitle,
-                Message = toastMessage
-            }, to: recipient.DeviceId);
+                await SendPushNotificationAsync(new
+                {
+                    Event = "Notification",
+                    Title = toastTitle,
+                    Message = toastMessage
+                }, to: recipient.DeviceId);
+            }
         }
 
         public Task PushSyncRequestAsync()
