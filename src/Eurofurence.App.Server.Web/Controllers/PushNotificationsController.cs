@@ -13,12 +13,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IPushEventMediator _pushEventMediator;
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IWnsChannelManager _wnsChannelManager;
+        private readonly IFcmChannelManager _fcmChannelManager;
 
         public PushNotificationsController(
             IPushEventMediator pushEventMediator,
             IWnsChannelManager wnsChannelManager,
+            IFcmChannelManager fcmChannelManager,
             IApiPrincipal apiPrincipal)
         {
+            _fcmChannelManager = fcmChannelManager;
             _pushEventMediator = pushEventMediator;
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
@@ -42,6 +45,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPost("WnsChannelRegistration")]
+        [ProducesResponseType(204)]
         public async Task<ActionResult> PostWnsChannelRegistrationAsync(
             [FromBody] PostWnsChannelRegistrationRequest request)
         {
@@ -49,9 +53,20 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             await _wnsChannelManager.RegisterChannelAsync(request.DeviceId, request.ChannelUri, _apiPrincipal.Uid,
                 request.Topics);
-            return Ok();
+            return NoContent();
         }
 
+        [HttpPost("FcmDeviceRegistration")]
+        [ProducesResponseType(204)]
+        public async Task<ActionResult> PostFcmDeviceRegistrationAsync(
+            [FromBody] PostFcmDeviceRegistrationRequest request)
+        {
+            if (request == null) return BadRequest();
+
+            await _fcmChannelManager.RegisterDeviceAsync(request.DeviceId, _apiPrincipal.Uid, request.Topics);
+            return NoContent();
+        }
+            
         public class ToastTest
         {
             public string Topic { get; set; }
@@ -60,8 +75,15 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         public class PostWnsChannelRegistrationRequest
         {
-            public Guid DeviceId { get; set; }
+            public string DeviceId { get; set; }
             public string ChannelUri { get; set; }
+            public string[] Topics { get; set; }
+        }
+
+        public class PostFcmDeviceRegistrationRequest
+        {
+            public string DeviceId { get; set; }
+
             public string[] Topics { get; set; }
         }
     }

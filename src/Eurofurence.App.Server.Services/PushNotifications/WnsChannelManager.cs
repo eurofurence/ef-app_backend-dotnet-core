@@ -74,7 +74,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
         }
 
-        public async Task RegisterChannelAsync(Guid deviceId, string channelUri, string uid, string[] topics)
+        public async Task RegisterChannelAsync(string deviceId, string channelUri, string uid, string[] topics)
         {
             var record = (await _pushNotificationRepository.FindAllAsync(a => a.DeviceId == deviceId))
                 .FirstOrDefault();
@@ -83,8 +83,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             if (isNewRecord)
             {
-                record = new PushNotificationChannelRecord();
-                record.DeviceId = deviceId;
+                record = new PushNotificationChannelRecord()
+                {
+                    Platform = PushNotificationChannelRecord.PlatformEnum.Wns,
+                    DeviceId = deviceId
+                };
                 record.NewId();
             }
 
@@ -115,17 +118,17 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsync()
         {
-            return _pushNotificationRepository.FindAllAsync();
+            return _pushNotificationRepository.FindAllAsync(a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
         private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsyncByTopic(string topic)
         {
-            return _pushNotificationRepository.FindAllAsync(a => a.Topics.Contains(topic));
+            return _pushNotificationRepository.FindAllAsync(a => a.Topics.Contains(topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
         private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsyncByUid(string uid)
         {
-            return _pushNotificationRepository.FindAllAsync(a => a.Uid == uid);
+            return _pushNotificationRepository.FindAllAsync(a => a.Uid == uid && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
 

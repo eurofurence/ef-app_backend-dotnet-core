@@ -6,7 +6,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 {
     public interface IWnsChannelManager
     {
-        Task RegisterChannelAsync(Guid deviceId, string channelUri, string uid, string[] topics);
+        Task RegisterChannelAsync(string deviceId, string channelUri, string uid, string[] topics);
 
         Task SendToastAsync(string topic, string message);
 
