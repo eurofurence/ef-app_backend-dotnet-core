@@ -119,7 +119,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null, c2 = null, c3 = null;
             var title = "Locate User";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge?",
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
@@ -315,7 +315,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null, c2 = null, c3 = null;
             var title = "PIN Info";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge?",
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
@@ -367,7 +367,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             var title = "PIN Creation";
             var requesterUid = $"Telegram:@{_user.Username}";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge?", 
+            c1 = () => AskAsync($"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?", 
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
