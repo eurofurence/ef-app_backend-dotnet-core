@@ -34,7 +34,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             {
                 if (_conversations.ContainsKey(chatId))
                 {
-                    if (_conversations[chatId].LastActivityUtc > DateTime.UtcNow.AddSeconds(-90))
+                    if (_conversations[chatId].LastActivityUtc > DateTime.UtcNow.AddMinutes(-5))
                     {
                         _conversations[chatId].LastActivityUtc = DateTime.UtcNow;
                         return _conversations[chatId];

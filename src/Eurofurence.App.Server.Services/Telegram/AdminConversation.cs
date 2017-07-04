@@ -60,7 +60,8 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public ITelegramBotClient BotClient { get; set; }
 
-        private Func<MessageEventArgs, Task> _awaitingResponseCallback = null;
+        private Func<string, Task> _awaitingResponseCallback = null;
+        private Message _lastAskMessage;
 
         public AdminConversation(
             ITelegramUserManager telegramUserManager,
@@ -118,11 +119,13 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null, c2 = null, c3 = null;
             var title = "Locate User";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge? (or /cancel)",
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge?",
                 async c1a =>
                 {
+                    await ClearLastAskResponseOptions();
+
                     int regNo = 0;
-                    var regNoWithLetter = c1a.Message.Text.Trim().ToUpper();
+                    var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
                         await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
@@ -149,7 +152,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
 
                     await ReplyAsync(response.ToString());
-                });
+                },"Cancel=/cancel");
             await c1();
         }
 
@@ -186,29 +189,35 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null, c2 = null, c3 = null, c4 = null;
             var title = "User Management";
 
-            c1 = () => AskAsync($"*{title}*\nWhat do you want to do?\n\n/listUsers\n/editUser\n\n/cancel",
+            c1 = () => AskAsync($"*{title}*\nWhat do you want to do?",
                 async c1a =>
                 {
-                    switch (c1a.Message.Text.ToLower())
+                    switch (c1a.ToLower())
                     {
-                        case ("/edituser"):
+                        case ("*edituser"):
                             c2 = () => AskAsync($"*{title}*\nPlease type the user name (without @ prefix)", async c2a =>
                             {
-                                var username = c2a.Message.Text;
+                                await ClearLastAskResponseOptions();
+
+                                var username = c2a;
                                 var acl = await _telegramUserManager.GetAclForUserAsync<PermissionFlags>(username);
 
-                                c3 = () => AskAsync($"*{title}*\nUser @{username} has flags: `{acl}`\n\n/add or /remove a flag\n/cancel (changes are already saved)",
+                                c3 = () => AskAsync($"*{title}*\nUser @{username} has flags: `{acl}`",
                                     async c3a =>
                                     {
-                                        var verbs = new[] {"/add", "/remove"}.ToList();
-                                        var verb = c3a.Message.Text;
+                                        if (c3a == "*back")
+                                        {
+                                            await c1();
+                                            return;
+                                        }
+
+                                        var verbs = new[] {"add", "remove"}.ToList();
+                                        var verb = c3a;
                                         if (!verbs.Contains(verb))
                                         {
                                             await c3();
                                             return;
                                         }
-
-                                        verb = verb.Replace("/", "");
 
                                         var values = Enum.GetValues(typeof(PermissionFlags)).Cast<PermissionFlags>()
                                             .Where(a => acl.HasFlag(a) == (verb == "remove"))
@@ -217,9 +226,17 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         await ReplyAsync(
                                             $"*{title}*\nModifying: @{username}\n\nAvailable flags to *{verb}*: `{string.Join(",", values.Select(a => $"{a}"))}`");
 
-                                        c4 = () => AskAsync($"Please type which flag to *{verb}* or /cancel.", async c4a =>
+                                        c4 = () => AskAsync($"Please type which flag to *{verb}*.", async c4a =>
                                         {
-                                            var selectedFlag = c4a.Message.Text;
+                                            await ClearLastAskResponseOptions();
+
+                                            if (c4a == "*back")
+                                            {
+                                                await c3();
+                                                return;
+                                            }
+
+                                            var selectedFlag = c4a;
                                             PermissionFlags typedFlag;
                                             if (!Enum.TryParse(selectedFlag, out typedFlag))
                                             {
@@ -232,19 +249,18 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             if (verb == "remove") acl &= ~typedFlag;
 
                                             await _telegramUserManager.SetAclForUserAsync(username, acl);
-
                                             await c3();
-                                        });
+                                        },"Back=*back", "Cancel=/cancel");
                                         await c4();
 
-                                    });
+                                    },"Add=add","Remove=remove","Back=*back","Cancel=/cancel");
                                 await c3();
 
-                            });
+                            }, "Cancel=/cancel");
                             await c2();
                             break;
 
-                        case ("/listusers"):
+                        case ("*listusers"):
                             var users = await _telegramUserManager.GetUsersAsync();
 
                             var response = new StringBuilder();
@@ -258,43 +274,54 @@ namespace Eurofurence.App.Server.Services.Telegram
                             await c1();
                             break;
                     }
-                });
+                }, "List Users=*listUsers", "Edit User=*editUser", "Cancel=/cancel");
             await c1();
         }
 
-        public async Task AskAsync(string question, Func<MessageEventArgs, Task> responseCallBack)
+        private IReplyMarkup MarkupFromCommands(string[] commands)
+        {
+            if (commands == null || commands.Length == 0) return new ReplyKeyboardRemove();
+            //return new InlineKeyboardMarkup(commands.Select(c  => new[] { new InlineKeyboardButton(c, c) }).ToArray());
+            return new InlineKeyboardMarkup(new [] {commands.Select(c =>
+            {
+                var parts = c.Split('=');
+                if (parts.Length == 2) return new InlineKeyboardButton(parts[0], parts[1]);
+                return new InlineKeyboardButton(c, c);
+            }).ToArray()});
+        }
+
+        public async Task AskAsync(string question, Func<string, Task> responseCallBack, params string[] commandOptions)
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {question}");
 
-            await BotClient.SendTextMessageAsync(ChatId, question, ParseMode.Markdown);
+            var message = await BotClient.SendTextMessageAsync(ChatId, question, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
             _awaitingResponseCallback = responseCallBack;
+            _lastAskMessage = message;
         }
 
 
         public ChatId ChatId { get; set; }
 
-        public async Task ReplyAsync(string message)
+        public async Task ReplyAsync(string message, params string[] commandOptions)
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {message}");
 
-            await BotClient.SendTextMessageAsync(ChatId, message, ParseMode.Markdown);
+            await BotClient.SendTextMessageAsync(ChatId, message, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
         }
 
-        public async Task OnCallbackQueryAsync(CallbackQueryEventArgs callbackQueryEventArgs)
-        {
-            await Task.Delay(0);
-        }
 
         private async Task CommandPinInfo()
         {
             Func<Task> c1 = null, c2 = null, c3 = null;
             var title = "PIN Info";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge? (or /cancel)",
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge?",
                 async c1a =>
                 {
+                    await ClearLastAskResponseOptions();
+
                     int regNo = 0;
-                    var regNoWithLetter = c1a.Message.Text.Trim().ToUpper();
+                    var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
                         await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
@@ -327,7 +354,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     response.AppendLine("```");
 
                     await ReplyAsync(response.ToString());
-                });
+                },"Cancel=/cancel");
             await c1();
 
 
@@ -340,11 +367,13 @@ namespace Eurofurence.App.Server.Services.Telegram
             var title = "PIN Creation";
             var requesterUid = $"Telegram:@{_user.Username}";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge? (or /cancel)", 
+            c1 = () => AskAsync($"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge?", 
                 async c1a =>
                 {
+                    await ClearLastAskResponseOptions();
+
                     int regNo = 0;
-                    var regNoWithLetter = c1a.Message.Text.Trim().ToUpper();
+                    var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
                         await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
@@ -352,23 +381,25 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nOn badge no {regNo}, what is the _nickname_ printed on the badge (not the real name)? (or /cancel)",
+                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nOn badge no {regNo}, what is the _nickname_ printed on the badge (not the real name)?",
                         async c2a =>
                         {
-                            var nameOnBadge = c2a.Message.Text.Trim();
+                            await ClearLastAskResponseOptions();
+
+                            var nameOnBadge = c2a.Trim();
 
                             c3 = () => AskAsync(
                                 $"*{title} - Step 3 of 3*\nPlease confirm:\n\nThe badge no. is *{regNoWithLetter}*\n\nThe nickname on the badge is *{nameOnBadge}*" +
-                                "\n\n*You have verified the identity of the attendee by matching their real name on badge against a legal form of identification.*\n\nYou may /confirm, /restart or /cancel",
+                                "\n\n*You have verified the identity of the attendee by matching their real name on badge against a legal form of identification.*",
                                 async c3a =>
                                 {
-                                    if (c3a.Message.Text.Equals("/restart", StringComparison.CurrentCultureIgnoreCase))
+                                    if (c3a.Equals("*restart", StringComparison.CurrentCultureIgnoreCase))
                                     {
                                         await c1();
                                         return;
                                     }
 
-                                    if (!c3a.Message.Text.Equals("/confirm", StringComparison.CurrentCultureIgnoreCase))
+                                    if (!c3a.Equals("*confirm", StringComparison.CurrentCultureIgnoreCase))
                                     {
                                         await c3();
                                         return;
@@ -392,37 +423,36 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     response.AppendLine($"\n_Generation/Access of this PIN by {requesterUid} has been recorded._");
 
                                     await ReplyAsync(response.ToString());
-                                });
+                                }, "Confirm=*confirm","Restart=*restart","Cancel=/cancel");
                             await c3();
-                        });
+                        }, "Cancel=/cancel");
                     await c2();
-                });
+                }, "Cancel=/cancel");
             await c1();
         }
 
-        public async Task OnMessageAsync(MessageEventArgs e)
+        private async Task ProcessMessageAsync(string message)
         {
-            Debug.WriteLine($"@{e.Message.From.Username} -> Bot: {e.Message.Text}");
-            _user = e.Message.From;
+            
 
-            if (e.Message.Text == "/cancel")
+            if (message == "/cancel")
             {
                 _awaitingResponseCallback = null;
-                await BotClient.SendTextMessageAsync(ChatId, "Cancelled. Send /start for a list of commands.",
+                await BotClient.SendTextMessageAsync(ChatId, "Send /start for a list of commands.",
                     replyMarkup: new ReplyKeyboardRemove());
                 return;
             }
 
             if (_awaitingResponseCallback != null)
             {
-                var invokable = _awaitingResponseCallback.Invoke(e);
+                var invokable = _awaitingResponseCallback.Invoke(message);
                 _awaitingResponseCallback = null;
                 await invokable;
                 return;
             }
 
             var userPermissions = await GetPermissionsAsync();
-            if (e.Message.Text == "/start")
+            if (message == "/start")
             {
                 var availableCommands = _commands
                     .Where(cmd => HasPermission(userPermissions, cmd.RequiredPermission))
@@ -448,12 +478,39 @@ namespace Eurofurence.App.Server.Services.Telegram
                 return;
             }
 
-            var matchingCommand = _commands.SingleOrDefault(a => a.Command.Equals(e.Message.Text, StringComparison.CurrentCultureIgnoreCase));
+            var matchingCommand = _commands.SingleOrDefault(a => a.Command.Equals(message, StringComparison.CurrentCultureIgnoreCase));
             if (matchingCommand != null && HasPermission(userPermissions, matchingCommand.RequiredPermission))
             {
                 await matchingCommand.CommandHandler();
                 return;
             }
+        }
+
+        private Task ClearInlineResponseOptions(int messageId)
+        {
+            return BotClient.EditMessageReplyMarkupAsync(ChatId, messageId, null);
+        }
+
+        private Task ClearLastAskResponseOptions()
+        {
+            if (_lastAskMessage != null) return ClearInlineResponseOptions(_lastAskMessage.MessageId);
+            return Task.CompletedTask;
+        }
+
+        public Task OnCallbackQueryAsync(CallbackQueryEventArgs e)
+        {
+            _user = e.CallbackQuery.Message.From;
+
+            return BotClient.EditMessageReplyMarkupAsync(
+                    e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, null)
+                .ContinueWith(_ => ProcessMessageAsync(e.CallbackQuery.Data));
+        }
+
+
+        public Task OnMessageAsync(MessageEventArgs e)
+        {
+            _user = e.Message.From;
+            return ProcessMessageAsync(e.Message.Text);
         }
     }
 }

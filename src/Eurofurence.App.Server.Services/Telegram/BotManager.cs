@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -206,13 +208,31 @@ namespace Eurofurence.App.Server.Services.Telegram
             _botClient.StartReceiving();
         }
 
+
+        private Dictionary<int, DateTime> _answerredQueries = new Dictionary<int, DateTime>();
+
         private async void BotClientOnOnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
             try
             {
-                await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
                 await _botClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
 
+                lock (_answerredQueries)
+                {
+                    _answerredQueries.Where(a => DateTime.UtcNow.AddMinutes(-5) > a.Value)
+                        .ToList()
+                        .ForEach(a => _answerredQueries.Remove(a.Key));
+
+                    if (e.CallbackQuery.Message.Date < DateTime.UtcNow.AddMinutes(-5))
+                        return;
+
+                    if (_answerredQueries.ContainsKey(e.CallbackQuery.Message.MessageId))
+                        return;
+
+                    _answerredQueries.Add(e.CallbackQuery.Message.MessageId, DateTime.UtcNow);
+                }
+                
+                await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
             }
             catch (Exception exception)
             {
