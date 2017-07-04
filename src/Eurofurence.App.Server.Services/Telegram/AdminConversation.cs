@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Validation;
+using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -19,6 +21,7 @@ namespace Eurofurence.App.Server.Services.Telegram
     {
         private readonly ITelegramUserManager _telegramUserManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
+        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
 
 
         private class CommandInfo
@@ -37,7 +40,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             None = 0,
             UserAdmin = 1 << 0,
             PinCreate = 1 << 1,
-            PinQuery = 1 << 2
+            PinQuery = 1 << 2,
+            Statistics = 1 << 3,
+            Locate = 1 << 4
         }
 
         private User _user;
@@ -59,10 +64,13 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public AdminConversation(
             ITelegramUserManager telegramUserManager,
-            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider)
+            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
+            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository
+            )
         {
             _telegramUserManager = telegramUserManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
+            _pushNotificationChannelRepository = pushNotificationChannelRepository;
 
             _commands = new List<CommandInfo>()
             {
@@ -87,8 +95,91 @@ namespace Eurofurence.App.Server.Services.Telegram
                     RequiredPermission = PermissionFlags.UserAdmin,
                     CommandHandler = CommandUserAdmin
                 }
+                ,
+                new CommandInfo()
+                {
+                    Command = "/statistics",
+                    Description = "Show some statistics",
+                    RequiredPermission = PermissionFlags.Statistics,
+                    CommandHandler = CommandStatistics
+                },
+                new CommandInfo()
+                {
+                    Command = "/locate",
+                    Description = "Figure out if a given regNo is signed in on any device",
+                    RequiredPermission = PermissionFlags.Locate,
+                    CommandHandler = CommandLocate
+                }
             };
-        }  
+        }
+
+        public async Task CommandLocate()
+        {
+            Func<Task> c1 = null, c2 = null, c3 = null;
+            var title = "Locate User";
+
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the digit at the end)_ on the badge? (or /cancel)",
+                async c1a =>
+                {
+                    int regNo = 0;
+                    var regNoWithLetter = c1a.Message.Text.Trim().ToUpper();
+                    if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
+                    {
+                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await c1();
+                        return;
+                    }
+
+                    var records =
+                        (await _pushNotificationChannelRepository.FindAllAsync(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}")))
+                        .ToList();
+
+                    if (records.Count == 0)
+                    {
+                        await ReplyAsync($"*{title} - Result*\nRegNo {regNo} is not logged in on any known device.");
+                        return;
+                    }
+
+                    var response = new StringBuilder();
+                    response.AppendLine($"*{title} - Result*");
+                    response.AppendLine($"RegNo *{regNo}* is logged in on *{records.Count}* devices:");
+                    foreach (var record in records)
+                        response.AppendLine(
+                            $"`{record.Platform} {string.Join(",", record.Topics)} ({record.LastChangeDateTimeUtc})`");
+
+
+                    await ReplyAsync(response.ToString());
+                });
+            await c1();
+        }
+
+        public async Task CommandStatistics()
+        {
+            var records = (await _pushNotificationChannelRepository.FindAllAsync()).ToList();
+
+            var devicesWithSessions =
+                records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase));
+
+            var devicesWithSessionCount = devicesWithSessions.Count();
+            var uniqueUserIds = devicesWithSessions.Select(a => a.Uid).Distinct().Count();
+
+            var groups = records.GroupBy(a => new Tuple<string, string>(a.Platform.ToString(),
+                String.Join(", ", a.Topics.OrderByDescending(b => b))));
+
+            var message = new StringBuilder();
+            message.AppendLine($"*{records.Count}* devices in reach of global / targeted push.");
+
+            foreach (var group in groups.OrderByDescending(g => g.Count()))
+            {
+                message.AppendLine($"`{group.Count().ToString().PadLeft(5)} {group.Key.Item1} - {group.Key.Item2}`");
+            }
+
+            message.AppendLine();
+            message.AppendLine($"*{devicesWithSessionCount}* devices have an user signed in.");
+            message.AppendLine($"*{uniqueUserIds}* unique user ids are present.");
+
+            await ReplyAsync(message.ToString());
+        }
 
         public async Task CommandUserAdmin()
         {

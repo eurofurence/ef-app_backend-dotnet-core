@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -23,12 +25,10 @@ namespace Eurofurence.App.Server.Services.Telegram
     {
         private readonly ITelegramUserManager _telegramUserManager;
         private readonly IDealerService _dealerService;
-        private readonly IImageService _imageService;
         private readonly IEventService _eventService;
-        private readonly IEventConferenceDayService _eventConferenceDayService;
-        private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
+        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly TelegramBotClient _botClient;
         private readonly ConversationManager _conversationManager;
 
@@ -57,22 +57,18 @@ namespace Eurofurence.App.Server.Services.Telegram
             TelegramConfiguration telegramConfiguration,
             ITelegramUserManager telegramUserManager,
             IDealerService dealerService,
-            IImageService imageService,
             IEventService eventService,
-            IEventConferenceDayService eventConferenceDayService,
-            IEventConferenceTrackService eventConferenceTrackService,
             IEventConferenceRoomService eventConferenceRoomService,
-            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider
+            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
+            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository
             )
         {
             _telegramUserManager = telegramUserManager;
             _dealerService = dealerService;
-            _imageService = imageService;
             _eventService = eventService;
-            _eventConferenceDayService = eventConferenceDayService;
-            _eventConferenceTrackService = eventConferenceTrackService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
+            _pushNotificationChannelRepository = pushNotificationChannelRepository;
 
             _botClient =
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
@@ -82,7 +78,10 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             _conversationManager = new ConversationManager(
                 _botClient,
-                (chatId) => new AdminConversation(_telegramUserManager, _regSysAlternativePinAuthenticationProvider)
+                (chatId) => new AdminConversation(
+                    _telegramUserManager, 
+                    _regSysAlternativePinAuthenticationProvider, 
+                    _pushNotificationChannelRepository)
                 );
 
             _botClient.OnMessage += BotClientOnOnMessage;
