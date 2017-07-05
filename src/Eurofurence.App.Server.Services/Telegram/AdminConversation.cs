@@ -47,7 +47,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             PinQuery = 1 << 2,
             Statistics = 1 << 3,
             Locate = 1 << 4,
-            SendPm = 1 << 5
+            SendPm = 1 << 5,
+            BadgeChecksum = 1 << 6,
+            All = (1 << 7) -1
         }
 
         private User _user;
@@ -127,8 +129,40 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Send a personal message to a specific RegNo",
                     RequiredPermission = PermissionFlags.SendPm,
                     CommandHandler = CommandSendMessage
+                },
+                new CommandInfo()
+                {
+                    Command = "/badgeChecksum",
+                    Description = "Calculate the checksum letter of a given reg no.",
+                    RequiredPermission = PermissionFlags.BadgeChecksum,
+                    CommandHandler = CommandBadgeChecksum
                 }
             };
+        }
+
+        public async Task CommandBadgeChecksum()
+        {
+            Func<Task> c1 = null, c2 = null, c3 = null;
+            var title = "Badge Checksum";
+
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the _registration number_?",
+                async regNoAsString =>
+                {
+                    await ClearLastAskResponseOptions();
+
+                    int regNo = 0;
+                    if (!int.TryParse(regNoAsString, out regNo))
+                    {
+                        await ReplyAsync($"_{regNoAsString} is not a number._");
+                        await c1();
+                        return;
+                    }
+
+                    var checksumLetter = BadgeChecksum.CalculateChecksum(regNo);
+
+                    await ReplyAsync($"*{title} - Result*\nBadge will show *{regNoAsString}{checksumLetter}*.");
+                }, "Cancel=/cancel");
+            await c1();
         }
 
         public async Task CommandSendMessage()
