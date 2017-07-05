@@ -27,7 +27,7 @@ namespace Eurofurence.App.Server.Services.Security
             ITokenFactory tokenFactory
         )
         {
-            _logger = loggerFactory.CreateLogger(GetType().Name);
+            _logger = loggerFactory.CreateLogger(GetType());
             _authenticationSettings = authenticationSettings;
             _tokenFactory = tokenFactory;
 
@@ -54,7 +54,7 @@ namespace Eurofurence.App.Server.Services.Security
 
             if (authenticationResult == null)
             {
-                _logger.LogWarning("AuthorizeViaRegSys failed for {Username} {RegNo}", request.Username, request.RegNo);
+                _logger.LogWarning("Authentication failed for {Username} {RegNo}", request.Username, request.RegNo);
                 return null;
             }
 
@@ -81,7 +81,7 @@ namespace Eurofurence.App.Server.Services.Security
                 Username = $"{authenticationResult.Username.ToLower()} ({authenticationResult.RegNo})"
             };
 
-            _logger.LogInformation("AuthorizeViaRegSys successful for {Username} {RegNo} via {Source}",
+            _logger.LogInformation("Authentication successful for {Username} {RegNo} via {Source}",
                 authenticationResult.Username, authenticationResult.RegNo, authenticationResult.Source);
 
             return response;

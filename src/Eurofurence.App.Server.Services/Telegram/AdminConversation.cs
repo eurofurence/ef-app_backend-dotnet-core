@@ -165,8 +165,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                         c3 = () => AskAsync($"*{title} - Step 3 of 3*\nPlease specify the body of the message.", async body =>
                         {
                             await ClearLastAskResponseOptions();
+                            var from = $"{_user.FirstName} {_user.LastName}";
+
                             c4 = () => AskAsync(
-                                $"*{title} - Review*\n\nFrom: *{_user.FirstName} {_user.LastName}*\nTo: *{regNo}*\nSubject: *{subject}*\n\nMessage:\n*{body}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
+
+                                $"*{title} - Review*\n\nFrom: *{from}*\nTo: *{regNo}*\nSubject: *{subject}*\n\nMessage:\n*{body}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
                                 async c4a =>
                                 {
                                     if (c4a != "*send")
@@ -177,7 +180,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                                     await _privateMessageService.SendPrivateMessageAsync(new SendPrivateMessageRequest()
                                     {
-                                        AuthorName = $"{_user.FirstName} {_user.LastName}",
+                                        AuthorName = $"{from}",
                                         RecipientUid = $"RegSys:23:{regNo}",
                                         Message = body,
                                         Subject = subject,
