@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -13,12 +14,15 @@ namespace Eurofurence.App.Server.Services.Telegram
         private object _syncRoot = new object();
 
         private Dictionary<string, IConversation> _conversations = new Dictionary<string, IConversation>();
+        private ILogger _logger;
 
         public ConversationManager(
+            ILoggerFactory loggerFactory,
             ITelegramBotClient botClient, 
             Func<ChatId, IConversation> conversationFactory
             )
         {
+            _logger = loggerFactory.CreateLogger(GetType());
             _conversationFactory = conversationFactory;
             _botClient = botClient;
         }

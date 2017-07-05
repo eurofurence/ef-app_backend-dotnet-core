@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.Validation;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -14,6 +15,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Microsoft.Extensions.Logging;
+using Telegram.Bot.Types.InlineQueryResults;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
@@ -22,6 +25,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly ITelegramUserManager _telegramUserManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
+        private readonly IPrivateMessageService _privateMessageService;
 
 
         private class CommandInfo
@@ -42,7 +46,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             PinCreate = 1 << 1,
             PinQuery = 1 << 2,
             Statistics = 1 << 3,
-            Locate = 1 << 4
+            Locate = 1 << 4,
+            SendPm = 1 << 5
         }
 
         private User _user;
@@ -62,16 +67,21 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private Func<string, Task> _awaitingResponseCallback = null;
         private Message _lastAskMessage;
+        private ILogger _logger;
 
         public AdminConversation(
             ITelegramUserManager telegramUserManager,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository
+            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
+            IPrivateMessageService privateMessageService,
+            ILoggerFactory loggerFactory
             )
         {
+            _logger = loggerFactory.CreateLogger(GetType());
             _telegramUserManager = telegramUserManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
+            _privateMessageService = privateMessageService;
 
             _commands = new List<CommandInfo>()
             {
@@ -110,8 +120,85 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Figure out if a given regNo is signed in on any device",
                     RequiredPermission = PermissionFlags.Locate,
                     CommandHandler = CommandLocate
+                },
+                new CommandInfo()
+                {
+                    Command = "/pm",
+                    Description = "Send a personal message to a specific RegNo",
+                    RequiredPermission = PermissionFlags.SendPm,
+                    CommandHandler = CommandSendMessage
                 }
             };
+        }
+
+        public async Task CommandSendMessage()
+        {
+            Func<Task> c1 = null, c2 = null, c3 = null, c4 = null;
+            var title = "Send Message";
+
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
+                async c1a =>
+                {
+                    await ClearLastAskResponseOptions();
+
+                    int regNo = 0;
+                    var regNoWithLetter = c1a.Trim().ToUpper();
+                    if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
+                    {
+                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await c1();
+                        return;
+                    }
+
+                    var records =
+                        (await _pushNotificationChannelRepository.FindAllAsync(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}")))
+                        .ToList();
+
+                    if (records.Count == 0)
+                    {
+                        await ReplyAsync($"*WARNING: RegNo {regNo} is not logged in on any known device - they will receive the message when they login.*");
+                    }
+
+                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nPlease speficy the subject of the message.", async subject =>
+                    {
+                        await ClearLastAskResponseOptions();
+                        c3 = () => AskAsync($"*{title} - Step 3 of 3*\nPlease specify the body of the message.", async body =>
+                        {
+                            await ClearLastAskResponseOptions();
+                            c4 = () => AskAsync(
+                                $"*{title} - Review*\n\nFrom: *{_user.FirstName} {_user.LastName}*\nTo: *{regNo}*\nSubject: *{subject}*\n\nMessage:\n*{body}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
+                                async c4a =>
+                                {
+                                    if (c4a != "*send")
+                                    {
+                                        await c3();
+                                        return;
+                                    }
+
+                                    await _privateMessageService.SendPrivateMessageAsync(new SendPrivateMessageRequest()
+                                    {
+                                        AuthorName = $"{_user.FirstName} {_user.LastName}",
+                                        RecipientUid = $"RegSys:23:{regNo}",
+                                        Message = body,
+                                        Subject = subject,
+                                        ToastTitle = "You received a new personal message",
+                                        ToastMessage = "Open the Eurofurence App to read it."
+                                    });
+
+                                    await ReplyAsync("Message sent.");
+                                }, "Send=*send", "Cancel=/cancel");
+                            await c4();
+
+                        }, "Cancel=/cancel");
+                        await c3();
+
+                    },"Cancel=/cancel");
+
+                    await c2();
+
+
+                }, "Cancel=/cancel");
+            await c1();
         }
 
         public async Task CommandLocate()
@@ -422,6 +509,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     response.AppendLine($"User can login to the Eurofurence Apps (mobile devices and web) with their registration number (*{result.RegNo}*) and PIN (*{result.Pin}*) as their password. They can type in any username, it does not matter.");
                                     response.AppendLine($"\n_Generation/Access of this PIN by {requesterUid} has been recorded._");
 
+                                    _logger.LogInformation("@{username} created PIN for {regNo} {nameOnBadge}", _user.Username, result.RegNo, result.NameOnBadge);
+
                                     await ReplyAsync(response.ToString());
                                 }, "Confirm=*confirm","Restart=*restart","Cancel=/cancel");
                             await c3();
@@ -433,8 +522,6 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private async Task ProcessMessageAsync(string message)
         {
-            
-
             if (message == "/cancel")
             {
                 _awaitingResponseCallback = null;
@@ -450,6 +537,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                 await invokable;
                 return;
             }
+
+            _logger.LogInformation("@{username} sent {message} on root conversation.", _user.Username, message);
 
             var userPermissions = await GetPermissionsAsync();
             if (message == "/start")
@@ -493,7 +582,14 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private Task ClearLastAskResponseOptions()
         {
-            if (_lastAskMessage != null) return ClearInlineResponseOptions(_lastAskMessage.MessageId);
+            try
+            {
+                if (_lastAskMessage != null) return ClearInlineResponseOptions(_lastAskMessage.MessageId);
+            }
+            catch (Exception e)
+            {
+            }
+
             return Task.CompletedTask;
         }
 

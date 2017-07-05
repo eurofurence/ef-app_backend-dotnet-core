@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -18,6 +19,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputMessageContents;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable CoVariantArrayConversion
 
@@ -31,8 +33,13 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
+        private readonly IPrivateMessageService _privateMessageService;
         private readonly TelegramBotClient _botClient;
         private readonly ConversationManager _conversationManager;
+
+        private Dictionary<int, DateTime> _answerredQueries = new Dictionary<int, DateTime>();
+        private ILogger _logger;
+
 
         internal class MiniProxy : IWebProxy
         {
@@ -62,15 +69,19 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEventService eventService,
             IEventConferenceRoomService eventConferenceRoomService,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository
+            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
+            IPrivateMessageService _privateMessageService,
+            ILoggerFactory loggerFactory
             )
         {
+            _logger = loggerFactory.CreateLogger(GetType());
             _telegramUserManager = telegramUserManager;
             _dealerService = dealerService;
             _eventService = eventService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
+            this._privateMessageService = _privateMessageService;
 
             _botClient =
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
@@ -79,11 +90,15 @@ namespace Eurofurence.App.Server.Services.Telegram
                         new MiniProxy(telegramConfiguration.Proxy));
 
             _conversationManager = new ConversationManager(
+                loggerFactory,
                 _botClient,
                 (chatId) => new AdminConversation(
                     _telegramUserManager, 
                     _regSysAlternativePinAuthenticationProvider, 
-                    _pushNotificationChannelRepository)
+                    _pushNotificationChannelRepository,
+                    _privateMessageService,
+                    loggerFactory
+                    )
                 );
 
             _botClient.OnMessage += BotClientOnOnMessage;
@@ -209,7 +224,6 @@ namespace Eurofurence.App.Server.Services.Telegram
         }
 
 
-        private Dictionary<int, DateTime> _answerredQueries = new Dictionary<int, DateTime>();
 
         private async void BotClientOnOnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {

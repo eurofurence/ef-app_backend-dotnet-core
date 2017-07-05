@@ -7,7 +7,7 @@ namespace Eurofurence.App.Server.Web.Extensions
     {
         public string RenderLogEvent(LogEvent logEvent)
         {
-            return $"[{logEvent.Level}] {logEvent.RenderMessage()}";
+            return $"[{logEvent.Level}] ({logEvent.Properties["SourceContext"]}) {logEvent.RenderMessage()}";
         }
     }
 }
