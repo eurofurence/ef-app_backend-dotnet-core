@@ -53,6 +53,20 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public bool IsDeviatingFromConBook { get; set; }
 
+        /// <summary>
+        ///     If set, refers to a banner ([3-4]:1 aspect ratio) that can be used when little
+        ///     vertical space is available (e.G. event schedule, or a header section).
+        /// </summary>
+        [DataMember]
+        public Guid? BannerImageId { get; set; }
+
+        /// <summary>
+        ///     If set, refers to an image of any aspect ratio that should be used where enough
+        ///     vertical space is available (e.G. event detail).
+        /// </summary>
+        [DataMember]
+        public Guid? PosterImageId { get; set; }
+
         [IgnoreDataMember]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }
 
