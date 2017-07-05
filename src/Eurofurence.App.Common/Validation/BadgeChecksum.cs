@@ -4,8 +4,8 @@ namespace Eurofurence.App.Common.Validation
 {
     public static class BadgeChecksum
     {
-        private static int[] weight = { 3, 5, 7, 11, 13, 17 };
-        private static String CHECKSUM_LETTER_MAP = "FJQCETNKWLVGYHSZXDBUARP"; // 23 letters (prime)
+        private static int[] weight = { 3, 7, 11, 13, 17 };
+        private static String CHECKSUM_LETTER_MAP = "FJQCEKNTWLVGYHSZXDBUARP"; // 23 letters (prime)
 
         public static char CalculateChecksum(int id)
         {
@@ -41,7 +41,6 @@ namespace Eurofurence.App.Common.Validation
 
             if (!Int32.TryParse(numberPart, out regNo)) return false;
 
-            return true; // Until we fix the hashing.
             return checksumLetter == CalculateChecksum(regNo);
         }
     }
