@@ -179,8 +179,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             var map = await _mapService.FindOneAsync(Id);
             if (map == null) return BadRequest("No map with this id");
 
-            var linkValidation = await _linkFragmentValidator.ValidateAsync(Record.Link);
-            if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
+
+            foreach (var link in Record.Links)
+            {
+                var linkValidation = await _linkFragmentValidator.ValidateAsync(link);
+                if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
+            }
 
             map.Entries.Remove(map.Entries.SingleOrDefault(a => a.Id == EntryId));
             map.Entries.Add(Record);
