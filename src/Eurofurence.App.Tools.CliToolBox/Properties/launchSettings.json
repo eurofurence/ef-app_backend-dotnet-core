@@ -2,7 +2,7 @@
   "profiles": {
     "Eurofurence.App.Tools.CliToolBox": {
       "commandName": "Project",
-      "commandLineArgs": "knowledge importWikiFile -inputPath=c:\\temp\\coninfo.txt"
+      "commandLineArgs": "events importImage -eventId 609f84e3-c244-431b-86cd-5cf69c9895d5 -imagePath=c:\\temp\\pofp.jpg -purpose=Poster"
     }
   }
 }
