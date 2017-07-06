@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Common.Validation;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.PushNotifications;
@@ -49,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             Locate = 1 << 4,
             SendPm = 1 << 5,
             BadgeChecksum = 1 << 6,
-            All = (1 << 7) -1
+            All = (1 << 7) - 1,
         }
 
         private User _user;
@@ -193,7 +194,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         await ReplyAsync($"*WARNING: RegNo {regNo} is not logged in on any known device - they will receive the message when they login.*");
                     }
 
-                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nPlease speficy the subject of the message.", async subject =>
+                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nPlease specify the subject of the message.", async subject =>
                     {
                         await ClearLastAskResponseOptions();
                         c3 = () => AskAsync($"*{title} - Step 3 of 3*\nPlease specify the body of the message.", async body =>
@@ -203,7 +204,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                             c4 = () => AskAsync(
 
-                                $"*{title} - Review*\n\nFrom: *{from}*\nTo: *{regNo}*\nSubject: *{subject}*\n\nMessage:\n*{body}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
+                                $"*{title} - Review*\n\nFrom: *{from.EscapeMarkdown()}*\nTo: *{regNo}*\nSubject: *{subject.EscapeMarkdown()}*\n\nMessage:\n*{body.EscapeMarkdown()}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
                                 async c4a =>
                                 {
                                     if (c4a != "*send")
@@ -326,7 +327,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 var username = c2a;
                                 var acl = await _telegramUserManager.GetAclForUserAsync<PermissionFlags>(username);
 
-                                c3 = () => AskAsync($"*{title}*\nUser @{username} has flags: `{acl}`",
+                                c3 = () => AskAsync($"*{title}*\nUser @{username.EscapeMarkdown()} has flags: `{acl}`",
                                     async c3a =>
                                     {
                                         if (c3a == "*back")
@@ -348,7 +349,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             .ToList();
 
                                         await ReplyAsync(
-                                            $"*{title}*\nModifying: @{username}\n\nAvailable flags to *{verb}*: `{string.Join(",", values.Select(a => $"{a}"))}`");
+                                            $"*{title}*\nModifying: @{username.EscapeMarkdown()}\n\nAvailable flags to *{verb}*: `{string.Join(",", values.Select(a => $"{a}"))}`");
 
                                         c4 = () => AskAsync($"Please type which flag to *{verb}*.", async c4a =>
                                         {
@@ -365,6 +366,21 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             if (!Enum.TryParse(selectedFlag, out typedFlag))
                                             {
                                                 await ReplyAsync("Invalid flag.");
+                                                await c4();
+                                                return;
+                                            }
+
+                                            if (typedFlag.HasFlag(PermissionFlags.UserAdmin))
+                                            {
+                                                await ReplyAsync("Sorry - user administration flag may not be changed via the bot interface.");
+                                                await c4();
+                                                return;
+                                            }
+
+                                            var myPermissions = await GetPermissionsAsync();
+                                            if (!HasPermission(myPermissions, typedFlag))
+                                            {
+                                                await ReplyAsync("Sorry - you may only add/remove flags that you own yourself.");
                                                 await c4();
                                                 return;
                                             }
@@ -389,9 +405,9 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                             var response = new StringBuilder();
                             response.AppendLine($"*{title}*\nCurrent Users in Database:\n");
-                            foreach (var user in users)
+                            foreach (var user in users.OrderBy(a => a.Username))
                             {
-                                response.AppendLine($"@{user.Username} - `{user.Acl}`");
+                                response.AppendLine($"@{user.Username.EscapeMarkdown()} - `{user.Acl}`");
                             }
 
                             await ReplyAsync(response.ToString());
@@ -463,7 +479,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                     var response = new StringBuilder();
                     response.AppendLine($"RegNo: *{record.RegNo}*");
-                    response.AppendLine($"NameOnBadge: *{record.NameOnBadge}*");
+                    response.AppendLine($"NameOnBadge: *{record.NameOnBadge.EscapeMarkdown()}*");
                     response.AppendLine($"Pin: *{record.Pin}*");
                     response.AppendLine("\n```\nAll times are UTC.\n");
                     response.AppendLine($"Issued on {record.IssuedDateTimeUtc} by {record.IssuedByUid}");
@@ -513,7 +529,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                             var nameOnBadge = c2a.Trim();
 
                             c3 = () => AskAsync(
-                                $"*{title} - Step 3 of 3*\nPlease confirm:\n\nThe badge no. is *{regNoWithLetter}*\n\nThe nickname on the badge is *{nameOnBadge}*" +
+                                $"*{title} - Step 3 of 3*\nPlease confirm:\n\nThe badge no. is *{regNoWithLetter}*\n\nThe nickname on the badge is *{nameOnBadge.EscapeMarkdown()}*" +
                                 "\n\n*You have verified the identity of the attendee by matching their real name on badge against a legal form of identification.*",
                                 async c3a =>
                                 {
@@ -540,11 +556,11 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                                     response.AppendLine($"*{title} - Completed*");
                                     response.AppendLine($"Registration Number: *{result.RegNo}*");
-                                    response.AppendLine($"Name on Badge: *{result.NameOnBadge}*");
+                                    response.AppendLine($"Name on Badge: *{result.NameOnBadge.EscapeMarkdown()}*");
                                     response.AppendLine($"PIN: *{result.Pin}*");
                                     response.AppendLine();
                                     response.AppendLine($"User can login to the Eurofurence Apps (mobile devices and web) with their registration number (*{result.RegNo}*) and PIN (*{result.Pin}*) as their password. They can type in any username, it does not matter.");
-                                    response.AppendLine($"\n_Generation/Access of this PIN by {requesterUid} has been recorded._");
+                                    response.AppendLine($"\n_Generation/Access of this PIN by {requesterUid.EscapeMarkdown()} has been recorded._");
 
                                     _logger.LogInformation("@{username} created PIN for {regNo} {nameOnBadge}", _user.Username, result.RegNo, result.NameOnBadge);
 
