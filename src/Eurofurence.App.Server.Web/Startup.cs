@@ -179,7 +179,7 @@ namespace Eurofurence.App.Server.Web
                 var options = new CloudWatchSinkOptions
                 {
                     LogGroupName = logGroupName,
-                    LogEventRenderer = new CustomLogEventRenderer()
+                    LogEventRenderer =  new JsonLogEventRenderer()
                 };
 
                 loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
