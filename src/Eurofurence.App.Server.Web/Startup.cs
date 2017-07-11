@@ -6,6 +6,7 @@ using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
@@ -13,7 +14,9 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
+using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
+using FluentScheduler;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -153,6 +156,11 @@ namespace Eurofurence.App.Server.Web
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
                 .As<IApiPrincipal>();
 
+            builder.Register(c => Configuration.GetSection("jobs:updateNews"))
+                .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
+            
+            builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
+
             var container = builder.Build();
             return container.Resolve<IServiceProvider>();
         }
@@ -161,13 +169,16 @@ namespace Eurofurence.App.Server.Web
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            IApplicationLifetime appLifetime)
+            IApplicationLifetime appLifetime,
+            IServiceProvider serviceProvider)
         {
             var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();
 
             if (env.IsDevelopment())
             {
-                loggerConfiguration.WriteTo.ColoredConsole();
+                loggerConfiguration
+                    .MinimumLevel.Debug()
+                    .WriteTo.ColoredConsole();
             }
             else
             {
@@ -228,6 +239,9 @@ namespace Eurofurence.App.Server.Web
                 c.DocExpansion("none");
                 c.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
             });
+
+            JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
+            JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
         }
     }
 }

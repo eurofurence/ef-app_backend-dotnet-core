@@ -15,7 +15,7 @@ namespace Eurofurence.App.Domain.Model.Announcements
         [Required]
         public DateTime ValidUntilDateTimeUtc { get; set; }
 
-        [DataMember]
+        [IgnoreDataMember]
         public string ExternalReference { get; set; }
 
         [DataMember]
