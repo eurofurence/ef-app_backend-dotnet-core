@@ -150,6 +150,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             csv.Configuration.Delimiter = ",";
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
 
+            if (csvRecords.Count == 0) return 0;
+
             foreach (var record in csvRecords)
                 record.ConferenceDayName = record.ConferenceDayName.Contains(" - ")
                     ? record.ConferenceDayName.Split(new[] { " - " }, StringSplitOptions.None)[1].Trim()
