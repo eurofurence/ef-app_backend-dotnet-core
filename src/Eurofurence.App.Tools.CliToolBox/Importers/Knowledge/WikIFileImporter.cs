@@ -121,12 +121,16 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
 
             foreach (Match linkMatch in m)
             {
-                if (linkMatch.Groups[2].Value.Trim().Equals("image", StringComparison.CurrentCultureIgnoreCase))
+                var target = linkMatch.Groups[1].Value.Trim();
+                var name = linkMatch.Groups[2].Value.Trim();
+
+
+                if (name.Equals("image", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // Get the image...
                     try
                     {
-                        var imageBytes = await GetImageAsync(linkMatch.Groups[1].Value.Trim());
+                        var imageBytes = await GetImageAsync(target);
                         var imageId =
                             await _imageService.InsertOrUpdateImageAsync($"knowledge:{url.AsHashToGuid()}", imageBytes);
 
@@ -139,12 +143,19 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                 }
                 else
                 {
-                    linkFragments.Add(new LinkFragment()
+                    if (!Uri.IsWellFormedUriString(target, UriKind.Absolute) &&
+                        Uri.IsWellFormedUriString($"http://{target}", UriKind.Absolute))
+                        target = $"http://{target}";
+
+                    if (Uri.IsWellFormedUriString(target, UriKind.Absolute))
                     {
-                        FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
-                        Name = linkMatch.Groups[2].Value.Trim(),
-                        Target = linkMatch.Groups[1].Value.Trim(),
-                    });
+                        linkFragments.Add(new LinkFragment()
+                        {
+                            FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
+                            Name = name,
+                            Target = target,
+                        });
+                    }
                 }
             }
 
