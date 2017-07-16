@@ -10,6 +10,7 @@ using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Security;
@@ -133,8 +134,11 @@ namespace Eurofurence.App.Server.Web
             });
             builder.RegisterInstance(new AuthenticationSettings
             {
-                ConventionNumber = 23,
                 DefaultTokenLifeTime = TimeSpan.FromDays(30)
+            });
+            builder.RegisterInstance(new ConventionSettings()
+            {
+                ConventionNumber = 23,
             });
             builder.RegisterInstance(new WnsConfiguration
             {
@@ -240,8 +244,11 @@ namespace Eurofurence.App.Server.Web
                 c.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
             });
 
-            JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
-            JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
+            if (env.IsProduction())
+            {
+                JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
+                JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
+            }
         }
     }
 }

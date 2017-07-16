@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Security;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +13,7 @@ namespace Eurofurence.App.Server.Services.Security
     public class AuthenticationHandler : IAuthenticationHandler
     {
         private readonly ILogger _logger;
+        private readonly ConventionSettings _conventionSettings;
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly ITokenFactory _tokenFactory;
 
@@ -22,12 +24,14 @@ namespace Eurofurence.App.Server.Services.Security
 
         public AuthenticationHandler(
             ILoggerFactory loggerFactory,
+            ConventionSettings conventionSettings,
             AuthenticationSettings authenticationSettings,
             IEntityRepository<RegSysAlternativePinRecord> regSysAlternativePinRepository,
             ITokenFactory tokenFactory
         )
         {
             _logger = loggerFactory.CreateLogger(GetType());
+            _conventionSettings = conventionSettings;
             _authenticationSettings = authenticationSettings;
             _tokenFactory = tokenFactory;
 
@@ -58,14 +62,14 @@ namespace Eurofurence.App.Server.Services.Security
                 return null;
             }
 
-            var uid = $"RegSys:{_authenticationSettings.ConventionNumber}:{authenticationResult.RegNo}";
+            var uid = $"RegSys:{_conventionSettings.ConventionNumber}:{authenticationResult.RegNo}";
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, uid),
                 new Claim(ClaimTypes.GivenName, authenticationResult.Username.ToLower()),
                 new Claim(ClaimTypes.PrimarySid, authenticationResult.RegNo.ToString()),
-                new Claim(ClaimTypes.GroupSid, _authenticationSettings.ConventionNumber.ToString()),
+                new Claim(ClaimTypes.GroupSid, _conventionSettings.ConventionNumber.ToString()),
                 new Claim(ClaimTypes.Role, "Attendee"),
                 new Claim(ClaimTypes.System, "RegSys")
             };

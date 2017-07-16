@@ -4,6 +4,7 @@ using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
@@ -15,6 +16,7 @@ using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.Communication;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
+using Eurofurence.App.Server.Services.Fursuits;
 using Eurofurence.App.Server.Services.Images;
 using Eurofurence.App.Server.Services.Knowledge;
 using Eurofurence.App.Server.Services.Maps;
@@ -55,6 +57,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<IRegSysAlternativePinAuthenticationProvider>();
             builder.RegisterType<BotManager>().As<BotManager>();
             builder.RegisterType<TelegramTelegramUserManager>().As<ITelegramUserManager>();
+
+            builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
         }
     }
 }
