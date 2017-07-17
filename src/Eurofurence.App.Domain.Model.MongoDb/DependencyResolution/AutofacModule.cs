@@ -5,10 +5,12 @@ using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Fursuits;
+using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits;
+using Eurofurence.App.Domain.Model.MongoDb.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
 using Eurofurence.App.Domain.Model.MongoDb.Telegram;
 using Eurofurence.App.Domain.Model.PushNotifications;
@@ -59,7 +61,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
             Register<TelegramUserRepository, IEntityRepository<TelegramUserRecord>, TelegramUserRecord>(builder);
+
             Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder);
+            Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipantRecord>, PlayerParticipantRecord>(builder);
+            Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipantRecord>, FursuitParticipantRecord>(builder);
+            Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder);
         }
     }
 }
