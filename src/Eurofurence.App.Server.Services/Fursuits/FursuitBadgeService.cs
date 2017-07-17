@@ -72,5 +72,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
             return record.Id;
         }
 
+        public async Task<byte[]> GetFursuitBadgeImageAsync(Guid id)
+        {
+            var content = await _fursuitBadgeRepository.FindOneAsync(id);
+            return content.ImageBytes;
+        }
     }
 }

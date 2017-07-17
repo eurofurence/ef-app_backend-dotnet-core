@@ -5,9 +5,9 @@ using MongoDB.Driver;
 namespace Eurofurence.App.Domain.Model.MongoDb.Fursuits.CollectingGame
 {
     public class PlayerParticipantRepository :
-        MongoDbEntityRepositoryBase<PlayerParticipantRecord>
+        MongoDbEntityRepositoryBase<PlayerParticipationRecord>
     {
-        public PlayerParticipantRepository(IMongoCollection<PlayerParticipantRecord> collection)
+        public PlayerParticipantRepository(IMongoCollection<PlayerParticipationRecord> collection)
             : base(collection)
         {
         }

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
 {
-    public class PlayerParticipantRecord : EntityBase
+    public class PlayerParticipationRecord : EntityBase
     {
         public class CollectionEntry
         {
-            public string FursuitParticipantUid { get; set; }
+            public Guid FursuitParticipationUid { get; set; }
             public DateTime EventDateTimeUtc { get; set; }
         }
 
@@ -19,7 +19,7 @@ namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
         public int CollectionCount { get; set; }
         public IList<CollectionEntry> CollectionEntries { get; set; }
 
-        public PlayerParticipantRecord()
+        public PlayerParticipationRecord()
         {
             CollectionEntries = new List<CollectionEntry>();
         }

@@ -63,8 +63,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<TelegramUserRepository, IEntityRepository<TelegramUserRecord>, TelegramUserRecord>(builder);
 
             Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder);
-            Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipantRecord>, PlayerParticipantRecord>(builder);
-            Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipantRecord>, FursuitParticipantRecord>(builder);
+            Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipationRecord>, PlayerParticipationRecord>(builder);
+            Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipationRecord>, FursuitParticipationRecord>(builder);
             Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder);
         }
     }

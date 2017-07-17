@@ -59,6 +59,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<TelegramTelegramUserManager>().As<ITelegramUserManager>();
 
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
+            builder.RegisterType<CollectingGameService>().As<ICollectingGameService>();
         }
     }
 }
