@@ -9,5 +9,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Security
         bool IsAttendee { get; }
         bool IsAuthenticated { get; }
         string Uid { get; }
+        string GivenName { get; }
     }
 }

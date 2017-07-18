@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Eurofurence.App.Common;
+using Eurofurence.App.Common.Results;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Extensions
 {
@@ -18,6 +21,18 @@ namespace Eurofurence.App.Server.Web.Extensions
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
 
             return obj;
+        }
+
+        public static ActionResult AsActionResult(this IResult obj)
+        {
+            if (obj.IsSuccessful) return new NoContentResult();
+            return new BadRequestObjectResult(new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage });
+        }
+
+        public static ActionResult AsActionResult<T>(this IResult<T> obj)
+        {
+            if (obj.IsSuccessful) return new ObjectResult(obj.Value) {StatusCode = 200};
+            return new BadRequestObjectResult(new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage });
         }
     }
 }

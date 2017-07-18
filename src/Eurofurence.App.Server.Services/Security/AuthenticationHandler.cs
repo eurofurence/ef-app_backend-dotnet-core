@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -67,7 +69,7 @@ namespace Eurofurence.App.Server.Services.Security
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, uid),
-                new Claim(ClaimTypes.GivenName, authenticationResult.Username.ToLower()),
+                new Claim(ClaimTypes.GivenName, authenticationResult.Username.ToLower().UppercaseFirst()),
                 new Claim(ClaimTypes.PrimarySid, authenticationResult.RegNo.ToString()),
                 new Claim(ClaimTypes.GroupSid, _conventionSettings.ConventionNumber.ToString()),
                 new Claim(ClaimTypes.Role, "Attendee"),

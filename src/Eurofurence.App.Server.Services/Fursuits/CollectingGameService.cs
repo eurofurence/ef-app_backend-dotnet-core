@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Results;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
@@ -60,9 +61,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
             return results;
         }
 
-        public async Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync(string playerUid)
+        public async Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync(string playerUid, string playerName)
         {
-            var response = new PlayerParticipationInfo();
+            var response = new PlayerParticipationInfo() {Name = playerName};
             var playerParticipation = await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == playerUid);
 
             if (playerParticipation != null)
@@ -73,7 +74,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
             return response;
         }
 
-        public async Task<bool> LinkTokenToFursuitBadge(string ownerUid, Guid fursuitBadgeId, string tokenValue)
+        public async Task<IResult> RegisterTokenForFursuitBadgeForOwnerAsync(string ownerUid, Guid fursuitBadgeId, string tokenValue)
         {
             try
             {
@@ -81,14 +82,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 var fursuitBadge = await _fursuitBadgeRepository.FindOneAsync(
                     badge => badge.OwnerUid == ownerUid && badge.Id == fursuitBadgeId);
-                if (fursuitBadge == null) return false;
+                if (fursuitBadge == null) return Result.Error("INVALID_FURSUIT_BADGE_ID", "Invalid fursuitBadgeId");
 
                 var token = await _tokenRepository.FindOneAsync(t => t.Value == tokenValue && t.IsLinked == false);
-                if (token == null) return false;
+                if (token == null) return Result.Error("INVALID_TOKEN", "Invalid token");
 
                 var existingParticipation =
                     await _fursuitParticipationRepository.FindOneAsync(p => p.FursuitBadgeId == fursuitBadgeId);
-                if (existingParticipation != null) return false;
+                if (existingParticipation != null) return Result.Error("EXISTING_PARTICIPATION", "Fursuit already has a token assigned to it");
 
                 var newParticipation = new FursuitParticipationRecord()
                 {
@@ -107,7 +108,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 await _tokenRepository.ReplaceOneAsync(token);
                 await _fursuitParticipationRepository.InsertOneAsync(newParticipation);
 
-                return true;
+                return Result.Ok;
             }
             finally
             {
@@ -115,8 +116,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
             }
         }
 
-        public async Task<CollectTokenResponse> CollectTokenForPlayerAsync(string playerUid, string tokenValue)
-            {
+        public async Task<IResult<CollectTokenResponse>> CollectTokenForPlayerAsync(string playerUid, string tokenValue)
+        {
             try
             {
                 await _semaphore.WaitAsync();
@@ -135,7 +136,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 if (playerParticipation.IsBanned)
                 {
-                    return new CollectTokenResponse {FailureMessage = "You have been disqualified from the game."};
+                    return Result<CollectTokenResponse>.Error("BANNED", "You have been disqualified from the game.");
                 }
 
                 var fursuitParticipation =
@@ -158,23 +159,26 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         {
                             sb.Append(
                                 $" Careful - you will be disqualified after {playerParticipation.Karma + 10} more failed attempts.");
+                            return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BAN_IMMINENT", sb.ToString());
                         }
                         else
                         {
                             sb.Append(" You have been disqualified.");
+                            return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BANNED", sb.ToString());
                         }
                     }
 
-                    return new CollectTokenResponse {FailureMessage = sb.ToString()};
+                    return Result<CollectTokenResponse>.Error("INVALID_TOKEN", sb.ToString());
                 }
 
                 if (playerParticipation.PlayerUid == fursuitParticipation.OwnerUid)
-                    return new CollectTokenResponse { FailureMessage = "You cannot collect your own fursuits." };
+                    return Result<CollectTokenResponse>.Error("INVALID_TOKEN_OWN_SUIT", "You cannot collect your own fursuits.");
 
                 if (playerParticipation.CollectionEntries.Any(a => a.FursuitParticipationUid == fursuitParticipation.Id))
-                    return new CollectTokenResponse { FailureMessage = "You have already collected this suit!" };
+                    return Result<CollectTokenResponse>.Error("INVALID_TOKEN_ALREADY_COLLECTED", "You have already collected this suit!");
 
                 playerParticipation.Karma = Math.Min(playerParticipation.Karma + 2, 10);
+
                 playerParticipation.CollectionEntries.Add(new PlayerParticipationRecord.CollectionEntry()
                 {
                     EventDateTimeUtc = DateTime.UtcNow,
@@ -200,15 +204,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 var fursuitBadge = await 
                     _fursuitBadgeRepository.FindOneAsync(a => a.Id == fursuitParticipation.FursuitBadgeId);
 
-                return new CollectTokenResponse
+                return Result<CollectTokenResponse>.Ok(new CollectTokenResponse()
                 {
-                    IsSuccessful = true,
                     FursuitBadgeId = fursuitBadge.Id,
                     Name = fursuitBadge.Name,
                     Gender = fursuitBadge.Gender,
                     Species = fursuitBadge.Species,
                     FursuitCollectionCount = fursuitParticipation.CollectionCount
-                };
+                });
             }
             finally
             {

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,6 +28,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "System,Developer,FursuitBadgeSystem")]
         [HttpPost("Badges/Registration")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
         public async Task<ActionResult> PostFursuitBadgeRegistrationAsync([FromBody] FursuitBadgeRegistration registration)
         {
             await _fursuitBadgeService.UpsertFursuitBadgeAsync(registration);
@@ -40,19 +43,19 @@ namespace Eurofurence.App.Server.Web.Controllers
             return File(content, "image/jpeg");
         }
 
-
         [Authorize(Roles = "Attendee")]
         [HttpPost("CollectingGame/FursuitParticpation/Badges/{FursuitBadgeId}/Token")]
-        public async Task<ActionResult> LinkTokenToFursuitBadgeAsync([FromRoute] Guid FursuitBadgeId, [FromBody] string TokenValue)
+        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerAsync([FromRoute] Guid FursuitBadgeId, [FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.LinkTokenToFursuitBadge(_apiPrincipal.Uid, FursuitBadgeId, TokenValue.ToUpper());
-
-            if (result) return NoContent();
-            return BadRequest();
+            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, FursuitBadgeId, TokenValue.ToUpper());
+            return result.AsActionResult();
         }
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("CollectingGame/FursuitParticipation")]
+        [ProducesResponseType(typeof(FursuitParticipationInfo[]), 200)]
         public Task<FursuitParticipationInfo[]> GetFursuitParticipationInfoForOwnerAsync()
         {
             return _collectingGameService.GetFursuitParticipationInfoForOwnerAsync(_apiPrincipal.Uid);
@@ -60,16 +63,20 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("CollectingGame/PlayerParticipation")]
+        [ProducesResponseType(typeof(PlayerParticipationInfo[]), 200)]
         public Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync()
         {
-            return _collectingGameService.GetPlayerParticipationInfoForPlayerAsync(_apiPrincipal.Uid);
+            return _collectingGameService.GetPlayerParticipationInfoForPlayerAsync(_apiPrincipal.Uid, _apiPrincipal.GivenName);
         }
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("CollectingGame/PlayerParticipation/CollectToken")]
-        public Task<CollectTokenResponse> CollectTokenForPlayerAsync([FromBody] string TokenValue)
+        [ProducesResponseType(typeof(CollectTokenResponse), 200)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> CollectTokenForPlayerAsync([FromBody] string TokenValue)
         {
-            return _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.ToUpper());
+            return result.AsActionResult();
         }
 
         

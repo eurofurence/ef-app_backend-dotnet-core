@@ -25,5 +25,8 @@ namespace Eurofurence.App.Server.Services.Security
         public bool IsAttendee => _principal?.IsInRole("Attendee") ?? false;
         public bool IsAuthenticated => _identity?.IsAuthenticated ?? false;
         public string Uid => _principal?.Identity.Name ?? "Anonymous";
+
+        public string GivenName => _principal?.Claims.SingleOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value ??
+                              "Anonymous";
     }
 }
