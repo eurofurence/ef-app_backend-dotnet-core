@@ -69,6 +69,27 @@ namespace Eurofurence.App.Server.Services.Fursuits
             if (playerParticipation != null)
             {
                 response.CollectionCount = playerParticipation.CollectionCount;
+
+                var tasks = playerParticipation.CollectionEntries
+                    .OrderByDescending(a => a.EventDateTimeUtc)
+                    .Take(5)
+                    .Select(async entry =>
+                    {
+                        var fursuitParticipation =
+                            await _fursuitParticipationRepository.FindOneAsync(entry.FursuitParticipationUid);
+                        var badge = await _fursuitBadgeRepository.FindOneAsync(fursuitParticipation.FursuitBadgeId);
+
+                        return new PlayerParticipationInfo.BadgeInfo
+                        {
+                            Id = badge.Id,
+                            Name = badge.Name
+                        };
+                    })
+                    .ToList();
+
+                await Task.WhenAll(tasks);
+
+                response.RecentlyCollected = tasks.Select(task => task.Result).ToList();
             }
 
             return response;
