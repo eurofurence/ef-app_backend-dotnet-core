@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class BotManager
     {
-        private readonly ITelegramUserManager _telegramUserManager;
+        private readonly IUserManager _userManager;
         private readonly IDealerService _dealerService;
         private readonly IEventService _eventService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
@@ -66,7 +66,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public BotManager(
             TelegramConfiguration telegramConfiguration,
-            ITelegramUserManager telegramUserManager,
+            IUserManager userManager,
             IDealerService dealerService,
             IEventService eventService,
             IEventConferenceRoomService eventConferenceRoomService,
@@ -78,7 +78,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             )
         {
             _logger = loggerFactory.CreateLogger(GetType());
-            _telegramUserManager = telegramUserManager;
+            _userManager = userManager;
             _dealerService = dealerService;
             _eventService = eventService;
             _eventConferenceRoomService = eventConferenceRoomService;
@@ -97,7 +97,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 loggerFactory,
                 _botClient,
                 (chatId) => new AdminConversation(
-                    _telegramUserManager, 
+                    _userManager, 
                     _regSysAlternativePinAuthenticationProvider, 
                     _pushNotificationChannelRepository,
                     _fursuitBadgeRepository,

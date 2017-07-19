@@ -24,7 +24,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class AdminConversation : Conversation, IConversation
     {
-        private readonly ITelegramUserManager _telegramUserManager;
+        private readonly IUserManager _userManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
@@ -60,7 +60,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private Task<PermissionFlags> GetPermissionsAsync()
         {
-            return _telegramUserManager.GetAclForUserAsync<PermissionFlags>(_user.Username);
+            return _userManager.GetAclForUserAsync<PermissionFlags>(_user.Username);
         }
 
         private bool HasPermission(PermissionFlags userPermissionFlags, PermissionFlags requiredPermission)
@@ -76,7 +76,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private ILogger _logger;
 
         public AdminConversation(
-            ITelegramUserManager telegramUserManager,
+            IUserManager userManager,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
@@ -85,7 +85,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             )
         {
             _logger = loggerFactory.CreateLogger(GetType());
-            _telegramUserManager = telegramUserManager;
+            _userManager = userManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
@@ -371,7 +371,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 await ClearLastAskResponseOptions();
 
                                 var username = c2a;
-                                var acl = await _telegramUserManager.GetAclForUserAsync<PermissionFlags>(username);
+                                var acl = await _userManager.GetAclForUserAsync<PermissionFlags>(username);
 
                                 c3 = () => AskAsync($"*{title}*\nUser @{username.EscapeMarkdown()} has flags: `{acl}`",
                                     async c3a =>
@@ -434,7 +434,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             if (verb == "add") acl |= typedFlag;
                                             if (verb == "remove") acl &= ~typedFlag;
 
-                                            await _telegramUserManager.SetAclForUserAsync(username, acl);
+                                            await _userManager.SetAclForUserAsync(username, acl);
                                             await c3();
                                         },"Back=*back", "Cancel=/cancel");
                                         await c4();
@@ -447,7 +447,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                             break;
 
                         case ("*listusers"):
-                            var users = await _telegramUserManager.GetUsersAsync();
+                            var users = await _userManager.GetUsersAsync();
 
                             var response = new StringBuilder();
                             response.AppendLine($"*{title}*\nCurrent Users in Database:\n");

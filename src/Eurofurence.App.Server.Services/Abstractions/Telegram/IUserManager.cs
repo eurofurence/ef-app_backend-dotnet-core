@@ -5,12 +5,12 @@ using Eurofurence.App.Domain.Model.Telegram;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Telegram
 {
-    public interface ITelegramUserManager
+    public interface IUserManager
     {
         Task<TEnum> GetAclForUserAsync<TEnum>(string username) where TEnum: struct;
 
         Task SetAclForUserAsync<TEnum>(string username, TEnum acl);
 
-        Task<IList<TelegramUserRecord>> GetUsersAsync();
+        Task<IList<UserRecord>> GetUsersAsync();
     }
 }

@@ -35,9 +35,9 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 
         private void Register<TRepository, IRepository, TRecord>(ContainerBuilder builder)
         {
-            // By default, we store entities in a collection that matches the class name.
-            builder.Register(r => _mongoDatabase.GetCollection<TRecord>(typeof(TRecord).Name))
-                .As<IMongoCollection<TRecord>>();
+            var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
+
+            builder.Register(r => _mongoDatabase.GetCollection<TRecord>(name)).As<IMongoCollection<TRecord>>();
             builder.RegisterType<TRepository>().As<IRepository>();
         }
 
@@ -63,7 +63,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
-            Register<TelegramUserRepository, IEntityRepository<TelegramUserRecord>, TelegramUserRecord>(builder);
+            Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
 
             Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder);
             Register<FursuitBadgeImageRepository, IEntityRepository<FursuitBadgeImageRecord>, FursuitBadgeImageRecord>(builder);

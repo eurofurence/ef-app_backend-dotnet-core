@@ -8,11 +8,11 @@ using Eurofurence.App.Server.Services.Abstractions.Telegram;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
-    public class TelegramTelegramUserManager : ITelegramUserManager
+    public class UserManager : IUserManager
     {
-        private readonly IEntityRepository<TelegramUserRecord> _telegramUserRepository;
+        private readonly IEntityRepository<UserRecord> _telegramUserRepository;
 
-        public TelegramTelegramUserManager(IEntityRepository<TelegramUserRecord> telegramUserRepository)
+        public UserManager(IEntityRepository<UserRecord> telegramUserRepository)
         {
             _telegramUserRepository = telegramUserRepository;
         }
@@ -34,7 +34,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             if (record == null)
             {
-                record = new TelegramUserRecord()
+                record = new UserRecord()
                 {
                     Username = username
                 };
@@ -53,7 +53,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             await _telegramUserRepository.ReplaceOneAsync(record);
         }
 
-        public async Task<IList<TelegramUserRecord>> GetUsersAsync()
+        public async Task<IList<UserRecord>> GetUsersAsync()
         {
             return (await _telegramUserRepository.FindAllAsync()).ToList();
         }
