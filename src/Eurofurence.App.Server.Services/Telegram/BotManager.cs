@@ -164,6 +164,35 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .ToArray();
         }
 
+
+        private async Task<InlineQueryResult[]> QueryFursuitBadges(string query)
+        {
+            if (query.Length < 3) return new InlineQueryResult[0];
+
+
+            var badges =
+                (await _fursuitBadgeRepository.FindAllAsync(
+                    a => a.IsDeleted == 0 && a.Name.ToLower().Contains(query.ToLower())))
+                .Take(5)
+                .ToList();
+
+            if (badges.Count == 0) return new InlineQueryResult[0];
+
+            return badges.Select(e =>
+                {
+                    return new InlineQueryResultPhoto()
+                    {
+                        Id = e.Id.ToString(),
+                        Url = $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image",
+                        ThumbUrl = $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image",
+                        Title = e.Name,
+                        Caption = $"{e.Name}\n{e.Species} ({e.Gender})\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
+                    };
+                })
+                .ToArray();
+
+        }
+
         private async Task<InlineQueryResult[]> QueryDealers(string query)
         {
             if (query.Length < 3) return new InlineQueryResult[0];
@@ -205,6 +234,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 var queries = new[]
                 {
                     QueryEvents(queryString),
+                    QueryFursuitBadges(queryString)
                   //  QueryDealers(queryString)
                 };
 
