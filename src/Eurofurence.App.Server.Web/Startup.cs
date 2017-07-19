@@ -109,6 +109,7 @@ namespace Eurofurence.App.Server.Web
 
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
+                options.OperationFilter<BinaryPayloadFilter>();
             });
 
 

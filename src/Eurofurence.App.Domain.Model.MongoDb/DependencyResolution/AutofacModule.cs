@@ -1,6 +1,8 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.ArtShow;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
@@ -9,6 +11,7 @@ using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Domain.Model.MongoDb.ArtShow;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
@@ -67,6 +70,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipationRecord>, PlayerParticipationRecord>(builder);
             Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipationRecord>, FursuitParticipationRecord>(builder);
             Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder);
+            Register<ItemActivityRepository, IEntityRepository<ItemActivityRecord>, ItemActivityRecord>(builder);
         }
     }
 }
