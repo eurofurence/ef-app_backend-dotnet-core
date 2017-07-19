@@ -16,6 +16,7 @@ using Eurofurence.App.Domain.Model.MongoDb.ArtShow;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
+using Eurofurence.App.Domain.Model.MongoDb.Security;
 using Eurofurence.App.Domain.Model.MongoDb.Telegram;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Security;
@@ -55,8 +56,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
         {
             Register<EntityStorageInfoRepository, IEntityStorageInfoRepository, EntityStorageInfoRecord>(builder);
             Register<EventRepository, IEntityRepository<EventRecord>, EventRecord>(builder);
-            Register<EventConferenceDayRepository, IEntityRepository<EventConferenceDayRecord>, EventConferenceDayRecord
-            >(builder);
+            Register<EventConferenceDayRepository, IEntityRepository<EventConferenceDayRecord>, EventConferenceDayRecord>(builder);
             Register<EventConferenceRoomRepository, IEntityRepository<EventConferenceRoomRecord>,
                 EventConferenceRoomRecord>(builder);
             Register<EventConferenceTrackRepository, IEntityRepository<EventConferenceTrackRecord>,
@@ -72,7 +72,12 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                 PushNotificationChannelRecord>(builder);
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
+
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
+            Register<RegSysIdentityRepository, IEntityRepository<RegSysIdentityRecord>, RegSysIdentityRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    Builders<RegSysIdentityRecord>.IndexKeys.Ascending(a => a.Uid)));
+
             Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
 
             Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder,

@@ -17,6 +17,7 @@ namespace Eurofurence.App.Server.Services.Security
         private readonly ILogger _logger;
         private readonly ConventionSettings _conventionSettings;
         private readonly AuthenticationSettings _authenticationSettings;
+        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly ITokenFactory _tokenFactory;
 
         private readonly RegSysCredentialsAuthenticationProvider _regSysCredentialsAuthenticationProvider;
@@ -29,12 +30,14 @@ namespace Eurofurence.App.Server.Services.Security
             ConventionSettings conventionSettings,
             AuthenticationSettings authenticationSettings,
             IEntityRepository<RegSysAlternativePinRecord> regSysAlternativePinRepository,
+            IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
             ITokenFactory tokenFactory
         )
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _conventionSettings = conventionSettings;
             _authenticationSettings = authenticationSettings;
+            _regSysIdentityRepository = regSysIdentityRepository;
             _tokenFactory = tokenFactory;
 
             _authenticationProviders = new IAuthenticationProvider[]
@@ -69,7 +72,7 @@ namespace Eurofurence.App.Server.Services.Security
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, uid),
-                new Claim(ClaimTypes.GivenName, authenticationResult.Username.ToLower().UppercaseFirst()),
+                new Claim(ClaimTypes.GivenName, authenticationResult.Username),
                 new Claim(ClaimTypes.PrimarySid, authenticationResult.RegNo.ToString()),
                 new Claim(ClaimTypes.GroupSid, _conventionSettings.ConventionNumber.ToString()),
                 new Claim(ClaimTypes.Role, "Attendee"),
@@ -84,8 +87,22 @@ namespace Eurofurence.App.Server.Services.Security
                 Uid = uid,
                 Token = token,
                 TokenValidUntil = expiration,
-                Username = $"{authenticationResult.Username.ToLower()} ({authenticationResult.RegNo})"
+                Username = $"{authenticationResult.Username} ({authenticationResult.RegNo})"
             };
+
+            var identityRecord = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == uid);
+            if (identityRecord == null)
+            {
+                identityRecord = new RegSysIdentityRecord
+                {
+                    Id = Guid.NewGuid(),
+                    Uid = uid
+                };
+                await _regSysIdentityRepository.InsertOneAsync(identityRecord);
+            }
+
+            identityRecord.Username = authenticationResult.Username;
+            await _regSysIdentityRepository.ReplaceOneAsync(identityRecord);
 
             _logger.LogInformation("Authentication successful for {Username} {RegNo} via {Source}",
                 authenticationResult.Username, authenticationResult.RegNo, authenticationResult.Source);
