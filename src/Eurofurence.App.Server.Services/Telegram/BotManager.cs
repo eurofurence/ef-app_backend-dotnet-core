@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -33,6 +34,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
+        private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly TelegramBotClient _botClient;
         private readonly ConversationManager _conversationManager;
@@ -70,6 +72,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEventConferenceRoomService eventConferenceRoomService,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
+            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IPrivateMessageService _privateMessageService,
             ILoggerFactory loggerFactory
             )
@@ -81,6 +84,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _eventConferenceRoomService = eventConferenceRoomService;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
+            _fursuitBadgeRepository = fursuitBadgeRepository;
             this._privateMessageService = _privateMessageService;
 
             _botClient =
@@ -96,6 +100,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     _telegramUserManager, 
                     _regSysAlternativePinAuthenticationProvider, 
                     _pushNotificationChannelRepository,
+                    _fursuitBadgeRepository,
                     _privateMessageService,
                     loggerFactory
                     )

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Common.Validation;
 using Eurofurence.App.Domain.Model.Abstractions;
+using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Security;
@@ -26,6 +27,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly ITelegramUserManager _telegramUserManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
+        private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IPrivateMessageService _privateMessageService;
 
 
@@ -50,7 +52,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             Locate = 1 << 4,
             SendPm = 1 << 5,
             BadgeChecksum = 1 << 6,
-            All = (1 << 7) - 1,
+            CollectionGameAdmin = 1 << 7,
+            All = (1 << 8) - 1,
         }
 
         private User _user;
@@ -76,6 +79,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             ITelegramUserManager telegramUserManager,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
+            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IPrivateMessageService privateMessageService,
             ILoggerFactory loggerFactory
             )
@@ -84,6 +88,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _telegramUserManager = telegramUserManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
+            _fursuitBadgeRepository = fursuitBadgeRepository;
             _privateMessageService = privateMessageService;
 
             _commands = new List<CommandInfo>()
@@ -137,8 +142,49 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Calculate the checksum letter of a given reg no.",
                     RequiredPermission = PermissionFlags.BadgeChecksum,
                     CommandHandler = CommandBadgeChecksum
+                },
+                new CommandInfo()
+                {
+                    Command ="/fursuitBadgeById",
+                    Description = "Lookup fursuit badge (by id)",
+                    RequiredPermission = PermissionFlags.CollectionGameAdmin,
+                    CommandHandler = CommandFursuitBadge
                 }
             };
+        }
+
+        public async Task CommandFursuitBadge()
+        {
+            Func<Task> c1 = null, c2 = null, c3 = null;
+            var title = "Fursuit Badge";
+
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nType in the fursuit badge number.",
+                async input =>
+                {
+                    await ClearLastAskResponseOptions();
+
+                    int badgeNo = 0;
+                    if (!int.TryParse(input, out badgeNo))
+                    {
+                        await ReplyAsync("That's not a valid number.");
+                        await c1();
+                        return;
+                    }
+
+                    var badge =
+                        await _fursuitBadgeRepository.FindOneAsync(a => a.ExternalReference == badgeNo.ToString());
+
+                    if (badge == null)
+                    {
+                        await ReplyAsync($"*{title} - Result*\nNo badge found with it *{badgeNo}*.");
+                        return;
+                    }
+
+                    await ReplyAsync(
+                        $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
+                    await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"https://app.eurofurence.org/api/v2/Fursuits/Badges/{badge.Id}/Image")));
+                }, "Cancel=/cancel");
+            await c1();
         }
 
         public async Task CommandBadgeChecksum()
