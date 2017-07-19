@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Eurofurence.App.Common.Abstractions;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtShow;
@@ -33,12 +34,21 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             _mongoDatabase = mongoDatabase;
         }
 
-        private void Register<TRepository, IRepository, TRecord>(ContainerBuilder builder)
+        private void Register<TRepository, IRepository, TRecord>(
+            ContainerBuilder builder, 
+            Action<IMongoCollection<TRecord>> setup = null
+            ) where TRecord: IEntityBase
         {
             var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
+            var collection = _mongoDatabase.GetCollection<TRecord>(name);
 
-            builder.Register(r => _mongoDatabase.GetCollection<TRecord>(name)).As<IMongoCollection<TRecord>>();
+            builder.Register(r => collection).As<IMongoCollection<TRecord>>();
             builder.RegisterType<TRepository>().As<IRepository>();
+
+            collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Ascending(a => a.IsDeleted));
+            collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Descending(a => a.LastChangeDateTimeUtc));
+
+            setup?.Invoke(collection);
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -65,12 +75,32 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
             Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
 
-            Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder);
+            Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.OwnerUid)));
+
             Register<FursuitBadgeImageRepository, IEntityRepository<FursuitBadgeImageRecord>, FursuitBadgeImageRecord>(builder);
-            Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipationRecord>, PlayerParticipationRecord>(builder);
-            Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipationRecord>, FursuitParticipationRecord>(builder);
-            Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder);
-            Register<ItemActivityRepository, IEntityRepository<ItemActivityRecord>, ItemActivityRecord>(builder);
+
+            Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipationRecord>, PlayerParticipationRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.PlayerUid)));
+
+            Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipationRecord>, FursuitParticipationRecord>(builder,
+                collection =>
+                {
+                    collection.Indexes.CreateOne(
+                        Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.OwnerUid));
+                    collection.Indexes.CreateOne(
+                        Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.TokenValue));
+                });
+
+            Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    Builders<TokenRecord>.IndexKeys.Ascending(a => a.Value)));
+
+            Register<ItemActivityRepository, IEntityRepository<ItemActivityRecord>, ItemActivityRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    Builders<ItemActivityRecord>.IndexKeys.Ascending(a => a.ImportHash)));
         }
     }
 }

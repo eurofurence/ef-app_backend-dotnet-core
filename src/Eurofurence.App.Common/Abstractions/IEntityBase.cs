@@ -6,6 +6,8 @@ namespace Eurofurence.App.Common.Abstractions
     {
         Guid Id { get; }
 
+        DateTime LastChangeDateTimeUtc { get; }
+
         int IsDeleted { get; }
 
         void Touch();
