@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Utility;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -51,7 +52,7 @@ namespace Eurofurence.App.Server.Services.Images
 
         public async Task<Guid> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes)
         {
-            var hash = CalculateSha1Hash(imageBytes);
+            var hash = Hashing.ComputeHashSha1(imageBytes);
 
             var existingRecord = (await _imageRepository.FindAllAsync(a => a.InternalReference == internalReference))
                 .ToList()
@@ -117,14 +118,6 @@ namespace Eurofurence.App.Server.Services.Images
         {
             var record = await _imageContentRepository.FindOneAsync(id);
             return record.Content;
-        }
-
-        private string CalculateSha1Hash(byte[] bytes)
-        {
-            using (var sha1 = SHA1.Create())
-            {
-                return Convert.ToBase64String(sha1.ComputeHash(bytes));
-            }
         }
     }
 }

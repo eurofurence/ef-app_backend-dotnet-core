@@ -24,8 +24,5 @@ namespace Eurofurence.App.Domain.Model.Fursuits
         [DataMember]
         [Required]
         public string Gender { get; set; }
-
-        [Required]
-        public byte[] ImageBytes { get; set; }
     }
 }

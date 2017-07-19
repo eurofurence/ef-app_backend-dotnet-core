@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Utility;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -16,41 +17,32 @@ namespace Eurofurence.App.Server.Services.Fursuits
     {
         private readonly ConventionSettings _conventionSettings;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
+        private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
 
         public FursuitBadgeService(
             ConventionSettings conventionSettings, 
-            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository
+            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
+            IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository
             )
         {
             _conventionSettings = conventionSettings;
             _fursuitBadgeRepository = fursuitBadgeRepository;
+            _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
         }
 
         public async Task<Guid> UpsertFursuitBadgeAsync(FursuitBadgeRegistration registration)
         {
             byte[] imageBytes = Convert.FromBase64String(registration.ImageContent);
-
-            var image = Image.Load(imageBytes);
-
-            image.Resize(new ResizeOptions()
-            {
-                Mode = ResizeMode.Max,
-                Size = new Size(240, 320),
-                Sampler = new BicubicResampler()
-            });
-
-            var ms = new MemoryStream();
-            image.SaveAsJpeg(ms, new JpegEncoderOptions() {IgnoreMetadata = true, Quality = 85});
-
-            bool existingRecord = true;
+            var hash = Hashing.ComputeHashSha1(imageBytes);
 
             var record = await _fursuitBadgeRepository.FindOneAsync(a => a.ExternalReference == registration.BadgeNo.ToString());
 
             if (record == null)
             {
-                existingRecord = false;
                 record = new FursuitBadgeRecord();
                 record.NewId();
+
+                await _fursuitBadgeRepository.InsertOneAsync(record);
             }
 
             record.ExternalReference = registration.BadgeNo.ToString();
@@ -58,23 +50,55 @@ namespace Eurofurence.App.Server.Services.Fursuits
             record.Gender = registration.Gender;
             record.Name = registration.Name;
             record.Species = registration.Species;
-            record.ImageBytes = ms.ToArray();
             record.Touch();
-           
 
-            ms.Dispose();
+            var imageRecord = await _fursuitBadgeImageRepository.FindOneAsync(record.Id);
 
-            if (existingRecord)
-                await _fursuitBadgeRepository.ReplaceOneAsync(record);
-            else
-                await _fursuitBadgeRepository.InsertOneAsync(record);
+            if (imageRecord == null)
+            {
+                imageRecord = new FursuitBadgeImageRecord
+                {
+                    Id = record.Id,
+                    Width = 240,
+                    Height = 320,
+                    MimeType = "image/jpeg"
+                };
+                imageRecord.Touch();
+
+                await _fursuitBadgeImageRepository.InsertOneAsync(imageRecord);
+            }
+
+            if (imageRecord.SourceContentHashSha1 != hash)
+            {
+                imageRecord.SourceContentHashSha1 = hash;
+
+                var image = Image.Load(imageBytes);
+
+                image.Resize(new ResizeOptions()
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(240, 320),
+                    Sampler = new BicubicResampler()
+                });
+
+                var ms = new MemoryStream();
+                image.SaveAsJpeg(ms, new JpegEncoderOptions() { IgnoreMetadata = true, Quality = 85 });
+                imageRecord.SizeInBytes = ms.Length;
+                imageRecord.ImageBytes = ms.ToArray();
+                ms.Dispose();
+
+                imageRecord.Touch();
+                await _fursuitBadgeImageRepository.ReplaceOneAsync(imageRecord);
+            }
+
+            await _fursuitBadgeRepository.ReplaceOneAsync(record);
 
             return record.Id;
         }
 
         public async Task<byte[]> GetFursuitBadgeImageAsync(Guid id)
         {
-            var content = await _fursuitBadgeRepository.FindOneAsync(id);
+            var content = await _fursuitBadgeImageRepository.FindOneAsync(id);
             return content.ImageBytes;
         }
     }

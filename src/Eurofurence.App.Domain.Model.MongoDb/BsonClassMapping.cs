@@ -1,4 +1,5 @@
 ﻿using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Knowledge;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -37,6 +38,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb
             DefaultMap<EventConferenceRoomRecord>();
             DefaultMap<KnowledgeGroupRecord>();
             DefaultMap<KnowledgeEntryRecord>();
+            DefaultMap<FursuitBadgeRecord>();
+            DefaultMap<FursuitBadgeImageRecord>();
         }
     }
 }
