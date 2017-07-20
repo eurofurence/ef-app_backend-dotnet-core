@@ -186,7 +186,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         Url = $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image",
                         ThumbUrl = $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image",
                         Title = e.Name,
-                        Caption = $"{e.Name}\n{e.Species} ({e.Gender})\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
+                        Caption = $"{e.Name}\n{e.Species} ({e.Gender})\n\nWorn by:{e.WornBy}\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
                     };
                 })
                 .ToArray();

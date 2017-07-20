@@ -181,7 +181,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     }
 
                     await ReplyAsync(
-                        $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
+                        $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
                     await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"https://app.eurofurence.org/api/v2/Fursuits/Badges/{badge.Id}/Image")));
                 }, "Cancel=/cancel");
             await c1();
