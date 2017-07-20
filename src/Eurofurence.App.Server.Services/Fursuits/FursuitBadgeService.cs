@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
             record.Gender = registration.Gender;
             record.Name = registration.Name;
             record.Species = registration.Species;
-            record.IsPublic = (registration.IsPublic > 0);
+            record.IsPublic = (registration.DontPublish == 0);
             record.Touch();
 
             var imageRecord = await _fursuitBadgeImageRepository.FindOneAsync(record.Id);
