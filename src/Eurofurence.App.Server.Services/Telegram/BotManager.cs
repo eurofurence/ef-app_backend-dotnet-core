@@ -172,7 +172,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             var badges =
                 (await _fursuitBadgeRepository.FindAllAsync(
-                    a => a.IsDeleted == 0 && a.Name.ToLower().Contains(query.ToLower())))
+                    a => a.IsDeleted == 0 && a.IsPublic && a.Name.ToLower().Contains(query.ToLower())))
                 .Take(5)
                 .ToList();
 

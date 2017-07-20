@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,13 +30,30 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "System,Developer")]
         [HttpPost("ItemActivites/Log")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        [ProducesResponseType(201)]
         [BinaryPayload(Description = "Art show log contents")]
-        public async Task<ActionResult> PostFursuitBadgeRegistrationAsync()
+        public async Task<ActionResult> ImportActivityLogAsync()
         {
             await _itemActivityService.ImportActivityLogAsync(new StreamReader(Request.Body));
-            return Ok();
+            return NoContent();
         }
+
+        [Authorize(Roles = "System,Developer")]
+        [HttpGet("ItemActivites/NotificationBundles/Simulation")]
+        [ProducesResponseType(200)]
+        public Task<IList<NotificationResult>> SimulateNotificationRunAsync()
+        {
+            return _itemActivityService.SimulateNotificationRunAsync();
+        }
+
+        [Authorize(Roles = "System,Developer")]
+        [HttpPost("ItemActivites/NotificationBundles/Send")]
+        [ProducesResponseType(200)]
+        public async Task<ActionResult> ExecuteNotificationRunAsync()
+        {
+            await _itemActivityService.ExecuteNotificationRunAsync();
+            return NoContent();
+        }
+
     }
 } 
