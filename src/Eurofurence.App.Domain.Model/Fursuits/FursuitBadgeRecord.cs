@@ -20,6 +20,10 @@ namespace Eurofurence.App.Domain.Model.Fursuits
 
         [DataMember]
         [Required]
+        public string WornBy { get; set; }
+
+        [DataMember]
+        [Required]
         public string Species { get; set; }
 
         [DataMember]
