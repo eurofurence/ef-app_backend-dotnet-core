@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Fursuits
@@ -24,5 +25,8 @@ namespace Eurofurence.App.Domain.Model.Fursuits
         [DataMember]
         [Required]
         public string Gender { get; set; }
+
+        [DataMember]
+        public bool IsPublic { get; set; }
     }
 }
