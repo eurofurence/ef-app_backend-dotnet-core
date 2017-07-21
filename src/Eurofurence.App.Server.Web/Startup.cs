@@ -199,11 +199,11 @@ namespace Eurofurence.App.Server.Web
                 var options = new CloudWatchSinkOptions
                 {
                     LogGroupName = logGroupName,
-                    LogEventRenderer =  new JsonLogEventRenderer()
+                    LogEventRenderer =  new JsonLogEventRenderer(),
+                    MinimumLogEventLevel = (LogEventLevel)Convert.ToInt32(Configuration["logLevel"])
                 };
 
                 loggerConfiguration
-                    .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["logLevel"]))
                     .WriteTo.AmazonCloudWatch(options, client);
             }
 
@@ -215,7 +215,7 @@ namespace Eurofurence.App.Server.Web
                     {"System", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning}
                 })
                 .AddSerilog();
-
+            
             _logger = loggerFactory.CreateLogger(GetType());
             _logger.LogInformation($"Logging commences");
 
@@ -257,13 +257,9 @@ namespace Eurofurence.App.Server.Web
 
             if (env.IsProduction())
             {
-                _logger.LogInformation("Starting JobManager to run jobs");
+                _logger.LogDebug("Starting JobManager to run jobs");
                 JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
-            }
-            else
-            {
-                _logger.LogInformation($"Not starting JobManager, env is {env.EnvironmentName}");
             }
 
             _logger.LogInformation($"Startup complete ({env.EnvironmentName})");

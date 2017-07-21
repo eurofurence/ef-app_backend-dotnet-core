@@ -37,12 +37,19 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public void Execute()
         {
-            ExecuteAsync().Wait();
+            try
+            {
+                ExecuteAsync().Wait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Job failed with exception", e);
+            }
         }
 
         public async Task ExecuteAsync()
         {
-            _logger.LogInformation("Job started");
+            _logger.LogDebug("Job started");
 
             var response = string.Empty;
             using (var client = new HttpClient())
@@ -107,6 +114,8 @@ namespace Eurofurence.App.Server.Web.Jobs
                 _logger.LogInformation("Sending push notification for announcement {id} ({title})", record.Entity.Id, record.Entity.Title);
                 await _pushEventMediator.PushAnnouncementNotificationAsync(record.Entity);
             }
+
+            _logger.LogDebug("Job finished");
         }
     }
 }
