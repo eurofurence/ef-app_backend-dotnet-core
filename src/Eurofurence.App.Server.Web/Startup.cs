@@ -31,15 +31,18 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.Swagger;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
 {
     public class Startup
     {
         private readonly IHostingEnvironment _hostingEnvironment;
+        private ILogger _logger;
 
         public Startup(IHostingEnvironment hostingEnvironment)
         {
@@ -213,6 +216,8 @@ namespace Eurofurence.App.Server.Web
                 })
                 .AddSerilog();
 
+            _logger = loggerFactory.CreateLogger(GetType());
+
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             app.UseCors("CorsPolicy");
@@ -250,13 +255,13 @@ namespace Eurofurence.App.Server.Web
 
             if (env.IsProduction())
             {
-                Log.Logger.Debug("Starting JobManager to run jobs");
+                _logger.LogDebug("Starting JobManager to run jobs");
                 JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
             }
             else
             {
-                Log.Logger.Debug($"Not starting JobManager, env is {env.EnvironmentName}");
+                _logger.LogDebug($"Not starting JobManager, env is {env.EnvironmentName}");
             }
         }
     }
