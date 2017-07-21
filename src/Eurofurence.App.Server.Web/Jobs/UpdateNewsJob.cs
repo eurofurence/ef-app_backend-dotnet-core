@@ -43,7 +43,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError("Job failed with exception", e);
+                _logger.LogError("Job failed with exception {Message} {StackTrace}", e.Message, e.StackTrace);
             }
         }
 
