@@ -257,13 +257,13 @@ namespace Eurofurence.App.Server.Web
 
             if (env.IsProduction())
             {
-                _logger.LogDebug("Starting JobManager to run jobs");
+                _logger.LogInformation("Starting JobManager to run jobs");
                 JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
             }
             else
             {
-                _logger.LogDebug($"Not starting JobManager, env is {env.EnvironmentName}");
+                _logger.LogInformation($"Not starting JobManager, env is {env.EnvironmentName}");
             }
 
             _logger.LogInformation($"Startup complete ({env.EnvironmentName})");

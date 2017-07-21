@@ -42,7 +42,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public async Task ExecuteAsync()
         {
-            _logger.LogDebug("Job started");
+            _logger.LogInformation("Job started");
 
             var response = string.Empty;
             using (var client = new HttpClient())
