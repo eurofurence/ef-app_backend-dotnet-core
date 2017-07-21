@@ -31,6 +31,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
+using Serilog.Events;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -198,7 +199,9 @@ namespace Eurofurence.App.Server.Web
                     LogEventRenderer =  new JsonLogEventRenderer()
                 };
 
-                loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
+                loggerConfiguration
+                    .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["logLevel"]))
+                    .WriteTo.AmazonCloudWatch(options, client);
             }
 
             Log.Logger = loggerConfiguration.CreateLogger();
@@ -247,6 +250,7 @@ namespace Eurofurence.App.Server.Web
 
             if (env.IsProduction())
             {
+                Log.Logger.Debug("Starting JobManager to run jobs");
                 JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
             }
