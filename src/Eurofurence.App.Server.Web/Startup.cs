@@ -217,6 +217,8 @@ namespace Eurofurence.App.Server.Web
                 .AddSerilog();
 
             _logger = loggerFactory.CreateLogger(GetType());
+            _logger.LogInformation($"Logging commences");
+
 
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
@@ -263,6 +265,8 @@ namespace Eurofurence.App.Server.Web
             {
                 _logger.LogDebug($"Not starting JobManager, env is {env.EnvironmentName}");
             }
+
+            _logger.LogInformation($"Startup complete ({env.EnvironmentName})");
         }
     }
 }
