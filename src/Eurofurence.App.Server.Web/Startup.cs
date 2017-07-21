@@ -254,6 +254,10 @@ namespace Eurofurence.App.Server.Web
                 JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
             }
+            else
+            {
+                Log.Logger.Debug($"Not starting JobManager, env is {env.EnvironmentName}");
+            }
         }
     }
 }
