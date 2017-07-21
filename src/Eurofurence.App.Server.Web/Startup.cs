@@ -204,6 +204,7 @@ namespace Eurofurence.App.Server.Web
                 };
 
                 loggerConfiguration
+                    .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["logLevel"]))
                     .WriteTo.AmazonCloudWatch(options, client);
             }
 
