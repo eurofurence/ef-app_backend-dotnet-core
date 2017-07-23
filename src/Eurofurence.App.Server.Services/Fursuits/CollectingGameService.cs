@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -7,8 +8,10 @@ using Eurofurence.App.Common.Results;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
+using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
+using Eurofurence.App.Server.Services.Security;
 
 namespace Eurofurence.App.Server.Services.Fursuits
 {
@@ -20,6 +23,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IEntityRepository<FursuitParticipationRecord> _fursuitParticipationRepository;
         private readonly IEntityRepository<PlayerParticipationRecord> _playerParticipationRepository;
+        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IEntityRepository<TokenRecord> _tokenRepository;
 
         public CollectingGameService(
@@ -27,6 +31,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IEntityRepository<FursuitParticipationRecord> fursuitParticipationRepository,
             IEntityRepository<PlayerParticipationRecord> playerParticipationRepository,
+            IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
             IEntityRepository<TokenRecord> tokenRepository
             )
         {
@@ -34,6 +39,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
             _fursuitBadgeRepository = fursuitBadgeRepository;
             _fursuitParticipationRepository = fursuitParticipationRepository;
             _playerParticipationRepository = playerParticipationRepository;
+            _regSysIdentityRepository = regSysIdentityRepository;
             _tokenRepository = tokenRepository;
         }
 
@@ -238,6 +244,60 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 _semaphore.Release();
             }
+        }
+
+        public async Task<IResult<PlayerScoreboardEntry[]>> GetPlayerScoreboardEntriesAsync(int top)
+        {
+            var players = await _playerParticipationRepository.FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0);
+
+            var tasks = players
+                .OrderByDescending(a => a.CollectionCount)
+                .ThenBy(a => a.CollectionEntries.Max(b => b.EventDateTimeUtc))
+                .Take(top)
+                .Select(async a => new PlayerScoreboardEntry()
+                {
+                    Name = (await _regSysIdentityRepository.FindOneAsync(b => b.Uid == a.PlayerUid))?.Username ?? "(?)",
+                    CollectionCount = a.CollectionCount,
+                })
+                .ToList();
+
+            await Task.WhenAll(tasks);
+
+            for (var i = 0; i < tasks.Count; i++) tasks[i].Result.Rank = i + 1;
+
+            return Result<PlayerScoreboardEntry[]>.Ok(tasks.Select(a => a.Result).ToArray());
+        }
+
+        public async Task<IResult<FursuitScoreboardEntry[]>> GetFursuitScoreboardEntriesAsync(int top)
+        {
+            var fursuits = await _fursuitParticipationRepository.FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0);
+
+            var tasks = fursuits
+                .OrderByDescending(a => a.CollectionCount)
+                .ThenBy(a => a.CollectionEntries.Max(b => b.EventDateTimeUtc))
+                .Take(top)
+                .Select(async a =>
+                {
+                    var fursuitBadge = await _fursuitBadgeRepository
+                        .FindOneAsync(b => b.Id == a.FursuitBadgeId);
+
+                    return new FursuitScoreboardEntry()
+                    {
+                        Name = fursuitBadge.Name,
+                        CollectionCount = a.CollectionCount,
+                        Gender = fursuitBadge.Gender,
+                        Species = fursuitBadge.Species,
+                        BadgeId = fursuitBadge.Id
+                    };
+                })
+                .ToList();
+
+            await Task.WhenAll(tasks);
+
+            for (var i = 0; i < tasks.Count; i++) tasks[i].Result.Rank = i + 1;
+
+            return Result<FursuitScoreboardEntry[]>
+                .Ok(tasks.Select(a => a.Result).ToArray());
         }
     }
 }

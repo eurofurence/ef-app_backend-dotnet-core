@@ -79,6 +79,24 @@ namespace Eurofurence.App.Server.Web.Controllers
             return result.AsActionResult();
         }
 
-        
+
+        [HttpGet("CollectingGame/PlayerParticipation/Scoreboard")]
+        [ProducesResponseType(typeof(PlayerScoreboardEntry[]), 200)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> GetPlayerScoreboardEntriesAsync()
+        {
+            var result = await _collectingGameService.GetPlayerScoreboardEntriesAsync(10);
+            return result.AsActionResult();
+        }
+
+        [HttpGet("CollectingGame/FursuitParticipation/Scoreboard")]
+        [ProducesResponseType(typeof(FursuitScoreboardEntry[]), 200)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> GetFursuitScoreboardEntriesAsync()
+        {
+            var result = await _collectingGameService.GetFursuitScoreboardEntriesAsync(10);
+            return result.AsActionResult();
+        }
+
     }
 } 

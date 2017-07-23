@@ -87,8 +87,15 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<FursuitBadgeImageRepository, IEntityRepository<FursuitBadgeImageRecord>, FursuitBadgeImageRecord>(builder);
 
             Register<PlayerParticipantRepository, IEntityRepository<PlayerParticipationRecord>, PlayerParticipationRecord>(builder,
-                collection => collection.Indexes.CreateOne(
-                    Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.PlayerUid)));
+                collection =>
+                {
+                    collection.Indexes.CreateOne(
+                        Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.PlayerUid));
+                    collection.Indexes.CreateOne(
+                        Builders<PlayerParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount));
+                    collection.Indexes.CreateOne(
+                        Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.IsBanned));
+                });
 
             Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipationRecord>, FursuitParticipationRecord>(builder,
                 collection =>
@@ -97,6 +104,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                         Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.OwnerUid));
                     collection.Indexes.CreateOne(
                         Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.TokenValue));
+                    collection.Indexes.CreateOne(
+                        Builders<FursuitParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount));
                 });
 
             Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder,
