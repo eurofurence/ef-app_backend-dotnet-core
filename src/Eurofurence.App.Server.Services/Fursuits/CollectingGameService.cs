@@ -76,7 +76,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 response.CollectionCount = playerParticipation.CollectionCount;
 
-                var tasks = playerParticipation.CollectionEntries
+                var fetchRecentlyCollectedAsync = playerParticipation.CollectionEntries
                     .OrderByDescending(a => a.EventDateTimeUtc)
                     .Take(5)
                     .Select(async entry =>
@@ -93,9 +93,21 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     })
                     .ToList();
 
-                await Task.WhenAll(tasks);
 
-                response.RecentlyCollected = tasks.Select(task => task.Result).ToList();
+                var playersAhead = await _playerParticipationRepository.FindAllAsync(
+                        a => !a.IsBanned && a.PlayerUid != playerParticipation.PlayerUid
+                        && a.CollectionCount >= playerParticipation.CollectionCount);
+
+                var rank = playersAhead.Count(a => a.CollectionCount > playerParticipation.CollectionCount
+                                                   || (a.CollectionCount == playerParticipation.CollectionCount &&
+                                                       a.CollectionEntries.Max(b => b.EventDateTimeUtc) <
+                                                       playerParticipation.CollectionEntries.Max(b => b.EventDateTimeUtc)
+                                                   )) + 1;
+                response.ScoreboardRank = rank;
+
+                await Task.WhenAll(fetchRecentlyCollectedAsync);
+
+                response.RecentlyCollected = fetchRecentlyCollectedAsync.Select(task => task.Result).ToList();
             }
 
             return response;
