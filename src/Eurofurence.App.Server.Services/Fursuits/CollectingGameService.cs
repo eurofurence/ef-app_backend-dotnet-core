@@ -260,7 +260,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<IResult<PlayerScoreboardEntry[]>> GetPlayerScoreboardEntriesAsync(int top)
         {
-            var players = await _playerParticipationRepository.FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0);
+            var players = await _playerParticipationRepository
+                .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0);
 
             var tasks = players
                 .OrderByDescending(a => a.CollectionCount)
@@ -282,7 +283,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<IResult<FursuitScoreboardEntry[]>> GetFursuitScoreboardEntriesAsync(int top)
         {
-            var fursuits = await _fursuitParticipationRepository.FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0);
+            var fursuits = await _fursuitParticipationRepository
+                .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0);
 
             var tasks = fursuits
                 .OrderByDescending(a => a.CollectionCount)
