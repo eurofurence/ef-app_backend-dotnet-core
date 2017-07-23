@@ -59,6 +59,13 @@ namespace Eurofurence.App.Server.Web.Jobs
                 response = await client.GetStringAsync(url);
             }
 
+            if (response == "null")
+            {
+                _logger.LogDebug("Received null response");
+                return;
+            }
+
+
             var records = JsonConvert.DeserializeObject<JObject[]>(response);
             var unixReference = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
