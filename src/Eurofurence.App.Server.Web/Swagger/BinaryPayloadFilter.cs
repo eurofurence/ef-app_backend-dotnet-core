@@ -27,7 +27,12 @@ namespace Eurofurence.App.Server.Web.Swagger
                 Name = attribute.ParameterName,
                 In = "body",
                 Required = attribute.Required,
-                Description = attribute.Description
+                Description = attribute.Description,
+                Schema = new Schema()
+                {
+                    Type = "string",
+                    Format = "byte"
+                }
             });
         }
     }
