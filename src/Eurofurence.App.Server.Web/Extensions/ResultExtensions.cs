@@ -34,5 +34,31 @@ namespace Eurofurence.App.Server.Web.Extensions
             if (obj.IsSuccessful) return new ObjectResult(obj.Value) {StatusCode = 200};
             return new BadRequestObjectResult(new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage });
         }
+
+        public static ActionResult AsActionResultSafeVariant(this IResult obj)
+        {
+            var result = new ApiSafeResult()
+            {
+                IsSuccessful = obj.IsSuccessful,
+                Error = obj.IsSuccessful ? null : new ApiErrorResult {Code = obj.ErrorCode, Message = obj.ErrorMessage}
+            };
+
+            return new ObjectResult(result);
+        }
+
+        public static ActionResult AsActionResultSafeVariant<T>(this IResult<T> obj)
+        {
+            var result = new ApiSafeResult<T>();
+            if (obj.IsSuccessful)
+            {
+                result.IsSuccessful = true;
+                result.Result = obj.Value;
+            }
+            else
+            {
+                result.Error = new ApiErrorResult {Code = obj.ErrorCode, Message = obj.ErrorMessage};
+            }
+            return new ObjectResult(result);
+        }
     }
 }
