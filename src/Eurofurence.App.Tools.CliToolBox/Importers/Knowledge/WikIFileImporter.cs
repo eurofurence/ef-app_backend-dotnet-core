@@ -96,9 +96,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             int modifiedRecords = 0;
             var usedImageIds = knowledgeEntries.SelectMany(a => a.ImageIds).Distinct().ToList();
 
+#pragma warning disable RECS0063 // Warns when a culture-aware 'StartsWith' call is used by default.
             var knowledgeImages =
                 await _imageService.FindAllAsync(a => a.IsDeleted == 0 &&
                                                       a.InternalReference.StartsWith("knowledge:"));
+#pragma warning restore RECS0063 // Warns when a culture-aware 'StartsWith' call is used by default.
 
             foreach (var image in knowledgeImages)
             {
@@ -149,12 +151,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
 
                     if (Uri.IsWellFormedUriString(target, UriKind.Absolute))
                     {
-                        linkFragments.Add(new LinkFragment()
-                        {
-                            FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
-                            Name = name,
-                            Target = target,
-                        });
+                        linkFragments.Add(new LinkFragment(
+                            LinkFragment.FragmentTypeEnum.WebExternal,
+                            name,
+                            target));
                     }
                 }
             }

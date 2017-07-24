@@ -22,7 +22,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IEventService _eventService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IImageService _imageService;
         private readonly IKnowledgeEntryService _knowledgeEntryService;
         private readonly IKnowledgeGroupService _knowledgeGroupService;

@@ -155,7 +155,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task CommandFursuitBadge()
         {
-            Func<Task> c1 = null, c2 = null, c3 = null;
+            Func<Task> c1 = null;
             var title = "Fursuit Badge";
 
             c1 = () => AskAsync($"*{title} - Step 1 of 1*\nType in the fursuit badge number.",
@@ -189,7 +189,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task CommandBadgeChecksum()
         {
-            Func<Task> c1 = null, c2 = null, c3 = null;
+            Func<Task> c1 = null;
             var title = "Badge Checksum";
 
             c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the _registration number_?",
@@ -287,7 +287,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task CommandLocate()
         {
-            Func<Task> c1 = null, c2 = null, c3 = null;
+            Func<Task> c1 = null;
             var title = "Locate User";
 
             c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
@@ -498,7 +498,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private async Task CommandPinInfo()
         {
-            Func<Task> c1 = null, c2 = null, c3 = null;
+            Func<Task> c1 = null;
             var title = "PIN Info";
 
             c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
@@ -685,8 +685,10 @@ namespace Eurofurence.App.Server.Services.Telegram
             {
                 if (_lastAskMessage != null) return ClearInlineResponseOptions(_lastAskMessage.MessageId);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                _logger.LogError("ClearLastAskResponseOptions failed: {Message} {StackTrace}",
+                    ex.Message, ex.StackTrace);
             }
 
             return Task.CompletedTask;

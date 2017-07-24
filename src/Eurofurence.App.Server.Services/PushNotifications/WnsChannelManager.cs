@@ -166,39 +166,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
         }
 
-
-        private async Task SendToastAsync(IEnumerable<PushNotificationChannelRecord> recipients, string title,
-            string message)
-        {
-            var recipientsList = recipients.ToList();
-            if (recipientsList.Count == 0) return;
-
-            var accessToken = await GetWnsAccessTokenAsync();
-
-            foreach (var recipient in recipientsList)
-            {
-#pragma warning disable CS4014
-                Task.Run(async () =>
-                {
-                    using (var client = new HttpClient())
-                    {
-                        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-                        client.DefaultRequestHeaders.Add("X-WNS-TYPE", "wns/toast");
-
-                        var xml =
-                            $"<?xml version=\"1.0\" encoding=\"utf-8\"?><toast><visual><binding template=\"ToastText01\"><text id=\"1\">{message}</text></binding></visual></toast>";
-                        var payload = new StringContent(xml, Encoding.UTF8, "text/xml");
-
-                        var result = await client.PostAsync(recipient.ChannelUri, payload);
-
-                        if (!result.IsSuccessStatusCode)
-                            _pushNotificationRepository.DeleteOneAsync(recipient.Id);
-                    }
-                });
-#pragma warning restore CS4014
-            }
-        }
-
         private async Task<string> GetWnsAccessTokenAsync()
         {
             using (var client = new HttpClient())

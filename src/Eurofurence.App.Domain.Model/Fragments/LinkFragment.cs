@@ -16,10 +16,10 @@ namespace Eurofurence.App.Domain.Model.Fragments
 
         [Required]
         [DataMember]
-        public FragmentTypeEnum FragmentType { get; set; }
+        public FragmentTypeEnum FragmentType { get; }
 
         [DataMember]
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         ///   * For FragmentType `DealerDetail`: The `Id` of the dealer record the link is referencing to.
@@ -39,7 +39,14 @@ namespace Eurofurence.App.Domain.Model.Fragments
         /// </summary>
         [Required]
         [DataMember]
-        public string Target { get; set; }
+        public string Target { get; }
+
+        public LinkFragment(FragmentTypeEnum fragmentType, string name, string target)
+        {
+            FragmentType = fragmentType;
+            Name = name;
+            Target = target;
+        }
 
         public override bool Equals(object obj)
         {
@@ -52,6 +59,18 @@ namespace Eurofurence.App.Domain.Model.Fragments
                 f.FragmentType == FragmentType
                 && f.Name == Name
                 && f.Target == Target;
+        }
+
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (int) FragmentType;
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

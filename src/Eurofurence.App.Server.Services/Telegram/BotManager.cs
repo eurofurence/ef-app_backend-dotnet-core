@@ -248,8 +248,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                     results,
                     cacheTime: 0);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                _logger.LogError("BotClientOnOnInlineQuery failed: {Message} {StackTrace}",
+                    ex.Message, ex.StackTrace);
             }
         }
 
@@ -283,8 +285,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                 
                 await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
+                _logger.LogError("BotClientOnOnCallbackQuery failed: {Message} {StackTrace}",
+                    ex.Message, ex.StackTrace);
             }
         }
 
@@ -294,8 +298,10 @@ namespace Eurofurence.App.Server.Services.Telegram
             {
                 await _conversationManager[e.Message.From.Id].OnMessageAsync(e);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
+                _logger.LogError("BotClientOnOnMessage failed: {Message} {StackTrace}",
+                    ex.Message, ex.StackTrace);
             }
         }
     }

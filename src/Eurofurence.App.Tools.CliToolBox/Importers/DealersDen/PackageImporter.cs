@@ -149,11 +149,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                     assumedUri = $"http://{part}";
 
                 if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute))
-                    linkFragments.Add(new LinkFragment
-                    {
-                        FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
-                        Target = assumedUri
-                    });
+                    linkFragments.Add(new LinkFragment(LinkFragment.FragmentTypeEnum.WebExternal, string.Empty,
+                        assumedUri));
             }
 
             dealerRecord.Links = linkFragments.ToArray();

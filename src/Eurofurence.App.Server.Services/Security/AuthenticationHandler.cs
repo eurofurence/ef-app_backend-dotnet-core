@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -19,9 +17,6 @@ namespace Eurofurence.App.Server.Services.Security
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly ITokenFactory _tokenFactory;
-
-        private readonly RegSysCredentialsAuthenticationProvider _regSysCredentialsAuthenticationProvider;
-        private readonly RegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
 
         private readonly IAuthenticationProvider[] _authenticationProviders;
 

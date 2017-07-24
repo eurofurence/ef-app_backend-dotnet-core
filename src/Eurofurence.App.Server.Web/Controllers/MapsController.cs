@@ -135,6 +135,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <remarks>If you can generate guids client-side, you can also use the PUT variant for both create and update.</remarks>
         /// <param name="Record">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
+        /// <param name="Id">"Id" of the map</param>
         /// <returns>The id of the new map entry (guid)</returns>
         /// <response code="400">
         ///     * Unable to parse `Record` or `Id`
@@ -159,7 +160,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     model (request body) must match the {EntryId} part of the uri.
         /// </remarks>
         /// <param name="Record">"Id" property must match the {EntryId} part of the uri</param>
-        /// <param>FindMeAgain</param>
+        /// <param name="Id">"Id" of the map.</param>
+        /// <param name="EntryId">"Id" of the entry that gets inserted.</param>
         /// <response code="400">
         ///     * Unable to parse `Record`, `Id` or `EntryId`
         ///     * `Record.Id` does not match `EntryId` from uri.

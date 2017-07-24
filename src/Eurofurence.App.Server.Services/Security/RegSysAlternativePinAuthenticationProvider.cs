@@ -19,9 +19,7 @@ namespace Eurofurence.App.Server.Services.Security
 
         private string GeneratePin()
         {
-            var validLetters = "ABCDEFGHJKLNPQRSTUVWXYZ";
             var r = new Random();
-
             return $"{r.Next(100000, 999999)}";
         }
 
