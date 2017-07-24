@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("CollectingGame/PlayerParticipation")]
-        [ProducesResponseType(typeof(PlayerParticipationInfo[]), 200)]
+        [ProducesResponseType(typeof(PlayerParticipationInfo), 200)]
         public Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync()
         {
             return _collectingGameService.GetPlayerParticipationInfoForPlayerAsync(_apiPrincipal.Uid, _apiPrincipal.GivenName);
