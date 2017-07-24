@@ -25,7 +25,14 @@ namespace Eurofurence.App.Server.Web.Controllers
             _collectingGameService = collectingGameService;
             _apiPrincipal = apiPrincipal;
         }
-
+        /// <summary>
+        ///     Upsert Fursuit Badge information
+        /// </summary>
+        /// <remarks>
+        ///     This is used by the fursuit badge system to push badge information to this backend.
+        ///     **Not meant to be consumed by the mobile apps**
+        /// </remarks>
+        /// <param name="registration"></param>
         [Authorize(Roles = "System,Developer,FursuitBadgeSystem")]
         [HttpPost("Badges/Registration")]
         [ProducesResponseType(200)]
@@ -36,13 +43,27 @@ namespace Eurofurence.App.Server.Web.Controllers
             return Ok();
         }
 
+        /// <summary>
+        ///     Retrieve the badge image content for a given fursuit badge id
+        /// </summary>
+        /// <param name="Id">"Id" of the fursuit badge</param>
+        [ProducesResponseType(typeof(byte[]), 200)]
+        [ProducesResponseType(404)]
         [HttpGet("Badges/{Id}/Image")]
         public async Task<ActionResult> GetFursuitBadgeImageAsync([FromRoute] Guid Id)
         {
             var content = await _fursuitBadgeService.GetFursuitBadgeImageAsync(Id);
+            if (content == null) return NotFound();
+
             return File(content, "image/jpeg");
         }
 
+        /// <summary>
+        ///     Register (link/assign) a valid, unused token to a fursuit badge.
+        /// </summary>
+        /// <param name="FursuitBadgeId"></param>
+        /// <param name="TokenValue"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Attendee")]
         [HttpPost("CollectingGame/FursuitParticpation/Badges/{FursuitBadgeId}/Token")]
         [ProducesResponseType(201)]
