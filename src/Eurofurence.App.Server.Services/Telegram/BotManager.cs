@@ -294,6 +294,8 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private async void BotClientOnOnMessage(object sender, MessageEventArgs e)
         {
+            if (string.IsNullOrEmpty(e.Message.From.Username)) return;
+
             try
             {
                 await _conversationManager[e.Message.From.Id].OnMessageAsync(e);
