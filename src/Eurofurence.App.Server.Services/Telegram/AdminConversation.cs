@@ -9,7 +9,9 @@ using Eurofurence.App.Common.Validation;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -29,6 +31,8 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly ICollectingGameService _collectingGameService;
+        private readonly ConventionSettings _conventionSettings;
 
 
         private class CommandInfo
@@ -81,6 +85,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IPrivateMessageService privateMessageService,
+            ICollectingGameService collectingGameService,
+            ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory
             )
         {
@@ -90,6 +96,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
             _privateMessageService = privateMessageService;
+            _collectingGameService = collectingGameService;
+            _conventionSettings = conventionSettings;
 
             _commands = new List<CommandInfo>()
             {
@@ -149,6 +157,13 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Lookup fursuit badge (by id)",
                     RequiredPermission = PermissionFlags.CollectionGameAdmin,
                     CommandHandler = CommandFursuitBadge
+                },
+                new CommandInfo()
+                {
+                    Command ="/collectionGameRegisterFursuit",
+                    Description = "Register a fursuit for the game",
+                    RequiredPermission = PermissionFlags.CollectionGameAdmin,
+                    CommandHandler = CommandCollectionGameRegisterFursuit
                 }
             };
         }
@@ -544,6 +559,84 @@ namespace Eurofurence.App.Server.Services.Telegram
             await c1();
 
 
+        }
+
+        private async Task CommandCollectionGameRegisterFursuit()
+        {
+            Func<Task> askForRegNo = null, askForFursuitBadgeNo = null, askTokenValue = null;
+
+            var title = "Collection Game Fursuit Registration";
+
+            askForRegNo = () => AskAsync($"*{title} - Step 1 of 3*\nPlease enter the `attendee registration number` on the con badge.",
+                async regNoAsString =>
+                {
+                    await ClearLastAskResponseOptions();
+
+                    int regNo;
+                    if (!Int32.TryParse(regNoAsString, out regNo))
+                    {
+                        await ReplyAsync($"*{regNoAsString}* is not a valid number.");
+                        await askForRegNo();
+                        return;
+                    }
+
+                    askForFursuitBadgeNo = () => AskAsync($"*{title} - Step 2 of 3*\nPlease enter the `fursuit badge number`.",
+                        async fursuitBadgeNoAsString =>
+                        {
+                            await ClearLastAskResponseOptions();
+
+                            int fursuitBadgeNo;
+                            if (!Int32.TryParse(fursuitBadgeNoAsString, out fursuitBadgeNo))
+                            {
+                                await ReplyAsync($"*{fursuitBadgeNo}* is not a valid number.");
+                                await askForFursuitBadgeNo();
+                                return;
+                            }
+
+                            var badge = await _fursuitBadgeRepository.FindOneAsync(
+                                a => a.ExternalReference == fursuitBadgeNo.ToString());
+
+                            if (badge == null)
+                            {
+                                await ReplyAsync($"*Error:* No fursuit badge with no *{fursuitBadgeNo}* found. Aborting.");
+                                return;
+                            }
+
+                            if (badge.OwnerUid != $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}")
+                            {
+                                await ReplyAsync($"*Error*: Fursuit badge with no *{fursuitBadgeNo}* exists, but does *not* belong to reg no *{regNo}*. Aborting.");
+                                return;
+                            }
+
+                            await ReplyAsync(
+                                $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
+                            await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"https://app.eurofurence.org/api/v2/Fursuits/Badges/{badge.Id}/Image")));
+
+                            askTokenValue = () => AskAsync(
+                                $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",
+                                async tokenValue =>
+                                {
+                                    tokenValue = tokenValue.ToUpper();
+                                    var registrationResult = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(
+                                        badge.OwnerUid, badge.Id, tokenValue);
+
+                                    if (registrationResult.IsSuccessful)
+                                    {
+                                        await ReplyAsync(
+                                            $"*{title} Result*\n`Success!` - Token *{tokenValue}* successfully linked to *({badge.ExternalReference}) {badge.Name}*!\n\nNext one? /collectionGameRegisterFursuit");
+                                    }
+                                    else
+                                    {
+                                        await ReplyAsync(
+                                            $"*Error*: `{registrationResult.ErrorMessage}`");
+                                        await askTokenValue();
+                                    }
+                                }, "Cancel=/cancel");
+                            await askTokenValue();
+                        }, "Cancel=/cancel");
+                    await askForFursuitBadgeNo();
+                }, "Cancel=/cancel");
+            await askForRegNo();
         }
 
         private async Task CommandPinRequest()

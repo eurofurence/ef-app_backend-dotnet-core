@@ -9,9 +9,11 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
@@ -36,6 +38,8 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly ICollectingGameService _collectingGameService;
+        private readonly ConventionSettings _conventionSettings;
         private readonly TelegramBotClient _botClient;
         private readonly ConversationManager _conversationManager;
 
@@ -74,6 +78,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IPrivateMessageService _privateMessageService,
+            ICollectingGameService collectingGameService,
+            ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory
             )
         {
@@ -86,6 +92,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
             this._privateMessageService = _privateMessageService;
+            _collectingGameService = collectingGameService;
+            _conventionSettings = conventionSettings;
 
             _botClient =
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
@@ -102,6 +110,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                     _pushNotificationChannelRepository,
                     _fursuitBadgeRepository,
                     _privateMessageService,
+                    _collectingGameService,
+                    _conventionSettings,
                     loggerFactory
                     )
                 );
