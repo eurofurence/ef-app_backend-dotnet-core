@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
@@ -37,10 +39,26 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("Badges/Registration")]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        [ProducesResponseType(401)]
         public async Task<ActionResult> PostFursuitBadgeRegistrationAsync([FromBody] FursuitBadgeRegistration registration)
         {
             await _fursuitBadgeService.UpsertFursuitBadgeAsync(registration);
             return Ok();
+        }
+
+        /// <summary>
+        ///     Return all Fursuit Badge Registrations
+        /// </summary>
+        /// <remarks>
+        ///     **Not meant to be consumed by the mobile apps**
+        /// </remarks>
+        [Authorize(Roles = "System,Developer,FursuitBadgeSystem")]
+        [HttpGet("Badges")]
+        [ProducesResponseType(typeof(FursuitBadgeRecord[]), 200)]
+        [ProducesResponseType(401)]
+        public Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync()
+        {
+            return _fursuitBadgeService.GetFursuitBadgesAsync();
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Utility;
@@ -102,6 +103,11 @@ namespace Eurofurence.App.Server.Services.Fursuits
         {
             var content = await _fursuitBadgeImageRepository.FindOneAsync(id);
             return content?.ImageBytes ?? null;
+        }
+
+        public Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync()
+        {
+            return _fursuitBadgeRepository.FindAllAsync();
         }
     }
 }

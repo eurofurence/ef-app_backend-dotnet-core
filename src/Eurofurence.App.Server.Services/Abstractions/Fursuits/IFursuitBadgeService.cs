@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Fursuits;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 {
@@ -8,5 +10,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
         Task<Guid> UpsertFursuitBadgeAsync(FursuitBadgeRegistration registration);
 
         Task<byte[]> GetFursuitBadgeImageAsync(Guid id);
+
+        Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync();
     }
 }
