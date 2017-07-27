@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -34,12 +35,32 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement)
         {
-            return SendPushNotificationAsync(new
-            {
-                Event = "Announcement",
-                announcement.Title,
-                Text = announcement.Content
-            }, to: $"/topics/{_configuration.TargetTopicAll}");
+            return Task.WhenAll(
+                SendPushNotificationAsync(new
+                {
+                    data = new
+                    {
+                        Event = "Announcement",
+                        announcement.Title,
+                        Text = announcement.Content
+                    },
+                    to = $"/topics/{_configuration.TargetTopicAndroid}"
+                }), 
+                SendPushNotificationAsync(new
+                {
+                    data = new
+                    {
+                        Event = "Announcement",
+                    },
+                    notification = new {
+                        title = announcement.Title,
+                        body = announcement.Content
+                    },
+                    content_available = true,
+                    priority = "high",
+                    to = $"/topics/{_configuration.TargetTopicIos}"
+                })
+            );
         }
 
         public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
@@ -48,30 +69,64 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             foreach (var recipient in recipients)
             {
-                await SendPushNotificationAsync(new
+                if (recipient.Topics.Contains("ios", StringComparer.CurrentCultureIgnoreCase))
                 {
-                    Event = "Notification",
-                    Title = toastTitle,
-                    Message = toastMessage
-                }, to: recipient.DeviceId);
+                    await SendPushNotificationAsync(new
+                    {
+                        data = new
+                        {
+                            Event = "Notification",
+                        },
+                        notification = new
+                        {
+                            title = toastTitle,
+                            body = toastMessage,
+                        },
+                        to = recipient.DeviceId
+                    });
+                }
+                else
+                {
+                    await SendPushNotificationAsync(new
+                    {
+                        data = new
+                        {
+                            Event = "Notification",
+                            Title = toastTitle,
+                            Message = toastMessage
+                        },
+                        to = recipient.DeviceId
+                    });
+                }
             }
         }
 
         public Task PushSyncRequestAsync()
         {
-            return SendPushNotificationAsync(new
-            {
-                Event = "Sync",
-            }, to: $"/topics/{_configuration.TargetTopicAll}");
+            return Task.WhenAll(
+                SendPushNotificationAsync(new
+                {
+                    data = new
+                    {
+                        Event = "Sync",
+                    },
+                    to = $"/topics/{_configuration.TargetTopicAndroid}"
+                }),
+                SendPushNotificationAsync(new
+                {
+                    data = new
+                    {
+                        Event = "Sync",
+                    },
+                    content_available = true,
+                    priority = "high",
+                    to = $"/topics/{_configuration.TargetTopicIos}"
+                })
+            );
         }
 
-        private async Task SendPushNotificationAsync(object data, string to)
+        private async Task SendPushNotificationAsync(object payload)
         {
-            var payload = new
-            {
-                to = to,
-                data
-            };
 
             var jsonPayload = JsonConvert.SerializeObject(payload);
 
