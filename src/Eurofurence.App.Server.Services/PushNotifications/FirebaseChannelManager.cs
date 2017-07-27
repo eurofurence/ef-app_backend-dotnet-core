@@ -20,6 +20,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public FirebaseChannelManager(
             FirebaseConfiguration configuration,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationRepository)
+
         {
             _configuration = configuration;
             _pushNotificationRepository = pushNotificationRepository;
@@ -38,7 +39,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 Event = "Announcement",
                 announcement.Title,
                 Text = announcement.Content
-            }, to: $"/topics/{_configuration.TargetTopic}");
+            }, to: $"/topics/{_configuration.TargetTopicAll}");
         }
 
         public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
@@ -61,7 +62,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             return SendPushNotificationAsync(new
             {
                 Event = "Sync",
-            }, to: $"/topics/{_configuration.TargetTopic}");
+            }, to: $"/topics/{_configuration.TargetTopicAll}");
         }
 
         private async Task SendPushNotificationAsync(object data, string to)
