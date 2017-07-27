@@ -119,7 +119,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("CollectingGame/PlayerParticipation/CollectionEntries")]
-        [ProducesResponseType(typeof(PlayerParticipationInfo), 200)]
+        [ProducesResponseType(typeof(PlayerCollectionEntry[]), 200)]
         public Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync()
         {
             return _collectingGameService.GetPlayerCollectionEntriesForPlayerAsync(_apiPrincipal.Uid);
