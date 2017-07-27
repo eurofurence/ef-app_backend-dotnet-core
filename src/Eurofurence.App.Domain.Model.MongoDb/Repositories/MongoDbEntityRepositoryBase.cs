@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Abstractions;
@@ -28,6 +29,22 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
         {
             var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().Where(filter));
             return await results.FirstOrDefaultAsync();
+        }
+
+        public virtual async Task<IEnumerable<TEntity>> FindAllAsync(IEnumerable<Guid> ids, bool includeDeletedRecords = false)
+        {
+            var idList = ids.ToList();
+            var filters = new List<FilterDefinition<TEntity>>();
+
+            if (!includeDeletedRecords)
+                filters.Add(new FilterDefinitionBuilder<TEntity>()
+                    .Eq(a => a.IsDeleted, 0));
+
+            filters.Add(new FilterDefinitionBuilder<TEntity>()
+                .Where(entity => idList.Contains(entity.Id)));
+
+            var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().And(filters));
+            return await results.ToListAsync();
         }
 
         public virtual async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter)

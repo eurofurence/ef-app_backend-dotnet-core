@@ -16,6 +16,11 @@ namespace Eurofurence.App.Domain.Model.Abstractions
             bool includeDeletedRecords = false,
             DateTime? minLastDateTimeChangedUtc = null);
 
+        Task<IEnumerable<TEntity>> FindAllAsync(
+            IEnumerable<Guid> ids,
+            bool includeDeletedRecords = false
+        );
+
         Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter);
         Task ReplaceOneAsync(TEntity entity);
         Task InsertOneAsync(TEntity entity);

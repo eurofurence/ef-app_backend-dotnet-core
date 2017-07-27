@@ -118,6 +118,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [Authorize(Roles = "Attendee")]
+        [HttpGet("CollectingGame/PlayerParticipation/CollectionEntries")]
+        [ProducesResponseType(typeof(PlayerParticipationInfo), 200)]
+        public Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync()
+        {
+            return _collectingGameService.GetPlayerCollectionEntriesForPlayerAsync(_apiPrincipal.Uid);
+        }
+
+        [Authorize(Roles = "Attendee")]
         [HttpPost("CollectingGame/PlayerParticipation/CollectToken")]
         [ProducesResponseType(typeof(CollectTokenResponse), 200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]

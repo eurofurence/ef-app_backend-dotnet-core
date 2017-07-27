@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,7 +10,6 @@ using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using Eurofurence.App.Server.Services.Security;
 
 namespace Eurofurence.App.Server.Services.Fursuits
 {
@@ -67,50 +65,97 @@ namespace Eurofurence.App.Server.Services.Fursuits
             return results;
         }
 
+
         public async Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync(string playerUid, string playerName)
         {
             var response = new PlayerParticipationInfo() {Name = playerName};
             var playerParticipation = await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == playerUid);
 
-            if (playerParticipation != null)
-            {
-                response.CollectionCount = playerParticipation.CollectionCount;
+            if (playerParticipation == null) return response;
 
-                var fetchRecentlyCollectedAsync = playerParticipation.CollectionEntries
-                    .OrderByDescending(a => a.EventDateTimeUtc)
-                    .Take(5)
-                    .Select(async entry =>
+            response.CollectionCount = playerParticipation.CollectionCount;
+
+            var recentlyCollected = playerParticipation.CollectionEntries
+                .OrderByDescending(a => a.EventDateTimeUtc)
+                .Take(5)
+                .ToList();
+
+            var recentlyCollectedFursuitParticipations = 
+                (await _fursuitParticipationRepository.FindAllAsync(
+                    recentlyCollected.Select(a => a.FursuitParticipationUid)))
+                .ToList();
+
+            var recentlyCollectedFursuitBadges =
+                (await _fursuitBadgeRepository.FindAllAsync(
+                    recentlyCollectedFursuitParticipations.Select(a => a.FursuitBadgeId)))
+                .ToList();
+
+            response.RecentlyCollected = recentlyCollected.Select(a =>
+                {
+                    var fursuitParticipation =
+                        recentlyCollectedFursuitParticipations.Single(b => b.Id == a.FursuitParticipationUid);
+                    var fursuitBadge =
+                        recentlyCollectedFursuitBadges.Single(b => b.Id == fursuitParticipation.FursuitBadgeId);
+
+                    return new PlayerParticipationInfo.BadgeInfo()
                     {
-                        var fursuitParticipation =
-                            await _fursuitParticipationRepository.FindOneAsync(entry.FursuitParticipationUid);
-                        var badge = await _fursuitBadgeRepository.FindOneAsync(fursuitParticipation.FursuitBadgeId);
+                        Id = fursuitBadge.Id,
+                        Name = fursuitBadge.Name
+                    };
+                })
+                .ToList();
 
-                        return new PlayerParticipationInfo.BadgeInfo
-                        {
-                            Id = badge.Id,
-                            Name = badge.Name
-                        };
-                    })
-                    .ToList();
-
-
-                var playersAhead = await _playerParticipationRepository.FindAllAsync(
-                        a => !a.IsBanned && a.PlayerUid != playerParticipation.PlayerUid
+            var playersAhead = await _playerParticipationRepository.FindAllAsync(
+                a => !a.IsBanned && a.PlayerUid != playerParticipation.PlayerUid
                         && a.CollectionCount >= playerParticipation.CollectionCount);
 
-                var rank = playersAhead.Count(a => a.CollectionCount > playerParticipation.CollectionCount
-                                                   || (a.CollectionCount == playerParticipation.CollectionCount &&
-                                                       a.CollectionEntries.Max(b => b.EventDateTimeUtc) <
-                                                       playerParticipation.CollectionEntries.Max(b => b.EventDateTimeUtc)
-                                                   )) + 1;
-                response.ScoreboardRank = rank;
-
-                await Task.WhenAll(fetchRecentlyCollectedAsync);
-
-                response.RecentlyCollected = fetchRecentlyCollectedAsync.Select(task => task.Result).ToList();
-            }
+            response.ScoreboardRank = playersAhead.Count(a => a.CollectionCount > playerParticipation.CollectionCount
+                                                || (a.CollectionCount == playerParticipation.CollectionCount &&
+                                                    a.CollectionEntries.Max(b => b.EventDateTimeUtc) <
+                                                    playerParticipation.CollectionEntries.Max(b => b.EventDateTimeUtc)
+                                                )) + 1;
 
             return response;
+        }
+
+        public async Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync(string playerUid)
+        {
+            var playerParticipation = await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == playerUid);
+            if (playerParticipation == null) return new PlayerCollectionEntry[0];
+
+            var collectionEntries = playerParticipation.CollectionEntries
+                .OrderByDescending(a => a.EventDateTimeUtc)
+                .ToList();
+
+            var fursuitParticipations =
+                (await _fursuitParticipationRepository.FindAllAsync(
+                    collectionEntries.Select(a => a.FursuitParticipationUid)))
+                .ToList();
+
+            var fursuitBadges =
+                (await _fursuitBadgeRepository.FindAllAsync(
+                    fursuitParticipations.Select(a => a.FursuitBadgeId)))
+                .ToList();
+
+            return collectionEntries.Select(a =>
+                {
+                    var fursuitParticipation =
+                        fursuitParticipations.Single(b => b.Id == a.FursuitParticipationUid);
+                    var fursuitBadge =
+                        fursuitBadges.Single(b => b.Id == fursuitParticipation.FursuitBadgeId);
+
+                    return new PlayerCollectionEntry()
+                    {
+                        BadgeId = fursuitBadge.Id,
+                        Name = fursuitBadge.Name,
+                        Species = fursuitBadge.Species,
+                        Gender = fursuitBadge.Gender,
+                        CollectionCount = fursuitParticipation.CollectionCount,
+                        CollectedAtDateTimeUtc = a.EventDateTimeUtc
+                    };
+                })
+                .OrderByDescending(a => a.CollectedAtDateTimeUtc)
+                .ToArray();
         }
 
         public async Task<IResult> RegisterTokenForFursuitBadgeForOwnerAsync(string ownerUid, Guid fursuitBadgeId, string tokenValue)
@@ -260,58 +305,56 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<IResult<PlayerScoreboardEntry[]>> GetPlayerScoreboardEntriesAsync(int top)
         {
-            var players = await _playerParticipationRepository
-                .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0);
-
-            var tasks = players
+            var topPlayers = (await _playerParticipationRepository
+                .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0))
                 .OrderByDescending(a => a.CollectionCount)
                 .ThenBy(a => a.CollectionEntries.Max(b => b.EventDateTimeUtc))
                 .Take(top)
-                .Select(async a => new PlayerScoreboardEntry()
-                {
-                    Name = (await _regSysIdentityRepository.FindOneAsync(b => b.Uid == a.PlayerUid))?.Username ?? "(?)",
-                    CollectionCount = a.CollectionCount,
-                })
                 .ToList();
 
-            await Task.WhenAll(tasks);
+            var topPlayersUids = topPlayers.Select(a => a.PlayerUid);
+            var identities = await _regSysIdentityRepository.FindAllAsync(a => topPlayersUids.Contains(a.Uid));
 
-            for (var i = 0; i < tasks.Count; i++) tasks[i].Result.Rank = i + 1;
+            var result = topPlayers
+                .Select(a => new PlayerScoreboardEntry()
+                {
+                    Name = identities.SingleOrDefault(b => b.Uid == a.PlayerUid)?.Username ?? "(?)",
+                    CollectionCount = a.CollectionCount,
+                })
+                .ToArray();
 
-            return Result<PlayerScoreboardEntry[]>.Ok(tasks.Select(a => a.Result).ToArray());
+            for (var i = 0; i < result.Length; i++) result[i].Rank = i + 1;
+            return Result<PlayerScoreboardEntry[]>.Ok(result);
         }
 
         public async Task<IResult<FursuitScoreboardEntry[]>> GetFursuitScoreboardEntriesAsync(int top)
         {
-            var fursuits = await _fursuitParticipationRepository
-                .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0);
-
-            var tasks = fursuits
+            var topFursuits = (await _fursuitParticipationRepository
+                .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0))
                 .OrderByDescending(a => a.CollectionCount)
                 .ThenBy(a => a.CollectionEntries.Max(b => b.EventDateTimeUtc))
                 .Take(top)
-                .Select(async a =>
-                {
-                    var fursuitBadge = await _fursuitBadgeRepository
-                        .FindOneAsync(b => b.Id == a.FursuitBadgeId);
+                .ToList();
 
+            var fursuitBadges = await _fursuitBadgeRepository.FindAllAsync(topFursuits.Select(a => a.FursuitBadgeId));
+
+            var result = topFursuits
+                .Select(entry =>
+                {
+                    var fursuitBadge = fursuitBadges.Single(badge => badge.Id == entry.FursuitBadgeId);
                     return new FursuitScoreboardEntry()
                     {
                         Name = fursuitBadge.Name,
-                        CollectionCount = a.CollectionCount,
+                        CollectionCount = entry.CollectionCount,
                         Gender = fursuitBadge.Gender,
                         Species = fursuitBadge.Species,
                         BadgeId = fursuitBadge.Id
                     };
                 })
-                .ToList();
+                .ToArray();
 
-            await Task.WhenAll(tasks);
-
-            for (var i = 0; i < tasks.Count; i++) tasks[i].Result.Rank = i + 1;
-
-            return Result<FursuitScoreboardEntry[]>
-                .Ok(tasks.Select(a => a.Result).ToArray());
+            for (var i = 0; i < result.Length; i++) result[i].Rank = i + 1;
+            return Result<FursuitScoreboardEntry[]>.Ok(result);
         }
     }
 }
