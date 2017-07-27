@@ -7,7 +7,7 @@ namespace Eurofurence.App.Domain.Model.Fursuits
     [DataContract]
     public class FursuitBadgeRecord : EntityBase
     {
-        [IgnoreDataMember]
+        [DataMember]
         public string ExternalReference { get; set; }
 
         [DataMember]
