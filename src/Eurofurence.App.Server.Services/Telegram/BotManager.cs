@@ -156,7 +156,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         messageBuilder.Append($"\n\n_{desc}_");
                     }
 
-                    messageBuilder.Append("\n\n[Read more...](https://app.eurofurence.org)");
+                    messageBuilder.Append($"\n\n[Read more...](https://www.eurofurence.org/EF23/schedule/events/{e.SourceEventId}.en.html)");
 
                     return new InlineQueryResultArticle()
                     {
