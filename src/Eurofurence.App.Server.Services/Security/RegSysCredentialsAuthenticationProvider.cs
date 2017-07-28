@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 
@@ -17,6 +18,9 @@ namespace Eurofurence.App.Server.Services.Security
                     new KeyValuePair<string, string>("nick", username),
                     new KeyValuePair<string, string>("password", password)
                 });
+
+                payload.Headers.Remove("Content-Type");
+                payload.Headers.TryAddWithoutValidation("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
 
                 var response = await client.PostAsync("https://reg.eurofurence.org/regsys/api/authcheck", payload);
 

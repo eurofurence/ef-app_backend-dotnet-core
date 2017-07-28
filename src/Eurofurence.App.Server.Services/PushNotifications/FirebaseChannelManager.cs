@@ -50,7 +50,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 {
                     data = new
                     {
-                        Event = "Announcement",
+                        @event = "announcement",
+                        announcement_id = announcement.Id,
                     },
                     notification = new {
                         title = announcement.Title,
@@ -75,7 +76,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     {
                         data = new
                         {
-                            Event = "Notification",
+                            @event = "notification",
                         },
                         notification = new
                         {
@@ -116,7 +117,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 {
                     data = new
                     {
-                        Event = "Sync",
+                        @event = "sync",
                     },
                     content_available = true,
                     priority = "high",
