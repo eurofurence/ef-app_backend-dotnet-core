@@ -55,7 +55,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     },
                     notification = new {
                         title = announcement.Title,
-                        body = announcement.Content
+                        body = announcement.Content,
+                        sound = "notification_default.caf"
                     },
                     content_available = true,
                     priority = "high",
