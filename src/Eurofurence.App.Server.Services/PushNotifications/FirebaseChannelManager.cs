@@ -83,6 +83,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         {
                             title = toastTitle,
                             body = toastMessage,
+                            sound = "notification_default.caf"
                         },
                         to = recipient.DeviceId
                     });
