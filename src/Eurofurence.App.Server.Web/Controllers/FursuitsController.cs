@@ -149,18 +149,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("CollectingGame/PlayerParticipation/Scoreboard")]
         [ProducesResponseType(typeof(PlayerScoreboardEntry[]), 200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
-        public async Task<ActionResult> GetPlayerScoreboardEntriesAsync()
+        public async Task<ActionResult> GetPlayerScoreboardEntriesAsync(int Top = 25)
         {
-            var result = await _collectingGameService.GetPlayerScoreboardEntriesAsync(10);
+            Top = Math.Min(Top, 25);
+            var result = await _collectingGameService.GetPlayerScoreboardEntriesAsync(Top);
             return result.AsActionResult();
         }
 
         [HttpGet("CollectingGame/FursuitParticipation/Scoreboard")]
         [ProducesResponseType(typeof(FursuitScoreboardEntry[]), 200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
-        public async Task<ActionResult> GetFursuitScoreboardEntriesAsync()
+        public async Task<ActionResult> GetFursuitScoreboardEntriesAsync(int Top = 25)
         {
-            var result = await _collectingGameService.GetFursuitScoreboardEntriesAsync(10);
+            Top = Math.Min(Top, 25);
+            var result = await _collectingGameService.GetFursuitScoreboardEntriesAsync(Top);
             return result.AsActionResult();
         }
 
