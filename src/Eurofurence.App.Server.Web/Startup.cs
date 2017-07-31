@@ -13,6 +13,7 @@ using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Services.Fursuits;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
@@ -209,6 +210,14 @@ namespace Eurofurence.App.Server.Web
                     .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["logLevel"]))
                     .WriteTo.AmazonCloudWatch(options, client);
             }
+
+
+            loggerConfiguration.Filter
+                .ByIncludingOnly(a =>
+                    a.Properties.ContainsKey("SourceContext") &&
+                    a.Properties["SourceContext"].ToString() == $@"""{typeof(CollectingGameService)}""")
+                .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["collectionGame:logLevel"]))
+                .WriteTo.RollingFile(Configuration["collectionGame:logFile"], LogEventLevel.Verbose);
 
             Log.Logger = loggerConfiguration.CreateLogger();
             loggerFactory
