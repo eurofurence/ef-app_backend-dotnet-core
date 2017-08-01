@@ -26,7 +26,7 @@ namespace Eurofurence.App.Tools.CliToolBox
             Configuration = configurationBuilder.Build();
 
             var self = typeof(Program).GetTypeInfo().Assembly;
-            var client = new MongoClient(Configuration["mongoDb:url"]);
+            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
             BsonClassMapping.Register();
