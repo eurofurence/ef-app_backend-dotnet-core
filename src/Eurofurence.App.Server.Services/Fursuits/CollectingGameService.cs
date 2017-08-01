@@ -356,5 +356,45 @@ namespace Eurofurence.App.Server.Services.Fursuits
             for (var i = 0; i < result.Length; i++) result[i].Rank = i + 1;
             return Result<FursuitScoreboardEntry[]>.Ok(result);
         }
+
+        public async Task<IResult> CreateTokenFromValueAsync(string tokenValue)
+        {
+            if (string.IsNullOrWhiteSpace(tokenValue))
+                return Result.Error("TOKEN_EMPTY", "Token cannot be empty");
+
+            var tokenRecord = new TokenRecord
+            {
+                Id = Guid.NewGuid(),
+                LastChangeDateTimeUtc = DateTime.UtcNow,
+                Value = tokenValue
+            };
+
+            try
+            {
+                await _semaphore.WaitAsync();
+                await _tokenRepository.InsertOneAsync(tokenRecord);
+
+                return Result.Ok;
+            }
+            catch (Exception ex)
+            {
+                return Result.Error("EXCEPTION", ex.Message);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        public async Task<IResult> CreateTokensFromValuesAsync(string[] tokenValues)
+        {
+            foreach (var tokenValue in tokenValues)
+            {
+                var result = await CreateTokenFromValueAsync(tokenValue);
+                if (!result.IsSuccessful) return result;
+            }
+
+            return Result.Ok;
+        }
     }
 }

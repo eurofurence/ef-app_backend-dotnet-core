@@ -166,5 +166,26 @@ namespace Eurofurence.App.Server.Web.Controllers
             return result.AsActionResult();
         }
 
+
+        [Authorize(Roles = "Developer,System")]
+        [HttpPost("CollectingGame/Tokens")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> CreateTokenFromValueAsync([FromBody] string tokenValue)
+        {
+            return (await _collectingGameService.CreateTokenFromValueAsync(tokenValue))
+                .AsActionResult();
+        }
+
+        [Authorize(Roles = "Developer,System")]
+        [HttpPost("CollectingGame/Tokens/Batch")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> CreateTokensFromValuesAsync([FromBody] string[] tokenValues)
+        {
+            return (await _collectingGameService.CreateTokensFromValuesAsync(tokenValues))
+                .AsActionResult();
+        }
+
     }
 } 

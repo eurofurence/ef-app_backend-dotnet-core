@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Web
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var client = new MongoClient(Configuration["mongoDb:url"]);
+            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
             BsonClassMapping.Register();

@@ -15,5 +15,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 
         Task<IResult<PlayerScoreboardEntry[]>>  GetPlayerScoreboardEntriesAsync(int top);
         Task<IResult<FursuitScoreboardEntry[]>> GetFursuitScoreboardEntriesAsync(int top);
+
+        Task<IResult> CreateTokenFromValueAsync(string tokenValue);
+        Task<IResult> CreateTokensFromValuesAsync(string[] tokenValues);
     }
 }
