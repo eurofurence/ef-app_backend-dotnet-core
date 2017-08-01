@@ -125,7 +125,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 response.ScoreboardRank =
                     playersAhead.Count(a => a.CollectionCount > playerParticipation.CollectionCount
-                                            || (a.CollectionCount == playerParticipation.CollectionCount &&
+                                            || (
+                                                a.CollectionCount > 0 &&
+                                                a.CollectionCount == playerParticipation.CollectionCount &&
                                                 a.CollectionEntries.Max(b => b.EventDateTimeUtc) <
                                                 playerParticipation.CollectionEntries.Max(b => b.EventDateTimeUtc)
                                             )) + 1;
