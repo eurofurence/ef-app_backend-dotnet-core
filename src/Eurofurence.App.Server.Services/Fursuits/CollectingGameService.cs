@@ -88,6 +88,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 if (playerParticipation == null) return response;
 
                 response.CollectionCount = playerParticipation.CollectionCount;
+                response.IsBanned = playerParticipation.IsBanned;
 
                 var recentlyCollected = playerParticipation.CollectionEntries
                     .OrderByDescending(a => a.EventDateTimeUtc)
