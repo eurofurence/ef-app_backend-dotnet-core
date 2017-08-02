@@ -250,15 +250,15 @@ namespace Eurofurence.App.Server.Services.Fursuits
             using (new TimeTrap(time => _logger.LogTrace(
                 "Benchmark: CollectTokenForPlayerAsync({playerUid}, {tokenValue}): {time} ms",
                     playerUid, tokenValue, time.TotalMilliseconds)))
-            { 
+            {
+                if (string.IsNullOrWhiteSpace(tokenValue))
+                {
+                    _logger.LogTrace("Rejected CollectTokenForPlayerAsync (empty token) for player {playerUid}", playerUid);
+                    return Result<CollectTokenResponse>.Error("EMPTY_TOKEN", "Token cannot be empty.");
+                }
+
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(tokenValue))
-                    {
-                        _logger.LogTrace("Rejected CollectTokenForPlayerAsync (empty token) for player {playerUid}", playerUid);
-                        return Result<CollectTokenResponse>.Error("EMPTY_TOKEN", "Token cannot be empty.");
-                    }
-
                     await _semaphore.WaitAsync();
 
                     var playerParticipation =
