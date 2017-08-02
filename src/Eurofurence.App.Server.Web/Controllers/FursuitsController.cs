@@ -131,7 +131,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
         public async Task<ActionResult> CollectTokenForPlayerAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.Trim().ToUpper());
             return result.AsActionResult();
         }
 
@@ -141,7 +141,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiSafeResult<CollectTokenResponse>), 200)]
         public async Task<ActionResult> CollectTokenForPlayerSafeAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.Trim().ToUpper());
             return result.AsActionResultSafeVariant();
         }
 
