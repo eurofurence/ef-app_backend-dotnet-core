@@ -60,7 +60,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [ResponseCache(Duration = 10, VaryByQueryKeys = new[] { "since" })]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
             _logger.LogInformation("Execute=Sync, Since={since}", since);
