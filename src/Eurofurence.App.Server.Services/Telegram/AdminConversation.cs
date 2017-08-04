@@ -712,7 +712,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             await c1();
         }
 
-        private async Task ProcessMessageAsync(string message)
+        private async Task ProcessMessageAsync(string message, Message rawMessage = null)
         {
             if (message == "/cancel")
             {
@@ -765,6 +765,19 @@ namespace Eurofurence.App.Server.Services.Telegram
                 await matchingCommand.CommandHandler();
                 return;
             }
+
+            if (rawMessage != null && HasPermission(PermissionFlags.All, userPermissions))
+            {
+                if (message.StartsWith("/chatid@", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    await BotClient.SendTextMessageAsync(rawMessage.Chat.Id,
+                        $"ChatId={rawMessage.Chat.Id} ({rawMessage.Chat.Title})");
+                }
+                if (message.StartsWith("/leave@", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    await BotClient.LeaveChatAsync(rawMessage.Chat.Id);
+                }
+            }
         }
 
         private Task ClearInlineResponseOptions(int messageId)
@@ -793,14 +806,14 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             return BotClient.EditMessageReplyMarkupAsync(
                     e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, null)
-                .ContinueWith(_ => ProcessMessageAsync(e.CallbackQuery.Data));
+                .ContinueWith(_ => ProcessMessageAsync(e.CallbackQuery.Data, e.CallbackQuery.Message));
         }
 
 
         public Task OnMessageAsync(MessageEventArgs e)
         {
             _user = e.Message.From;
-            return ProcessMessageAsync(e.Message.Text);
+            return ProcessMessageAsync(e.Message.Text, e.Message);
         }
     }
 }

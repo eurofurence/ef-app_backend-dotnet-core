@@ -11,6 +11,7 @@ using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Services.Fursuits
@@ -19,31 +20,34 @@ namespace Eurofurence.App.Server.Services.Fursuits
     {
         private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        private readonly ConventionSettings _conventionSettings;
+        private readonly CollectionGameConfiguration _collectionGameConfiguration;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IEntityRepository<FursuitParticipationRecord> _fursuitParticipationRepository;
         private readonly IEntityRepository<PlayerParticipationRecord> _playerParticipationRepository;
         private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IEntityRepository<TokenRecord> _tokenRepository;
+        private readonly ITelegramMessageSender _telegramMessageSender;
         private ILogger _logger;
 
         public CollectingGameService(
             ILoggerFactory loggerFactory,
-            ConventionSettings conventionSettings,
+            CollectionGameConfiguration collectionGameConfiguration,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IEntityRepository<FursuitParticipationRecord> fursuitParticipationRepository,
             IEntityRepository<PlayerParticipationRecord> playerParticipationRepository,
             IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
-            IEntityRepository<TokenRecord> tokenRepository
+            IEntityRepository<TokenRecord> tokenRepository,
+            ITelegramMessageSender telegramMessageSender
             )
         {
             _logger = loggerFactory.CreateLogger(GetType());
-            _conventionSettings = conventionSettings;
+            _collectionGameConfiguration = collectionGameConfiguration;
             _fursuitBadgeRepository = fursuitBadgeRepository;
             _fursuitParticipationRepository = fursuitParticipationRepository;
             _playerParticipationRepository = playerParticipationRepository;
             _regSysIdentityRepository = regSysIdentityRepository;
             _tokenRepository = tokenRepository;
+            _telegramMessageSender = telegramMessageSender;
         }
 
 
@@ -309,6 +313,16 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             }
                             else
                             {
+                                if (!string.IsNullOrWhiteSpace(_collectionGameConfiguration.TelegramManagementChatId))
+                                {
+                                    var identity =
+                                        await _regSysIdentityRepository.FindOneAsync(a => a.Uid == playerParticipation.PlayerUid);
+
+                                    await _telegramMessageSender.SendMarkdownMessageToChatAsync(
+                                        _collectionGameConfiguration.TelegramManagementChatId,
+                                        $"**Player Banned:**\n{playerParticipation.PlayerUid} ({identity.Username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
+                                }
+
                                 sb.Append(" You have been disqualified.");
                                 _logger.LogWarning("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BANNED");
                                 return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BANNED", sb.ToString());

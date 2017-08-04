@@ -164,6 +164,12 @@ namespace Eurofurence.App.Server.Web
                 AccessToken = Configuration["telegram:accessToken"],
                 Proxy = Configuration["telegram:proxy"]
             });
+            builder.RegisterInstance(new CollectionGameConfiguration()
+            {
+                LogFile = Configuration["collectionGame:logFile"],
+                LogLevel = Convert.ToInt32(Configuration["collectionGame:logLevel"]),
+                TelegramManagementChatId = Configuration["collectionGame:telegramManagementChatId"]
+            });
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
                 .As<IApiPrincipal>();
@@ -212,6 +218,7 @@ namespace Eurofurence.App.Server.Web
                 loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
             }
 
+            var cgc = serviceProvider.GetService<CollectionGameConfiguration>();
             loggerConfiguration
                 .WriteTo
                 .Logger(lc =>
@@ -219,8 +226,7 @@ namespace Eurofurence.App.Server.Web
                         .ByIncludingOnly(a =>
                             a.Properties.ContainsKey("SourceContext") &&
                             a.Properties["SourceContext"].ToString() == $@"""{typeof(CollectingGameService)}""")
-                        .WriteTo.File(Configuration["collectionGame:logFile"],
-                            (LogEventLevel) Convert.ToInt32(Configuration["collectionGame:logLevel"]))
+                        .WriteTo.File(cgc.LogFile, (LogEventLevel) cgc.LogLevel)
                 );
                 
             Log.Logger = loggerConfiguration.CreateLogger();
