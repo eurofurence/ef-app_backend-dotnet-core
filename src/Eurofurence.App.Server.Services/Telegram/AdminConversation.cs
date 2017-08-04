@@ -164,6 +164,13 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Register a fursuit for the game",
                     RequiredPermission = PermissionFlags.CollectionGameAdmin,
                     CommandHandler = CommandCollectionGameRegisterFursuit
+                },
+                new CommandInfo()
+                {
+                    Command ="/collectionGameUnban",
+                    Description = "Unban someone from the game",
+                    RequiredPermission = PermissionFlags.CollectionGameAdmin,
+                    CommandHandler = CommandCollectionGameUnban
                 }
             };
         }
@@ -294,6 +301,42 @@ namespace Eurofurence.App.Server.Services.Telegram
                     },"Cancel=/cancel");
 
                     await c2();
+
+
+                }, "Cancel=/cancel");
+            await c1();
+        }
+
+        public async Task CommandCollectionGameUnban()
+        {
+            Func<Task> c1 = null;
+            var title = "Collecting Game Unban";
+
+            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
+                async regNoAsString =>
+                {
+                    await ClearLastAskResponseOptions();
+
+                    int regNo = 0;
+                    var regNoWithLetter = regNoAsString.Trim().ToUpper();
+                    if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
+                    {
+                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await c1();
+                        return;
+                    }
+
+                    var result = await _collectingGameService.UnbanPlayerAsync(
+                            $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}");
+
+                    if (result.IsSuccessful)
+                    {
+                        await ReplyAsync($"*{title}* - Success - {regNo} unbanned.");
+                    }
+                    else
+                    {
+                        await ReplyAsync($"*{title}* - Error\n\n{result.ErrorMessage} ({result.ErrorCode})");
+                    }
 
 
                 }, "Cancel=/cancel");

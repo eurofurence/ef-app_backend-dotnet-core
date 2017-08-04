@@ -9,7 +9,6 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Security;
-using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
@@ -313,15 +312,11 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             }
                             else
                             {
-                                if (!string.IsNullOrWhiteSpace(_collectionGameConfiguration.TelegramManagementChatId))
-                                {
-                                    var identity =
-                                        await _regSysIdentityRepository.FindOneAsync(a => a.Uid == playerParticipation.PlayerUid);
+                                var identity =
+                                    await _regSysIdentityRepository.FindOneAsync(a => a.Uid == playerParticipation.PlayerUid);
 
-                                    await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-                                        _collectionGameConfiguration.TelegramManagementChatId,
-                                        $"**Player Banned:**\n{playerParticipation.PlayerUid} ({identity.Username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
-                                }
+                                await SendToTelegramManagementChannelAsync(
+                                    $"*Player Banned:*\n{playerParticipation.PlayerUid} ({identity.Username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
 
                                 sb.Append(" You have been disqualified.");
                                 _logger.LogWarning("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BANNED");
@@ -497,6 +492,47 @@ namespace Eurofurence.App.Server.Services.Fursuits
             }
 
             return Result.Ok;
+        }
+
+        public async Task<IResult> UnbanPlayerAsync(string playerUid)
+        {
+            using (new TimeTrap(time => _logger.LogTrace("Benchmark: RegisterTokenForFursuitBadgeForOwnerAsync({playerUid}): {time} ms",
+                playerUid, time.TotalMilliseconds)))
+            {
+                try
+                {
+                    await _semaphore.WaitAsync();
+
+                    var playerParticipation =
+                        await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == playerUid);
+
+                    if (playerParticipation == null)
+                        return Result.Error("INVALID_PLAYERUID", $"No player found with uid = {playerUid}");
+
+                    if (playerParticipation.IsBanned == false)
+                        return Result.Error("NOT_BANNED", $"Player with uid {playerUid} is not banned.");
+
+                    playerParticipation.IsBanned = false;
+                    playerParticipation.Karma = 0;
+                    playerParticipation.Touch();
+
+                    await _playerParticipationRepository.ReplaceOneAsync(playerParticipation);
+                    await SendToTelegramManagementChannelAsync($"*Player Unbanned*: {playerParticipation.PlayerUid}");
+
+                    return Result.Ok;
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            }
+        }
+
+        private async Task SendToTelegramManagementChannelAsync(string message)
+        {
+            if (string.IsNullOrWhiteSpace(_collectionGameConfiguration.TelegramManagementChatId)) return;
+
+            await _telegramMessageSender.SendMarkdownMessageToChatAsync(_collectionGameConfiguration.TelegramManagementChatId, message);
         }
     }
 }
