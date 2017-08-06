@@ -57,8 +57,15 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<PrivateMessageService>().As<IPrivateMessageService>();
             builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
                 .As<IRegSysAlternativePinAuthenticationProvider>();
+
             builder.RegisterType<BotManager>().As<BotManager>();
+            builder.RegisterType<TelegramMessageBroker>()
+                .As<ITelegramMessageBroker>()
+                .As<ITelegramMessageSender>()
+                .SingleInstance();
+
             builder.RegisterType<UserManager>().As<IUserManager>();
+
 
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
             builder.RegisterType<CollectingGameService>().As<ICollectingGameService>();

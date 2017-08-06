@@ -68,6 +68,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(byte[]), 200)]
         [ProducesResponseType(404)]
         [HttpGet("Badges/{Id}/Image")]
+        [ResponseCache(Duration = 60 * 30, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult> GetFursuitBadgeImageAsync([FromRoute] Guid Id)
         {
             var content = await _fursuitBadgeService.GetFursuitBadgeImageAsync(Id);
@@ -131,7 +132,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
         public async Task<ActionResult> CollectTokenForPlayerAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.Trim().ToUpper());
             return result.AsActionResult();
         }
 
@@ -141,7 +142,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiSafeResult<CollectTokenResponse>), 200)]
         public async Task<ActionResult> CollectTokenForPlayerSafeAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.Trim().ToUpper());
             return result.AsActionResultSafeVariant();
         }
 
@@ -149,6 +150,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("CollectingGame/PlayerParticipation/Scoreboard")]
         [ProducesResponseType(typeof(PlayerScoreboardEntry[]), 200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        [ResponseCache(Duration = 5, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult> GetPlayerScoreboardEntriesAsync(int Top = 25)
         {
             Top = Math.Min(Top, 25);
@@ -159,6 +161,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("CollectingGame/FursuitParticipation/Scoreboard")]
         [ProducesResponseType(typeof(FursuitScoreboardEntry[]), 200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        [ResponseCache(Duration = 5, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult> GetFursuitScoreboardEntriesAsync(int Top = 25)
         {
             Top = Math.Min(Top, 25);

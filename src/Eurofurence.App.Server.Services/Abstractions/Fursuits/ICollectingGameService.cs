@@ -18,5 +18,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 
         Task<IResult> CreateTokenFromValueAsync(string tokenValue);
         Task<IResult> CreateTokensFromValuesAsync(string[] tokenValues);
+
+        Task<IResult> UnbanPlayerAsync(string playerUid);
     }
 }

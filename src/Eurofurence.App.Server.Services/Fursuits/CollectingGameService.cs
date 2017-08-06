@@ -9,8 +9,8 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Security;
-using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Services.Fursuits
@@ -19,31 +19,34 @@ namespace Eurofurence.App.Server.Services.Fursuits
     {
         private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        private readonly ConventionSettings _conventionSettings;
+        private readonly CollectionGameConfiguration _collectionGameConfiguration;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IEntityRepository<FursuitParticipationRecord> _fursuitParticipationRepository;
         private readonly IEntityRepository<PlayerParticipationRecord> _playerParticipationRepository;
         private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IEntityRepository<TokenRecord> _tokenRepository;
+        private readonly ITelegramMessageSender _telegramMessageSender;
         private ILogger _logger;
 
         public CollectingGameService(
             ILoggerFactory loggerFactory,
-            ConventionSettings conventionSettings,
+            CollectionGameConfiguration collectionGameConfiguration,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IEntityRepository<FursuitParticipationRecord> fursuitParticipationRepository,
             IEntityRepository<PlayerParticipationRecord> playerParticipationRepository,
             IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
-            IEntityRepository<TokenRecord> tokenRepository
+            IEntityRepository<TokenRecord> tokenRepository,
+            ITelegramMessageSender telegramMessageSender
             )
         {
             _logger = loggerFactory.CreateLogger(GetType());
-            _conventionSettings = conventionSettings;
+            _collectionGameConfiguration = collectionGameConfiguration;
             _fursuitBadgeRepository = fursuitBadgeRepository;
             _fursuitParticipationRepository = fursuitParticipationRepository;
             _playerParticipationRepository = playerParticipationRepository;
             _regSysIdentityRepository = regSysIdentityRepository;
             _tokenRepository = tokenRepository;
+            _telegramMessageSender = telegramMessageSender;
         }
 
 
@@ -88,6 +91,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 if (playerParticipation == null) return response;
 
                 response.CollectionCount = playerParticipation.CollectionCount;
+                response.IsBanned = playerParticipation.IsBanned;
 
                 var recentlyCollected = playerParticipation.CollectionEntries
                     .OrderByDescending(a => a.EventDateTimeUtc)
@@ -250,7 +254,13 @@ namespace Eurofurence.App.Server.Services.Fursuits
             using (new TimeTrap(time => _logger.LogTrace(
                 "Benchmark: CollectTokenForPlayerAsync({playerUid}, {tokenValue}): {time} ms",
                     playerUid, tokenValue, time.TotalMilliseconds)))
-            { 
+            {
+                if (string.IsNullOrWhiteSpace(tokenValue))
+                {
+                    _logger.LogTrace("Rejected CollectTokenForPlayerAsync (empty token) for player {playerUid}", playerUid);
+                    return Result<CollectTokenResponse>.Error("EMPTY_TOKEN", "Token cannot be empty.");
+                }
+
                 try
                 {
                     await _semaphore.WaitAsync();
@@ -302,6 +312,12 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             }
                             else
                             {
+                                var identity =
+                                    await _regSysIdentityRepository.FindOneAsync(a => a.Uid == playerParticipation.PlayerUid);
+
+                                await SendToTelegramManagementChannelAsync(
+                                    $"*Player Banned:*\n{playerParticipation.PlayerUid} ({identity.Username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
+
                                 sb.Append(" You have been disqualified.");
                                 _logger.LogWarning("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BANNED");
                                 return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BANNED", sb.ToString());
@@ -476,6 +492,47 @@ namespace Eurofurence.App.Server.Services.Fursuits
             }
 
             return Result.Ok;
+        }
+
+        public async Task<IResult> UnbanPlayerAsync(string playerUid)
+        {
+            using (new TimeTrap(time => _logger.LogTrace("Benchmark: RegisterTokenForFursuitBadgeForOwnerAsync({playerUid}): {time} ms",
+                playerUid, time.TotalMilliseconds)))
+            {
+                try
+                {
+                    await _semaphore.WaitAsync();
+
+                    var playerParticipation =
+                        await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == playerUid);
+
+                    if (playerParticipation == null)
+                        return Result.Error("INVALID_PLAYERUID", $"No player found with uid = {playerUid}");
+
+                    if (playerParticipation.IsBanned == false)
+                        return Result.Error("NOT_BANNED", $"Player with uid {playerUid} is not banned.");
+
+                    playerParticipation.IsBanned = false;
+                    playerParticipation.Karma = 0;
+                    playerParticipation.Touch();
+
+                    await _playerParticipationRepository.ReplaceOneAsync(playerParticipation);
+                    await SendToTelegramManagementChannelAsync($"*Player Unbanned*: {playerParticipation.PlayerUid}");
+
+                    return Result.Ok;
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            }
+        }
+
+        private async Task SendToTelegramManagementChannelAsync(string message)
+        {
+            if (string.IsNullOrWhiteSpace(_collectionGameConfiguration.TelegramManagementChatId)) return;
+
+            await _telegramMessageSender.SendMarkdownMessageToChatAsync(_collectionGameConfiguration.TelegramManagementChatId, message);
         }
     }
 }

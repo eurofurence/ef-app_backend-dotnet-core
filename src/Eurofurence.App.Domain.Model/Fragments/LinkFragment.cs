@@ -10,8 +10,9 @@ namespace Eurofurence.App.Domain.Model.Fragments
         {
             WebExternal,
             MapExternal,
-            MapInternal,
-            DealerDetail
+            MapEntry,
+            DealerDetail,
+            EventConferenceRoom
         }
 
         [Required]
@@ -23,6 +24,8 @@ namespace Eurofurence.App.Domain.Model.Fragments
 
         /// <summary>
         ///   * For FragmentType `DealerDetail`: The `Id` of the dealer record the link is referencing to.
+        ///   * For FragmentType `MapEntry`: The `Id` of the map entry record the link is referencing to.
+        ///   * For FragmentType `EventConferenceRoom`: The `Id` of the event conference room record the link is referencing to.
         ///   * For FragmentType `MapExternal`: An stringified json object.
         ///     * Acceptable properties and their expected value (type):
         ///       * `name` - name of target POI (*string*)

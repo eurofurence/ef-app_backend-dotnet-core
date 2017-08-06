@@ -40,6 +40,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ICollectingGameService _collectingGameService;
         private readonly ConventionSettings _conventionSettings;
+        private readonly ITelegramMessageBroker _telegramMessageBroker;
         private readonly TelegramBotClient _botClient;
         private readonly ConversationManager _conversationManager;
 
@@ -77,10 +78,11 @@ namespace Eurofurence.App.Server.Services.Telegram
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
-            IPrivateMessageService _privateMessageService,
+            IPrivateMessageService privateMessageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
-            ILoggerFactory loggerFactory
+            ILoggerFactory loggerFactory,
+            ITelegramMessageBroker telegramMessageBroker
             )
         {
             _logger = loggerFactory.CreateLogger(GetType());
@@ -91,9 +93,10 @@ namespace Eurofurence.App.Server.Services.Telegram
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
-            this._privateMessageService = _privateMessageService;
+            _privateMessageService = privateMessageService;
             _collectingGameService = collectingGameService;
             _conventionSettings = conventionSettings;
+            _telegramMessageBroker = telegramMessageBroker;
 
             _botClient =
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
@@ -109,7 +112,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     _regSysAlternativePinAuthenticationProvider, 
                     _pushNotificationChannelRepository,
                     _fursuitBadgeRepository,
-                    _privateMessageService,
+                    privateMessageService,
                     _collectingGameService,
                     _conventionSettings,
                     loggerFactory
@@ -120,6 +123,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             _botClient.OnCallbackQuery += BotClientOnOnCallbackQuery;
 
             _botClient.OnInlineQuery += BotClientOnOnInlineQuery;
+
+            _telegramMessageBroker.OnSendMarkdownMessageToChatAsync += _telegramMessageBroker_OnSendMarkdownMessageToChatAsync;
         }
 
         private async Task<InlineQueryResult[]> QueryEvents(string query)
@@ -315,6 +320,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                 _logger.LogError("BotClientOnOnMessage failed: {Message} {StackTrace}",
                     ex.Message, ex.StackTrace);
             }
+        }
+
+        private async Task _telegramMessageBroker_OnSendMarkdownMessageToChatAsync(string chatId, string message)
+        {
+            await _botClient.SendTextMessageAsync(chatId, message, ParseMode.Markdown);
         }
     }
 }

@@ -164,6 +164,12 @@ namespace Eurofurence.App.Server.Web
                 AccessToken = Configuration["telegram:accessToken"],
                 Proxy = Configuration["telegram:proxy"]
             });
+            builder.RegisterInstance(new CollectionGameConfiguration()
+            {
+                LogFile = Configuration["collectionGame:logFile"],
+                LogLevel = Convert.ToInt32(Configuration["collectionGame:logLevel"]),
+                TelegramManagementChatId = Configuration["collectionGame:telegramManagementChatId"]
+            });
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
                 .As<IApiPrincipal>();
@@ -194,6 +200,8 @@ namespace Eurofurence.App.Server.Web
             }
             else
             {
+                loggerConfiguration.MinimumLevel.Is(LogEventLevel.Verbose);
+
                 var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + env.EnvironmentName;
 
                 AWSCredentials credentials =
@@ -203,22 +211,24 @@ namespace Eurofurence.App.Server.Web
                 {
                     LogGroupName = logGroupName,
                     LogEventRenderer =  new JsonLogEventRenderer(),
-                    MinimumLogEventLevel = (LogEventLevel)Convert.ToInt32(Configuration["logLevel"])
+                    MinimumLogEventLevel = (LogEventLevel)Convert.ToInt32(Configuration["logLevel"]),
+                    LogStreamNameProvider = new ConstantLogStreamNameProvider(Environment.MachineName)
                 };
 
-                loggerConfiguration
-                    .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["logLevel"]))
-                    .WriteTo.AmazonCloudWatch(options, client);
+                loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
             }
 
-
-            loggerConfiguration.Filter
-                .ByIncludingOnly(a =>
-                    a.Properties.ContainsKey("SourceContext") &&
-                    a.Properties["SourceContext"].ToString() == $@"""{typeof(CollectingGameService)}""")
-                .MinimumLevel.Is((LogEventLevel)Convert.ToInt32(Configuration["collectionGame:logLevel"]))
-                .WriteTo.RollingFile(Configuration["collectionGame:logFile"], LogEventLevel.Verbose);
-
+            var cgc = serviceProvider.GetService<CollectionGameConfiguration>();
+            loggerConfiguration
+                .WriteTo
+                .Logger(lc =>
+                    lc.Filter
+                        .ByIncludingOnly(a =>
+                            a.Properties.ContainsKey("SourceContext") &&
+                            a.Properties["SourceContext"].ToString() == $@"""{typeof(CollectingGameService)}""")
+                        .WriteTo.File(cgc.LogFile, (LogEventLevel) cgc.LogLevel)
+                );
+                
             Log.Logger = loggerConfiguration.CreateLogger();
             loggerFactory
                 .WithFilter(new FilterLoggerSettings
