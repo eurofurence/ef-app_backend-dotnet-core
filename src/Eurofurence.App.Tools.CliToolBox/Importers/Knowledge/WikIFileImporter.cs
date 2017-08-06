@@ -69,7 +69,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                 {
                     var knowledgeEntry = new KnowledgeEntryRecord
                     {
-                        Id = entryMatch.Groups[1].Value.Trim().AsHashToGuid(),
+                        Id = $"{entryMatch.Groups[1].Value.Trim()}-{knowledgeGroup.Id}".AsHashToGuid(),
                         KnowledgeGroupId = knowledgeGroup.Id,
                         Title = entryMatch.Groups[1].Value.Trim(),
                         Text = entryMatch.Groups[2].Value.Trim(),
