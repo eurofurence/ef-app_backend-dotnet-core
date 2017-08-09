@@ -40,12 +40,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 {
                     data = new
                     {
-                        Event = "Announcement"
-                    },
-                    notification = new
-                    {
-                        title = announcement.Title,
-                        body = announcement.Content
+                        Event = "Announcement",
+                        announcement.Title,
+                        Text = announcement.Content
                     },
                     to = $"/topics/{_configuration.TargetTopicAndroid}"
                 }), 
@@ -80,7 +77,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     {
                         data = new
                         {
-                            @event = "notification"
+                            @event = "notification",
                         },
                         notification = new
                         {
@@ -97,12 +94,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     {
                         data = new
                         {
-                            Event = "Notification"
-                        },
-                        notification = new
-                        {
-                            title = toastTitle,
-                            body = toastMessage,
+                            Event = "Notification",
+                            Title = toastTitle,
+                            Message = toastMessage
                         },
                         to = recipient.DeviceId
                     });
