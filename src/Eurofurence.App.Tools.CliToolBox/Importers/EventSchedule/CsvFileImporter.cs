@@ -150,6 +150,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             csv.Configuration.Delimiter = ",";
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
 
+            csvRecords = csvRecords
+                .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.CurrentCultureIgnoreCase)).ToList();
+
             if (csvRecords.Count == 0) return 0;
 
             foreach (var record in csvRecords)
