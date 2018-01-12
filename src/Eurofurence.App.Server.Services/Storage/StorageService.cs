@@ -43,7 +43,12 @@ namespace Eurofurence.App.Server.Services.Storage
 
             if (record == null)
             {
-                record = new EntityStorageInfoRecord {EntityType = _entityType};
+                record = new EntityStorageInfoRecord
+                {
+                    EntityType = _entityType,
+                    DeltaStartDateTimeUtc = DateTime.UtcNow
+                };
+
                 record.NewId();
                 record.Touch();
 
