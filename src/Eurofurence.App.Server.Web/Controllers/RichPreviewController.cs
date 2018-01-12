@@ -80,11 +80,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             var @event = await _eventService.FindOneAsync(Id);
             if (@event == null) return NotFound();
 
-            var eventConferenceDay = await _eventService.FindOneAsync(@event.ConferenceDayId);
+            var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
 
             return new MetadataGenerator()
                 .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Title} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
+                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
                 .AsResult();
         }
 
