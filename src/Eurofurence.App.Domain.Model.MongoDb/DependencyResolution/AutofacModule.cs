@@ -96,8 +96,14 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
 
             Register<FursuitBadgeRepository, IEntityRepository<FursuitBadgeRecord>, FursuitBadgeRecord>(builder,
-                collection => collection.Indexes.CreateOne(
-                    Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.OwnerUid)));
+                collection =>
+                {
+                    collection.Indexes.CreateOne(
+                        Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.ExternalReference),
+                        new CreateIndexOptions() { Unique = true });
+                    collection.Indexes.CreateOne(Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.OwnerUid));
+
+                });
 
             Register<FursuitBadgeImageRepository, IEntityRepository<FursuitBadgeImageRecord>, FursuitBadgeImageRecord>(builder);
 
