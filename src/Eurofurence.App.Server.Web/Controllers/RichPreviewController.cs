@@ -11,6 +11,7 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class RichPreviewController : Controller
     {
         private readonly IEventService _eventService;
+        private readonly IEventConferenceDayService _eventConferenceDayService;
 
         private class MetadataGenerator
         {
@@ -45,6 +46,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             public string Render()
             {
+                if (!_metaProperties.ContainsKey("og:type")) _metaProperties.Add("og:type", "website");
+
                 var innerHtml = new StringBuilder();
                 if (!String.IsNullOrWhiteSpace(_title)) innerHtml.Append($"<title>{_title}</title>");
                 if (!String.IsNullOrWhiteSpace(_description)) innerHtml.Append($"<meta name=\"description\" content=\"{_description}\" />");
@@ -52,7 +55,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                     innerHtml.Append($"<meta http-equiv=\"refresh\" content=\"0;url={_redirect}\" />");
 
                 foreach (var property in _metaProperties)
-                    innerHtml.Append($"<meta property=\"{property.Key}\" value=\"{property.Value}\" />");
+                    innerHtml.Append($"<meta property=\"{property.Key}\" content=\"{property.Value}\" />");
 
                 return $"<html><head>{innerHtml}</head></html>";
             }
@@ -63,9 +66,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
         }
 
-        public RichPreviewController(IEventService eventService)
+        public RichPreviewController(
+            IEventService eventService, 
+            IEventConferenceDayService eventConferenceDayService)
         {
             _eventService = eventService;
+            _eventConferenceDayService = eventConferenceDayService;
         }
 
         [HttpGet("Events/{Id}")]
@@ -74,9 +80,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             var @event = await _eventService.FindOneAsync(Id);
             if (@event == null) return NotFound();
 
+            var eventConferenceDay = await _eventService.FindOneAsync(@event.ConferenceDayId);
+
             return new MetadataGenerator()
-                .WithDescription(@event.Description)
                 .WithTitle(@event.Title)
+                .WithDescription($"{eventConferenceDay.Title} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
                 .AsResult();
         }
 
