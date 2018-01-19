@@ -128,6 +128,20 @@ namespace Eurofurence.App.Server.Web
                 auth.AddPolicy("OAuth-AllAuthenticated", oAuthBearerAuthenticationPolicy);
             });
 
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(configure =>
+                {
+                    configure.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.ASCII.GetBytes(Configuration["oAuth:secretKey"])),
+                            ValidAudience = Configuration["oAuth:Audience"],
+                            ValidIssuer = Configuration["oAuth:Issuer"],
+                            ValidateLifetime = true,
+                            ClockSkew = TimeSpan.FromSeconds(0)
+                       };
+                });
+
             var builder = new ContainerBuilder();
             builder.Populate(services);
             builder.RegisterModule(new AutofacModule(database));
@@ -144,7 +158,7 @@ namespace Eurofurence.App.Server.Web
             });
             builder.RegisterInstance(new ConventionSettings()
             {
-                ConventionNumber = 23,
+                ConventionNumber = 24,
             });
             builder.RegisterInstance(new WnsConfiguration
             {
@@ -245,21 +259,7 @@ namespace Eurofurence.App.Server.Web
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
             app.UseCors("CorsPolicy");
-
-            app.UseJwtBearerAuthentication(new JwtBearerOptions
-            {
-                TokenValidationParameters = new TokenValidationParameters
-                {
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.ASCII.GetBytes(Configuration["oAuth:secretKey"])),
-                    ValidAudience = Configuration["oAuth:Audience"],
-                    ValidIssuer = Configuration["oAuth:Issuer"],
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromSeconds(0)
-                },
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true
-            });
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {

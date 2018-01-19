@@ -20,6 +20,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.InlineQueryResults;
 
 namespace Eurofurence.App.Server.Services.Telegram
@@ -529,8 +530,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             return new InlineKeyboardMarkup(new [] {commands.Select(c =>
             {
                 var parts = c.Split('=');
-                if (parts.Length == 2) return new InlineKeyboardButton(parts[0], parts[1]);
-                return new InlineKeyboardButton(c, c);
+
+                if (parts.Length == 2) return InlineKeyboardButton.WithCallbackData(parts[0], parts[1]);
+                return InlineKeyboardButton.WithCallbackData(c, c);
             }).ToArray()});
         }
 

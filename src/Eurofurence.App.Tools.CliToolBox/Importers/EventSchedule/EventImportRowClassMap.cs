@@ -4,7 +4,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 {
     partial class CsvFileImporter
     {
-        public class EventImportRowClassMap : CsvClassMap<EventImportRow>
+        public class EventImportRowClassMap : ClassMap<EventImportRow>
         {
             public EventImportRowClassMap()
             {

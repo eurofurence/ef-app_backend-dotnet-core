@@ -2,7 +2,7 @@
 
 namespace Eurofurence.App.Server.Services.ArtShow
 {
-    internal sealed class LogImportRowClassMap : CsvClassMap<LogImportRow>
+    internal sealed class LogImportRowClassMap : ClassMap<LogImportRow>
     {
         public LogImportRowClassMap()
         {

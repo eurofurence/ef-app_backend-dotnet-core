@@ -176,7 +176,7 @@ namespace Eurofurence.App.Tools.EventScheduleImporter
         }
 
 
-        public sealed class EventImportRowClassMap : CsvClassMap<EventImportRow>
+        public sealed class EventImportRowClassMap : ClassMap<EventImportRow>
         {
             public EventImportRowClassMap()
             {

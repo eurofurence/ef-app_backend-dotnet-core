@@ -13,7 +13,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private object _syncRoot = new object();
 
-        private Dictionary<string, IConversation> _conversations = new Dictionary<string, IConversation>();
+        private Dictionary<int, IConversation> _conversations = new Dictionary<int, IConversation>();
         private ILogger _logger;
 
         public ConversationManager(
@@ -27,12 +27,12 @@ namespace Eurofurence.App.Server.Services.Telegram
             _botClient = botClient;
         }
 
-        public IConversation this[string chatId]
+        public IConversation this[int chatId]
         {
             get { return GetConversation(chatId); }
         }
 
-        private IConversation GetConversation(string chatId)
+        private IConversation GetConversation(int chatId)
         {
             lock (_syncRoot)
             {

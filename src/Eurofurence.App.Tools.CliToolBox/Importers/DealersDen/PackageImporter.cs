@@ -176,7 +176,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
         }
     }
 
-    public sealed class DealerImportRowClassMap : CsvClassMap<DealerImportRow>
+    public sealed class DealerImportRowClassMap : ClassMap<DealerImportRow>
     {
         public DealerImportRowClassMap()
         {
