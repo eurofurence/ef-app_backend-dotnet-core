@@ -98,6 +98,12 @@ namespace Eurofurence.App.Server.Services.Telegram
             _conventionSettings = conventionSettings;
             _telegramMessageBroker = telegramMessageBroker;
 
+            if (string.IsNullOrWhiteSpace(telegramConfiguration.AccessToken))
+            {
+                _logger.LogInformation("No access token for Telegram Bot provided - not running bot.");
+                return;
+            }
+
             _botClient =
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
                     ? new TelegramBotClient(telegramConfiguration.AccessToken)
@@ -272,7 +278,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public void Start()
         {
-            _botClient.StartReceiving();
+            _botClient?.StartReceiving();
         }
 
 
