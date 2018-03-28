@@ -8,10 +8,12 @@ namespace Eurofurence.App.Server.KestrelHost
     {
         public static void Main(string[] args)
         {
+            var baseUrl = (args.Length >= 1) ? args[0] : "http://*:30001";
+
             var host = new WebHostBuilder()
                 .UseStartup<Startup>()
                 .UseKestrel()
-                .UseUrls("http://*:30001")
+                .UseUrls(baseUrl)
                 .Build();
 
             var botManager = (BotManager)host.Services.GetService(typeof(BotManager));
