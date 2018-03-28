@@ -35,11 +35,18 @@ namespace Eurofurence.App.Server.Services.Security
             _regSysIdentityRepository = regSysIdentityRepository;
             _tokenFactory = tokenFactory;
 
-            _authenticationProviders = new IAuthenticationProvider[]
-            {
-                new RegSysAlternativePinAuthenticationProvider(regSysAlternativePinRepository),
-                new RegSysCredentialsAuthenticationProvider()
-            };
+            _authenticationProviders =
+                _conventionSettings.IsRegSysAuthenticationEnabled ?
+                    new IAuthenticationProvider[]
+                        {
+                            new RegSysAlternativePinAuthenticationProvider(regSysAlternativePinRepository),
+                            new RegSysCredentialsAuthenticationProvider()
+                        }
+                    :
+                    new IAuthenticationProvider[]
+                        {
+                            new RegSysAlternativePinAuthenticationProvider(regSysAlternativePinRepository),
+                        };
         }
 
 

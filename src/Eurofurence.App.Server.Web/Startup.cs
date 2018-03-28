@@ -158,7 +158,8 @@ namespace Eurofurence.App.Server.Web
             });
             builder.RegisterInstance(new ConventionSettings()
             {
-                ConventionNumber = 24,
+                ConventionNumber = Convert.ToInt32(Configuration["global:conventionNumber"]),
+                IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1
             });
             builder.RegisterInstance(new WnsConfiguration
             {
