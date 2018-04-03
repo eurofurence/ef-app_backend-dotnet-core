@@ -7,6 +7,7 @@ using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Eurofurence.App.Server.Services.Security
 {
@@ -71,15 +72,32 @@ namespace Eurofurence.App.Server.Services.Security
 
             var uid = $"RegSys:{_conventionSettings.ConventionNumber}:{authenticationResult.RegNo}";
 
+            var identityRecord = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == uid);
+            if (identityRecord == null)
+            {
+                identityRecord = new RegSysIdentityRecord
+                {
+                    Id = Guid.NewGuid(),
+                    Uid = uid,
+                    Roles = new List<string>() { "Attendee" }
+                };
+                await _regSysIdentityRepository.InsertOneAsync(identityRecord);
+            }
+
+            identityRecord.Username = authenticationResult.Username;
+            await _regSysIdentityRepository.ReplaceOneAsync(identityRecord);
+
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, uid),
                 new Claim(ClaimTypes.GivenName, authenticationResult.Username),
                 new Claim(ClaimTypes.PrimarySid, authenticationResult.RegNo.ToString()),
                 new Claim(ClaimTypes.GroupSid, _conventionSettings.ConventionNumber.ToString()),
-                new Claim(ClaimTypes.Role, "Attendee"),
                 new Claim(ClaimTypes.System, "RegSys")
             };
+
+            claims.AddRange(identityRecord.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var expiration = DateTime.UtcNow.Add(_authenticationSettings.DefaultTokenLifeTime);
             var token = _tokenFactory.CreateTokenFromClaims(claims, expiration);
@@ -91,20 +109,6 @@ namespace Eurofurence.App.Server.Services.Security
                 TokenValidUntil = expiration,
                 Username = $"{authenticationResult.Username} ({authenticationResult.RegNo})"
             };
-
-            var identityRecord = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == uid);
-            if (identityRecord == null)
-            {
-                identityRecord = new RegSysIdentityRecord
-                {
-                    Id = Guid.NewGuid(),
-                    Uid = uid
-                };
-                await _regSysIdentityRepository.InsertOneAsync(identityRecord);
-            }
-
-            identityRecord.Username = authenticationResult.Username;
-            await _regSysIdentityRepository.ReplaceOneAsync(identityRecord);
 
             _logger.LogInformation("Authentication successful for {Username} {RegNo} via {Source}",
                 authenticationResult.Username, authenticationResult.RegNo, authenticationResult.Source);
