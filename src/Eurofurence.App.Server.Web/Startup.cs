@@ -74,7 +74,11 @@ namespace Eurofurence.App.Server.Web
                         .AllowCredentials());
             });
 
-            services.AddMvc(options => options.MaxModelValidationErrors = 0)
+            services.AddMvc(options =>
+            {
+                options.MaxModelValidationErrors = 0;
+                options.Filters.Add(new CustomValidationAttributesFilter());
+            })
                 .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
