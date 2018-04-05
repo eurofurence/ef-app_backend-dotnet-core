@@ -38,7 +38,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpPost]
         [Authorize(Roles = "System,Developer,Attendee")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         public async Task<ActionResult> PostEventFeedbackAsync([FromBody] EventFeedbackRecord record)
         {
@@ -53,7 +53,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             await _eventFeedbackService.InsertOneAsync(record);
 
-            return Ok();
+            return NoContent();
         }
     }
 }
