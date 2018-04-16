@@ -87,15 +87,22 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         private void importCsvFileCommand(CommandLineApplication command)
         {
             var inputPathOption = command.Option("-inputPath", "Csv file to import", CommandOptionType.SingleValue);
+            var fakeStartDate = command.Option("-fakeStartDate", "Fake start date (first con day) to shift all content to", CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
             {
+                DateTime parsedFakeStartDate;
+                bool hasFakeStartDate = DateTime.TryParse(fakeStartDate.Value(), out parsedFakeStartDate);
+
                 var importer = new Importers.EventSchedule.CsvFileImporter(
                     _eventService,
                     _eventConferenceDayService,
                     _eventConferenceRoomService,
                     _eventConferenceTrackService
-                    );
+                    )
+                {
+                    FakeStartDate = hasFakeStartDate ? (DateTime?)parsedFakeStartDate : null
+                };
 
                 var modifiedRecords = importer.ImportCsvFile(inputPathOption.Value());
 

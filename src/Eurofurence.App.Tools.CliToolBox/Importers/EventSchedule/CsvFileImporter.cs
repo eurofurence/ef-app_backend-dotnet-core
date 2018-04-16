@@ -16,6 +16,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
 
+        public DateTime? FakeStartDate { get; set; }
+        private TimeSpan DateTimeOffset { get; set; }
+
         public CsvFileImporter(
             IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
@@ -27,6 +30,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceTrackService = eventConferenceTrackService;
+
+            DateTimeOffset = TimeSpan.Zero;
         }
 
 
@@ -172,6 +177,18 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                 .Distinct().OrderBy(a => a).ToList();
 
             int modifiedRecords = 0;
+
+            if (FakeStartDate.HasValue)
+            {
+                DateTimeOffset = TimeSpan.FromDays((FakeStartDate.Value - conferenceDays.Min(a => a.Item1)).Days);
+                for (int i = 0; i < conferenceDays.Count; i++)
+                {
+                    conferenceDays[i] = new Tuple<DateTime, string>(
+                        conferenceDays[i].Item1.Add(DateTimeOffset),
+                        conferenceDays[i].Item2
+                    );
+                }
+            }
 
             var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
             var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
