@@ -14,17 +14,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IWnsChannelManager _wnsChannelManager;
         private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IPushNotificationChannelStatisticsService _pushNotificationChannelStatisticsService;
 
         public PushNotificationsController(
             IPushEventMediator pushEventMediator,
             IWnsChannelManager wnsChannelManager,
             IFirebaseChannelManager firebaseChannelManager,
+            IPushNotificationChannelStatisticsService pushNotificationChannelStatisticsService,
             IApiPrincipal apiPrincipal)
         {
             _firebaseChannelManager = firebaseChannelManager;
             _pushEventMediator = pushEventMediator;
             _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
+            _pushNotificationChannelStatisticsService = pushNotificationChannelStatisticsService;
         }
 
         [HttpPost("SyncRequest")]
@@ -66,7 +69,17 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _firebaseChannelManager.RegisterDeviceAsync(request.DeviceId, _apiPrincipal.Uid, request.Topics);
             return NoContent();
         }
-            
+
+        [HttpGet("Statistics")]
+        [Authorize(Roles = "Developer")]
+        [ProducesResponseType(typeof(PushNotificationChannelStatistics), 200)]
+        public async Task<PushNotificationChannelStatistics> GetStatisticsAsync([FromQuery] DateTime? Since)
+        {
+            var result = await _pushNotificationChannelStatisticsService.PushNotificationChannelStatisticsAsync(Since);
+            return result;
+        }
+
+
         public class ToastTest
         {
             public string Topic { get; set; }
