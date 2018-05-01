@@ -2,7 +2,7 @@
   "profiles": {
     "Eurofurence.App.Tools.CliToolBox": {
       "commandName": "Project",
-      "commandLineArgs": "events importImage -eventId 609f84e3-c244-431b-86cd-5cf69c9895d5 -imagePath=c:\\temp\\pofp.jpg -purpose=Poster"
+      "commandLineArgs": "events importCsvFile -inputPath \"c:\\temp\\EF23-events-public-20170818T165601.708931084-v2.3.csv\" -fakeStartDate \"2018-04-24\""
     }
   }
 }
