@@ -5,6 +5,10 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Eurofurence.App.Server.Web.Swagger;
+using System.IO;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -57,5 +61,21 @@ namespace Eurofurence.App.Server.Web.Controllers
             var content = await _imageService.GetImageContentByIdAsync(id);
             return File(content, record.MimeType);
         }
+
+
+        [Authorize(Roles = "System,Developer")]
+        [HttpPut("{Id}/Content")]
+        public async Task<ActionResult> PutImageContentAsync([FromRoute] Guid id, [FromBody] string ImageContent)
+        {
+            var record = await _imageService.FindOneAsync(id);
+            if (record == null) return NotFound();
+
+            byte[] imageBytes = Convert.FromBase64String(ImageContent);
+
+            await _imageService.InsertOrUpdateImageAsync(record.InternalReference, imageBytes);
+
+            return NoContent();            
+        }
+
     }
 }
