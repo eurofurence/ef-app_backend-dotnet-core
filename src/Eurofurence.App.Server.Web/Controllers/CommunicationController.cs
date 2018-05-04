@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -79,5 +80,15 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             return Json(await _privateMessageService.SendPrivateMessageAsync(Request));
         }
+
+
+        [HttpGet("PrivateMessages/{MessageId}/Status")]
+        [Authorize(Roles = "Developer,System,Action-PrivateMessages-Query")]
+        public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid MessageId)
+        {
+            var result = await _privateMessageService.GetPrivateMessageStatusAsync(MessageId);
+            return result.Transient404(HttpContext);
+        }
+
     }
 }

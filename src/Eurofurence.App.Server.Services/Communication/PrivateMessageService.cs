@@ -71,5 +71,20 @@ namespace Eurofurence.App.Server.Services.Communication
 
             return entity.Id;
         }
+
+        public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid messageId)
+        {
+            var message = await FindOneAsync(messageId);
+            if (message == null) return null;
+
+            return new PrivateMessageStatus()
+            {
+                Id = message.Id,
+                RecipientUid = message.RecipientUid,
+                CreatedDateTimeUtc = message.CreatedDateTimeUtc,
+                ReceivedDateTimeUtc = message.ReceivedDateTimeUtc,
+                ReadDateTimeUtc = message.ReadDateTimeUtc
+            };
+        }
     }
 }
