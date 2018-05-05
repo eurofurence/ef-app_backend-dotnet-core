@@ -52,9 +52,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Attendee")]
         [HttpPost("PrivateMessages/{MessageId}/Read")]
         [ProducesResponseType(typeof(DateTime), 200)]
-        public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync([FromRoute] Guid MessageId)
+        public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync(
+            [EnsureNotNull][FromRoute] Guid MessageId,
+            [EnsureNotNull][FromBody] bool IsRead
+        )
         {
-            if (MessageId == Guid.Empty) return BadRequest();
+            if (!IsRead) return BadRequest("Message can only be marked as read; not as unread.");
 
             var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(MessageId, _apiPrincipal.Uid);
             return result.HasValue ? (ActionResult) Json(result) : BadRequest();
@@ -84,7 +87,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpGet("PrivateMessages/{MessageId}/Status")]
         [Authorize(Roles = "Developer,System,Action-PrivateMessages-Query")]
-        public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid MessageId)
+        [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
+        [ProducesResponseType(typeof(string), 404)]
+        public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(
+            [FromRoute][EnsureNotNull] Guid MessageId)
         {
             var result = await _privateMessageService.GetPrivateMessageStatusAsync(MessageId);
             return result.Transient404(HttpContext);
