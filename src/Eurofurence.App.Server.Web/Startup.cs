@@ -280,6 +280,7 @@ namespace Eurofurence.App.Server.Web
                 c.RoutePrefix = "swagger/v2/ui";
                 c.DocExpansion(DocExpansion.None);
                 c.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
+                c.EnableDeepLinking();
             });
 
             if (env.IsProduction())
