@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
+using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.Dealers
 {
@@ -63,5 +64,16 @@ namespace Eurofurence.App.Domain.Model.Dealers
 
         [DataMember]
         public Guid? ArtPreviewImageId { get; set; }
+
+        [DataMember]
+        public bool IsAfterDark { get; set; }
+
+        [DataMember]
+        public IList<string> Categories { get; set; }
+
+        public DealerRecord()
+        {
+            Categories = new List<string>();
+        }
     }
 }

@@ -62,7 +62,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                         AttendsOnFriday = !string.IsNullOrWhiteSpace(record.AttendsFri),
                         AttendsOnSaturday = !string.IsNullOrWhiteSpace(record.AttendsSat),
                         TelegramHandle = record.Telegram,
-                        TwitterHandle = record.Twitter
+                        TwitterHandle = record.Twitter,
+                        IsAfterDark = !string.IsNullOrWhiteSpace(record.AfterDark),
+                        Categories = record.GetCategories()
                     };
 
                     dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{record.RegNo}.",
@@ -101,6 +103,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                 .Map(s => s.AttendsOnThursday, t => t.AttendsOnThursday)
                 .Map(s => s.AttendsOnFriday, t => t.AttendsOnFriday)
                 .Map(s => s.AttendsOnSaturday, t => t.AttendsOnSaturday)
+                .Map(s => s.Categories, t => t.Categories)
+                .Map(s => s.IsAfterDark, t => t.IsAfterDark)
                 .Map(s => s.Links, t => t.Links);
 
             var diff = patch.Patch(importRecords, existingRecords);
@@ -194,6 +198,12 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             Map(m => m.AttendsThu).Name("Attends Thu");
             Map(m => m.AttendsFri).Name("Attends Fri");
             Map(m => m.AttendsSat).Name("Attends Sat");
+            Map(m => m.AfterDark).Name("After Dark");
+            Map(m => m.CategoryPrints).Name("Cat. Prints");
+            Map(m => m.CategoryArtwork).Name("Cat. Artwork");
+            Map(m => m.CategoryFursuits).Name("Cat. Fursuit");
+            Map(m => m.CategoryCommissions).Name("Cat. Commissions");
+            Map(m => m.CategoryMiscellaneous).Name("Cat. Misc");
         }
     }
 
@@ -213,5 +223,24 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
         public string Website { get; set; }
         public string Telegram { get; set; }
         public string Twitter { get; set; }
+        public string AfterDark { get; set; }
+        public string CategoryPrints { get; set; }
+        public string CategoryArtwork { get; set; }
+        public string CategoryFursuits { get; set; }
+        public string CategoryCommissions { get; set; }
+        public string CategoryMiscellaneous { get; set; }
+
+        public IList<string> GetCategories()
+        {
+            var categories = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(CategoryPrints)) categories.Add("Prints");
+            if (!string.IsNullOrWhiteSpace(CategoryArtwork)) categories.Add("Artwork");
+            if (!string.IsNullOrWhiteSpace(CategoryFursuits)) categories.Add("Fursuits");
+            if (!string.IsNullOrWhiteSpace(CategoryCommissions)) categories.Add("Commissions");
+            if (!string.IsNullOrWhiteSpace(CategoryMiscellaneous)) categories.Add("Miscellaneous");
+
+            return categories;
+        }
     }
 }
