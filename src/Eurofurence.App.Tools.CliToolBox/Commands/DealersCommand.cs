@@ -3,6 +3,7 @@ using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Tools.CliToolBox.Importers.DealersDen;
 using Microsoft.Extensions.CommandLineUtils;
+using System.Linq;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
@@ -23,6 +24,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.Command("importZipPackage", importZipPackageCommand);
             command.Command("clear", clearCommand);
+            command.Command("clean", cleanCommand);
         }
 
         private void clearCommand(CommandLineApplication command)
@@ -64,6 +66,40 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             {
                 var importer = new PackageImporter(_imageService, _dealerService, command.Out);
                 importer.ImportZipPackageAsync(inputPathOption.Value()).Wait();
+                return 0;
+            });
+        }
+
+        private void cleanCommand(CommandLineApplication command)
+        {
+            command.OnExecute(() =>
+            {
+                Console.WriteLine("Cleaning images");
+
+                var images = _imageService
+                    .FindAllAsync(image => image.InternalReference.StartsWith("dealer:"))
+                    .Result;
+
+                var dealers = _dealerService.FindAllAsync().Result;
+
+                var usedImages = dealers
+                    .SelectMany(dealer => new Guid?[] { dealer.ArtistImageId, dealer.ArtistThumbnailImageId, dealer.ArtPreviewImageId })
+                    .Where(guid => guid.HasValue)
+                    .Select(guid => guid.Value);
+
+                var unusedImages = images
+                    .Where(image => !usedImages.Contains(image.Id));
+
+
+                Console.WriteLine($"{images.Count()} images related to dealers\n{usedImages.Count()} images referenced by {dealers.Count()} dealers");
+                Console.WriteLine($"Removing {unusedImages.Count()} images");
+
+                foreach(var image in unusedImages)
+                {
+                    Console.WriteLine($"  Removing {image.Id} ({image.InternalReference})");
+                    _imageService.DeleteOneAsync(image.Id).Wait();
+                }
+
                 return 0;
             });
         }
