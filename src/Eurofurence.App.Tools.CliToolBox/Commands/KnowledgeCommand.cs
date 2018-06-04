@@ -27,8 +27,19 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.Command("importWikiFile", importWikiFileCommand);
             command.Command("clear", clearCommand);
+            command.Command("resetStorageDelta", resetStorageDeltaCommand);
         }
 
+        private void resetStorageDeltaCommand(CommandLineApplication command)
+        {
+            command.OnExecute(() =>
+            {
+                _knowledgeGroupService.ResetStorageDeltaAsync().Wait();
+                _knowledgeEntryService.ResetStorageDeltaAsync().Wait();
+                return 0;
+            });
+
+        }
         private void clearCommand(CommandLineApplication command)
         {
             command.OnExecute(() =>

@@ -8,5 +8,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
     {
         Task<Guid> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes);
         Task<byte[]> GetImageContentByIdAsync(Guid id);
+        byte[] GeneratePlaceholderImage();
     }
 }

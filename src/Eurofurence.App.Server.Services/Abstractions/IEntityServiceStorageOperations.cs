@@ -9,5 +9,6 @@ namespace Eurofurence.App.Server.Services.Abstractions
     {
         Task<DeltaResponse<TEntity>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null);
         Task<EntityStorageInfoRecord> GetStorageInfoAsync();
+        Task ResetStorageDeltaAsync();
     }
 }

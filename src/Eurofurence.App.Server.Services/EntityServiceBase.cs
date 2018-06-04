@@ -133,5 +133,23 @@ namespace Eurofurence.App.Server.Services
                         break;
                 }
         }
+
+        public virtual async Task ResetStorageDeltaAsync()
+        {
+            var items = await _entityRepository.FindAllAsync(includeDeletedRecords: true, minLastDateTimeChangedUtc: DateTime.MinValue);
+            await _storageService.ResetDeltaStartAsync();
+
+            foreach(var item in items)
+            {
+                if (item.IsDeleted == 1)
+                {
+                    await _entityRepository.DeleteOneAsync(item.Id);
+                } else
+                {
+                    item.Touch();
+                    await _entityRepository.ReplaceOneAsync(item);
+                }
+            }
+        }
     }
 }

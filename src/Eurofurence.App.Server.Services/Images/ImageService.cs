@@ -8,6 +8,7 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using ImageSharp;
+using System.IO;
 
 namespace Eurofurence.App.Server.Services.Images
 {
@@ -118,6 +119,15 @@ namespace Eurofurence.App.Server.Services.Images
         {
             var record = await _imageContentRepository.FindOneAsync(id);
             return record.Content;
+        }
+
+        public byte[] GeneratePlaceholderImage()
+        {
+            var image = new Image<Rgba32>(1, 1);
+            var output = new MemoryStream();
+            image.SaveAsPng(output);
+
+            return output.ToArray();           
         }
     }
 }
