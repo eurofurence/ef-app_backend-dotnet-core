@@ -5,5 +5,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Security
     public interface IAuthenticationHandler
     {
         Task<AuthenticationResponse> AuthorizeViaRegSys(RegSysAuthenticationRequest request);
+        Task<string> CreateRegSysAccessTokenAsync(string[] rolesToGrant);
     }
 }

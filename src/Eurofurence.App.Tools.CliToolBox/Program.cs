@@ -10,6 +10,8 @@ using Eurofurence.App.Tools.CliToolBox.Commands;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
+using Microsoft.Extensions.Logging;
+using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Tools.CliToolBox
 {
@@ -29,17 +31,30 @@ namespace Eurofurence.App.Tools.CliToolBox
             var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
+
             BsonClassMapping.Register();
 
             var builder = new ContainerBuilder();
             builder.RegisterModule(new AutofacModule(database));
             builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
+            builder.Register<ILoggerFactory>(_ => new LoggerFactory());
 
             builder.RegisterInstance(new TokenFactorySettings
             {
                 SecretKey = Configuration["oAuth:secretKey"],
                 Audience = Configuration["oAuth:audience"],
                 Issuer = Configuration["oAuth:issuer"]
+            });
+
+            builder.RegisterInstance(new ConventionSettings
+            {
+                ConventionNumber = Convert.ToInt32(Configuration["global:conventionNumber"]),
+                IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1
+            });
+
+            builder.RegisterInstance(new AuthenticationSettings
+            {
+                DefaultTokenLifeTime = TimeSpan.FromDays(30)
             });
 
             var commands = self.GetTypes()

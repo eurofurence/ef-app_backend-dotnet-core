@@ -17,7 +17,9 @@ namespace Eurofurence.App.Server.Services.Security
         private readonly ConventionSettings _conventionSettings;
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
+        private readonly IEntityRepository<RegSysAccessTokenRecord> _regSysAccessTokenRepository;
         private readonly ITokenFactory _tokenFactory;
+        private readonly static Random _random = new Random();
 
         private readonly IAuthenticationProvider[] _authenticationProviders;
 
@@ -27,6 +29,7 @@ namespace Eurofurence.App.Server.Services.Security
             AuthenticationSettings authenticationSettings,
             IEntityRepository<RegSysAlternativePinRecord> regSysAlternativePinRepository,
             IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
+            IEntityRepository<RegSysAccessTokenRecord> regSysAccessTokenRepository,
             ITokenFactory tokenFactory
         )
         {
@@ -34,6 +37,7 @@ namespace Eurofurence.App.Server.Services.Security
             _conventionSettings = conventionSettings;
             _authenticationSettings = authenticationSettings;
             _regSysIdentityRepository = regSysIdentityRepository;
+            _regSysAccessTokenRepository = regSysAccessTokenRepository;
             _tokenFactory = tokenFactory;
 
             _authenticationProviders =
@@ -84,6 +88,23 @@ namespace Eurofurence.App.Server.Services.Security
                 await _regSysIdentityRepository.InsertOneAsync(identityRecord);
             }
 
+            if (!String.IsNullOrWhiteSpace(request.AccessToken))
+            {
+                var accessToken = await _regSysAccessTokenRepository.FindOneAsync(a => a.Token == request.AccessToken);
+                if (accessToken != null && !accessToken.ClaimedAtDateTimeUtc.HasValue)
+                {
+                    identityRecord.Roles = identityRecord.Roles
+                        .Concat(accessToken.GrantRoles)
+                        .Distinct()
+                        .ToArray();
+
+                    accessToken.ClaimedByUid = identityRecord.Uid;
+                    accessToken.ClaimedAtDateTimeUtc = DateTime.UtcNow;
+
+                    await _regSysAccessTokenRepository.ReplaceOneAsync(accessToken);
+                }
+            }
+
             identityRecord.Username = authenticationResult.Username;
             await _regSysIdentityRepository.ReplaceOneAsync(identityRecord);
 
@@ -114,6 +135,21 @@ namespace Eurofurence.App.Server.Services.Security
                 authenticationResult.Username, authenticationResult.RegNo, authenticationResult.Source);
 
             return response;
+        }
+
+        public async Task<string> CreateRegSysAccessTokenAsync(string[] rolesToGrant)
+        {
+            string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+            var accessToken = new RegSysAccessTokenRecord()
+            {
+                Id = Guid.NewGuid(),
+                GrantRoles = rolesToGrant,
+                Token = new string(Enumerable.Repeat(chars, 10).Select(s => s[_random.Next(s.Length)]).ToArray())
+            };
+
+            await _regSysAccessTokenRepository.InsertOneAsync(accessToken);
+            return accessToken.Token;
         }
     }
 }

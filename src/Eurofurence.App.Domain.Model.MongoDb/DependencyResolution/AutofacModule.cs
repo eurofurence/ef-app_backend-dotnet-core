@@ -92,6 +92,9 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<RegSysIdentityRepository, IEntityRepository<RegSysIdentityRecord>, RegSysIdentityRecord>(builder,
                 collection => collection.Indexes.CreateOne(
                     Builders<RegSysIdentityRecord>.IndexKeys.Ascending(a => a.Uid)));
+            Register<RegSysAccessTokenRepository, IEntityRepository<RegSysAccessTokenRecord>, RegSysAccessTokenRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    Builders<RegSysAccessTokenRecord>.IndexKeys.Ascending(a => a.Token)));
 
             Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
 
