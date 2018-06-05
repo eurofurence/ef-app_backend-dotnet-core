@@ -48,7 +48,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             return new PushNotificationChannelStatistics()
             {
                 SinceLastSeenDateTimeUtc = sinceLastSeenDateTimeUtc.Value,
-                NumberOfDevices = devicesWithSessionCount,
+                NumberOfDevices = records.Count,
                 NumberOfAuthenticatedDevices = devicesWithSessionCount,
                 NumberOfUniqueUserIds = uniqueUserIds,
                 PlatformStatistics = groups
