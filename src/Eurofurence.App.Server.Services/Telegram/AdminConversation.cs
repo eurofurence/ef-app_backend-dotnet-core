@@ -205,7 +205,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
-                    await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"https://app.eurofurence.org/api/v2/Fursuits/Badges/{badge.Id}/Image")));
+                    await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"{_conventionSettings.ApiBaseUrl}Fursuits/Badges/{badge.Id}/Image")));
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -655,7 +655,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                             await ReplyAsync(
                                 $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
-                            await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"https://app.eurofurence.org/api/v2/Fursuits/Badges/{badge.Id}/Image")));
+                            await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"{_conventionSettings.ApiBaseUrl}Fursuits/Badges/{badge.Id}/Image")));
 
                             askTokenValue = () => AskAsync(
                                 $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",

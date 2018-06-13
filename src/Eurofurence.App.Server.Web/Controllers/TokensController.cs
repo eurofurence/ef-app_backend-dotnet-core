@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(AuthenticationResponse), 200)]
         [ProducesResponseType(403)]
         public async Task<AuthenticationResponse> PostRegSysAuthenticationRequest(
-            [FromBody] RegSysAuthenticationRequest request)
+            [EnsureNotNull][FromBody] RegSysAuthenticationRequest request)
         {
             return (await _authenticationHandler.AuthorizeViaRegSys(request))
                 .Transient403(HttpContext);
