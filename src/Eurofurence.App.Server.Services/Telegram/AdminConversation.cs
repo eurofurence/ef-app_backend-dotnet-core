@@ -22,6 +22,7 @@ using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types.InlineKeyboardButtons;
 using Telegram.Bot.Types.InlineQueryResults;
+using System.IO;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
@@ -31,6 +32,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
+        private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ICollectingGameService _collectingGameService;
         private readonly ConventionSettings _conventionSettings;
@@ -85,6 +87,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
+            IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository,
             IPrivateMessageService privateMessageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
@@ -96,6 +99,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
+            _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
             _privateMessageService = privateMessageService;
             _collectingGameService = collectingGameService;
             _conventionSettings = conventionSettings;
@@ -205,7 +209,9 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
-                    await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"{_conventionSettings.ApiBaseUrl}Fursuits/Badges/{badge.Id}/Image")));
+
+                    var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
+                    await BotClient.SendPhotoAsync(ChatId, new FileToSend(badge.Id.ToString(), imageContent));
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -655,7 +661,9 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                             await ReplyAsync(
                                 $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
-                            await BotClient.SendPhotoAsync(ChatId, new FileToSend(new Uri($@"{_conventionSettings.ApiBaseUrl}Fursuits/Badges/{badge.Id}/Image")));
+
+                            var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
+                            await BotClient.SendPhotoAsync(ChatId, new FileToSend(badge.Id.ToString(), imageContent));
 
                             askTokenValue = () => AskAsync(
                                 $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",

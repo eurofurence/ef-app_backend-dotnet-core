@@ -37,6 +37,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
+        private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ICollectingGameService _collectingGameService;
         private readonly ConventionSettings _conventionSettings;
@@ -78,6 +79,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
+            IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository,
             IPrivateMessageService privateMessageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
@@ -93,6 +95,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
+            _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
             _privateMessageService = privateMessageService;
             _collectingGameService = collectingGameService;
             _conventionSettings = conventionSettings;
@@ -118,6 +121,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     _regSysAlternativePinAuthenticationProvider, 
                     _pushNotificationChannelRepository,
                     _fursuitBadgeRepository,
+                    _fursuitBadgeImageRepository,
                     privateMessageService,
                     _collectingGameService,
                     _conventionSettings,
