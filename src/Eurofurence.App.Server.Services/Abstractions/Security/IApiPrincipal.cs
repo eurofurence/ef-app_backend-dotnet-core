@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Security
 {
@@ -10,5 +11,9 @@ namespace Eurofurence.App.Server.Services.Abstractions.Security
         bool IsAuthenticated { get; }
         string Uid { get; }
         string GivenName { get; }
+        string PrimarySid { get; }
+        string PrimaryGroupSid { get; }
+        string DisplayName { get; }
+        DateTime? AuthenticationValidUntilUtc { get; }
     }
 }

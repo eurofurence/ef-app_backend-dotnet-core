@@ -151,5 +151,17 @@ namespace Eurofurence.App.Server.Services.Security
             await _regSysAccessTokenRepository.InsertOneAsync(accessToken);
             return accessToken.Token;
         }
+
+        public AuthenticationResponse AuthorizeViaPrincipal(IApiPrincipal principal)
+        {
+            var result = new AuthenticationResponse()
+            {
+                Uid = principal.Uid,
+                Username = principal.DisplayName,
+                TokenValidUntil = principal.AuthenticationValidUntilUtc ?? DateTime.MinValue
+            };
+
+            return result;
+        }
     }
 }

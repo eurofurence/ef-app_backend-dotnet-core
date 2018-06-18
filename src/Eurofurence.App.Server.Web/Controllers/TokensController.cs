@@ -36,18 +36,11 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpGet("WhoAmI")]
         [Authorize("OAuth-AllAuthenticated")]
-        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(AuthenticationResponse), 200)]
         [ProducesResponseType(403)]
-        public string GetWhoAmIInfo()
+        public AuthenticationResponse GetWhoAmIInfo()
         {
-            var message = new List<string>();
-
-            message.Add("What your authorization tells me about you:");
-
-            foreach (var claim in _apiPrincipal.Claims)
-                message.Add($"{claim.Key} = {claim.Value}");
-
-            return string.Join("\n", message.ToArray());
+            return _authenticationHandler.AuthorizeViaPrincipal(_apiPrincipal);
         }
     }
 }
