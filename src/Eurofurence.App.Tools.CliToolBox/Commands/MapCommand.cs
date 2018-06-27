@@ -27,6 +27,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             command.HelpOption("-?");
             command.Command("loadImage", loadImageCommand);
             command.Command("list", listCommand);
+            command.Command("create", createCommand);
+            command.Command("update", updateCommand);
         }
 
         private void listCommand(CommandLineApplication command)
