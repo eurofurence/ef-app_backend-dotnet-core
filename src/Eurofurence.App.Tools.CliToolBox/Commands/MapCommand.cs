@@ -49,6 +49,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var id = Guid.NewGuid();
                 var record = new MapRecord()
                 {
+                    Id = id,
                     Description = id.ToString(),
                     IsBrowseable = false,
                     Entries = new List<MapEntryRecord>()
