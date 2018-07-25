@@ -29,7 +29,20 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             command.Command("list", listCommand);
             command.Command("create", createCommand);
             command.Command("update", updateCommand);
+            command.Command("delete", deleteCommand);
+            command.Command("resetStorageDelta", resetStorageDeltaCommand);
         }
+
+        private void resetStorageDeltaCommand(CommandLineApplication command)
+        {
+            command.OnExecute(() =>
+            {
+                _mapService.ResetStorageDeltaAsync().Wait();
+                return 0;
+            });
+
+        }
+
 
         private void listCommand(CommandLineApplication command)
         {
@@ -138,6 +151,35 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 {
                     Console.WriteLine("Map record has not changed.");
                 }
+
+                return 0;
+            });
+        }
+
+        private void deleteCommand(CommandLineApplication command)
+        {
+            command.HelpOption("-?");
+            var idOption = command.Option("-id", "Guid of the map entry", CommandOptionType.SingleValue);
+
+            command.OnExecute(() =>
+            {
+                if (!idOption.HasValue())
+                {
+                    command.Out.WriteLine("-id is required");
+                    return -1;
+                }
+
+                var map = _mapService.FindOneAsync(Guid.Parse(idOption.Value())).Result;
+
+                if (map == null)
+                {
+                    command.Out.WriteLine($"No map with id {idOption.Value()} found.");
+                    return -1;
+                }
+                command.Out.WriteLine($"Deleting map {map.Id} (Description={map.Description}, IsBrowseable={map.IsBrowseable})");
+
+                _mapService.DeleteOneAsync(map.Id).Wait();
+                _imageService.DeleteOneAsync(map.ImageId).Wait();
 
                 return 0;
             });
