@@ -49,7 +49,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="Record"></param>
         /// <param name="Id"></param>
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull][HttpPut("{Id}")]
@@ -71,7 +71,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="Record"></param>
         /// <returns>Id of the newly created knowledge entry</returns>
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(typeof(Guid), 200)]
         [HttpPost("")]
         public async Task<ActionResult> PostKnowledgeEntryAsync(
@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a knowledge entry.
         /// </summary>
         /// <param name="Id"></param>
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{Id}")]

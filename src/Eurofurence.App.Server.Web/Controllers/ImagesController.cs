@@ -63,7 +63,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [HttpPut("{Id}/Content")]
         public async Task<ActionResult> PutImageContentAsync([FromRoute] Guid id, [FromBody] string ImageContent)
         {
