@@ -67,6 +67,9 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public Guid? PosterImageId { get; set; }
 
+        [DataMember]
+        public string[] Tags { get; set; }
+        
         [IgnoreDataMember]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }
 

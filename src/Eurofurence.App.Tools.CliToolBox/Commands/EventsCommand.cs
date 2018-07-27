@@ -36,6 +36,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             command.HelpOption("-?|-h|--help");
             command.Command("importCsvFile", importCsvFileCommand);
             command.Command("importImage", importImageCommand);
+            command.Command("setTags", setTagsCommand);
             command.Command("clear", clearCommand);
         }
 
@@ -52,8 +53,48 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             });
         }
 
+        private void setTagsCommand(CommandLineApplication command)
+        {
+            command.HelpOption("-?|-h|--help");
+
+            var eventIdOption = command.Option("-eventId", "Event Id", CommandOptionType.SingleValue);
+            var tags = command.Option("-tags", "Tags (Comma-Delimited)", CommandOptionType.SingleValue);
+
+            command.OnExecute(() =>
+            {
+                var importer = new ImageImporter(_imageService, _eventService);
+                ImageImporter.PurposeEnum purpose = ImageImporter.PurposeEnum.Banner;
+                Guid eventId = Guid.Empty;
+
+                if (!Guid.TryParse(eventIdOption.Value(), out eventId))
+                {
+                    command.Out.WriteLine("Invalid value for -purpose or -eventId");
+                    return -1;
+                }
+
+                var @event = _eventService.FindOneAsync(eventId).Result;
+
+                if (@event == null)
+                {
+                    command.Out.WriteLine($"Event {eventId} not found.");
+                    return -1;
+                }
+
+                @event.Tags = tags.Value().Split(',');
+                @event.Touch();
+
+                _eventService.ReplaceOneAsync(@event).Wait();
+
+                command.Out.WriteLine($"Event {eventId} ({@event.Title} - {@event.SubTitle}) updated with tags: {String.Join(", ", @event.Tags)}");
+
+                return 0;
+            });
+        }
+
         private void importImageCommand(CommandLineApplication command)
         {
+            command.HelpOption("-?|-h|--help");
+
             var eventIdOption = command.Option("-eventId", "Event Id", CommandOptionType.SingleValue);
             var imagePathOption = command.Option("-imagePath", "ImagePath", CommandOptionType.SingleValue);
             var purposeOption = command.Option("-purpose", "Banner or Poster", CommandOptionType.SingleValue);
@@ -86,6 +127,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void importCsvFileCommand(CommandLineApplication command)
         {
+            command.HelpOption("-?|-h|--help");
+
             var inputPathOption = command.Option("-inputPath", "Csv file to import", CommandOptionType.SingleValue);
             var fakeStartDate = command.Option("-fakeStartDate", "Fake start date (first con day) to shift all content to", CommandOptionType.SingleValue);
 
