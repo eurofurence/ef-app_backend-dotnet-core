@@ -129,6 +129,16 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                     .Replace("@", "")
                     .Replace("https://t.me/", "")
                     .Replace("https://telegram.me/", "");
+
+            dealerRecord.ShortDescription = ConvertKnownUnicodeCharacters(dealerRecord.ShortDescription);
+            dealerRecord.AboutTheArtistText = ConvertKnownUnicodeCharacters(dealerRecord.AboutTheArtistText);
+            dealerRecord.AboutTheArtText = ConvertKnownUnicodeCharacters(dealerRecord.AboutTheArtText);
+            dealerRecord.ArtPreviewCaption = ConvertKnownUnicodeCharacters(dealerRecord.ArtPreviewCaption);
+        }
+
+        private string ConvertKnownUnicodeCharacters(string input)
+        {
+            return input.Replace("\u2028", "\n");
         }
 
         private void ImportLinks(DealerRecord dealerRecord, string websiteUrls)
