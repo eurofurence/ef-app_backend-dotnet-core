@@ -259,7 +259,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 var queries = new[]
                 {
                     QueryEvents(queryString),
-                    QueryFursuitBadges(queryString)
+                  //  QueryFursuitBadges(queryString)
                   //  QueryDealers(queryString)
                 };
 
