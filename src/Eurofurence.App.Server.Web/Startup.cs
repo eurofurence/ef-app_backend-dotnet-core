@@ -91,7 +91,7 @@ namespace Eurofurence.App.Server.Web
                 });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
+            
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v2", new Info
@@ -145,6 +145,11 @@ namespace Eurofurence.App.Server.Web
                             ClockSkew = TimeSpan.FromSeconds(0)
                        };
                 });
+
+            services.Configure<LoggerFilterOptions>(options =>
+            {
+                options.MinLevel = LogLevel.Trace;
+            });
 
             var builder = new ContainerBuilder();
             builder.Populate(services);
