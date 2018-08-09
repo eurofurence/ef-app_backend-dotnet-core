@@ -7,6 +7,7 @@ using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FluentScheduler;
 using Microsoft.Extensions.Configuration;
@@ -19,17 +20,20 @@ namespace Eurofurence.App.Server.Web.Jobs
     public class UpdateNewsJob : IJob
     {
         private readonly IAnnouncementService _announcementService;
+        private readonly IImageService _imageService;
         private readonly IPushEventMediator _pushEventMediator;
         private readonly IConfiguration _configuration;
         private readonly ILogger _logger;
 
         public UpdateNewsJob(
             IAnnouncementService announcementService, 
+            IImageService imageService,
             IPushEventMediator pushEventMediator,
             [KeyFilter("updateNews")] IConfiguration configuration,
             ILoggerFactory loggerFactory)
         {
             _announcementService = announcementService;
+            _imageService = imageService;
             _pushEventMediator = pushEventMediator;
             _configuration = configuration;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -77,10 +81,11 @@ namespace Eurofurence.App.Server.Web.Jobs
                     Area = j["news"]["type"].Value<string>().UppercaseFirst(),
                     Author = j["news"]?["department"]?.Value<string>().UppercaseFirst() ?? "Eurofurence",
                     Title = j["news"]["title"].Value<string>(),
-                    Content = j["news"]["message"].Value<string>().RemoveMarkdown(),
+                    Content = j["news"]["message"].Value<string>(),
                     ValidFromDateTimeUtc = unixReference.AddSeconds(j["date"].Value<double>()).ToUniversalTime(),
                     ValidUntilDateTimeUtc = unixReference
                         .AddSeconds(j["news"]["valid_until"].Value<double>()).ToUniversalTime(),
+                    ImageId = GetImageIdForEntryAsync(j["id"].Value<string>(), j["data"]?["imagedata"]?.Value<string>()).Result
                 },
                 Type = j["news"]["type"].Value<string>()
             }).ToList();
@@ -100,6 +105,7 @@ namespace Eurofurence.App.Server.Web.Jobs
                 .Map(s => s.Author, t => t.Author)
                 .Map(s => s.Title, t => t.Title)
                 .Map(s => s.Content, t => t.Content)
+                .Map(s => s.ImageId, t => t.ImageId)
                 .Map(s => s.ValidUntilDateTimeUtc, t => t.ValidUntilDateTimeUtc)
                 .Map(s => s.ValidFromDateTimeUtc, t => t.ValidFromDateTimeUtc);
 
@@ -123,6 +129,17 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
 
             _logger.LogDebug("Job finished");
+        }
+
+        private async Task<Guid?> GetImageIdForEntryAsync(string reference, string imageDataBase64)
+        {
+            reference = $"announcements:{reference}";
+
+            if (string.IsNullOrWhiteSpace(imageDataBase64)) return null;
+            var imageBytes = Convert.FromBase64String(imageDataBase64);
+
+            var imageId = await _imageService.InsertOrUpdateImageAsync(reference, imageBytes);
+            return imageId;
         }
     }
 }

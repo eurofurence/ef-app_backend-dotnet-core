@@ -33,5 +33,8 @@ namespace Eurofurence.App.Domain.Model.Announcements
         [DataMember]
         [Required]
         public string Content { get; set; }
+
+        [DataMember]
+        public Guid? ImageId { get; set; }
     }
 }
