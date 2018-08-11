@@ -24,10 +24,10 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _firebaseChannelManager.PushAnnouncementNotificationAsync(announcement);
         }
 
-        public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
+        public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage, Guid relatedId)
         {
             await _wnsChannelManager.PushPrivateMessageNotificationAsync(recipientUid, toastTitle, toastMessage);
-            await _firebaseChannelManager.PushPrivateMessageNotificationAsync(recipientUid, toastTitle, toastMessage);
+            await _firebaseChannelManager.PushPrivateMessageNotificationAsync(recipientUid, toastTitle, toastMessage, relatedId);
         }
 
         public async Task PushSyncRequestAsync()

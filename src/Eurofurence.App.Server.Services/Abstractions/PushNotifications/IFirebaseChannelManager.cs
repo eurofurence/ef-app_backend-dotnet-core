@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
@@ -11,6 +12,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 
         Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement);
 
-        Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage);
+        Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage, Guid relatedId);
     }
 }

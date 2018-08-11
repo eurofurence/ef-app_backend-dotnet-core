@@ -67,7 +67,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
             await InsertOneAsync(entity);
             await _pushEventMediator.PushPrivateMessageNotificationAsync(
-                request.RecipientUid, request.ToastTitle, request.ToastMessage);
+                request.RecipientUid, request.ToastTitle, request.ToastMessage, entity.Id);
 
             return entity.Id;
         }

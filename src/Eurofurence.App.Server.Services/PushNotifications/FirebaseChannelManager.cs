@@ -42,7 +42,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     {
                         Event = "Announcement",
                         announcement.Title,
-                        Text = announcement.Content
+                        Text = announcement.Content,
+                        RelatedId = announcement.Id
                     },
                     to = $"/topics/{_configuration.TargetTopicAndroid}"
                 }), 
@@ -65,7 +66,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             );
         }
 
-        public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
+        public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage, Guid relatedId)
         {
             var recipients = await GetRecipientChannelAsync(recipientUid);
 
@@ -96,7 +97,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         {
                             Event = "Notification",
                             Title = toastTitle,
-                            Message = toastMessage
+                            Message = toastMessage,
+                            RelatedId = relatedId
                         },
                         to = recipient.DeviceId
                     });
