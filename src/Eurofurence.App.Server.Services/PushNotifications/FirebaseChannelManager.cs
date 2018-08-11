@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
@@ -41,8 +42,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     data = new
                     {
                         Event = "Announcement",
-                        announcement.Title,
-                        Text = announcement.Content,
+                        Title = announcement.Title.RemoveMarkdown(),
+                        Text = announcement.Content.RemoveMarkdown(),
                         RelatedId = announcement.Id
                     },
                     to = $"/topics/{_configuration.TargetTopicAndroid}"
@@ -55,8 +56,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         announcement_id = announcement.Id,
                     },
                     notification = new {
-                        title = announcement.Title,
-                        body = announcement.Content,
+                        title = announcement.Title.RemoveMarkdown(),
+                        body = announcement.Content.RemoveMarkdown(),
                         sound = "notification_default.caf"
                     },
                     content_available = true,
