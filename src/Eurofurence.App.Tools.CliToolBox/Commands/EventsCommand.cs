@@ -63,7 +63,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             command.OnExecute(() =>
             {
                 var importer = new ImageImporter(_imageService, _eventService);
-                ImageImporter.PurposeEnum purpose = ImageImporter.PurposeEnum.Banner;
                 Guid eventId = Guid.Empty;
 
                 if (!Guid.TryParse(eventIdOption.Value(), out eventId))

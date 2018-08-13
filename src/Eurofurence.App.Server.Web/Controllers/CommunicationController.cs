@@ -47,6 +47,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     `ReadDateTimeUtc` value of the first call.
         /// </remarks>
         /// <param name="MessageId">`Id` of the message to mark as read</param>
+        /// <param name="IsRead">boolean, expected to be 'true' always</param>
         /// <returns>The current timestamp on the server that will be persisted in the messages `ReadDateTimeUtc` property.</returns>
         /// <response code="400">`MessageId` is invalid or not accessible by the user.</response>
         [Authorize(Roles = "Attendee")]
