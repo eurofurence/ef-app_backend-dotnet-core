@@ -212,8 +212,7 @@ namespace Eurofurence.App.Server.Web
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            IApplicationLifetime appLifetime,
-            IServiceProvider serviceProvider)
+            IApplicationLifetime appLifetime)
         {
             var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();
 
@@ -243,7 +242,7 @@ namespace Eurofurence.App.Server.Web
                 loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
             }
 
-            var cgc = serviceProvider.GetService<CollectionGameConfiguration>();
+            var cgc = app.ApplicationServices.GetService<CollectionGameConfiguration>();
             loggerConfiguration
                 .WriteTo
                 .Logger(lc =>
@@ -292,7 +291,7 @@ namespace Eurofurence.App.Server.Web
             if (env.IsProduction())
             {
                 _logger.LogDebug("Starting JobManager to run jobs");
-                JobManager.JobFactory = new ServiceProviderJobFactory(serviceProvider);
+                JobManager.JobFactory = new ServiceProviderJobFactory(app.ApplicationServices);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
             }
 
