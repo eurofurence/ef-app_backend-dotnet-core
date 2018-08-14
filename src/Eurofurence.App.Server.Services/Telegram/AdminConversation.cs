@@ -245,6 +245,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         {
             Func<Task> c1 = null, c2 = null, c3 = null, c4 = null;
             var title = "Send Message";
+            var requesterUid = $"Telegram:@{_user.Username}";
 
             c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
@@ -302,7 +303,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     _logger.LogInformation(
                                         LogEvents.Audit,
                                         "{requesterUid} sent a PM {messsageId} to {recipientUid} via Telegram Bot",
-                                        $"Telegram:@{_user.Username}", messageId, recipientUid);
+                                        requesterUid, messageId, recipientUid);
 
                                     await ReplyAsync("Message sent.");
                                 }, "Send=*send", "Cancel=/cancel");
