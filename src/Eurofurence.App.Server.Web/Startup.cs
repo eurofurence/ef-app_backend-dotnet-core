@@ -32,7 +32,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
-using Serilog.Configuration;
+using Serilog.Context;
 using Serilog.Events;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.Swagger;
@@ -230,6 +230,7 @@ namespace Eurofurence.App.Server.Web
 
                 AWSCredentials credentials =
                     new BasicAWSCredentials(Configuration["aws:accessKey"], Configuration["aws:secret"]);
+
                 IAmazonCloudWatchLogs client = new AmazonCloudWatchLogsClient(credentials, RegionEndpoint.EUCentral1);
                 var options = new CloudWatchSinkOptions
                 {
@@ -247,7 +248,10 @@ namespace Eurofurence.App.Server.Web
                 .Logger(lc =>
                     lc.Filter
                         .ByIncludingOnly($"EventId.Id = {LogEvents.Audit.Id}")
-                        .WriteTo.File(Configuration["auditLog"], LogEventLevel.Verbose)
+                        .WriteTo.File(Configuration["auditLog"], 
+                            restrictedToMinimumLevel: LogEventLevel.Verbose,
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}"
+                        )
                 );
 
             var cgc = app.ApplicationServices.GetService<CollectionGameConfiguration>();
@@ -276,6 +280,17 @@ namespace Eurofurence.App.Server.Web
 
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
+
+            app.Use(async (context, next) =>
+            {
+                using (LogContext.PushProperty("IPAddress",
+                    context.Request.Headers.ContainsKey("X-Forwarded-For") ?
+                        context.Request.Headers["X-Forwarded-For"].ToString()
+                        : context.Connection.RemoteIpAddress.ToString()))
+                {
+                    await next();
+                }
+            });
 
             app.UseMvc(routes =>
             {
