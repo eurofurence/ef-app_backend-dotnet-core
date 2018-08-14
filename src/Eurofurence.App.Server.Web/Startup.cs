@@ -242,6 +242,14 @@ namespace Eurofurence.App.Server.Web
                 loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
             }
 
+            loggerConfiguration
+                .WriteTo
+                .Logger(lc =>
+                    lc.Filter
+                        .ByIncludingOnly($"EventId.Name = '{LogEvents.Audit.Name}'")
+                        .WriteTo.File(Configuration["auditLog"], LogEventLevel.Verbose)
+                );
+
             var cgc = app.ApplicationServices.GetService<CollectionGameConfiguration>();
             loggerConfiguration
                 .WriteTo
@@ -252,8 +260,9 @@ namespace Eurofurence.App.Server.Web
                             a.Properties["SourceContext"].ToString() == $@"""{typeof(CollectingGameService)}""")
                         .WriteTo.File(cgc.LogFile, (LogEventLevel) cgc.LogLevel)
                 );
-                
+
             Log.Logger = loggerConfiguration.CreateLogger();
+
             loggerFactory
                 .WithFilter(new FilterLoggerSettings
                 {
@@ -264,7 +273,6 @@ namespace Eurofurence.App.Server.Web
             
             _logger = loggerFactory.CreateLogger(GetType());
             _logger.LogInformation($"Logging commences");
-
 
             appLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
