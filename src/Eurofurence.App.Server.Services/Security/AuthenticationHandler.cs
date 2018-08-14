@@ -70,7 +70,7 @@ namespace Eurofurence.App.Server.Services.Security
 
             if (authenticationResult == null)
             {
-                _logger.LogWarning("Authentication failed for {Username} {RegNo}", request.Username, request.RegNo);
+                _logger.LogWarning(LogEvents.Audit, "Authentication failed for {Username} {RegNo}", request.Username, request.RegNo);
                 return null;
             }
 
@@ -131,7 +131,7 @@ namespace Eurofurence.App.Server.Services.Security
                 Username = $"{authenticationResult.Username} ({authenticationResult.RegNo})"
             };
 
-            _logger.LogInformation("Authentication successful for {Username} {RegNo} via {Source}",
+            _logger.LogInformation(LogEvents.Audit, "Authentication successful for {Username} {RegNo} via {Source}",
                 authenticationResult.Username, authenticationResult.RegNo, authenticationResult.Source);
 
             return response;

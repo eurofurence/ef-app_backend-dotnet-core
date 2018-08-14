@@ -246,7 +246,7 @@ namespace Eurofurence.App.Server.Web
                 .WriteTo
                 .Logger(lc =>
                     lc.Filter
-                        .ByIncludingOnly($"EventId.Name = '{LogEvents.Audit.Name}'")
+                        .ByIncludingOnly($"EventId.Id = {LogEvents.Audit.Id}")
                         .WriteTo.File(Configuration["auditLog"], LogEventLevel.Verbose)
                 );
 
@@ -255,9 +255,7 @@ namespace Eurofurence.App.Server.Web
                 .WriteTo
                 .Logger(lc =>
                     lc.Filter
-                        .ByIncludingOnly(a =>
-                            a.Properties.ContainsKey("SourceContext") &&
-                            a.Properties["SourceContext"].ToString() == $@"""{typeof(CollectingGameService)}""")
+                        .ByIncludingOnly($"EventId.Id = {LogEvents.CollectionGame.Id}")
                         .WriteTo.File(cgc.LogFile, (LogEventLevel) cgc.LogLevel)
                 );
 

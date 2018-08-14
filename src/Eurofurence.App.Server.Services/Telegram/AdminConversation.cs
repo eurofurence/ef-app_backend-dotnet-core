@@ -288,15 +288,21 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         return;
                                     }
 
-                                    await _privateMessageService.SendPrivateMessageAsync(new SendPrivateMessageRequest()
+                                    var recipientUid = $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}";
+                                    var messageId = await _privateMessageService.SendPrivateMessageAsync(new SendPrivateMessageRequest()
                                     {
                                         AuthorName = $"{from}",
-                                        RecipientUid = $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}",
+                                        RecipientUid = recipientUid,
                                         Message = body,
                                         Subject = subject,
                                         ToastTitle = "You received a new personal message",
                                         ToastMessage = "Open the Eurofurence App to read it."
                                     });
+
+                                    _logger.LogInformation(
+                                        LogEvents.Audit,
+                                        "{requesterUid} sent a PM {messsageId} to {recipientUid} via Telegram Bot",
+                                        $"Telegram:@{_user.Username}", messageId, recipientUid);
 
                                     await ReplyAsync("Message sent.");
                                 }, "Send=*send", "Cancel=/cancel");
@@ -722,7 +728,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                             c3 = () => AskAsync(
                                 $"*{title} - Step 3 of 3*\nPlease confirm:\n\nThe badge no. is *{regNoWithLetter}*\n\nThe nickname on the badge is *{nameOnBadge.EscapeMarkdown()}*" +
-                                "\n\n*You have verified the identity of the attendee by matching their real name on badge against a legal form of identification.*",
+                                "\n\n*You have verified the identity of the attendee by matching their real name against a legal form of identification.*",
                                 async c3a =>
                                 {
                                     if (c3a.Equals("*restart", StringComparison.CurrentCultureIgnoreCase))
@@ -754,7 +760,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     response.AppendLine($"User can login to the Eurofurence Apps (mobile devices and web) with their registration number (*{result.RegNo}*) and PIN (*{result.Pin}*) as their password. They can type in any username, it does not matter.");
                                     response.AppendLine($"\n_Generation/Access of this PIN by {requesterUid.EscapeMarkdown()} has been recorded._");
 
-                                    _logger.LogInformation("@{username} created PIN for {regNo} {nameOnBadge}", _user.Username, result.RegNo, result.NameOnBadge);
+                                    _logger.LogInformation(LogEvents.Audit, "{requesterUid} created PIN for {regNo} {nameOnBadge}", requesterUid, result.RegNo, result.NameOnBadge);
 
                                     await ReplyAsync(response.ToString());
                                 }, "Confirm=*confirm","Restart=*restart","Cancel=/cancel");

@@ -9,6 +9,7 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Security;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
@@ -53,6 +54,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
         public async Task<FursuitParticipationInfo[]> GetFursuitParticipationInfoForOwnerAsync(string ownerUid)
         {
             using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame,
                 "Benchmark: GetFursuitParticipationInfoForOwnerAsync({ownerUid}): {time} ms",
                 ownerUid, time.TotalMilliseconds)))
             {
@@ -81,6 +83,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
         public async Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync(string playerUid, string playerName)
         {
             using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame,
                 "Benchmark: GetPlayerParticipationInfoForPlayerAsync({playerUid}): {time} ms",
                 playerUid, time.TotalMilliseconds)))
             {
@@ -143,6 +146,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
         public async Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync(string playerUid)
         {
             using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame,
                 "Benchmark: GetPlayerCollectionEntriesForPlayerAsync({playerUid}): {time} ms",
                 playerUid, time.TotalMilliseconds)))
             {
@@ -189,6 +193,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
         public async Task<IResult> RegisterTokenForFursuitBadgeForOwnerAsync(string ownerUid, Guid fursuitBadgeId, string tokenValue)
         {
             using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame,
                 "Benchmark: RegisterTokenForFursuitBadgeForOwnerAsync({ownerUid}, {fursuitBadgeId},  {tokenValue}): {time} ms",
                 ownerUid, fursuitBadgeId, tokenValue, time.TotalMilliseconds)))
             {
@@ -200,14 +205,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         badge => badge.OwnerUid == ownerUid && badge.Id == fursuitBadgeId);
                     if (fursuitBadge == null)
                     {
-                        _logger.LogDebug("Failed RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {reason}", ownerUid, "INVALID_FURSUIT_BADGE_ID");
+                        _logger.LogDebug(LogEvents.CollectionGame, "Failed RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {reason}", ownerUid, "INVALID_FURSUIT_BADGE_ID");
                         return Result.Error("INVALID_FURSUIT_BADGE_ID", "Invalid fursuitBadgeId");
                     }
 
                     var token = await _tokenRepository.FindOneAsync(t => t.Value == tokenValue && t.IsLinked == false);
                     if (token == null)
                     {
-                        _logger.LogDebug("Failed RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {reason}", ownerUid, "INVALID_TOKEN");
+                        _logger.LogDebug(LogEvents.CollectionGame, "Failed RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {reason}", ownerUid, "INVALID_TOKEN");
                         return Result.Error("INVALID_TOKEN", "Invalid token");
                     }
 
@@ -215,7 +220,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         await _fursuitParticipationRepository.FindOneAsync(p => p.FursuitBadgeId == fursuitBadgeId);
                     if (existingParticipation != null)
                     {
-                        _logger.LogDebug("Failed RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {reason}", ownerUid, "EXISTING_PARTICIPATION");
+                        _logger.LogDebug(LogEvents.CollectionGame, "Failed RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {reason}", ownerUid, "EXISTING_PARTICIPATION");
                         return Result.Error("EXISTING_PARTICIPATION", "Fursuit already has a token assigned to it");
                     }
 
@@ -237,6 +242,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     await _fursuitParticipationRepository.InsertOneAsync(newParticipation);
 
                     _logger.LogInformation(
+                        LogEvents.CollectionGame,
                         "Successful RegisterTokenForFursuitBadgeForOwnerAsync for {ownerUid}: {fursuitName} now has token {tokenValue}",
                         ownerUid, fursuitBadge.Name, token.Value);
 
@@ -252,12 +258,13 @@ namespace Eurofurence.App.Server.Services.Fursuits
         public async Task<IResult<CollectTokenResponse>> CollectTokenForPlayerAsync(string playerUid, string tokenValue)
         {
             using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame,
                 "Benchmark: CollectTokenForPlayerAsync({playerUid}, {tokenValue}): {time} ms",
                     playerUid, tokenValue, time.TotalMilliseconds)))
             {
                 if (string.IsNullOrWhiteSpace(tokenValue))
                 {
-                    _logger.LogTrace("Rejected CollectTokenForPlayerAsync (empty token) for player {playerUid}", playerUid);
+                    _logger.LogTrace(LogEvents.CollectionGame, "Rejected CollectTokenForPlayerAsync (empty token) for player {playerUid}", playerUid);
                     return Result<CollectTokenResponse>.Error("EMPTY_TOKEN", "Token cannot be empty.");
                 }
 
@@ -276,13 +283,13 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             Karma = 0
                         };
 
-                        _logger.LogDebug("Creating initial PlayerParticipationRecord for {playerUid}", playerUid);
+                        _logger.LogDebug(LogEvents.CollectionGame, "Creating initial PlayerParticipationRecord for {playerUid}", playerUid);
                         await _playerParticipationRepository.InsertOneAsync(playerParticipation);
                     }
 
                     if (playerParticipation.IsBanned)
                     {
-                        _logger.LogDebug("Rejected CollectTokenForPlayerAsync for banned player {playerUid}", playerUid);
+                        _logger.LogDebug(LogEvents.CollectionGame, "Rejected CollectTokenForPlayerAsync for banned player {playerUid}", playerUid);
                         return Result<CollectTokenResponse>.Error("BANNED",
                             "You have been disqualified from the game.");
                     }
@@ -307,7 +314,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             {
                                 sb.Append(
                                     $" Careful - you will be disqualified after {playerParticipation.Karma + 10} more failed attempts.");
-                                _logger.LogInformation("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BAN_IMMINENT");
+                                _logger.LogInformation(LogEvents.CollectionGame, "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BAN_IMMINENT");
                                 return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BAN_IMMINENT", sb.ToString());
                             }
                             else
@@ -319,18 +326,18 @@ namespace Eurofurence.App.Server.Services.Fursuits
                                     $"*Player Banned:*\n{playerParticipation.PlayerUid} ({identity.Username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
 
                                 sb.Append(" You have been disqualified.");
-                                _logger.LogWarning("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BANNED");
+                                _logger.LogWarning(LogEvents.CollectionGame, "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_BANNED");
                                 return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BANNED", sb.ToString());
                             }
                         }
 
-                        _logger.LogDebug("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN");
+                        _logger.LogDebug(LogEvents.CollectionGame, "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN");
                         return Result<CollectTokenResponse>.Error("INVALID_TOKEN", sb.ToString());
                     }
 
                     if (playerParticipation.PlayerUid == fursuitParticipation.OwnerUid)
                     {
-                        _logger.LogDebug("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_OWN_SUIT");
+                        _logger.LogDebug(LogEvents.CollectionGame, "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_OWN_SUIT");
                         return Result<CollectTokenResponse>.Error("INVALID_TOKEN_OWN_SUIT",
                             "You cannot collect your own fursuits.");
                     }
@@ -338,7 +345,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     if (playerParticipation.CollectionEntries.Any(
                         a => a.FursuitParticipationUid == fursuitParticipation.Id))
                     {
-                        _logger.LogDebug("Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_ALREADY_COLLECTED");
+                        _logger.LogDebug(LogEvents.CollectionGame, "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}", playerUid, tokenValue, "INVALID_TOKEN_ALREADY_COLLECTED");
                         return Result<CollectTokenResponse>.Error("INVALID_TOKEN_ALREADY_COLLECTED",
                             "You have already collected this suit!");
                     }
@@ -371,6 +378,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         _fursuitBadgeRepository.FindOneAsync(a => a.Id == fursuitParticipation.FursuitBadgeId);
 
                     _logger.LogInformation(
+                        LogEvents.CollectionGame,
                         "Successful CollectTokenForPlayerAsync for {playerUid} using token {tokenValue} (now has {playerCollectionCount} catches): {fursuitName} ({fursuitCollectionCount} times caught)",
                         playerUid, tokenValue, playerParticipation.CollectionCount, fursuitBadge.Name,
                         fursuitParticipation.CollectionCount);
@@ -393,7 +401,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<IResult<PlayerScoreboardEntry[]>> GetPlayerScoreboardEntriesAsync(int top)
         {
-            using (new TimeTrap(time => _logger.LogTrace("Benchmark: GetPlayerScoreboardEntriesAsync({top}): {time} ms",
+            using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame, 
+                "Benchmark: GetPlayerScoreboardEntriesAsync({top}): {time} ms",
                 top, time.TotalMilliseconds)))
             {
                 var topPlayers = (await _playerParticipationRepository
@@ -421,7 +431,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<IResult<FursuitScoreboardEntry[]>> GetFursuitScoreboardEntriesAsync(int top)
         {
-            using (new TimeTrap(time => _logger.LogTrace("Benchmark: GetFursuitScoreboardEntriesAsync({top}): {time} ms",
+            using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame, 
+                "Benchmark: GetFursuitScoreboardEntriesAsync({top}): {time} ms",
                 top, time.TotalMilliseconds)))
             {
                 var topFursuits = (await _fursuitParticipationRepository
@@ -496,7 +508,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<IResult> UnbanPlayerAsync(string playerUid)
         {
-            using (new TimeTrap(time => _logger.LogTrace("Benchmark: RegisterTokenForFursuitBadgeForOwnerAsync({playerUid}): {time} ms",
+            using (new TimeTrap(time => _logger.LogTrace(
+                LogEvents.CollectionGame, 
+                "Benchmark: RegisterTokenForFursuitBadgeForOwnerAsync({playerUid}): {time} ms",
                 playerUid, time.TotalMilliseconds)))
             {
                 try
