@@ -131,8 +131,8 @@ namespace Eurofurence.App.Server.Services.Security
                 Username = $"{authenticationResult.Username} ({authenticationResult.RegNo})"
             };
 
-            _logger.LogInformation(LogEvents.Audit, "Authentication successful for {Username} {RegNo} via {Source}",
-                authenticationResult.Username, authenticationResult.RegNo, authenticationResult.Source);
+            _logger.LogInformation(LogEvents.Audit, "Authentication successful for {Username} {RegNo} ({Uid}) via {Source}",
+                authenticationResult.Username, authenticationResult.RegNo, response.Uid, authenticationResult.Source);
 
             return response;
         }
