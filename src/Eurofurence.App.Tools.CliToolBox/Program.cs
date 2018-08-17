@@ -68,7 +68,6 @@ namespace Eurofurence.App.Tools.CliToolBox
             var app = new CommandLineApplication();
 
             app.Name = "toolbox";
-            app.HelpOption("-?|-h|--help");
 
             if (args.Length == 0)
                 args = new[] {"-h"};
