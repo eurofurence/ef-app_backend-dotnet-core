@@ -110,6 +110,7 @@ namespace Eurofurence.App.Tools.CliToolBox
 
         public static void PrintAllHelpOptionsRecursively(CommandLineApplication app)
         {
+            app.ShowHelp();
             foreach (var subCommand in app.Commands)
             {
                 PrintAllHelpOptionsRecursively(subCommand);
