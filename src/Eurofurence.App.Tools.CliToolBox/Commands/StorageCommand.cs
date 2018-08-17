@@ -97,59 +97,5 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 return 0;
             });
         }
-
-        private void createReferenceCommand(CommandLineApplication command)
-        {
-            var internalReference = command.Argument("Internal Reference", "", false);
-
-            command.OnExecute(() =>
-            {
-                if (string.IsNullOrWhiteSpace(internalReference.Value))
-                {
-                    command.Out.WriteLine("Internal reference not specified");
-                    return -1;
-                }
-
-                var existingImage = _imageService.FindAllAsync(image => image.InternalReference == internalReference.Value).Result.SingleOrDefault();
-                if (existingImage != null)
-                {
-                    command.Out.WriteLine($"An image with reference {internalReference.Value} already exists.");
-                    return -1;
-                }
-
-                var id = _imageService.InsertOrUpdateImageAsync(internalReference.Value, _imageService.GeneratePlaceholderImage()).Result;
-                command.Out.WriteLine($"Created placeholder image {id} for reference {internalReference.Value}");
-
-                return 0;
-            });
-        }
-
-        private void deleteReferenceCommand(CommandLineApplication command)
-        {
-            var internalReference = command.Argument("Internal Reference", "", false);
-
-            command.OnExecute(() =>
-            {
-                if (string.IsNullOrWhiteSpace(internalReference.Value))
-                {
-                    command.Out.WriteLine("Internal reference not specified");
-                    return -1;
-                }
-
-                var existingImage = _imageService.FindAllAsync(image => image.InternalReference == internalReference.Value).Result.SingleOrDefault();
-                if (existingImage == null)
-                {
-                    command.Out.WriteLine($"An image with reference {internalReference.Value} could not be found.");
-                    return -1;
-                }
-
-                _imageService.DeleteOneAsync(existingImage.Id).Wait();
-                
-                command.Out.WriteLine($"Deleted image {existingImage.Id} for reference {internalReference.Value}");
-
-                return 0;
-            });
-        }
     }
-
 }
