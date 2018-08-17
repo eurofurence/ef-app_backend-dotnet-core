@@ -20,7 +20,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         public void Register(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             command.Command("createReference", createReferenceCommand);
             command.Command("deleteReference", deleteReferenceCommand);
             command.Command("resetStorageDelta", resetStorageDeltaCommand);
@@ -38,7 +37,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void createReferenceCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             var internalReference = command.Argument("Internal Reference", "", false);
 
             command.OnExecute(() =>
@@ -65,7 +63,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void deleteReferenceCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             var internalReference = command.Argument("Internal Reference", "", false);
 
             command.OnExecute(() =>

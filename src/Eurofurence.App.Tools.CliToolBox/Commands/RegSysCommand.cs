@@ -19,13 +19,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         public void Register(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             command.Command("createAccessToken", createAccessTokenCommand);
         }
 
         private void createAccessTokenCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             command.ShowInHelpText = true;
 
             var rolesArgument = command.Option("-grantRole", "Role to grant", CommandOptionType.MultipleValue);

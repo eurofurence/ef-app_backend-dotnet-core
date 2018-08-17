@@ -22,14 +22,12 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         public void Register(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             command.Command("create", createTokenCommand);
         }
 
         private void createTokenCommand(CommandLineApplication command)
         {
             command.Description = "Create a JWT bearer token for authentication against the API";
-            command.HelpOption("-?|-h|--help");
             command.ShowInHelpText = true;
 
             var userArgument = command.Argument("[user]", "Name of the user");

@@ -33,7 +33,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         public void Register(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
             command.Command("importCsvFile", importCsvFileCommand);
             command.Command("importImage", importImageCommand);
             command.Command("setTags", setTagsCommand);
@@ -55,8 +54,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void setTagsCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
-
             var eventIdOption = command.Option("-eventId", "Event Id", CommandOptionType.SingleValue);
             var tags = command.Option("-tags", "Tags (Comma-Delimited)", CommandOptionType.SingleValue);
 
@@ -92,8 +89,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void importImageCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
-
             var eventIdOption = command.Option("-eventId", "Event Id", CommandOptionType.SingleValue);
             var imagePathOption = command.Option("-imagePath", "ImagePath", CommandOptionType.SingleValue);
             var purposeOption = command.Option("-purpose", "Banner or Poster", CommandOptionType.SingleValue);
@@ -126,8 +121,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void importCsvFileCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?|-h|--help");
-
             var inputPathOption = command.Option("-inputPath", "Csv file to import", CommandOptionType.SingleValue);
             var fakeStartDate = command.Option("-fakeStartDate", "Fake start date (first con day) to shift all content to", CommandOptionType.SingleValue);
 

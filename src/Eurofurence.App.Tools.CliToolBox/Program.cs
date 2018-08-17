@@ -67,7 +67,6 @@ namespace Eurofurence.App.Tools.CliToolBox
 
             var app = new CommandLineApplication();
 
-
             app.Name = "toolbox";
             app.HelpOption("-?|-h|--help");
 
@@ -81,6 +80,14 @@ namespace Eurofurence.App.Tools.CliToolBox
                 app.Command(command.Name, command.Register);
             }
 
+            if (args.Length == 1 && args[0] == "--documentation")
+            {
+                PrintAllHelpOptionsRecursively(app);
+                return 0;
+            }
+
+            AddHelpOptionRecursively(app);
+
             try
             {
                 return app.Execute(args);
@@ -91,6 +98,23 @@ namespace Eurofurence.App.Tools.CliToolBox
             }
 
             return 0;
+        }
+
+        public static void AddHelpOptionRecursively(CommandLineApplication app)
+        {
+            app.HelpOption("-?|-h|--help");
+            foreach(var subCommand in app.Commands)
+            {
+                AddHelpOptionRecursively(subCommand);
+            }
+        }
+
+        public static void PrintAllHelpOptionsRecursively(CommandLineApplication app)
+        {
+            foreach (var subCommand in app.Commands)
+            {
+                PrintAllHelpOptionsRecursively(subCommand);
+            }
         }
     }
 }

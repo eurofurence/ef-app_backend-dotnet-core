@@ -24,7 +24,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         public void Register(CommandLineApplication command)
         {
-            command.HelpOption("-?");
             command.Command("loadImage", loadImageCommand);
             command.Command("list", listCommand);
             command.Command("create", createCommand);
@@ -56,7 +55,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void createCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?");
             command.OnExecute(() =>
             {
                 var id = Guid.NewGuid();
@@ -79,7 +77,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         private void updateCommand(CommandLineApplication command)
         {
 
-            command.HelpOption("-?");
             var idOption = command.Option("-id", "Guid of the map entry", CommandOptionType.SingleValue);
             var isBrowseableOption = command.Option("-isBrowseable", "", CommandOptionType.SingleValue);
             var descriptionOption = command.Option("-description", "", CommandOptionType.SingleValue);
@@ -158,7 +155,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void deleteCommand(CommandLineApplication command)
         {
-            command.HelpOption("-?");
             var idOption = command.Option("-id", "Guid of the map entry", CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
