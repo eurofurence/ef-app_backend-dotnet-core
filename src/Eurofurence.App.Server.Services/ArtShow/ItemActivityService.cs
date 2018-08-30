@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using Eurofurence.App.Domain.Model.Abstractions;
@@ -13,11 +14,12 @@ using Eurofurence.App.Server.Services.Abstractions.Communication;
 
 namespace Eurofurence.App.Server.Services.ArtShow
 {
-    public class ItemActivityService :IItemActivityService
+    public class ItemActivityService : IItemActivityService
     {
         private readonly ConventionSettings _conventionSettings;
         private readonly IEntityRepository<ItemActivityRecord> _itemActivityRepository;
         private readonly IPrivateMessageService _privateMessageService;
+        private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public ItemActivityService(
             ConventionSettings conventionSettings, 
@@ -88,15 +90,24 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
         public async Task ExecuteNotificationRunAsync()
         {
-            var notificationBundles = await BuildNotificationBundlesAsync();
-
-            var tasks = notificationBundles.Select(async bundle =>
+            try
             {
-                if (bundle.ItemsSold?.Count > 0) await SendItemsSoldNotificationAsync(bundle.RecipientUid, bundle.ItemsSold);
-                if (bundle.ItemsToAuction?.Count > 0) await SendItemsToAuctionNotificationAsync(bundle.RecipientUid, bundle.ItemsToAuction);
-            });
+                await _semaphore.WaitAsync();
 
-            await Task.WhenAll(tasks);
+                var notificationBundles = await BuildNotificationBundlesAsync();
+
+                var tasks = notificationBundles.Select(async bundle =>
+                {
+                    if (bundle.ItemsSold?.Count > 0) await SendItemsSoldNotificationAsync(bundle.RecipientUid, bundle.ItemsSold);
+                    if (bundle.ItemsToAuction?.Count > 0) await SendItemsToAuctionNotificationAsync(bundle.RecipientUid, bundle.ItemsToAuction);
+                });
+
+                await Task.WhenAll(tasks);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         private async Task SendItemsToAuctionNotificationAsync(string recipientUid, IList<ItemActivityRecord> items)
