@@ -81,7 +81,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             if (record.ContentHashSha1 != contentHash)
             {
-                return RedirectPermanent($"with-hash:{Convert.ToBase64String(Encoding.Default.GetBytes(record.ContentHashSha1))}");
+                return Redirect($"./with-hash:{Convert.ToBase64String(Encoding.Default.GetBytes(record.ContentHashSha1))}");
             }
 
             var content = await _imageService.GetImageContentByIdAsync(id);
