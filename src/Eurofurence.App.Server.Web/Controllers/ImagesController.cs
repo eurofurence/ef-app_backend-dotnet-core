@@ -5,10 +5,8 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Server.Web.Swagger;
-using System.IO;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using System.Text;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -61,7 +59,34 @@ namespace Eurofurence.App.Server.Web.Controllers
             var content = await _imageService.GetImageContentByIdAsync(id);
             return File(content, record.MimeType);
         }
+        
+        /// <summary>
+        ///     Retrieve a single image content using hash code (preferred, as it allows caching).
+        /// </summary>
+        /// <param name="id">id of the requested entity</param>
+        /// <param name="contentHashBase64Encoded">Base64 Encoded ContentHashSha1 of the requested entity</param>
+        [HttpGet("{Id}/Content/with-hash:{contentHashBase64Encoded}")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(byte[]), 200)]
+        [ResponseCache(Duration = 60 * 60 * 24, Location = ResponseCacheLocation.Any)]
+        public async Task<ActionResult> GetImageWithHashContentAsync(
+            [EnsureNotNull][FromRoute] Guid id,
+            [EnsureNotNull][FromRoute] string contentHashBase64Encoded)
+        {
+            var record = await _imageService.FindOneAsync(id);
+            if (record == null) return NotFound();
 
+            var contentHash =
+                Encoding.Default.GetString(Convert.FromBase64String(contentHashBase64Encoded));
+
+            if (record.ContentHashSha1 != contentHash)
+            {
+                return RedirectPermanent($"with-hash:{Convert.ToBase64String(Encoding.Default.GetBytes(record.ContentHashSha1))}");
+            }
+
+            var content = await _imageService.GetImageContentByIdAsync(id);
+            return File(content, record.MimeType);
+        }
 
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [HttpPut("{Id}/Content")]
