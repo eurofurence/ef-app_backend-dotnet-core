@@ -12,6 +12,9 @@ namespace Eurofurence.App.Domain.Model.Communication
         public string RecipientUid { get; set; }
 
         [DataMember]
+        public string SenderUid { get; set; }
+
+        [DataMember]
         [Required]
         public DateTime CreatedDateTimeUtc { get; set; }
 
