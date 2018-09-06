@@ -53,11 +53,12 @@ namespace Eurofurence.App.Server.Services.Communication
             return message.ReadDateTimeUtc;
         }
 
-        public async Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request)
+        public async Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request, string senderUid = "System")
         {
             var entity = new PrivateMessageRecord
             {
                 AuthorName = request.AuthorName,
+                SenderUid = senderUid,
                 RecipientUid = request.RecipientUid,
                 Message = request.Message,
                 Subject = request.Subject,
@@ -72,11 +73,9 @@ namespace Eurofurence.App.Server.Services.Communication
             return entity.Id;
         }
 
-        public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid messageId)
-        {
-            var message = await FindOneAsync(messageId);
-            if (message == null) return null;
 
+        private PrivateMessageStatus PrivateMessageRecordToStatus(PrivateMessageRecord message)
+        {
             return new PrivateMessageStatus()
             {
                 Id = message.Id,
@@ -85,6 +84,19 @@ namespace Eurofurence.App.Server.Services.Communication
                 ReceivedDateTimeUtc = message.ReceivedDateTimeUtc,
                 ReadDateTimeUtc = message.ReadDateTimeUtc
             };
+        }
+
+        public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid messageId)
+        {
+            var message = await FindOneAsync(messageId);
+            if (message == null) return null;
+
+            return PrivateMessageRecordToStatus(message);
+        }
+
+        public async Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForSenderAsync(string senderUid)
+        {
+            return await FindAllAsync(a => a.SenderUid == senderUid);
         }
     }
 }

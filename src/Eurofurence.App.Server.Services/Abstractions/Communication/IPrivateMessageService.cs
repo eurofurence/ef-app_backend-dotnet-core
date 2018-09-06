@@ -11,8 +11,10 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
 
         Task<DateTime?> MarkPrivateMessageAsReadAsync(Guid messageId, string recipientUid = null);
 
-        Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request);
+        Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request, string senderUid = "System");
 
         Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid messageId);
+
+        Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForSenderAsync(string senderUid);
     }
 }

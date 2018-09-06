@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -82,7 +83,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (Request == null) return BadRequest();
 
-            return Json(await _privateMessageService.SendPrivateMessageAsync(Request));
+            if (_apiPrincipal.IsAttendee)
+            {
+                Request.AuthorName = _apiPrincipal.GivenName;
+            }
+
+            return Json(await _privateMessageService.SendPrivateMessageAsync(Request, _apiPrincipal.Uid));
         }
 
 
@@ -95,6 +101,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var result = await _privateMessageService.GetPrivateMessageStatusAsync(MessageId);
             return result.Transient404(HttpContext);
+        }
+
+        [HttpGet("PrivateMessages/:sent-by-me")]
+        [Authorize]
+        [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
+        public Task<IEnumerable<PrivateMessageRecord>> GetMySentPrivateMessagesAsync()
+        {
+            return _privateMessageService.GetPrivateMessagesForSenderAsync(_apiPrincipal.Uid);
         }
 
     }
