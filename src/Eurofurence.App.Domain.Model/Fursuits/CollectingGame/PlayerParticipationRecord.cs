@@ -16,6 +16,8 @@ namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
         public int Karma { get; set; }
         public bool IsBanned { get; set; }
 
+        public DateTime? LastCollectionDateTimeUtc { get; set; }
+
         public int CollectionCount { get; set; }
         public IList<CollectionEntry> CollectionEntries { get; set; }
 

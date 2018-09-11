@@ -17,6 +17,42 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
             Collection = collection;
         }
 
+        SortDefinition<TEntity> BuildSortDefinitionFromFilterOptions(FilterOptions<TEntity> filterOptions)
+        {
+            if (filterOptions?.SortFields == null) return null;
+
+            var builder = new SortDefinitionBuilder<TEntity>();
+            SortDefinition<TEntity> sortDefinition = null;
+
+            foreach (var sortField in filterOptions.SortFields)
+            {
+                switch (sortField.Order)
+                {
+                    case FilterOptions<TEntity>.SortOrderEnum.Ascending:
+                        sortDefinition = sortDefinition?.Ascending(sortField.Field)
+                            ?? builder.Ascending(sortField.Field);
+                        break;
+                    case FilterOptions<TEntity>.SortOrderEnum.Descending:
+                        sortDefinition = sortDefinition?.Descending(sortField.Field)
+                            ?? builder.Descending(sortField.Field);
+                        break;
+                }
+            }
+
+            return sortDefinition;
+        }
+
+        FindOptions<TEntity, TEntity> BuildFindOptionsFromFilterOptions(FilterOptions<TEntity> filterOptions)
+        {
+            if (filterOptions == null) return null;
+
+            var findOptions = new FindOptions<TEntity, TEntity>();
+            findOptions.Sort = BuildSortDefinitionFromFilterOptions(filterOptions);
+            findOptions.Limit = filterOptions.MaxRecordCount;
+
+            return findOptions;
+        }
+
         public virtual async Task<TEntity> FindOneAsync(Guid id, bool includeDeletedRecords = false)
         {
             var results = await Collection.FindAsync(entity =>
@@ -31,7 +67,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
             return await results.FirstOrDefaultAsync();
         }
 
-        public virtual async Task<IEnumerable<TEntity>> FindAllAsync(IEnumerable<Guid> ids, bool includeDeletedRecords = false)
+        public virtual async Task<IEnumerable<TEntity>> FindAllAsync(
+            IEnumerable<Guid> ids, 
+            bool includeDeletedRecords = false,
+            FilterOptions<TEntity> filterOptions = null
+        )
         {
             var idList = ids.ToList();
             var filters = new List<FilterDefinition<TEntity>>();
@@ -43,19 +83,32 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
             filters.Add(new FilterDefinitionBuilder<TEntity>()
                 .Where(entity => idList.Contains(entity.Id)));
 
-            var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().And(filters));
+            var results = await Collection.FindAsync(
+                new FilterDefinitionBuilder<TEntity>().And(filters),
+                BuildFindOptionsFromFilterOptions(filterOptions)
+            );
+
             return await results.ToListAsync();
         }
 
-        public virtual async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter)
+        public virtual async Task<IEnumerable<TEntity>> FindAllAsync(
+            Expression<Func<TEntity, bool>> filter,
+            FilterOptions<TEntity> filterOptions = null
+        )
         {
-            var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().Where(filter));
+            var results = await Collection.FindAsync(
+                new FilterDefinitionBuilder<TEntity>().Where(filter),
+                BuildFindOptionsFromFilterOptions(filterOptions)
+            );
+
             return await results.ToListAsync();
         }
 
         public virtual async Task<IEnumerable<TEntity>> FindAllAsync(
             bool includeDeletedRecords = false,
-            DateTime? minLastDateTimeChangedUtc = null)
+            DateTime? minLastDateTimeChangedUtc = null,
+            FilterOptions<TEntity> filterOptions = null
+        )
         {
             var filters = new List<FilterDefinition<TEntity>>();
 
@@ -67,7 +120,10 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
                 filters.Add(new FilterDefinitionBuilder<TEntity>()
                     .Gte(a => a.LastChangeDateTimeUtc, minLastDateTimeChangedUtc.Value));
 
-            var results = await Collection.FindAsync(new FilterDefinitionBuilder<TEntity>().And(filters));
+            var results = await Collection.FindAsync(
+                new FilterDefinitionBuilder<TEntity>().And(filters),
+                BuildFindOptionsFromFilterOptions(filterOptions)
+            );
             return await results.ToListAsync();
         }
 

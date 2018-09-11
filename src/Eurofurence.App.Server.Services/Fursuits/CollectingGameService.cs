@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Results;
 using Eurofurence.App.Common.Utility;
+using Eurofurence.App.Domain.Model;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
@@ -358,6 +359,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         FursuitParticipationUid = fursuitParticipation.Id
                     });
 
+                    playerParticipation.LastCollectionDateTimeUtc = DateTime.UtcNow;
                     playerParticipation.CollectionCount = playerParticipation.CollectionEntries.Count;
                     await _playerParticipationRepository.ReplaceOneAsync(playerParticipation);
 
@@ -370,6 +372,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             PlayerParticipationUid = playerUid
                         });
 
+                        fursuitParticipation.LastCollectionDateTimeUtc = DateTime.UtcNow;
                         fursuitParticipation.CollectionCount = fursuitParticipation.CollectionEntries.Count;
                         await _fursuitParticipationRepository.ReplaceOneAsync(fursuitParticipation);
                     }
@@ -407,10 +410,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 top, time.TotalMilliseconds)))
             {
                 var topPlayers = (await _playerParticipationRepository
-                        .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0))
-                    .OrderByDescending(a => a.CollectionCount)
-                    .ThenBy(a => a.CollectionEntries.Max(b => b.EventDateTimeUtc))
-                    .Take(top)
+                        .FindAllAsync(
+                            a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0,
+                            new FilterOptions<PlayerParticipationRecord>()
+                                .SortDescending(a => a.CollectionCount)
+                                .SortAscending(a => a.LastCollectionDateTimeUtc)
+                                .Take(top)
+                            )                       
+                        )
                     .ToList();
 
                 var topPlayersUids = topPlayers.Select(a => a.PlayerUid);
@@ -437,10 +444,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 top, time.TotalMilliseconds)))
             {
                 var topFursuits = (await _fursuitParticipationRepository
-                        .FindAllAsync(a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0))
-                    .OrderByDescending(a => a.CollectionCount)
-                    .ThenBy(a => a.CollectionEntries.Max(b => b.EventDateTimeUtc))
-                    .Take(top)
+                        .FindAllAsync(
+                            a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0,
+                            new FilterOptions<FursuitParticipationRecord>()
+                                .SortDescending(a => a.CollectionCount)
+                                .SortAscending(a => a.LastCollectionDateTimeUtc)
+                                .Take(top)
+                                )
+                        )
                     .ToList();
 
                 var fursuitBadges =
@@ -547,6 +558,44 @@ namespace Eurofurence.App.Server.Services.Fursuits
             if (string.IsNullOrWhiteSpace(_collectionGameConfiguration.TelegramManagementChatId)) return;
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_collectionGameConfiguration.TelegramManagementChatId, message);
+        }
+
+        public async Task<IResult> RecalculateAsync()
+        {
+            await _semaphore.WaitAsync();
+
+            try
+            {
+                var playerParticipations = await _playerParticipationRepository.FindAllAsync();
+
+                foreach (var playerParticipation in playerParticipations)
+                {
+                    playerParticipation.CollectionCount = playerParticipation.CollectionEntries?.Count() ?? 0;
+                    playerParticipation.LastCollectionDateTimeUtc =
+                        (playerParticipation.CollectionCount == 0) ? (DateTime?)null
+                        : playerParticipation.CollectionEntries.Max(a => a.EventDateTimeUtc);
+
+                    await _playerParticipationRepository.ReplaceOneAsync(playerParticipation);
+                }
+
+                var fursuitParticipations = await _fursuitParticipationRepository.FindAllAsync();
+
+                foreach (var fursuitParticipation in fursuitParticipations)
+                {
+                    fursuitParticipation.CollectionCount = fursuitParticipation.CollectionEntries?.Count() ?? 0;
+                    fursuitParticipation.LastCollectionDateTimeUtc =
+                        (fursuitParticipation.CollectionCount == 0) ? (DateTime?)null
+                        : fursuitParticipation.CollectionEntries.Max(a => a.EventDateTimeUtc);
+
+                    await _fursuitParticipationRepository.ReplaceOneAsync(fursuitParticipation);
+                }
+
+                return Result.Ok;
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
     }
 }

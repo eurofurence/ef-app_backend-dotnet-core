@@ -28,6 +28,9 @@ namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
         public DateTime TokenRegistrationDateTimeUtc { get; set; }
 
         [DataMember]
+        public DateTime? LastCollectionDateTimeUtc { get; set; }
+
+        [DataMember]
         public int CollectionCount { get; set; }
 
         [IgnoreDataMember]

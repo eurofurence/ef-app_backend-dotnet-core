@@ -119,6 +119,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                     collection.Indexes.CreateOne(
                         Builders<PlayerParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount));
                     collection.Indexes.CreateOne(
+                        Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.LastCollectionDateTimeUtc));
+                    collection.Indexes.CreateOne(
                         Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.IsBanned));
                 });
 
@@ -132,6 +134,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                         new CreateIndexOptions() { Unique = true });
                     collection.Indexes.CreateOne(
                         Builders<FursuitParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount));
+                    collection.Indexes.CreateOne(
+                        Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.LastCollectionDateTimeUtc));
                 });
 
             Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder,

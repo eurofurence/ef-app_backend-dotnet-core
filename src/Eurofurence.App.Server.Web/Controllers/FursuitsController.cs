@@ -190,5 +190,15 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .AsActionResult();
         }
 
+
+        [Authorize(Roles = "Developer,System")]
+        [HttpPost("CollectingGame/Recalculate")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> RecalculateAsync()
+        {
+            return (await _collectingGameService.RecalculateAsync()).AsActionResult();
+        }
+
     }
 } 

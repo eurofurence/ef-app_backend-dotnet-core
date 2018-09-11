@@ -14,14 +14,17 @@ namespace Eurofurence.App.Domain.Model.Abstractions
 
         Task<IEnumerable<TEntity>> FindAllAsync(
             bool includeDeletedRecords = false,
-            DateTime? minLastDateTimeChangedUtc = null);
+            DateTime? minLastDateTimeChangedUtc = null,
+            FilterOptions<TEntity> filterOptions = null
+        );
 
         Task<IEnumerable<TEntity>> FindAllAsync(
             IEnumerable<Guid> ids,
-            bool includeDeletedRecords = false
+            bool includeDeletedRecords = false,
+            FilterOptions<TEntity> filterOptions = null
         );
 
-        Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter);
+        Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter, FilterOptions<TEntity> filterOptions = null);
         Task ReplaceOneAsync(TEntity entity);
         Task InsertOneAsync(TEntity entity);
         Task DeleteOneAsync(Guid id);
