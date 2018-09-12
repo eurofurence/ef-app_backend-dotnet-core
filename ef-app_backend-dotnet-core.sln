@@ -33,9 +33,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eurofurence.App.Tools.CliTo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{07D37E4D-3609-4732-8BED-7C3F69694CF0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eurofurence.App.Server.Services.Tests", "Eurofurence.App.Server.Services.Tests\Eurofurence.App.Server.Services.Tests.csproj", "{184B514D-8548-4C6A-9C52-A521051013CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eurofurence.App.Server.Services.Tests", "test\Eurofurence.App.Server.Services.Tests\Eurofurence.App.Server.Services.Tests.csproj", "{184B514D-8548-4C6A-9C52-A521051013CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eurofurence.App.Tests.Common", "Eurofurence.App.Tests.Common\Eurofurence.App.Tests.Common.csproj", "{94A3288D-4F78-4744-B8B2-135C772DBE26}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eurofurence.App.Tests.Common", "test\Eurofurence.App.Tests.Common\Eurofurence.App.Tests.Common.csproj", "{94A3288D-4F78-4744-B8B2-135C772DBE26}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
