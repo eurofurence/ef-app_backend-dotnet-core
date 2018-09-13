@@ -23,7 +23,7 @@ namespace Eurofurence.App.Server.Services.Tests
         private readonly IEntityRepository<PlayerParticipationRecord> _playerParticipationRepository;
         private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IEntityRepository<TokenRecord> _tokenRepository;
-
+        private readonly ICollectingGameService _collectingGameService;
         private const string INVALID_TOKEN = "INVALID-TOKEN";
 
         public CollectionGameServiceTests()
@@ -41,70 +41,66 @@ namespace Eurofurence.App.Server.Services.Tests
 
             _container = builder.Build();
 
+            _collectingGameService = _container.Resolve<ICollectingGameService>();
             _fursuitParticipationRepository = _container.Resolve<IEntityRepository<FursuitParticipationRecord>>();
             _playerParticipationRepository = _container.Resolve<IEntityRepository<PlayerParticipationRecord>>();
             _regSysIdentityRepository = _container.Resolve<IEntityRepository<RegSysIdentityRecord>>();
             _fursuitBadgeRepository = _container.Resolve<IEntityRepository<FursuitBadgeRecord>>();
             _tokenRepository = _container.Resolve<IEntityRepository<TokenRecord>>();
-
-            PopulateDemoData(_container).Wait();
         }
 
-        private async Task PopulateDemoData(IContainer container)
+        private async Task<RegSysIdentityRecord> CreateRegSysIdentityAsync()
         {
-
-            for (int i = 0; i < 20; i++)
+            var id = Guid.NewGuid();
+            var record = new RegSysIdentityRecord()
             {
-                await _regSysIdentityRepository.InsertOneAsync(new RegSysIdentityRecord()
-                {
-                    Id = Guid.NewGuid(),
-                    Uid = $"Test:{i}",
-                    Username = "$Test Attendee {i}",
-                    Roles = new[] { "Attendee" },
-                });
-            }
+                Id = id,
+                Uid = $"Test:{id}",
+                Username = $"Test Attendee {id}",
+                Roles = new[] { "Attendee" },
+            };
 
-
-            for (int i = 0; i < 20; i++)
-            {
-                await _fursuitBadgeRepository.InsertOneAsync(new FursuitBadgeRecord()
-                {
-                    Id = Guid.NewGuid(),
-                    OwnerUid = $"Test:{i}",
-                    Name = "Suit of attendee {i}"
-                });
-            }
-
-
-            for (int i = 0; i < 20; i++)
-            {
-                await _tokenRepository.InsertOneAsync(new TokenRecord()
-                {
-                    Id = Guid.NewGuid(),
-                    Value = $"TOKEN-{i}"
-                });
-            }
+            await _regSysIdentityRepository.InsertOneAsync(record);
+            return record;
         }
 
+        private async Task<FursuitBadgeRecord> CreateFursuitBadgeAsync(string ownerUid)
+        {
+            var record = new FursuitBadgeRecord()
+            {
+                Id = Guid.NewGuid(),
+                OwnerUid = ownerUid,
+                Name = $"Suit of attendee {ownerUid}"
+            };
+
+            await _fursuitBadgeRepository.InsertOneAsync(record);
+            return record;
+        }
+
+        private async Task<TokenRecord> CreateTokenAsync()
+        {
+            var id = Guid.NewGuid();
+            var record = new TokenRecord()
+            {
+                Id = id,
+                Value = id.ToString()
+            };
+
+            await _tokenRepository.InsertOneAsync(record);
+            return record;
+        }
 
         [Fact(DisplayName = "Token Registration: Valid scenario")]
         public async Task CollectingGameService_WhenRegisteringValidTokenForAFursuitBadge_ThenOperationsSuccessful()
         {
             var cgs = _container.Resolve<ICollectingGameService>();
 
-            var testUser = (await _regSysIdentityRepository.FindAllAsync()).First();
-            var testToken = (await _tokenRepository.FindAllAsync()).First();
-            var testUserFursuitBadge = await _fursuitBadgeRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
-            var testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
-
-            Assert.NotNull(testUser);
-            Assert.NotNull(testUserFursuitBadge);
-            Assert.Null(testUserFursuitParticipation);
-            Assert.NotNull(testToken);
-            Assert.False(testToken.IsLinked);
-
+            var testUser = await CreateRegSysIdentityAsync();
+            var testToken = await CreateTokenAsync();
+            var testUserFursuitBadge = await CreateFursuitBadgeAsync(ownerUid: testUser.Uid);
+            
             var result = await cgs.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, testUserFursuitBadge.Id, testToken.Value);
-            testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
+            var testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
             testToken = await _tokenRepository.FindOneAsync(testToken.Id);
 
             Assert.True(result.IsSuccessful);
@@ -118,17 +114,15 @@ namespace Eurofurence.App.Server.Services.Tests
         {
             var cgs = _container.Resolve<ICollectingGameService>();
 
-            var testUser = (await _regSysIdentityRepository.FindAllAsync()).First();
+            var testUser = await CreateRegSysIdentityAsync();
             var testToken = INVALID_TOKEN;
-            var testUserFursuitBadge = await _fursuitBadgeRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
-            var testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
-
+            var testUserFursuitBadge = await CreateFursuitBadgeAsync(ownerUid: testUser.Uid);
+            
             Assert.NotNull(testUser);
             Assert.NotNull(testUserFursuitBadge);
-            Assert.Null(testUserFursuitParticipation);
 
             var result = await cgs.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, testUserFursuitBadge.Id, testToken);
-            testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
+            var testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_TOKEN", result.ErrorCode);
@@ -140,10 +134,10 @@ namespace Eurofurence.App.Server.Services.Tests
         {
             var cgs = _container.Resolve<ICollectingGameService>();
 
-            var testUser = (await _regSysIdentityRepository.FindAllAsync()).First();
-            var testToken = (await _tokenRepository.FindAllAsync()).First();
+            var testUser = await CreateRegSysIdentityAsync();
+            var testToken = await CreateTokenAsync();
             var invalidFursuitBadgeId = Guid.NewGuid();
-
+            
             Assert.NotNull(testUser);
             Assert.NotNull(testToken);
 
@@ -154,7 +148,7 @@ namespace Eurofurence.App.Server.Services.Tests
         }
 
 
-        public struct TwoPlayersWithOneFursuitToken
+        private struct TwoPlayersWithOneFursuitToken
         {
             public RegSysIdentityRecord player1WithFursuit;
             public FursuitBadgeRecord player1FursuitBadge;
@@ -164,18 +158,19 @@ namespace Eurofurence.App.Server.Services.Tests
 
         private async Task<TwoPlayersWithOneFursuitToken> SetupTwoPlayersWithOneFursuitTokenAsync()
         {
-            var cgs = _container.Resolve<ICollectingGameService>();
             var result = new TwoPlayersWithOneFursuitToken();
 
-            var playerPool = (await _regSysIdentityRepository.FindAllAsync()).Take(2).ToList();
+            result.player1WithFursuit = await CreateRegSysIdentityAsync();
+            result.player1Token = await CreateTokenAsync();
+            result.player1FursuitBadge = await CreateFursuitBadgeAsync(result.player1WithFursuit.Uid);
 
-            result.player1WithFursuit = playerPool[0];
-            result.player1Token = (await _tokenRepository.FindAllAsync()).First();
-            result.player1FursuitBadge = await _fursuitBadgeRepository.FindOneAsync(a => a.OwnerUid == result.player1WithFursuit.Uid);
+            await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(
+                result.player1WithFursuit.Uid,
+                result.player1FursuitBadge.Id,
+                result.player1Token.Value
+            );
 
-            await cgs.RegisterTokenForFursuitBadgeForOwnerAsync(result.player1WithFursuit.Uid, result.player1FursuitBadge.Id, result.player1Token.Value);
-
-            result.player2WithoutFursuit = playerPool[1];
+            result.player2WithoutFursuit = await CreateRegSysIdentityAsync();
 
             return result;
         }
@@ -183,10 +178,12 @@ namespace Eurofurence.App.Server.Services.Tests
         [Fact(DisplayName = "Collect Token: Valid scenario")]
         public async Task CollectingGameService_WhenCollectingValidToken_ThenOperationIsSuccessful()
         {
-            var cgs = _container.Resolve<ICollectingGameService>();
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
-            var result = await cgs.CollectTokenForPlayerAsync(setup.player2WithoutFursuit.Uid, setup.player1Token.Value);
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                setup.player2WithoutFursuit.Uid, 
+                setup.player1Token.Value
+            );
 
             var player1FursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == setup.player1WithFursuit.Uid);
             var player2PlayerParticipation = await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == setup.player2WithoutFursuit.Uid);
@@ -201,11 +198,17 @@ namespace Eurofurence.App.Server.Services.Tests
         [Fact(DisplayName = "Collect Token: Collecting valid token twice fails")]
         public async Task CollectingGameService_WhenCollectingValidTokenMultipleTimes_ThenOperationFails()
         {
-            var cgs = _container.Resolve<ICollectingGameService>();
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
-            await cgs.CollectTokenForPlayerAsync(setup.player2WithoutFursuit.Uid, setup.player1Token.Value);
-            var result = await cgs.CollectTokenForPlayerAsync(setup.player2WithoutFursuit.Uid, setup.player1Token.Value);
+            await _collectingGameService.CollectTokenForPlayerAsync(
+                setup.player2WithoutFursuit.Uid, 
+                setup.player1Token.Value
+            );
+
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                setup.player2WithoutFursuit.Uid, 
+                setup.player1Token.Value
+            );
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_TOKEN_ALREADY_COLLECTED", result.ErrorCode);
@@ -215,10 +218,12 @@ namespace Eurofurence.App.Server.Services.Tests
         [Fact(DisplayName = "Collect Token: Collecting an invalid token fails")]
         public async Task CollectingGameService_WhenCollectingInvalidToken_ThenOperationFails()
         {
-            var cgs = _container.Resolve<ICollectingGameService>();
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
-            var result = await cgs.CollectTokenForPlayerAsync(setup.player2WithoutFursuit.Uid, INVALID_TOKEN);
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                setup.player2WithoutFursuit.Uid, 
+                INVALID_TOKEN
+            );
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_TOKEN", result.ErrorCode);
@@ -227,10 +232,12 @@ namespace Eurofurence.App.Server.Services.Tests
         [Fact(DisplayName = "Collect Token: Collecting your own suit fails")]
         public async Task CollectingGameService_WhenCollectingValidTokenOfYourOwnSuit_ThenOperationFails()
         {
-            var cgs = _container.Resolve<ICollectingGameService>();
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
-            var result = await cgs.CollectTokenForPlayerAsync(setup.player1WithFursuit.Uid, setup.player1Token.Value);
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                setup.player1WithFursuit.Uid,
+                setup.player1Token.Value
+            );
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_TOKEN_OWN_SUIT", result.ErrorCode);
@@ -239,15 +246,67 @@ namespace Eurofurence.App.Server.Services.Tests
         [Fact(DisplayName = "Collect Token: Collecting too many wrong tokens leads to a ban")]
         public async Task CollectingGameService_WhenCollectingManyInvalidTokenOfYourOwnSuit_ThenPlayerIsBanned()
         {
-            var cgs = _container.Resolve<ICollectingGameService>();
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             IResult<CollectTokenResponse> result = null;
             for (int i = 0; i < 20; i++)
-                result = await cgs.CollectTokenForPlayerAsync(setup.player1WithFursuit.Uid, INVALID_TOKEN);
+                result = await _collectingGameService.CollectTokenForPlayerAsync(
+                    setup.player1WithFursuit.Uid, 
+                    INVALID_TOKEN
+                );
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("BANNED", result.ErrorCode);
+        }
+
+        [Fact(DisplayName = "Scoreboard: For players/fursuits with identical collection count, the earlier achiever ranks higher")]
+        public async Task CollectingGameService_WhenPlayersOrFursuitsHaveSameCollectionCount_ThenWhoeverAchievedItFirstRanksHigher()
+        {
+            var players = new RegSysIdentityRecord[3];
+            var tokens = new TokenRecord[3];
+            var fursuitBadges = new FursuitBadgeRecord[3];
+
+            // 3 players, each with suit
+            for (int i = 0; i < 3; i++)
+            {
+                players[i] = await CreateRegSysIdentityAsync();
+                tokens[i] = await CreateTokenAsync();
+                fursuitBadges[i] = await CreateFursuitBadgeAsync(players[i].Uid);
+
+                await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(
+                    players[i].Uid, fursuitBadges[i].Id, tokens[i].Value);
+            }
+
+            // Each catches everyone else.
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (j == i) continue;
+
+                    var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                        players[i].Uid, tokens[j].Value);
+
+                    Assert.True(result.IsSuccessful);
+                }
+            }
+
+            var playerScoreboard = await _collectingGameService.GetPlayerScoreboardEntriesAsync(5);
+            var fursuitScoreboard = await _collectingGameService.GetFursuitScoreboardEntriesAsync(5);
+
+            // 1 catches first, then 2, then 3
+            Assert.Equal(3, playerScoreboard.Value.Length);
+            Assert.True(playerScoreboard.Value.All(a => a.CollectionCount == 2));
+            Assert.Equal(players[0].Username, playerScoreboard.Value[0].Name);
+            Assert.Equal(players[1].Username, playerScoreboard.Value[1].Name);
+            Assert.Equal(players[2].Username, playerScoreboard.Value[2].Name);
+
+            // 3 gets the 2 catches first (by 1 + 2), then 1 (by 2 + 3), then 2
+            Assert.Equal(3, fursuitScoreboard.Value.Length);
+            Assert.True(fursuitScoreboard.Value.All(a => a.CollectionCount == 2));
+            Assert.Equal(fursuitBadges[2].Id, fursuitScoreboard.Value[0].BadgeId);
+            Assert.Equal(fursuitBadges[0].Id, fursuitScoreboard.Value[1].BadgeId);
+            Assert.Equal(fursuitBadges[1].Id, fursuitScoreboard.Value[2].BadgeId);
         }
     }
 }

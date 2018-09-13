@@ -94,6 +94,28 @@ namespace Eurofurence.App.Tests.Common.InMemoryRepository
 
         private IQueryable<T> ApplyFilterOptions<T>(IQueryable<T> input, FilterOptions<T> filterOptions)
         {
+            if (filterOptions == null) return input;
+
+            IOrderedQueryable<T> inputSorted = null;
+
+            foreach(var sort in filterOptions.SortFields)
+            {
+                switch (sort.Order)
+                {
+                    case FilterOptions<T>.SortOrderEnum.Ascending:
+                        inputSorted = inputSorted?.ThenBy(sort.Field) ?? input.OrderBy(sort.Field);
+                        break;
+                    case FilterOptions<T>.SortOrderEnum.Descending:
+                        inputSorted = inputSorted?.ThenByDescending(sort.Field) ?? input.OrderByDescending(sort.Field);
+                        break;
+                }
+            }
+
+            input = inputSorted ?? input;
+
+            if (filterOptions.MaxRecordCount.HasValue)
+                input = input.Take(filterOptions.MaxRecordCount.Value);
+
             return input;
         }
     }
