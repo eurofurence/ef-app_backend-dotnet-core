@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -26,6 +27,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly ILogger _logger;
         private readonly IMapService _mapService;
+        private readonly ConventionSettings _conventionSettings;
 
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -38,7 +40,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IImageService imageService,
             IDealerService dealerService,
             IAnnouncementService announcementService,
-            IMapService mapService
+            IMapService mapService,
+            ConventionSettings conventionSettings
         )
         {
             _logger = loggerFactory.CreateLogger(GetType());
@@ -52,6 +55,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
             _announcementService = announcementService;
             _mapService = mapService;
+            _conventionSettings = conventionSettings;
         }
 
         /// <summary>
@@ -66,6 +70,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var response = new AggregatedDeltaResponse
             {
+                ConventionIdentifier = _conventionSettings.ConventionIdentifier,
                 Since = since,
                 CurrentDateTimeUtc = DateTime.UtcNow,
 
