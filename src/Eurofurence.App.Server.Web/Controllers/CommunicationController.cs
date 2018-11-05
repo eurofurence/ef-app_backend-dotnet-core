@@ -11,8 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class CommunicationController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class CommunicationController : BaseController
     {
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IPrivateMessageService _privateMessageService;

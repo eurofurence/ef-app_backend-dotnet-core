@@ -9,8 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class KnowledgeGroupsController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class KnowledgeGroupsController : BaseController
     {
         private readonly IKnowledgeGroupService _knowledgeGroupService;
 

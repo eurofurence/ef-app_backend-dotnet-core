@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class EventConferenceTracksController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class EventConferenceTracksController : BaseController
     {
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
 

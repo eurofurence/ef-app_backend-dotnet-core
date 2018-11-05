@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class FursuitsController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class FursuitsController : BaseController
     {
         private readonly IFursuitBadgeService _fursuitBadgeService;
         private readonly ICollectingGameService _collectingGameService;

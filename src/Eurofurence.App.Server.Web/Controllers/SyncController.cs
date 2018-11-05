@@ -13,8 +13,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class SyncController
+    [Route("Api/[cid]/[controller]")]
+    public class SyncController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
         private readonly IDealerService _dealerService;

@@ -13,8 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class ArtShowController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class ArtShowController : BaseController
     {
         private readonly IItemActivityService _itemActivityService;
         private readonly IApiPrincipal _apiPrincipal;

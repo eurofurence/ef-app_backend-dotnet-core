@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class TokensController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class TokensController : BaseController
     {
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IAuthenticationHandler _authenticationHandler;

@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class EventFeedbackController : Controller
+    [Route("Api/[cid]/[controller]")]
+    public class EventFeedbackController : BaseController
     {
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IEventFeedbackService _eventFeedbackService;
