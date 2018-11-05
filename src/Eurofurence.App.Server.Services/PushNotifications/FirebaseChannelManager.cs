@@ -9,6 +9,7 @@ using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Newtonsoft.Json;
 
@@ -18,14 +19,18 @@ namespace Eurofurence.App.Server.Services.PushNotifications
     {
         private readonly FirebaseConfiguration _configuration;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationRepository;
+        private readonly ConventionSettings _conventionSettings;
 
         public FirebaseChannelManager(
             FirebaseConfiguration configuration,
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationRepository)
+            IEntityRepository<PushNotificationChannelRecord> pushNotificationRepository,
+            ConventionSettings conventionSettings
+            )
 
         {
             _configuration = configuration;
             _pushNotificationRepository = pushNotificationRepository;
+            _conventionSettings = conventionSettings;
         }
 
         private Task<IEnumerable<PushNotificationChannelRecord>> GetRecipientChannelAsync(string recipientUid)
@@ -46,7 +51,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         Text = announcement.Content.RemoveMarkdown(),
                         RelatedId = announcement.Id
                     },
-                    to = $"/topics/{_configuration.TargetTopicAndroid}"
+                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
                 }), 
                 SendPushNotificationAsync(new
                 {
@@ -62,7 +67,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     },
                     content_available = true,
                     priority = "high",
-                    to = $"/topics/{_configuration.TargetTopicIos}"
+                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-ios"
                 })
             );
         }
@@ -116,7 +121,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     {
                         Event = "Sync",
                     },
-                    to = $"/topics/{_configuration.TargetTopicAndroid}"
+                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
                 }),
                 SendPushNotificationAsync(new
                 {
@@ -126,7 +131,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     },
                     content_available = true,
                     priority = "high",
-                    to = $"/topics/{_configuration.TargetTopicIos}"
+                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-ios"
                 })
             );
         }

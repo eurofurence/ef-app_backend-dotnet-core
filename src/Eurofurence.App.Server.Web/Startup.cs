@@ -181,9 +181,6 @@ namespace Eurofurence.App.Server.Web
             builder.RegisterInstance(new FirebaseConfiguration
             {
                 AuthorizationKey = Configuration["firebase:authorizationKey"],
-                TargetTopicAll = Configuration["firebase:targetTopic:all"],
-                TargetTopicAndroid = Configuration["firebase:targetTopic:android"],
-                TargetTopicIos = Configuration["firebase:targetTopic:ios"]
             });
             builder.RegisterInstance(new TelegramConfiguration
             {
