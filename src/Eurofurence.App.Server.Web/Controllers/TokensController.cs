@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[cid]/[controller]")]
+    [Route("Api/[controller]")]
     public class TokensController : BaseController
     {
         private readonly IApiPrincipal _apiPrincipal;

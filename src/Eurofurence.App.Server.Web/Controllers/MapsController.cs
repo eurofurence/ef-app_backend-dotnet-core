@@ -14,7 +14,7 @@ namespace Eurofurence.App.Server.Web.Controllers
     /// <summary>
     /// FindMe1
     /// </summary>
-    [Route("Api/[cid]/[controller]")]
+    [Route("Api/[controller]")]
     public class MapsController : BaseController
     {
         private readonly ILinkFragmentValidator _linkFragmentValidator;

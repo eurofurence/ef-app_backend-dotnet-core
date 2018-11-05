@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[cid]/[controller]")]
+    [Route("Api/[controller]")]
     public class EventsController : BaseController
     {
         private readonly IEventService _eventService;

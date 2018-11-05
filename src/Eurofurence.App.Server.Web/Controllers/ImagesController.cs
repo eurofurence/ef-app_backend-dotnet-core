@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[cid]/[controller]")]
+    [Route("Api/[controller]")]
     public class ImagesController : BaseController
     {
         private readonly IImageService _imageService;

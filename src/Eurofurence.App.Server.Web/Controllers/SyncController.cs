@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/[cid]/[controller]")]
+    [Route("Api/[controller]")]
     public class SyncController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
