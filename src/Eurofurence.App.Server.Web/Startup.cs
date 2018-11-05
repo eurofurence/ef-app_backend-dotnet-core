@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Amazon;
@@ -64,6 +65,7 @@ namespace Eurofurence.App.Server.Web
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
             BsonClassMapping.Register();
+            CidRouteBaseAttribute.Value = Configuration["global:conventionIdentifier"];
 
             services.AddCors(options =>
             {
@@ -167,7 +169,7 @@ namespace Eurofurence.App.Server.Web
             });
             builder.RegisterInstance(new ConventionSettings()
             {
-                ConventionNumber = Convert.ToInt32(Configuration["global:conventionNumber"]),
+                ConventionIdentifier = Configuration["global:conventionIdentifier"],
                 IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1,
                 ApiBaseUrl = Configuration["global:apiBaseUrl"]
             });
@@ -212,7 +214,8 @@ namespace Eurofurence.App.Server.Web
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            IApplicationLifetime appLifetime)
+            IApplicationLifetime appLifetime
+        )
         {
             var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();
 
@@ -292,13 +295,7 @@ namespace Eurofurence.App.Server.Web
                 }
             });
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    "default",
-                    "{controller=Test}/{action=Index}/{id?}");
-            });
-
+            app.UseMvc();
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>

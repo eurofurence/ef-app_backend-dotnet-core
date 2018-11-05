@@ -48,7 +48,7 @@ namespace Eurofurence.App.Tools.CliToolBox
 
             builder.RegisterInstance(new ConventionSettings
             {
-                ConventionNumber = Convert.ToInt32(Configuration["global:conventionNumber"]),
+                ConventionIdentifier = Configuration["global:conventionIdentifier"],
                 IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1
             });
 

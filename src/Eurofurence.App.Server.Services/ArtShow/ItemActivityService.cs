@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 var newRecord = new ItemActivityRecord()
                 {
                     Id = Guid.NewGuid(),
-                    OwnerUid = $"RegSys:{_conventionSettings.ConventionNumber}:{csvRecord.RegNo}",
+                    OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{csvRecord.RegNo}",
                     ASIDNO = csvRecord.ASIDNO,
                     ArtistName = csvRecord.ArtistName,
                     ArtPieceTitle = csvRecord.ArtPieceTitle,
