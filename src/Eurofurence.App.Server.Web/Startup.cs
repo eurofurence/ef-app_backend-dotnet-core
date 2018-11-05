@@ -228,7 +228,7 @@ namespace Eurofurence.App.Server.Web
             {
                 loggerConfiguration.MinimumLevel.Is(LogEventLevel.Verbose);
 
-                var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + env.EnvironmentName;
+                var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + Configuration["global:conventionIdentifier"];
 
                 AWSCredentials credentials =
                     new BasicAWSCredentials(Configuration["aws:accessKey"], Configuration["aws:secret"]);
