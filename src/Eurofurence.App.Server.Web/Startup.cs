@@ -204,6 +204,7 @@ namespace Eurofurence.App.Server.Web
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
             
             builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
+            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
 
             var container = builder.Build();
             return container.Resolve<IServiceProvider>();

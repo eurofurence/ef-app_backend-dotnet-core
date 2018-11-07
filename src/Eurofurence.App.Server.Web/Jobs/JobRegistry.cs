@@ -8,6 +8,9 @@ namespace Eurofurence.App.Server.Web.Jobs
     {
         public JobRegistry(IConfiguration configuration)
         {
+            NonReentrantAsDefault();
+
+            Schedule<FlushPrivateMessageNotificationsJob>().ToRunEvery(1).Seconds();
             Schedule<UpdateNewsJob>().ToRunNow().AndEvery(Convert.ToInt32(configuration["updateNews:secondsInterval"])).Seconds();
         }
     }

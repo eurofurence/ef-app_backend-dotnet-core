@@ -55,7 +55,10 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<PushNotificationChannelStatisticsService>().As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<FirebaseChannelManager>().As<IFirebaseChannelManager>();
             builder.RegisterType<LinkFragmentValidator>().As<ILinkFragmentValidator>();
-            builder.RegisterType<PrivateMessageService>().As<IPrivateMessageService>();
+            builder.RegisterType<PrivateMessageService>()
+                .As<IPrivateMessageService>()
+                .SingleInstance();
+
             builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
                 .As<IRegSysAlternativePinAuthenticationProvider>();
 
