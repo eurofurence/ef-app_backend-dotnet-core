@@ -302,7 +302,7 @@ namespace Eurofurence.App.Server.Web
             {
                 c.RoutePrefix = $"swagger/ui";
                 c.DocExpansion(DocExpansion.None);
-                c.SwaggerEndpoint($"/swagger/api/swagger.json", "Current API");
+                c.SwaggerEndpoint($"../api/swagger.json", "Current API");
                 c.EnableDeepLinking();
             });
 
