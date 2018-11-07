@@ -53,7 +53,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 }
 
                 record.ExternalReference = registration.BadgeNo.ToString();
-                record.OwnerUid = $"RegSys:{_conventionSettings.ConventionNumber}:{registration.RegNo}";
+                record.OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{registration.RegNo}";
                 record.Gender = registration.Gender;
                 record.Name = registration.Name;
                 record.Species = registration.Species;

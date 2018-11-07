@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Link")]
-    public class RichPreviewController : Controller
+    public class RichPreviewController : BaseController
     {
         private readonly IEventService _eventService;
         private readonly IEventConferenceDayService _eventConferenceDayService;

@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class PushNotificationsController : Controller
+    [Route("Api/[controller]")]
+    public class PushNotificationsController : BaseController
     {
         private readonly IPushEventMediator _pushEventMediator;
         private readonly IApiPrincipal _apiPrincipal;

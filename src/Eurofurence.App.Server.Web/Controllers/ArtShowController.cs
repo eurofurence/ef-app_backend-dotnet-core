@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
-using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Swagger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class ArtShowController : Controller
+    [Route("Api/[controller]")]
+    public class ArtShowController : BaseController
     {
         private readonly IItemActivityService _itemActivityService;
         private readonly IApiPrincipal _apiPrincipal;

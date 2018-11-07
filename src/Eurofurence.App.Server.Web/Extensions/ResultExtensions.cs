@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Common;
-using Eurofurence.App.Common.Results;
+﻿using Eurofurence.App.Common.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

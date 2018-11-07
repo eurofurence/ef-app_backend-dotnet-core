@@ -289,7 +289,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         return;
                                     }
 
-                                    var recipientUid = $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}";
+                                    var recipientUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}";
                                     var messageId = await _privateMessageService.SendPrivateMessageAsync(new SendPrivateMessageRequest()
                                     {
                                         AuthorName = $"{from}",
@@ -341,7 +341,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     }
 
                     var result = await _collectingGameService.UnbanPlayerAsync(
-                            $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}");
+                            $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}");
 
                     if (result.IsSuccessful)
                     {
@@ -660,7 +660,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 return;
                             }
 
-                            if (badge.OwnerUid != $"RegSys:{_conventionSettings.ConventionNumber}:{regNo}")
+                            if (badge.OwnerUid != $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}")
                             {
                                 await ReplyAsync($"*Error*: Fursuit badge with no *{fursuitBadgeNo}* exists, but does *not* belong to reg no *{regNo}*. Aborting.");
                                 return;

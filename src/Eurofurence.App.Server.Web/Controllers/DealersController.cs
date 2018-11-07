@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class DealersController : Controller
+    [Route("Api/[controller]")]
+    public class DealersController : BaseController
     {
         private readonly IDealerService _dealerService;
 

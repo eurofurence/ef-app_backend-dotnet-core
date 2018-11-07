@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -11,8 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class CommunicationController : Controller
+    [Route("Api/[controller]")]
+    public class CommunicationController : BaseController
     {
         private readonly IApiPrincipal _apiPrincipal;
         private readonly IPrivateMessageService _privateMessageService;

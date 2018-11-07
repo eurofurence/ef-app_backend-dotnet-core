@@ -10,6 +10,8 @@ namespace Eurofurence.App.Domain.Model.Sync
 {
     public class AggregatedDeltaResponse
     {
+        public string ConventionIdentifier { get; set; }
+
         public DateTime? Since { get; set; }
         public DateTime CurrentDateTimeUtc { get; set; }
 

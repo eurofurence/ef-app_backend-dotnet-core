@@ -74,7 +74,7 @@ namespace Eurofurence.App.Server.Services.Security
                 return null;
             }
 
-            var uid = $"RegSys:{_conventionSettings.ConventionNumber}:{authenticationResult.RegNo}";
+            var uid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{authenticationResult.RegNo}";
 
             var identityRecord = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == uid);
             if (identityRecord == null)
@@ -114,7 +114,7 @@ namespace Eurofurence.App.Server.Services.Security
                 new Claim(ClaimTypes.Name, uid),
                 new Claim(ClaimTypes.GivenName, authenticationResult.Username),
                 new Claim(ClaimTypes.PrimarySid, authenticationResult.RegNo.ToString()),
-                new Claim(ClaimTypes.GroupSid, _conventionSettings.ConventionNumber.ToString()),
+                new Claim(ClaimTypes.GroupSid, _conventionSettings.ConventionIdentifier.ToString()),
                 new Claim(ClaimTypes.System, "RegSys")
             };
 

@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class AnnouncementsController : Controller
+    [Route("Api/[controller]")]
+    public class AnnouncementsController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
         private readonly IPushEventMediator _eventMediator;

@@ -43,6 +43,7 @@ namespace Eurofurence.App.Server.Web
     public class Startup
     {
         private readonly IHostingEnvironment _hostingEnvironment;
+        private ConventionSettings _conventionSettings;
         private ILogger _logger;
 
         public Startup(IHostingEnvironment hostingEnvironment)
@@ -63,7 +64,15 @@ namespace Eurofurence.App.Server.Web
             var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
+            _conventionSettings = new ConventionSettings()
+            {
+                ConventionIdentifier = Configuration["global:conventionIdentifier"],
+                IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1,
+                ApiBaseUrl = Configuration["global:apiBaseUrl"]
+            };
+
             BsonClassMapping.Register();
+            CidRouteBaseAttribute.Value = _conventionSettings.ConventionIdentifier;
 
             services.AddCors(options =>
             {
@@ -94,13 +103,13 @@ namespace Eurofurence.App.Server.Web
             
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v2", new Info
+                options.SwaggerDoc("api", new Info
                 {
-                    Version = "v2",
+                    Version = "current",
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
                     TermsOfService = "None",
-                    Contact = new Contact {Name = "Luchs", Url = "https://telegram.me/pinselohrkater"}
+                    Contact = new Contact {Name = "Luchs", Url = "https://telegram.me/pinselohrkater"},
                 });
 
                 options.AddSecurityDefinition("Bearer", new ApiKeyScheme
@@ -165,12 +174,7 @@ namespace Eurofurence.App.Server.Web
             {
                 DefaultTokenLifeTime = TimeSpan.FromDays(30)
             });
-            builder.RegisterInstance(new ConventionSettings()
-            {
-                ConventionNumber = Convert.ToInt32(Configuration["global:conventionNumber"]),
-                IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1,
-                ApiBaseUrl = Configuration["global:apiBaseUrl"]
-            });
+            builder.RegisterInstance(_conventionSettings);
             builder.RegisterInstance(new WnsConfiguration
             {
                 ClientId = Configuration["wns:clientId"],
@@ -180,9 +184,6 @@ namespace Eurofurence.App.Server.Web
             builder.RegisterInstance(new FirebaseConfiguration
             {
                 AuthorizationKey = Configuration["firebase:authorizationKey"],
-                TargetTopicAll = Configuration["firebase:targetTopic:all"],
-                TargetTopicAndroid = Configuration["firebase:targetTopic:android"],
-                TargetTopicIos = Configuration["firebase:targetTopic:ios"]
             });
             builder.RegisterInstance(new TelegramConfiguration
             {
@@ -203,6 +204,7 @@ namespace Eurofurence.App.Server.Web
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
             
             builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
+            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
 
             var container = builder.Build();
             return container.Resolve<IServiceProvider>();
@@ -212,7 +214,8 @@ namespace Eurofurence.App.Server.Web
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            IApplicationLifetime appLifetime)
+            IApplicationLifetime appLifetime
+        )
         {
             var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();
 
@@ -226,7 +229,7 @@ namespace Eurofurence.App.Server.Web
             {
                 loggerConfiguration.MinimumLevel.Is(LogEventLevel.Verbose);
 
-                var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + env.EnvironmentName;
+                var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + Configuration["global:conventionIdentifier"];
 
                 AWSCredentials credentials =
                     new BasicAWSCredentials(Configuration["aws:accessKey"], Configuration["aws:secret"]);
@@ -292,20 +295,14 @@ namespace Eurofurence.App.Server.Web
                 }
             });
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    "default",
-                    "{controller=Test}/{action=Index}/{id?}");
-            });
+            app.UseMvc();
 
             app.UseSwagger();
-
             app.UseSwaggerUI(c =>
             {
-                c.RoutePrefix = "swagger/v2/ui";
+                c.RoutePrefix = $"swagger/ui";
                 c.DocExpansion(DocExpansion.None);
-                c.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
+                c.SwaggerEndpoint($"/swagger/api/swagger.json", "Current API");
                 c.EnableDeepLinking();
             });
 

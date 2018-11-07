@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Api/v2/[controller]")]
-    public class SyncController
+    [Route("Api/[controller]")]
+    public class SyncController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
         private readonly IDealerService _dealerService;
@@ -27,6 +27,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly ILogger _logger;
         private readonly IMapService _mapService;
+        private readonly ConventionSettings _conventionSettings;
 
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -39,7 +40,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IImageService imageService,
             IDealerService dealerService,
             IAnnouncementService announcementService,
-            IMapService mapService
+            IMapService mapService,
+            ConventionSettings conventionSettings
         )
         {
             _logger = loggerFactory.CreateLogger(GetType());
@@ -53,6 +55,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
             _announcementService = announcementService;
             _mapService = mapService;
+            _conventionSettings = conventionSettings;
         }
 
         /// <summary>
@@ -67,6 +70,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var response = new AggregatedDeltaResponse
             {
+                ConventionIdentifier = _conventionSettings.ConventionIdentifier,
                 Since = since,
                 CurrentDateTimeUtc = DateTime.UtcNow,
 
