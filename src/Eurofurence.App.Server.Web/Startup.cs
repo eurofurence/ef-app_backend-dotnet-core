@@ -105,11 +105,14 @@ namespace Eurofurence.App.Server.Web
             {
                 options.SwaggerDoc("api", new Info
                 {
-                    Version = "current",
+                    Version = _conventionSettings.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
-                    TermsOfService = "None",
-                    Contact = new Contact {Name = "Luchs", Url = "https://telegram.me/pinselohrkater"},
+                    Contact = new Contact {
+                        Name = "Eurofurence IT Department",
+                        Email = "it@eurofurence.org",
+                        Url = "https://help.eurofurence.org/contact/it"
+                    }
                 });
 
                 options.AddSecurityDefinition("Bearer", new ApiKeyScheme
@@ -304,9 +307,9 @@ namespace Eurofurence.App.Server.Web
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = $"swagger/ui";
-                c.EnableFilter();
                 c.DocExpansion(DocExpansion.None);
                 c.SwaggerEndpoint($"../api/swagger.json", "Current API");
+                c.InjectStylesheet("/css/swagger.css");
                 c.EnableDeepLinking();
             });
 
