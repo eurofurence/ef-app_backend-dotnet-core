@@ -59,6 +59,12 @@ namespace Eurofurence.App.Server.Web.Jobs
             using (var client = new HttpClient())
             {
                 var url = _configuration["source:url"];
+                if (String.IsNullOrWhiteSpace(url))
+                {
+                    _logger.LogDebug("Empty soruce url; cancelling job", url);
+                    return;
+                }
+
                 _logger.LogDebug("Fetching data from {url}", url);
                 response = await client.GetStringAsync(url);
             }

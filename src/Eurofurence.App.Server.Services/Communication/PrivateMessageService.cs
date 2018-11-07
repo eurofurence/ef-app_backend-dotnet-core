@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ namespace Eurofurence.App.Server.Services.Communication
         IPrivateMessageService
     {
         private readonly IPushEventMediator _pushEventMediator;
+        private readonly ConcurrentQueue<QueuedNotificationParameters> _notificationQueue = new ConcurrentQueue<QueuedNotificationParameters>();
 
         public PrivateMessageService(
             IEntityRepository<PrivateMessageRecord> entityRepository,
@@ -53,6 +55,15 @@ namespace Eurofurence.App.Server.Services.Communication
             return message.ReadDateTimeUtc;
         }
 
+
+        private struct QueuedNotificationParameters
+        {
+            public string RecipientUid;
+            public string ToastTitle;
+            public string ToastMessage;
+            public Guid RelatedId;
+        }
+
         public async Task<Guid> SendPrivateMessageAsync(SendPrivateMessageRequest request, string senderUid = "System")
         {
             var entity = new PrivateMessageRecord
@@ -67,8 +78,14 @@ namespace Eurofurence.App.Server.Services.Communication
             entity.NewId();
 
             await InsertOneAsync(entity);
-            await _pushEventMediator.PushPrivateMessageNotificationAsync(
-                request.RecipientUid, request.ToastTitle, request.ToastMessage, entity.Id);
+
+            _notificationQueue.Enqueue(new QueuedNotificationParameters()
+            {
+                RecipientUid = request.RecipientUid,
+                ToastTitle = request.ToastTitle,
+                ToastMessage = request.ToastMessage,
+                RelatedId = entity.Id
+            });
 
             return entity.Id;
         }
@@ -97,6 +114,32 @@ namespace Eurofurence.App.Server.Services.Communication
         public async Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForSenderAsync(string senderUid)
         {
             return await FindAllAsync(a => a.SenderUid == senderUid);
+        }
+
+        public async Task<int> FlushPrivateMessageQueueNotifications(int messageCount = 10)
+        {
+            var flushedMessageCount = 0;
+
+            for(int i = 0; i < messageCount; i++)
+            {
+                if (_notificationQueue.TryDequeue(out QueuedNotificationParameters parameters))
+                {
+                    await _pushEventMediator.PushPrivateMessageNotificationAsync(
+                        parameters.RecipientUid,
+                        parameters.ToastTitle,
+                        parameters.ToastMessage,
+                        parameters.RelatedId
+                    );
+
+                    flushedMessageCount++;
+                }
+                else
+                { 
+                    break;
+                }
+            }
+
+            return flushedMessageCount;
         }
     }
 }
