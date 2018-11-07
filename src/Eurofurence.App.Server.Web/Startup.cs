@@ -128,6 +128,9 @@ namespace Eurofurence.App.Server.Web
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
                 options.OperationFilter<BinaryPayloadFilter>();
+                options.DocumentFilter<BasePathFilter>(
+                    Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1"
+                    ? $"/{_conventionSettings.ConventionIdentifier}" : "/");
             });
 
 
@@ -301,6 +304,7 @@ namespace Eurofurence.App.Server.Web
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = $"swagger/ui";
+                c.EnableFilter();
                 c.DocExpansion(DocExpansion.None);
                 c.SwaggerEndpoint($"../api/swagger.json", "Current API");
                 c.EnableDeepLinking();
