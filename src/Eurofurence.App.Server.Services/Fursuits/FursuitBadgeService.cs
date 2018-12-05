@@ -7,11 +7,12 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using ImageSharp;
-using ImageSharp.Formats;
-using ImageSharp.Processing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using SixLabors.Primitives;
 using System.Threading;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace Eurofurence.App.Server.Services.Fursuits
 {
@@ -83,15 +84,17 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                     var image = Image.Load(imageBytes);
 
-                    image.Resize(new ResizeOptions()
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(240, 320),
-                        Sampler = new BicubicResampler()
-                    });
+                    image.Mutate(ctx =>
+                        ctx.Resize(new ResizeOptions()
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(240, 320),
+                            Sampler = new BicubicResampler()
+                        })
+                    );
 
                     var ms = new MemoryStream();
-                    image.SaveAsJpeg(ms, new JpegEncoderOptions() { IgnoreMetadata = true, Quality = 85 });
+                    image.SaveAsJpeg(ms, new JpegEncoder() { IgnoreMetadata = true, Quality = 85 });
                     imageRecord.SizeInBytes = ms.Length;
                     imageRecord.ImageBytes = ms.ToArray();
                     ms.Dispose();

@@ -7,8 +7,10 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Images;
-using ImageSharp;
+using SixLabors.ImageSharp;
 using System.IO;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Eurofurence.App.Server.Services.Images
 {
@@ -75,16 +77,15 @@ namespace Eurofurence.App.Server.Services.Images
 
                 return existingRecord.Id;
             }
-                
 
-            var image = Image.Load(imageBytes);
+            var image = Image.Load(imageBytes, out IImageFormat imageFormat);
 
             var record = new ImageRecord
             {
                 Id = existingRecord?.Id ?? Guid.NewGuid(),
                 IsDeleted = 0,
                 InternalReference = internalReference,
-                MimeType = image.CurrentImageFormat.MimeType,
+                MimeType = imageFormat.DefaultMimeType,
                 Width = image.Width,
                 Height = image.Height,
                 SizeInBytes = imageBytes.Length,
