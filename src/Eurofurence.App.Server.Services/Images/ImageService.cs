@@ -130,5 +130,11 @@ namespace Eurofurence.App.Server.Services.Images
 
             return output.ToArray();           
         }
+
+        public async Task InsertImageAsync(ImageRecord image, byte[] imageBytes)
+        {
+            await _imageRepository.InsertOneAsync(image);
+            await InsertOrUpdateImageAsync(image.InternalReference, imageBytes);
+        }
     }
 }
