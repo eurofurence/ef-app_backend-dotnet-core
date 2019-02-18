@@ -151,5 +151,18 @@ namespace Eurofurence.App.Server.Services
                 }
             }
         }
+
+        public Task<bool> HasOneAsync(Guid id)
+        {
+            return _entityRepository.HasAsync(id);
+        }
+
+        public Task<bool> HasManyAsync(params Guid?[] ids)
+        {
+            var idsWithValue = ids.Where(id => id.HasValue).Select(id => id.Value).ToArray();
+            if (idsWithValue.Length == 0) return Task.FromResult(true);
+
+            return _entityRepository.HasManyAsync(idsWithValue);
+        }
     }
 }

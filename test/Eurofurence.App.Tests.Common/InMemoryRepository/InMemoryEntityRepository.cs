@@ -78,6 +78,16 @@ namespace Eurofurence.App.Tests.Common.InMemoryRepository
                 _entities.Where(entity => f(entity)).FirstOrDefault());
         }
 
+        public Task<bool> HasAsync(Guid id, bool includeDeletedRecords = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> HasManyAsync(Guid[] ids, bool includeDeletedRecords = false)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task InsertOneAsync(T entity)
         {
             _entities.Add(entity);

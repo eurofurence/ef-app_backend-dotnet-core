@@ -11,6 +11,8 @@ namespace Eurofurence.App.Domain.Model.Abstractions
     {
         Task<TEntity> FindOneAsync(Guid id, bool includeDeletedRecords = false);
         Task<TEntity> FindOneAsync(Expression<Func<TEntity, bool>> filter);
+        Task<bool> HasAsync(Guid id, bool includeDeletedRecords = false);
+        Task<bool> HasManyAsync(Guid[] ids, bool includeDeletedRecords = false);
 
         Task<IEnumerable<TEntity>> FindAllAsync(
             bool includeDeletedRecords = false,
@@ -29,6 +31,7 @@ namespace Eurofurence.App.Domain.Model.Abstractions
         Task InsertOneAsync(TEntity entity);
         Task DeleteOneAsync(Guid id);
         Task DeleteAllAsync();
+
     }
 
 

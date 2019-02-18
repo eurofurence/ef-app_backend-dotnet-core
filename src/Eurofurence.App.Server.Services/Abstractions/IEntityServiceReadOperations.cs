@@ -11,5 +11,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
         Task<TEntity> FindOneAsync(Guid id);
         Task<IEnumerable<TEntity>> FindAllAsync();
         Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter);
+        Task<bool> HasOneAsync(Guid id);
+        Task<bool> HasManyAsync(params Guid?[] ids);
     }
 }
