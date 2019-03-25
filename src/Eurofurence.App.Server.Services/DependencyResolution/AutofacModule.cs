@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
@@ -14,6 +15,7 @@ using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
+using Eurofurence.App.Server.Services.ArtistsAlley;
 using Eurofurence.App.Server.Services.ArtShow;
 using Eurofurence.App.Server.Services.Communication;
 using Eurofurence.App.Server.Services.Dealers;
@@ -74,6 +76,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
             builder.RegisterType<CollectingGameService>().As<ICollectingGameService>();
             builder.RegisterType<ItemActivityService>().As<IItemActivityService>();
+            builder.RegisterType<TableRegistrationService>().As<ITableRegistrationService>();
         }
     }
 }

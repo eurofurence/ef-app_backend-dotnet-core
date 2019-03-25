@@ -11,6 +11,7 @@ using SixLabors.ImageSharp;
 using System.IO;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
+using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Server.Services.Images
 {
@@ -135,6 +136,26 @@ namespace Eurofurence.App.Server.Services.Images
         {
             await _imageRepository.InsertOneAsync(image);
             await InsertOrUpdateImageAsync(image.InternalReference, imageBytes);
+        }
+
+        public ImageFragment GenerateFragmentFromBytes(byte[] imageBytes)
+        {
+            try
+            {
+                var image = Image.Load(imageBytes, out IImageFormat imageFormat);
+                return new ImageFragment()
+                {
+                    SizeInBytes = imageBytes.LongLength,
+                    Height = image.Height,
+                    Width = image.Width,
+                    MimeType = imageFormat.DefaultMimeType,
+                    ImageBytes = imageBytes
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }
