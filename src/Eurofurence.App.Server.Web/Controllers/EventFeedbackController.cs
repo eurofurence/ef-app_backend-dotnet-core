@@ -25,19 +25,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _eventFeedbackService = eventFeedbackService;
         }
 
-        [HttpGet]
-        [Authorize(Roles = "System,Developer,Attendee")]
-        [ProducesResponseType(typeof(IEnumerable<EventFeedbackRecord>), 200)]
-        public Task<IEnumerable<EventFeedbackRecord>> GetEventFeedbackAsync()
-        {
-            if (_apiPrincipal.IsAttendee)
-                return _eventFeedbackService.FindAllAsync(a => a.AuthorUid == _apiPrincipal.Uid);
-
-            return null;
-        }
-
         [HttpPost]
-        [Authorize(Roles = "System,Developer,Attendee")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         public async Task<ActionResult> PostEventFeedbackAsync([FromBody] EventFeedbackRecord record)
@@ -47,9 +35,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (await _eventService.FindOneAsync(record.EventId) == null)
                 return BadRequest($"No event with id {record.EventId}");
 
+            if (record.Rating < 1 || record.Rating > 5) return BadRequest("Rating must be between 1 and 5");
+
             record.Touch();
             record.NewId();
-            record.AuthorUid = _apiPrincipal.Uid;
 
             await _eventFeedbackService.InsertOneAsync(record);
 
