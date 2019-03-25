@@ -53,6 +53,9 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public bool IsDeviatingFromConBook { get; set; }
 
+        [DataMember]
+        public bool IsAcceptingFeedback { get; set; }
+
         /// <summary>
         ///     If set, refers to a banner ([3-4]:1 aspect ratio) that can be used when little
         ///     vertical space is available (e.G. event schedule, or a header section).
