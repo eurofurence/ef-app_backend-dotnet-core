@@ -11,6 +11,7 @@ using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Fursuits;
@@ -201,6 +202,15 @@ namespace Eurofurence.App.Server.Web
                 LogFile = Configuration["collectionGame:logFile"],
                 LogLevel = Convert.ToInt32(Configuration["collectionGame:logLevel"]),
                 TelegramManagementChatId = Configuration["collectionGame:telegramManagementChatId"]
+            });
+            builder.RegisterInstance(new ArtistAlleyConfiguration()
+            {
+                TelegramAdminGroupChatId = Configuration["artistAlley:telegram:adminGroupChatId"],
+                TelegramAnnouncementChannelId = Configuration["artistAlley:telegram:announcementChannelId"],
+                TwitterConsumerKey = Configuration["artistAlley:twitter:consumerKey"],
+                TwitterConsumerSecret = Configuration["artistAlley:twitter:consumerSecret"],
+                TwitterAccessToken = Configuration["artistAlley:twitter:accessToken"],
+                TwitterAccessTokenSecret = Configuration["artistAlley:twitter:accessTokenSecret"]
             });
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))

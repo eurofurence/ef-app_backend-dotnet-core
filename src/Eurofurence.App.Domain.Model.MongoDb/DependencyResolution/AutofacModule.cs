@@ -3,6 +3,7 @@ using Autofac;
 using Eurofurence.App.Common.Abstractions;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
@@ -146,6 +147,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<ItemActivityRepository, IEntityRepository<ItemActivityRecord>, ItemActivityRecord>(builder,
                 collection => collection.Indexes.CreateOne(
                     Builders<ItemActivityRecord>.IndexKeys.Ascending(a => a.ImportHash)));
+
+            Register<TableRegistrationRepository, IEntityRepository<TableRegistrationRecord>, TableRegistrationRecord>(builder);
         }
     }
 }

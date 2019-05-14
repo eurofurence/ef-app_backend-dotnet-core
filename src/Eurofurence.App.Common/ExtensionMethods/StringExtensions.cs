@@ -6,14 +6,16 @@
         {
             return input
                 .Replace("_", @"\_")
-                .Replace("*", @"\*");
+                .Replace("*", @"\*")
+                .Replace("`", @"\`");
         }
 
         public static string RemoveMarkdown(this string input)
         {
             return input
                 .Replace("_", "")
-                .Replace("*", "");
+                .Replace("*", "")
+                .Replace("`", "");
         }
 
         public static string UppercaseFirst(this string input)

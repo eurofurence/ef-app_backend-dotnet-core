@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Images
@@ -10,5 +11,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
         Task<Guid> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes);
         Task<byte[]> GetImageContentByIdAsync(Guid id);
         byte[] GeneratePlaceholderImage();
+        ImageFragment GenerateFragmentFromBytes(byte[] imageBytes);
+        ImageFragment EnforceMaximumDimensions(ImageFragment image, int width, int height);
     }
 }
