@@ -20,9 +20,10 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
-using Telegram.Bot.Types.InlineKeyboardButtons;
-using Telegram.Bot.Types.InlineQueryResults;
 using System.IO;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Telegram.Bot.Types.InputFiles;
+using Eurofurence.App.Domain.Model.Security;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
@@ -33,7 +34,9 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
         private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
         private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
+        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly ITableRegistrationService _tableRegistrationService;
         private readonly ICollectingGameService _collectingGameService;
         private readonly ConventionSettings _conventionSettings;
 
@@ -60,7 +63,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             SendPm = 1 << 5,
             BadgeChecksum = 1 << 6,
             CollectionGameAdmin = 1 << 7,
-            All = (1 << 8) - 1,
+            TableRegistrationAdmin = 1 << 8,
+            All = (1 << 9) - 1,
         }
 
         private User _user;
@@ -88,7 +92,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
             IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
             IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository,
+            IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
             IPrivateMessageService privateMessageService,
+            ITableRegistrationService tableRegistrationService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory
@@ -100,7 +106,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             _pushNotificationChannelRepository = pushNotificationChannelRepository;
             _fursuitBadgeRepository = fursuitBadgeRepository;
             _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
+            _regSysIdentityRepository = regSysIdentityRepository;
             _privateMessageService = privateMessageService;
+            _tableRegistrationService = tableRegistrationService;
             _collectingGameService = collectingGameService;
             _conventionSettings = conventionSettings;
 
@@ -176,6 +184,13 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Unban someone from the game",
                     RequiredPermission = PermissionFlags.CollectionGameAdmin,
                     CommandHandler = CommandCollectionGameUnban
+                },
+                new CommandInfo()
+                {
+                    Command ="/tableRegistration",
+                    Description = "Manage Table Registrations",
+                    RequiredPermission = PermissionFlags.TableRegistrationAdmin,
+                    CommandHandler = CommandTableRegistration
                 }
             };
         }
@@ -211,7 +226,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
                     var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
-                    await BotClient.SendPhotoAsync(ChatId, new FileToSend(badge.Id.ToString(), imageContent));
+                    await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -568,6 +583,79 @@ namespace Eurofurence.App.Server.Services.Telegram
             await BotClient.SendTextMessageAsync(ChatId, message, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
         }
 
+        private async Task CommandTableRegistration()
+        {
+            Func<Task> c1 = null, c2 = null, c3 = null;
+            var title = "Table Registration";
+            var requesterUid = $"Telegram:@{_user.Username}";
+
+            c1 = () => AskAsync($"*{title}* - What would you like to do?",
+                async c1a =>
+                {
+                    if (c1a == "*list")
+                    {
+                        var records = await _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
+                        var ownerUids = records.Select(a => a.OwnerUid);
+                        var ownerIdentities = await _regSysIdentityRepository.FindAllAsync(a => ownerUids.Contains(a.Uid));
+
+                        var list = records.Select(record =>
+                            $"{record.Id} / {record.OwnerUid} {ownerIdentities.Single(a => a.Uid == record.OwnerUid).Username.RemoveMarkdown()}\n*{record.DisplayName.RemoveMarkdown()}*"
+                        );
+
+                        var response = $"There are currently *{records.Count()}* registrations pending reviews.\n\n{String.Join("\n\n", list)}";
+
+                        await ReplyAsync(response);
+
+                        await c1();
+                    }
+                    else if (c1a == "*review")
+                    {
+                        var records = await _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
+                        var nextRecord = records.OrderBy(a => a.LastChangeDateTimeUtc).FirstOrDefault();
+
+                        if (nextRecord == null)
+                        {
+                            await ReplyAsync("There are no registrations pending review.");
+                            await c1();
+                        } else
+                        {
+                            var ownerIdentity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == nextRecord.OwnerUid);
+
+                            var message = new StringBuilder();
+
+                            message.AppendLine("You are reviewing:");
+                            message.AppendLine($"*Id:*`{nextRecord.Id}` (from: { nextRecord.OwnerUid} { ownerIdentity.Username.RemoveMarkdown()})\n");
+
+                            message.AppendLine($"Display Name: *{nextRecord.DisplayName.RemoveMarkdown()}*");
+                            message.AppendLine($"Website URL: *{nextRecord.WebsiteUrl.RemoveMarkdown()}*");
+                            message.AppendLine($"Short Description: _{nextRecord.ShortDescription.RemoveMarkdown()}_\n");
+                            message.AppendLine($"Image: {(nextRecord.Image != null ? "Available (see below)" : "Not provided")}");
+
+                            await ReplyAsync(message.ToString());
+                            if (nextRecord.Image != null)
+                            {
+                                var imageContent = new MemoryStream(nextRecord.Image.ImageBytes);
+                                await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
+                            }
+
+                            c2 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel and Twitter feed.",
+                                async c2a =>
+                                {
+                                    if (c2a == "*approve") await _tableRegistrationService.ApproveByIdAsync(nextRecord.Id, requesterUid);
+                                    if (c2a == "*reject") await _tableRegistrationService.RejectByIdAsync(nextRecord.Id, requesterUid);
+
+
+                                    await ReplyAsync("Done. Send /tableRegistration again if you wish to review/view further items.");
+                                    
+                                }, "Approve=*approve", "Reject=*reject");
+
+                            await c2();
+                        }
+                    }
+
+                }, "List all pending=*list", "Review next one=*review", "Cancel=/cancel");
+            await c1();
+        }
 
         private async Task CommandPinInfo()
         {
@@ -670,7 +758,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
 
                             var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
-                            await BotClient.SendPhotoAsync(ChatId, new FileToSend(badge.Id.ToString(), imageContent));
+                            await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
 
                             askTokenValue = () => AskAsync(
                                 $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",
