@@ -12,5 +12,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
         Task<byte[]> GetImageContentByIdAsync(Guid id);
         byte[] GeneratePlaceholderImage();
         ImageFragment GenerateFragmentFromBytes(byte[] imageBytes);
+        ImageFragment EnforceMaximumDimensions(ImageFragment image, int width, int height);
     }
 }

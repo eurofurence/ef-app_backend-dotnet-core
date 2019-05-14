@@ -12,6 +12,10 @@ using System.IO;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using Eurofurence.App.Domain.Model.Fragments;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.Primitives;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace Eurofurence.App.Server.Services.Images
 {
@@ -140,6 +144,8 @@ namespace Eurofurence.App.Server.Services.Images
 
         public ImageFragment GenerateFragmentFromBytes(byte[] imageBytes)
         {
+            if (imageBytes == null || imageBytes.Length == 0) return null;
+
             try
             {
                 var image = Image.Load(imageBytes, out IImageFormat imageFormat);
@@ -156,6 +162,32 @@ namespace Eurofurence.App.Server.Services.Images
             {
                 return null;
             }
+        }
+
+        public ImageFragment EnforceMaximumDimensions(ImageFragment image, int width, int height)
+        {
+            if (image == null) return null;
+
+            double scaling = Math.Min((double)width / image.Width, (double)height / image.Height);
+            if (scaling >= 1) return image;
+
+            var rawImage = Image.Load(image.ImageBytes);
+
+            rawImage.Mutate(ctx =>
+                ctx.Resize(new ResizeOptions()
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(width, height),
+                    Sampler = new BicubicResampler()
+                })
+            );
+
+            var ms = new MemoryStream();
+            rawImage.SaveAsJpeg(ms, new JpegEncoder() { IgnoreMetadata = true, Quality = 85 });
+            var newFragment = GenerateFragmentFromBytes(ms.ToArray());
+            ms.Dispose();
+
+            return newFragment;
         }
     }
 }
