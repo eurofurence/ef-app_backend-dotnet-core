@@ -9,6 +9,7 @@ using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using LinqToTwitter;
@@ -22,6 +23,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly ITelegramMessageSender _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
+        private readonly IPrivateMessageService _privateMessageService;
         private TwitterContext _twitterContext;
 
         public TableRegistrationService(
@@ -29,12 +31,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             IEntityRepository<TableRegistrationRecord> tableRegistrationRepository,
             ITelegramMessageSender telegramMessageSender,
             IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
+            IPrivateMessageService privateMessageService,
             IImageService imageService)
         {
             _configuration = configuration;
             _tableRegistrationRepository = tableRegistrationRepository;
             _telegramMessageSender = telegramMessageSender;
             _regSysIdentityRepository = regSysIdentityRepository;
+            _privateMessageService = privateMessageService;
             _imageService = imageService;
 
             var auth = new SingleUserAuthorizer
@@ -100,9 +104,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 _configuration.TelegramAdminGroupChatId,
                 $"*Approved:* {identity.Username} ({record.OwnerUid} / {record.Id})\n\nRegistration has been approved by *{operatorUid}* and will be published on Twitter/Telegram.");
 
-
-
             await BroadcastAsync(record);
+
             // Todo: Send a message to user.
         }
 
@@ -155,7 +158,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _tableRegistrationRepository.ReplaceOneAsync(record);
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
-                $"*Rejected:* {identity.Username} ({record.OwnerUid} / {record.Id})\n\nRegistration has been rejected by *{operatorUid}*. Reason given: ...");
+                $"*Rejected:* {identity.Username} ({record.OwnerUid} / {record.Id})\n\nRegistration has been rejected by *{operatorUid}*.");
 
             // Todo: Send a message to user. 
         }

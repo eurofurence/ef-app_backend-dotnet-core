@@ -46,7 +46,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 
         [DataMember]
         public string ImageContent =>
-            Image.ImageBytes?.Length > 0 ? Convert.ToBase64String(Image.ImageBytes) : null;
+            Image?.ImageBytes?.Length > 0 ? Convert.ToBase64String(Image.ImageBytes) : null;
 
         [IgnoreDataMember]
         public IList<StateChangeRecord> StateChangeLog { get; set; }
