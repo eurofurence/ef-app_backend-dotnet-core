@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
+using Eurofurence.App.Domain.Model;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Security;
@@ -66,6 +68,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var record = new TableRegistrationRecord()
             {
                 OwnerUid = uid,
+                CreatedDateTimeUtc = DateTime.UtcNow,
                 DisplayName = request.DisplayName,
                 WebsiteUrl = request.WebsiteUrl,
                 ShortDescription = request.ShortDescription,
@@ -155,6 +158,18 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 $"*Rejected:* {identity.Username} ({record.OwnerUid} / {record.Id})\n\nRegistration has been rejected by *{operatorUid}*. Reason given: ...");
 
             // Todo: Send a message to user. 
+        }
+
+        public async Task<TableRegistrationRecord> GetLatestRegistrationByUid(string uid)
+        {
+            var request = (await _tableRegistrationRepository.FindAllAsync(
+                a => a.OwnerUid == uid,
+                new FilterOptions<TableRegistrationRecord>()
+                    .SortDescending(a => a.CreatedDateTimeUtc)
+                    .Take(1)
+                )).SingleOrDefault();
+
+            return request;
         }
     }
 }

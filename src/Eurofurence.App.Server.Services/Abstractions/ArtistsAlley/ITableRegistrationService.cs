@@ -9,6 +9,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
     {
         Task RegisterTableAsync(string uid, TableRegistrationRequest request);
         Task<IEnumerable<TableRegistrationRecord>> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state);
+        Task<TableRegistrationRecord> GetLatestRegistrationByUid(string uid);
 
         Task ApproveByIdAsync(Guid id, string operatorUid);
         Task RejectByIdAsync(Guid id, string operatorUid);

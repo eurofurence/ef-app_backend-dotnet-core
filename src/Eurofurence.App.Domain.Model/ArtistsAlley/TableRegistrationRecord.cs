@@ -1,6 +1,7 @@
 ﻿using Eurofurence.App.Domain.Model.Fragments;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
@@ -22,18 +23,32 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
             Rejected = 3
         }
 
+        [DataMember]
+        public DateTime CreatedDateTimeUtc { get; set; }
+
+        [DataMember]
         public string OwnerUid { get; set; }
 
+        [DataMember]
         public string DisplayName { get; set; }
 
+        [DataMember]
         public string WebsiteUrl { get; set; }
 
+        [DataMember]
         public string ShortDescription { get; set; }
 
+        [DataMember]
         public ImageFragment Image { get; set; }
 
+        [DataMember]
         public RegistrationStateEnum State { get; set; }
 
+        [DataMember]
+        public string ImageContent =>
+            Image.ImageBytes?.Length > 0 ? Convert.ToBase64String(Image.ImageBytes) : null;
+
+        [IgnoreDataMember]
         public IList<StateChangeRecord> StateChangeLog { get; set; }
 
         public TableRegistrationRecord()

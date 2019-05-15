@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,6 +29,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             await _tableRegistrationService.RegisterTableAsync(_apiPrincipal.Uid, Request);
             return NoContent();
+        }
+
+        [Authorize(Roles = "Attendee")]
+        [HttpGet("TableRegistration/:my-latest")]
+        public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
+        {
+            var record = await _tableRegistrationService.GetLatestRegistrationByUid(_apiPrincipal.Uid);
+            return record.Transient404(HttpContext);
         }
     }
 } 
