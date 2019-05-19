@@ -116,8 +116,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var telegramMessageBuilder = new StringBuilder();
             var twitterMessageBuilder = new StringBuilder();
 
-            telegramMessageBuilder.Append($"Now in the Artist Alley:\n\n*{record.DisplayName.EscapeMarkdown()}*\n\n");
-            twitterMessageBuilder.Append($"Now in the Artist Alley:\n\n{record.DisplayName}\n\n");
+            telegramMessageBuilder.Append($"Now in the Artist Alley ({record.Location.EscapeMarkdown()}):\n\n*{record.DisplayName.EscapeMarkdown()}*\n\n");
+            twitterMessageBuilder.Append($"Now in the Artist Alley ({record.Location}):\n\n{record.DisplayName}\n\n");
 
             telegramMessageBuilder.Append($"_{record.ShortDescription.EscapeMarkdown()}_\n\n");
             twitterMessageBuilder.Append($"_{record.ShortDescription}_\n\n");

@@ -626,8 +626,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                             message.AppendLine("You are reviewing:");
                             message.AppendLine($"*Id:*`{nextRecord.Id}` (from: { nextRecord.OwnerUid} { ownerIdentity.Username.RemoveMarkdown()})\n");
 
+                            message.AppendLine($"Location: `{nextRecord.Location.RemoveMarkdown()}`");
                             message.AppendLine($"Display Name: *{nextRecord.DisplayName.RemoveMarkdown()}*");
                             message.AppendLine($"Website URL: *{nextRecord.WebsiteUrl.RemoveMarkdown()}*");
+                            message.AppendLine($"Telegram Handle: *{nextRecord.TelegramHandle.RemoveMarkdown()}*");
                             message.AppendLine($"Short Description: _{nextRecord.ShortDescription.RemoveMarkdown()}_\n");
                             message.AppendLine($"Image: {(nextRecord.Image != null ? "Available (see below)" : "Not provided")}");
 
