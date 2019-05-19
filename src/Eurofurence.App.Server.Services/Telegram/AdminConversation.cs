@@ -643,9 +643,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                             c2 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel and Twitter feed.",
                                 async c2a =>
                                 {
+                                    await ReplyAsync("This will take just a moment... please wait...");
+
                                     if (c2a == "*approve") await _tableRegistrationService.ApproveByIdAsync(nextRecord.Id, requesterUid);
                                     if (c2a == "*reject") await _tableRegistrationService.RejectByIdAsync(nextRecord.Id, requesterUid);
-
 
                                     await ReplyAsync("Done. Send /tableRegistration again if you wish to review/view further items.");
                                     

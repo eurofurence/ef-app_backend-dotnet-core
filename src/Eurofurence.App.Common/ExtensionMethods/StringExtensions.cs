@@ -7,7 +7,7 @@
             return input
                 .Replace("_", @"\_")
                 .Replace("*", @"\*")
-                .Replace("`", @"\`");
+                .Replace("`", @"``");
         }
 
         public static string RemoveMarkdown(this string input)

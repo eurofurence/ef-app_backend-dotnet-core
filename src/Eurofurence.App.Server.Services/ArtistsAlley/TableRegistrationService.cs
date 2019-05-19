@@ -88,7 +88,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _tableRegistrationRepository.InsertOneAsync(record);
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*New Table Registration Request:*\n\nFrom: *{identity.Username.EscapeMarkdown()} ({uid.EscapeMarkdown()})*\n\nDisplay Name: *{record.DisplayName.EscapeMarkdown()}*\n_{record.ShortDescription.EscapeMarkdown()}_");
+                $"*New Request:* {identity.Username.EscapeMarkdown()} ({uid.EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
@@ -104,7 +104,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*Approved:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.EscapeMarkdown()}* and will be published on Twitter/Telegram.");
+                $"*Approved:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Twitter/Telegram.");
 
             await BroadcastAsync(record);
 
@@ -116,18 +116,18 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var telegramMessageBuilder = new StringBuilder();
             var twitterMessageBuilder = new StringBuilder();
 
-            telegramMessageBuilder.Append($"Now in the Artist Alley ({record.Location.EscapeMarkdown()}):\n\n*{record.DisplayName.EscapeMarkdown()}*\n\n");
+            telegramMessageBuilder.Append($"Now in the Artist Alley ({record.Location.EscapeMarkdown()}):\n\n*{record.DisplayName.RemoveMarkdown()}*\n\n");
             twitterMessageBuilder.Append($"Now in the Artist Alley ({record.Location}):\n\n{record.DisplayName}\n\n");
 
-            telegramMessageBuilder.Append($"_{record.ShortDescription.EscapeMarkdown()}_\n\n");
-            twitterMessageBuilder.Append($"_{record.ShortDescription}_\n\n");
+            telegramMessageBuilder.Append(record.ShortDescription.EscapeMarkdown() + "\n\n");
+            twitterMessageBuilder.Append(record.ShortDescription + "\n\n");
 
-            if (string.IsNullOrWhiteSpace(record.TelegramHandle))
+            if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
             {
                 telegramMessageBuilder.AppendLine($"Telgram: {record.TelegramHandle.RemoveMarkdown()}"); 
                 twitterMessageBuilder.AppendLine($"Telgram: https://t.me/{record.TelegramHandle.Replace("@", "")}");
             }
-            if (record.WebsiteUrl != null)
+            if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
             {
                 telegramMessageBuilder.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
                 twitterMessageBuilder.AppendLine($"Website: {record.WebsiteUrl}");
@@ -172,7 +172,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _tableRegistrationRepository.ReplaceOneAsync(record);
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
-                $"*Rejected:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.EscapeMarkdown()}*.");
+                $"*Rejected:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
 
             // Todo: Send a message to user. 
         }
