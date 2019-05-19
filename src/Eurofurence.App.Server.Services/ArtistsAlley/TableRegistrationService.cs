@@ -88,7 +88,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _tableRegistrationRepository.InsertOneAsync(record);
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*New Table Registration Request:*\n\nFrom: *{identity.Username.RemoveMarkdown()} ({uid})*\n\nDisplay Name: *{record.DisplayName.RemoveMarkdown()}*\n_{record.ShortDescription.RemoveMarkdown()}_");
+                $"*New Table Registration Request:*\n\nFrom: *{identity.Username.EscapeMarkdown()} ({uid.EscapeMarkdown()})*\n\nDisplay Name: *{record.DisplayName.EscapeMarkdown()}*\n_{record.ShortDescription.EscapeMarkdown()}_");
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
@@ -104,7 +104,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*Approved:* {identity.Username} ({record.OwnerUid} / {record.Id})\n\nRegistration has been approved by *{operatorUid}* and will be published on Twitter/Telegram.");
+                $"*Approved:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.EscapeMarkdown()}* and will be published on Twitter/Telegram.");
 
             await BroadcastAsync(record);
 
@@ -113,38 +113,50 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         private async Task BroadcastAsync(TableRegistrationRecord record)
         {
-            var messageBuilder = new StringBuilder();
-            messageBuilder.Append($"Now in the Artist Alley:\n\n*{record.DisplayName.RemoveMarkdown()}*\n\n");
-            messageBuilder.Append($"_{record.ShortDescription.RemoveMarkdown()}_");
+            var telegramMessageBuilder = new StringBuilder();
+            var twitterMessageBuilder = new StringBuilder();
+
+            telegramMessageBuilder.Append($"Now in the Artist Alley:\n\n*{record.DisplayName.EscapeMarkdown()}*\n\n");
+            twitterMessageBuilder.Append($"Now in the Artist Alley:\n\n{record.DisplayName}\n\n");
+
+            telegramMessageBuilder.Append($"_{record.ShortDescription.EscapeMarkdown()}_\n\n");
+            twitterMessageBuilder.Append($"_{record.ShortDescription}_\n\n");
+
+            if (string.IsNullOrWhiteSpace(record.TelegramHandle))
+            {
+                telegramMessageBuilder.AppendLine($"Telgram: {record.TelegramHandle.RemoveMarkdown()}"); 
+                twitterMessageBuilder.AppendLine($"Telgram: https://t.me/{record.TelegramHandle.Replace("@", "")}");
+            }
             if (record.WebsiteUrl != null)
             {
-                messageBuilder.Append("\n\n");
-                messageBuilder.Append(record.WebsiteUrl);
+                telegramMessageBuilder.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
+                twitterMessageBuilder.AppendLine($"Website: {record.WebsiteUrl}");
             }
 
-            var message = messageBuilder.ToString();
+            var twitterMessage = twitterMessageBuilder.ToString();
+            var telegramMessage = telegramMessageBuilder.ToString();
 
             if (record.Image != null)
             {
                 await _telegramMessageSender.SendImageToChatAsync(
                     _configuration.TelegramAnnouncementChannelId,
                     record.Image.ImageBytes,
-                    message);
+                    telegramMessage);
 
                 var media = await _twitterContext.UploadMediaAsync(
                     record.Image.ImageBytes,
                     record.Image.MimeType,
                     "tweet_image");
 
-                await _twitterContext.TweetAsync(message.RemoveMarkdown(), new ulong[] { media.MediaID });
+                await _twitterContext.TweetAsync(twitterMessage, new ulong[] { media.MediaID });
             }
             else
             {
                 await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                     _configuration.TelegramAnnouncementChannelId,
-                    message);
+                    telegramMessage);
 
-                await _twitterContext.TweetAsync(message.RemoveMarkdown());
+                await _twitterContext.TweetAsync(twitterMessage);
             }
         }
 
@@ -160,7 +172,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _tableRegistrationRepository.ReplaceOneAsync(record);
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
-                $"*Rejected:* {identity.Username} ({record.OwnerUid} / {record.Id})\n\nRegistration has been rejected by *{operatorUid}*.");
+                $"*Rejected:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.EscapeMarkdown()}*.");
 
             // Todo: Send a message to user. 
         }
