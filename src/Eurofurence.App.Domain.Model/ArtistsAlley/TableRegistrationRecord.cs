@@ -39,6 +39,12 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         public string ShortDescription { get; set; }
 
         [DataMember]
+        public string TelegramHandle { get; set; }
+
+        [DataMember]
+        public string Location { get; set; }
+
+        [DataMember]
         public ImageFragment Image { get; set; }
 
         [DataMember]

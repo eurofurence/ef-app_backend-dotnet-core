@@ -76,6 +76,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 DisplayName = request.DisplayName,
                 WebsiteUrl = request.WebsiteUrl,
                 ShortDescription = request.ShortDescription,
+                TelegramHandle = request.TelegramHandle,
+                Location = request.Location,
                 Image = imageFragment,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
             };

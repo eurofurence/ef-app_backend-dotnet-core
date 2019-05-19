@@ -9,5 +9,9 @@
         public string ShortDescription { get; set; }
 
         public string ImageContent { get; set; }
+
+        public string Location { get; set; }
+
+        public string TelegramHandle { get; set; }
     }
 }
