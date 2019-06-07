@@ -28,14 +28,21 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public async Task<ActionResult> PostEventFeedbackAsync([FromBody] EventFeedbackRecord record)
+        public async Task<ActionResult> PostEventFeedbackAsync([FromBody]PostEventFeedbackRequest request)
         {
-            if (record == null) return BadRequest();
+            if (request == null) return BadRequest();
 
-            if (await _eventService.FindOneAsync(record.EventId) == null)
-                return BadRequest($"No event with id {record.EventId}");
+            if (await _eventService.FindOneAsync(request.EventId) == null)
+                return BadRequest($"No event with id {request.EventId}");
 
-            if (record.Rating < 1 || record.Rating > 5) return BadRequest("Rating must be between 1 and 5");
+            if (request.Rating < 1 || request.Rating > 5) return BadRequest("Rating must be between 1 and 5");
+
+            var record = new EventFeedbackRecord()
+            {
+                EventId = request.EventId,
+                Message = request.Message,
+                Rating = request.Rating
+            };
 
             record.Touch();
             record.NewId();
