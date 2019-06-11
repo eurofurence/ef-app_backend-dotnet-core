@@ -111,7 +111,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return new MetadataGenerator()
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
-                .WithImage(dealer.ArtistImageId.HasValue ? $"/{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty)
+                .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty)
                 .AsResult();
         }
 
