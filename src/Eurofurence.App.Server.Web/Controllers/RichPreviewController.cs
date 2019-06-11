@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
-    [Route("Link")]
+    [Route("Web")]
     public class RichPreviewController : BaseController
     {
+        private readonly ConventionSettings _conventionSettings;
         private readonly IEventService _eventService;
         private readonly IEventConferenceDayService _eventConferenceDayService;
+        private readonly IDealerService _dealerService;
 
         private class MetadataGenerator
         {
@@ -43,6 +47,11 @@ namespace Eurofurence.App.Server.Web.Controllers
                 _redirect = targetUrl;
                 return this;
             }
+            public MetadataGenerator WithImage(string imageUrl)
+            {
+                _metaProperties.Add("og:image", imageUrl);
+                return this;
+            }
 
             public string Render()
             {
@@ -67,11 +76,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         public RichPreviewController(
+            ConventionSettings conventionSettings,
             IEventService eventService, 
-            IEventConferenceDayService eventConferenceDayService)
+            IEventConferenceDayService eventConferenceDayService,
+            IDealerService dealerService
+            )
         {
+            _conventionSettings = conventionSettings;
             _eventService = eventService;
             _eventConferenceDayService = eventConferenceDayService;
+            _dealerService = dealerService;
         }
 
         [HttpGet("Events/{Id}")]
@@ -85,6 +99,19 @@ namespace Eurofurence.App.Server.Web.Controllers
             return new MetadataGenerator()
                 .WithTitle(@event.Title)
                 .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
+                .AsResult();
+        }
+
+        [HttpGet("Dealers/{Id}")]
+        public async Task<ActionResult> GetDealerById(Guid Id)
+        {
+            var dealer = await _dealerService.FindOneAsync(Id);
+            if (dealer == null) return NotFound();
+
+            return new MetadataGenerator()
+                .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
+                .WithDescription(dealer.ShortDescription)
+                .WithImage(dealer.ArtistImageId.HasValue ? $"/{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty)
                 .AsResult();
         }
 
