@@ -72,6 +72,16 @@ namespace Eurofurence.App.Server.Web
             BsonClassMapping.Register();
             CidRouteBaseAttribute.Value = _conventionSettings.ConventionIdentifier;
 
+            services.AddLogging(options =>
+            {
+                options.ClearProviders();
+                
+                if (_hostingEnvironment.IsDevelopment())
+                {
+                    options.AddConsole();
+                }
+            });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",

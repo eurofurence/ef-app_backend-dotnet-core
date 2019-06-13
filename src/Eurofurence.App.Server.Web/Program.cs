@@ -1,22 +1,28 @@
-﻿using Microsoft.AspNetCore;
+﻿using Eurofurence.App.Server.Services.Telegram;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
 namespace Eurofurence.App.Server.Web
 {
     public class Program
     {
-        private static string _baseUrl;
+        public static BotManager _botManager { get; private set; }
 
         public static void Main(string[] args)
         {
-            _baseUrl = (args.Length >= 1) ? args[0] : "http://*:30001";
+            var baseUrl = (args.Length >= 1) ? args[0] : "http://*:30001";
 
-            CreateWebHostBuilder(args).Build().Run();
+            var host = CreateWebHostBuilder(baseUrl).Build();
+
+            _botManager = (BotManager)host.Services.GetService(typeof(BotManager));
+            _botManager.Start();
+
+            host.Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseUrls(_baseUrl)
+        public static IWebHostBuilder CreateWebHostBuilder(string baseUrl) =>
+            WebHost.CreateDefaultBuilder()
+                .UseUrls(baseUrl)
                 .UseStartup<Startup>();
     }
 }
