@@ -35,8 +35,10 @@ using Newtonsoft.Json.Converters;
 using Serilog;
 using Serilog.Context;
 using Serilog.Events;
+using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerUI;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -254,7 +256,7 @@ namespace Eurofurence.App.Server.Web
                 var options = new CloudWatchSinkOptions
                 {
                     LogGroupName = logGroupName,
-                    LogEventRenderer =  new JsonLogEventRenderer(),
+                    TextFormatter = new JsonFormatter(),
                     MinimumLogEventLevel = (LogEventLevel)Convert.ToInt32(Configuration["logLevel"]),
                     LogStreamNameProvider = new ConstantLogStreamNameProvider(Environment.MachineName)
                 };
