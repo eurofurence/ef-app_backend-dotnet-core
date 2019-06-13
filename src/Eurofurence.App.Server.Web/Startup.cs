@@ -49,18 +49,13 @@ namespace Eurofurence.App.Server.Web
         private ConventionSettings _conventionSettings;
         private ILogger _logger;
 
-        public Startup(IHostingEnvironment hostingEnvironment)
+        public Startup(IHostingEnvironment hostingEnvironment, IConfiguration configuration)
         {
             _hostingEnvironment = hostingEnvironment;
-
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json");
-
-            Configuration = builder.Build();
+            Configuration = configuration;
         }
 
-        public IConfigurationRoot Configuration { get; set; }
+        public IConfiguration Configuration { get; set; }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
@@ -127,8 +122,8 @@ namespace Eurofurence.App.Server.Web
                 });
 
                 options.DescribeAllEnumsAsStrings();
-                options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Server.Web.xml");
-                options.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/Eurofurence.App.Domain.Model.xml");
+                options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
+                options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Domain.Model.xml");
 
 
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
