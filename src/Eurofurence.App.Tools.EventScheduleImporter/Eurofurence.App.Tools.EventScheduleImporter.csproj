@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <AssemblyName>Eurofurence.App.Tools.EventScheduleImporter</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Eurofurence.App.Tools.EventScheduleImporter</PackageId>
@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETCOREAPP2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETCOREAPP2_2</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
