@@ -34,19 +34,20 @@ namespace Eurofurence.App.Server.Web.Extensions
             Properties.Add("og:description", value);
             return this;
         }
+
         public WebPreviewMetadata WithRedirect(string targetUrl)
         {
             Redirect = targetUrl;
             return this;
         }
+
         public WebPreviewMetadata WithImage(string imageUrl)
         {
             Properties.Add("og:image", imageUrl);
             return this;
         }
 
-
-        public ActionResult AsResult()
+        public ActionResult AsViewResult()
         {
             if (!Properties.ContainsKey("og:type")) Properties.Add("og:type", "website");
 

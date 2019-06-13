@@ -37,11 +37,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
 
-            return View("Metadata", new object { });
-            //return new MetadataGenerator()
-            //    .WithTitle(@event.Title)
-            //    .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
-            //    .AsResult();
+            return new WebPreviewMetadata()
+                .WithTitle(@event.Title)
+                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
+                .AsViewResult();
         }
 
         [HttpGet("Dealers/{Id}")]
@@ -54,7 +53,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty)
-                .AsResult();
+                .AsViewResult();
         }
 
     }
