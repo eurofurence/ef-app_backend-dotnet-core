@@ -71,6 +71,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             public ActionResult AsResult()
             {
+                return new ViewResult() { ViewName = "MetaData" };
                 return new ContentResult() { Content = Render(), ContentType = "text/html" };
             }
         }
