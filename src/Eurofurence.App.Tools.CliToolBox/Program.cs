@@ -43,7 +43,7 @@ namespace Eurofurence.App.Tools.CliToolBox
                 builder.RegisterType(type).AsSelf();
 
             var container = builder.Build();
-            container.Resolve<IMongoDatabaseInitialization>().ExecuteInitializationTasks(database);
+            container.Resolve<IMongoDatabaseBroker>().Setup(database);
 
             var app = new CommandLineApplication();
 

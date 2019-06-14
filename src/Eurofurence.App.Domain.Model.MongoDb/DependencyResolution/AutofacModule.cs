@@ -29,11 +29,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 {
     public class AutofacModule : Module
     {
-        private MongoDatabaseInitialization _mongoDatabaseInitialization;
+        private MongoDatabaseBroker _mongoDatabaseInitialization;
 
         public AutofacModule()
         {
-            _mongoDatabaseInitialization = new MongoDatabaseInitialization();
+            _mongoDatabaseInitialization = new MongoDatabaseBroker();
         }
 
         private void Register<TRepository, IRepository, TRecord>(
@@ -41,14 +41,16 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Action<IMongoCollection<TRecord>> setup = null
             ) where TRecord: IEntityBase
         {
+            var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
+
+            builder.Register(_ => _mongoDatabaseInitialization.GetCollection<TRecord>(name))
+                .As<IMongoCollection<TRecord>>();
+
+            builder.RegisterType<TRepository>().As<IRepository>();
+
             _mongoDatabaseInitialization.InitializationTasks.Add(mongoDatabase =>
             {
-                var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
                 var collection = mongoDatabase.GetCollection<TRecord>(name);
-
-                builder.Register(r => collection).As<IMongoCollection<TRecord>>();
-                builder.RegisterType<TRepository>().As<IRepository>();
-
 
                 var createBasicIndexes = new Action(() =>
                 {
@@ -73,7 +75,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance<IMongoDatabaseInitialization>(_mongoDatabaseInitialization);
+            builder.RegisterInstance<IMongoDatabaseBroker>(_mongoDatabaseInitialization);
 
             Register<EntityStorageInfoRepository, IEntityStorageInfoRepository, EntityStorageInfoRecord>(builder);
             Register<EventRepository, IEntityRepository<EventRecord>, EventRecord>(builder);

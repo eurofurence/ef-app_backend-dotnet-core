@@ -55,36 +55,10 @@ namespace Eurofurence.App.Server.Web
         {
             BsonClassMapping.Register();
 
-            var builder = new ContainerBuilder();
-            builder.Populate(services);
-
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule());
-            builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
-
-            builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
-                .As<IApiPrincipal>();
-
-            builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
-            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
-            builder.Register(c => Configuration.GetSection("jobs:updateNews"))
-                .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
-
-            var container = builder.Build();
-
-            var conventionSettings = container.Resolve<ConventionSettings>();
-            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
-            var database = client.GetDatabase(Configuration["mongoDb:database"]);
-
-            container
-                .Resolve<Domain.Model.MongoDb.DependencyResolution.IMongoDatabaseInitialization>()
-                .ExecuteInitializationTasks(database);
-
-            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
-
             services.AddLogging(options =>
             {
                 options.ClearProviders();
-                
+
                 if (_hostingEnvironment.IsDevelopment())
                 {
                     options.AddConsole();
@@ -117,15 +91,16 @@ namespace Eurofurence.App.Server.Web
                 });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            
+
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("api", new Info
                 {
-                    Version = conventionSettings.ConventionIdentifier,
+                    Version = Configuration["global:conventionIdentifier"],
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
-                    Contact = new Contact {
+                    Contact = new Contact
+                    {
                         Name = "Eurofurence IT Department",
                         Email = "it@eurofurence.org",
                         Url = "https://help.eurofurence.org/contact/it"
@@ -150,9 +125,8 @@ namespace Eurofurence.App.Server.Web
                 options.OperationFilter<BinaryPayloadFilter>();
                 options.DocumentFilter<BasePathFilter>(
                     Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1"
-                    ? $"/{conventionSettings.ConventionIdentifier}" : "/");
+                    ? $"/{Configuration["global:conventionIdentifier"]}" : "/");
             });
-
 
             var oAuthBearerAuthenticationPolicy =
                 new AuthorizationPolicyBuilder().AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
@@ -168,20 +142,48 @@ namespace Eurofurence.App.Server.Web
                 .AddJwtBearer(configure =>
                 {
                     configure.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            IssuerSigningKey = new SymmetricSecurityKey(
+                    {
+                        IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.ASCII.GetBytes(Configuration["oAuth:secretKey"])),
-                            ValidAudience = Configuration["oAuth:Audience"],
-                            ValidIssuer = Configuration["oAuth:Issuer"],
-                            ValidateLifetime = true,
-                            ClockSkew = TimeSpan.FromSeconds(0)
-                       };
+                        ValidAudience = Configuration["oAuth:Audience"],
+                        ValidIssuer = Configuration["oAuth:Issuer"],
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromSeconds(0)
+                    };
                 });
 
             services.Configure<LoggerFilterOptions>(options =>
             {
                 options.MinLevel = LogLevel.Trace;
             });
+
+
+            var builder = new ContainerBuilder();
+            builder.Populate(services);
+
+            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule());
+            builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
+
+            builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
+                .As<IApiPrincipal>();
+
+            builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
+            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
+            builder.Register(c => Configuration.GetSection("jobs:updateNews"))
+                .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
+
+            var container = builder.Build();
+            
+
+            var conventionSettings = container.Resolve<ConventionSettings>();
+            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
+            var database = client.GetDatabase(Configuration["mongoDb:database"]);
+
+            container
+                .Resolve<Domain.Model.MongoDb.DependencyResolution.IMongoDatabaseBroker>()
+                .Setup(database);
+
+            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
 
             return container.Resolve<IServiceProvider>();
         }
