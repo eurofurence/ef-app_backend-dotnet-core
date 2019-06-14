@@ -29,11 +29,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 {
     public class AutofacModule : Module
     {
-        private readonly IMongoDatabase _mongoDatabase;
+        private MongoDatabaseInitialization _mongoDatabaseInitialization;
 
-        public AutofacModule(IMongoDatabase mongoDatabase)
+        public AutofacModule()
         {
-            _mongoDatabase = mongoDatabase;
+            _mongoDatabaseInitialization = new MongoDatabaseInitialization();
         }
 
         private void Register<TRepository, IRepository, TRecord>(
@@ -41,35 +41,40 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Action<IMongoCollection<TRecord>> setup = null
             ) where TRecord: IEntityBase
         {
-            var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
-            var collection = _mongoDatabase.GetCollection<TRecord>(name);
-
-            builder.Register(r => collection).As<IMongoCollection<TRecord>>();
-            builder.RegisterType<TRepository>().As<IRepository>();
-
-
-            var createBasicIndexes = new Action(() =>
+            _mongoDatabaseInitialization.InitializationTasks.Add(mongoDatabase =>
             {
-                collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Ascending(a => a.IsDeleted));
-                collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Descending(a => a.LastChangeDateTimeUtc));
+                var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
+                var collection = mongoDatabase.GetCollection<TRecord>(name);
+
+                builder.Register(r => collection).As<IMongoCollection<TRecord>>();
+                builder.RegisterType<TRepository>().As<IRepository>();
+
+
+                var createBasicIndexes = new Action(() =>
+                {
+                    collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Ascending(a => a.IsDeleted));
+                    collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Descending(a => a.LastChangeDateTimeUtc));
+                });
+
+                try
+                {
+                    createBasicIndexes();
+                    setup?.Invoke(collection);
+                }
+                catch (MongoWriteConcernException)
+                {
+                    collection.Indexes.DropAll();
+                    createBasicIndexes();
+                    setup?.Invoke(collection);
+                }
+
             });
-
-            try
-            {
-                createBasicIndexes();
-                setup?.Invoke(collection);
-            }
-            catch (MongoWriteConcernException)
-            {
-                collection.Indexes.DropAll();
-                createBasicIndexes();
-                setup?.Invoke(collection);
-            }
-
         }
 
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterInstance<IMongoDatabaseInitialization>(_mongoDatabaseInitialization);
+
             Register<EntityStorageInfoRepository, IEntityStorageInfoRepository, EntityStorageInfoRecord>(builder);
             Register<EventRepository, IEntityRepository<EventRecord>, EventRecord>(builder);
             Register<EventConferenceDayRepository, IEntityRepository<EventConferenceDayRecord>, EventConferenceDayRecord>(builder);

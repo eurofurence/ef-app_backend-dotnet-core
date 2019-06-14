@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var builder = new ContainerBuilder();
             builder.RegisterModule(new App.Tests.Common.TestLogger.AutofacModule());
             builder.RegisterModule(new App.Tests.Common.InMemoryRepository.AutofacModule());
-            builder.RegisterModule(new DependencyResolution.AutofacModule());
+            builder.RegisterModule(new DependencyResolution.AutofacModule(null));
 
             var _telegramMessageSender = new Mock<ITelegramMessageSender>().As<ITelegramMessageSender>();
             var _configuration = new CollectionGameConfiguration();

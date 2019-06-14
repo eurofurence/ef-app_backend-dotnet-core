@@ -23,8 +23,8 @@ namespace Eurofurence.App.Tools.KnowledgeBaseImporter
             BsonClassMapping.Register();
 
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new AutofacModule(_database));
-            builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule());
+            builder.RegisterModule(new AutofacModule());
+            builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule(null));
 
             var container = builder.Build();
 

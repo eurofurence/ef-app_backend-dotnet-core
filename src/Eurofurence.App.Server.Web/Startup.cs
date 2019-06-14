@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 using Amazon;
 using Amazon.CloudWatchLogs;
@@ -8,11 +7,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Domain.Model.MongoDb;
-using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
-using Eurofurence.App.Server.Services.Abstraction.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
-using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Fursuits;
 using Eurofurence.App.Server.Services.Security;
@@ -46,7 +41,6 @@ namespace Eurofurence.App.Server.Web
     public class Startup
     {
         private readonly IHostingEnvironment _hostingEnvironment;
-        private ConventionSettings _conventionSettings;
         private ILogger _logger;
 
         public Startup(IHostingEnvironment hostingEnvironment, IConfiguration configuration)
@@ -59,18 +53,33 @@ namespace Eurofurence.App.Server.Web
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
+            BsonClassMapping.Register();
+
+            var builder = new ContainerBuilder();
+            builder.Populate(services);
+
+            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule());
+            builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
+
+            builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
+                .As<IApiPrincipal>();
+
+            builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
+            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
+            builder.Register(c => Configuration.GetSection("jobs:updateNews"))
+                .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
+
+            var container = builder.Build();
+
+            var conventionSettings = container.Resolve<ConventionSettings>();
             var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
-            _conventionSettings = new ConventionSettings()
-            {
-                ConventionIdentifier = Configuration["global:conventionIdentifier"],
-                IsRegSysAuthenticationEnabled = Convert.ToInt32(Configuration["global:regSysAuthenticationEnabled"]) == 1,
-                ApiBaseUrl = Configuration["global:apiBaseUrl"]
-            };
+            container
+                .Resolve<Domain.Model.MongoDb.DependencyResolution.IMongoDatabaseInitialization>()
+                .ExecuteInitializationTasks(database);
 
-            BsonClassMapping.Register();
-            CidRouteBaseAttribute.Value = _conventionSettings.ConventionIdentifier;
+            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
 
             services.AddLogging(options =>
             {
@@ -113,7 +122,7 @@ namespace Eurofurence.App.Server.Web
             {
                 options.SwaggerDoc("api", new Info
                 {
-                    Version = _conventionSettings.ConventionIdentifier,
+                    Version = conventionSettings.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
                     Contact = new Contact {
@@ -141,7 +150,7 @@ namespace Eurofurence.App.Server.Web
                 options.OperationFilter<BinaryPayloadFilter>();
                 options.DocumentFilter<BasePathFilter>(
                     Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1"
-                    ? $"/{_conventionSettings.ConventionIdentifier}" : "/");
+                    ? $"/{conventionSettings.ConventionIdentifier}" : "/");
             });
 
 
@@ -174,62 +183,6 @@ namespace Eurofurence.App.Server.Web
                 options.MinLevel = LogLevel.Trace;
             });
 
-            var builder = new ContainerBuilder();
-            builder.Populate(services);
-            builder.RegisterModule(new AutofacModule(database));
-            builder.RegisterModule(new Services.DependencyResolution.AutofacModule());
-            builder.RegisterInstance(new TokenFactorySettings
-            {
-                SecretKey = Configuration["oAuth:secretKey"],
-                Audience = Configuration["oAuth:audience"],
-                Issuer = Configuration["oAuth:issuer"]
-            });
-            builder.RegisterInstance(new AuthenticationSettings
-            {
-                DefaultTokenLifeTime = TimeSpan.FromDays(30)
-            });
-            builder.RegisterInstance(_conventionSettings);
-            builder.RegisterInstance(new WnsConfiguration
-            {
-                ClientId = Configuration["wns:clientId"],
-                ClientSecret = Configuration["wns:clientSecret"],
-                TargetTopic = Configuration["wns:targetTopic"]
-            });
-            builder.RegisterInstance(new FirebaseConfiguration
-            {
-                AuthorizationKey = Configuration["firebase:authorizationKey"],
-            });
-            builder.RegisterInstance(new TelegramConfiguration
-            {
-                AccessToken = Configuration["telegram:accessToken"],
-                Proxy = Configuration["telegram:proxy"]
-            });
-            builder.RegisterInstance(new CollectionGameConfiguration()
-            {
-                LogFile = Configuration["collectionGame:logFile"],
-                LogLevel = Convert.ToInt32(Configuration["collectionGame:logLevel"]),
-                TelegramManagementChatId = Configuration["collectionGame:telegramManagementChatId"]
-            });
-            builder.RegisterInstance(new ArtistAlleyConfiguration()
-            {
-                TelegramAdminGroupChatId = Configuration["artistAlley:telegram:adminGroupChatId"],
-                TelegramAnnouncementChannelId = Configuration["artistAlley:telegram:announcementChannelId"],
-                TwitterConsumerKey = Configuration["artistAlley:twitter:consumerKey"],
-                TwitterConsumerSecret = Configuration["artistAlley:twitter:consumerSecret"],
-                TwitterAccessToken = Configuration["artistAlley:twitter:accessToken"],
-                TwitterAccessTokenSecret = Configuration["artistAlley:twitter:accessTokenSecret"]
-            });
-
-            builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
-                .As<IApiPrincipal>();
-
-            builder.Register(c => Configuration.GetSection("jobs:updateNews"))
-                .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
-            
-            builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
-            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
-
-            var container = builder.Build();
             return container.Resolve<IServiceProvider>();
         }
 
