@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text;
-using Amazon;
+﻿using Amazon;
 using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
 using Autofac;
@@ -8,8 +6,8 @@ using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Services.Fursuits;
 using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
@@ -34,6 +32,8 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using System;
+using System.Text;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -54,6 +54,8 @@ namespace Eurofurence.App.Server.Web
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             BsonClassMapping.Register();
+
+            var conventionSettings = ConventionSettings.FromConfiguration(Configuration);
 
             services.AddLogging(options =>
             {
@@ -96,7 +98,7 @@ namespace Eurofurence.App.Server.Web
             {
                 options.SwaggerDoc("api", new Info
                 {
-                    Version = Configuration["global:conventionIdentifier"],
+                    Version = conventionSettings.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
                     Contact = new Contact
@@ -119,13 +121,12 @@ namespace Eurofurence.App.Server.Web
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Domain.Model.xml");
 
-
                 options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
                 options.OperationFilter<BinaryPayloadFilter>();
                 options.DocumentFilter<BasePathFilter>(
                     Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1"
-                    ? $"/{Configuration["global:conventionIdentifier"]}" : "/");
+                    ? $"/{conventionSettings.ConventionIdentifier}" : "/");
             });
 
             var oAuthBearerAuthenticationPolicy =
@@ -141,12 +142,13 @@ namespace Eurofurence.App.Server.Web
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(configure =>
                 {
+                    var tokenFactorySettings = TokenFactorySettings.FromConfiguration(Configuration);
+
                     configure.TokenValidationParameters = new TokenValidationParameters
                     {
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.ASCII.GetBytes(Configuration["oAuth:secretKey"])),
-                        ValidAudience = Configuration["oAuth:Audience"],
-                        ValidIssuer = Configuration["oAuth:Issuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenFactorySettings.SecretKey)),
+                        ValidAudience = tokenFactorySettings.Audience,
+                        ValidIssuer = tokenFactorySettings.Issuer,
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.FromSeconds(0)
                     };
@@ -156,7 +158,6 @@ namespace Eurofurence.App.Server.Web
             {
                 options.MinLevel = LogLevel.Trace;
             });
-
 
             var builder = new ContainerBuilder();
             builder.Populate(services);
@@ -173,9 +174,7 @@ namespace Eurofurence.App.Server.Web
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
 
             var container = builder.Build();
-            
 
-            var conventionSettings = container.Resolve<ConventionSettings>();
             var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
@@ -229,7 +228,7 @@ namespace Eurofurence.App.Server.Web
                 .Logger(lc =>
                     lc.Filter
                         .ByIncludingOnly($"EventId.Id = {LogEvents.Audit.Id}")
-                        .WriteTo.File(Configuration["auditLog"], 
+                        .WriteTo.File(Configuration["auditLog"],
                             restrictedToMinimumLevel: LogEventLevel.Verbose,
                             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}"
                         )
@@ -241,7 +240,7 @@ namespace Eurofurence.App.Server.Web
                 .Logger(lc =>
                     lc.Filter
                         .ByIncludingOnly($"EventId.Id = {LogEvents.CollectionGame.Id}")
-                        .WriteTo.File(cgc.LogFile, (LogEventLevel) cgc.LogLevel)
+                        .WriteTo.File(cgc.LogFile, (LogEventLevel)cgc.LogLevel)
                 );
 
             Log.Logger = loggerConfiguration.CreateLogger();
@@ -253,7 +252,7 @@ namespace Eurofurence.App.Server.Web
                     {"System", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning}
                 })
                 .AddSerilog();
-            
+
             _logger = loggerFactory.CreateLogger(GetType());
             _logger.LogInformation($"Logging commences");
 

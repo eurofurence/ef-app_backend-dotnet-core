@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using Eurofurence.App.Server.Services.Abstraction.Telegram;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -54,59 +54,14 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
         {
             if (_configuration == null) return;
 
-            builder.RegisterInstance(new ConventionSettings()
-            {
-                ConventionIdentifier = _configuration["global:conventionIdentifier"],
-                IsRegSysAuthenticationEnabled = Convert.ToInt32(_configuration["global:regSysAuthenticationEnabled"]) == 1,
-                ApiBaseUrl = _configuration["global:apiBaseUrl"]
-            });
-
-            builder.RegisterInstance(new TokenFactorySettings
-            {
-                SecretKey = _configuration["oAuth:secretKey"],
-                Audience = _configuration["oAuth:audience"],
-                Issuer = _configuration["oAuth:issuer"]
-            });
-
-            builder.RegisterInstance(new AuthenticationSettings
-            {
-                DefaultTokenLifeTime = TimeSpan.FromDays(30)
-            });
-
-            builder.RegisterInstance(new WnsConfiguration
-            {
-                ClientId = _configuration["wns:clientId"],
-                ClientSecret = _configuration["wns:clientSecret"],
-                TargetTopic = _configuration["wns:targetTopic"]
-            });
-
-            builder.RegisterInstance(new FirebaseConfiguration
-            {
-                AuthorizationKey = _configuration["firebase:authorizationKey"],
-            });
-
-            builder.RegisterInstance(new TelegramConfiguration
-            {
-                AccessToken = _configuration["telegram:accessToken"],
-                Proxy = _configuration["telegram:proxy"]
-            });
-
-            builder.RegisterInstance(new CollectionGameConfiguration()
-            {
-                LogFile = _configuration["collectionGame:logFile"],
-                LogLevel = Convert.ToInt32(_configuration["collectionGame:logLevel"]),
-                TelegramManagementChatId = _configuration["collectionGame:telegramManagementChatId"]
-            });
-
-            builder.RegisterInstance(new ArtistAlleyConfiguration()
-            {
-                TelegramAdminGroupChatId = _configuration["artistAlley:telegram:adminGroupChatId"],
-                TelegramAnnouncementChannelId = _configuration["artistAlley:telegram:announcementChannelId"],
-                TwitterConsumerKey = _configuration["artistAlley:twitter:consumerKey"],
-                TwitterConsumerSecret = _configuration["artistAlley:twitter:consumerSecret"],
-                TwitterAccessToken = _configuration["artistAlley:twitter:accessToken"],
-                TwitterAccessTokenSecret = _configuration["artistAlley:twitter:accessTokenSecret"]
-            });
+            builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
+            builder.RegisterInstance(TokenFactorySettings.FromConfiguration(_configuration));
+            builder.RegisterInstance(AuthenticationSettings.FromConfiguration(_configuration));
+            builder.RegisterInstance(WnsConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(TelegramConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));
         }
 
         private void RegisterServices(ContainerBuilder builder)

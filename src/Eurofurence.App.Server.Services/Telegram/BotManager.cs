@@ -1,29 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Abstractions;
+﻿using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Server.Services.Abstraction.Telegram;
+using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
-using Microsoft.Extensions.Logging;
-using System.IO;
-using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Telegram.Bot.Types.InputFiles;
-using Eurofurence.App.Domain.Model.Security;
 
 // ReSharper disable CoVariantArrayConversion
 
@@ -51,7 +50,6 @@ namespace Eurofurence.App.Server.Services.Telegram
         private Dictionary<int, DateTime> _answerredQueries = new Dictionary<int, DateTime>();
         private ILogger _logger;
 
-
         internal class MiniProxy : IWebProxy
         {
             private readonly string _uri;
@@ -60,6 +58,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             {
                 _uri = uri;
             }
+
             public Uri GetProxy(Uri destination)
             {
                 return new Uri(_uri);
@@ -124,8 +123,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                 loggerFactory,
                 _botClient,
                 (chatId) => new AdminConversation(
-                    _userManager, 
-                    _regSysAlternativePinAuthenticationProvider, 
+                    _userManager,
+                    _regSysAlternativePinAuthenticationProvider,
                     _pushNotificationChannelRepository,
                     _fursuitBadgeRepository,
                     _fursuitBadgeImageRepository,
@@ -200,11 +199,9 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .ToArray();
         }
 
-
         private async Task<InlineQueryResultBase[]> QueryFursuitBadges(string query)
         {
             if (query.Length < 3) return new InlineQueryResultBase[0];
-
 
             var badges =
                 (await _fursuitBadgeRepository.FindAllAsync(
@@ -220,13 +217,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                         $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image",
                         $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image")
                     {
-                        
                         Title = e.Name,
                         Caption = $"{e.Name}\n{e.Species} ({e.Gender})\n\nWorn by:{e.WornBy}\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
                     };
                 })
                 .ToArray();
-
         }
 
         private async void BotClientOnOnInlineQuery(object sender, InlineQueryEventArgs inlineQueryEventArgs)
@@ -261,8 +256,6 @@ namespace Eurofurence.App.Server.Services.Telegram
             _botClient?.StartReceiving();
         }
 
-
-
         private async void BotClientOnOnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
             try
@@ -283,7 +276,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                     _answerredQueries.Add(e.CallbackQuery.Message.MessageId, DateTime.UtcNow);
                 }
-                
+
                 await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
             }
             catch (Exception ex)
@@ -319,8 +312,6 @@ namespace Eurofurence.App.Server.Services.Telegram
                 chatId, new InputOnlineFile(new MemoryStream(imageBytes)),
                 caption: message,
                 parseMode: ParseMode.Markdown);
-                
         }
-
     }
 }
