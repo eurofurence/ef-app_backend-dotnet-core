@@ -149,13 +149,13 @@ namespace Eurofurence.App.Domain.Model.MongoDb.Repositories
 
         public virtual async Task<bool> HasAsync(Guid id, bool includeDeletedRecords = false)
         {
-            var count = await Collection.CountAsync(entity => entity.Id == id && (entity.IsDeleted == 0 || includeDeletedRecords));
+            var count = await Collection.CountDocumentsAsync(entity => entity.Id == id && (entity.IsDeleted == 0 || includeDeletedRecords));
             return count > 0;
         }
 
         public virtual async Task<bool> HasManyAsync(Guid[] ids, bool includeDeletedRecords = false)
         {
-            var count = await Collection.CountAsync(
+            var count = await Collection.CountDocumentsAsync(
                 entity => ids.Contains(entity.Id) && (entity.IsDeleted == 0 || includeDeletedRecords));
 
             return count == ids.Length;

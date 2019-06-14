@@ -1,6 +1,6 @@
-using System.Linq;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Linq;
 
 namespace Eurofurence.App.Server.Web.Swagger
 {
@@ -10,11 +10,12 @@ namespace Eurofurence.App.Server.Web.Swagger
         {
             var apiDescription = context.ApiDescription;
 
-            var attribute =
-            (apiDescription.ActionAttributes()
-                .FirstOrDefault(a => a is BinaryPayloadAttribute) as BinaryPayloadAttribute);
+            apiDescription.TryGetMethodInfo(out var methodInfo);
 
-            if (attribute == null)
+            if (!(methodInfo?
+                .GetCustomAttributes(false)
+                .FirstOrDefault(a => a is BinaryPayloadAttribute)
+                is BinaryPayloadAttribute attribute))
             {
                 return;
             }

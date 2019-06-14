@@ -1,5 +1,4 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using Eurofurence.App.Common.Abstractions;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
@@ -24,6 +23,7 @@ using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Telegram;
 using MongoDB.Driver;
+using System;
 
 namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 {
@@ -37,9 +37,9 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
         }
 
         private void Register<TRepository, IRepository, TRecord>(
-            ContainerBuilder builder, 
+            ContainerBuilder builder,
             Action<IMongoCollection<TRecord>> setup = null
-            ) where TRecord: IEntityBase
+            ) where TRecord : IEntityBase
         {
             var name = typeof(TRecord).FullName.Replace("Eurofurence.App.Domain.Model.", "");
 
@@ -54,8 +54,8 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
 
                 var createBasicIndexes = new Action(() =>
                 {
-                    collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Ascending(a => a.IsDeleted));
-                    collection.Indexes.CreateOne(Builders<TRecord>.IndexKeys.Descending(a => a.LastChangeDateTimeUtc));
+                    collection.Indexes.CreateOne(new CreateIndexModel<TRecord>(Builders<TRecord>.IndexKeys.Ascending(a => a.IsDeleted)));
+                    collection.Indexes.CreateOne(new CreateIndexModel<TRecord>(Builders<TRecord>.IndexKeys.Descending(a => a.LastChangeDateTimeUtc)));
                 });
 
                 try
@@ -69,7 +69,6 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                     createBasicIndexes();
                     setup?.Invoke(collection);
                 }
-
             });
         }
 
@@ -99,10 +98,12 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
             Register<RegSysIdentityRepository, IEntityRepository<RegSysIdentityRecord>, RegSysIdentityRecord>(builder,
                 collection => collection.Indexes.CreateOne(
-                    Builders<RegSysIdentityRecord>.IndexKeys.Ascending(a => a.Uid)));
+                    new CreateIndexModel<RegSysIdentityRecord>(
+                        Builders<RegSysIdentityRecord>.IndexKeys.Ascending(a => a.Uid))));
             Register<RegSysAccessTokenRepository, IEntityRepository<RegSysAccessTokenRecord>, RegSysAccessTokenRecord>(builder,
                 collection => collection.Indexes.CreateOne(
-                    Builders<RegSysAccessTokenRecord>.IndexKeys.Ascending(a => a.Token)));
+                    new CreateIndexModel<RegSysAccessTokenRecord>(
+                        Builders<RegSysAccessTokenRecord>.IndexKeys.Ascending(a => a.Token))));
 
             Register<UserRepository, IEntityRepository<UserRecord>, UserRecord>(builder);
 
@@ -110,10 +111,12 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                 collection =>
                 {
                     collection.Indexes.CreateOne(
-                        Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.ExternalReference),
-                        new CreateIndexOptions() { Unique = true });
-                    collection.Indexes.CreateOne(Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.OwnerUid));
-
+                        new CreateIndexModel<FursuitBadgeRecord>(
+                            Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.ExternalReference),
+                            new CreateIndexOptions() { Unique = true }));
+                    collection.Indexes.CreateOne(
+                        new CreateIndexModel<FursuitBadgeRecord>(
+                            Builders<FursuitBadgeRecord>.IndexKeys.Ascending(a => a.OwnerUid)));
                 });
 
             Register<FursuitBadgeImageRepository, IEntityRepository<FursuitBadgeImageRecord>, FursuitBadgeImageRecord>(builder);
@@ -122,38 +125,48 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                 collection =>
                 {
                     collection.Indexes.CreateOne(
-                        Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.PlayerUid),
-                        new CreateIndexOptions() { Unique =  true });
+                        new CreateIndexModel<PlayerParticipationRecord>(
+                            Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.PlayerUid),
+                            new CreateIndexOptions() { Unique = true }));
                     collection.Indexes.CreateOne(
-                        Builders<PlayerParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount));
+                            new CreateIndexModel<PlayerParticipationRecord>(
+                            Builders<PlayerParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount)));
                     collection.Indexes.CreateOne(
-                        Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.LastCollectionDateTimeUtc));
+                            new CreateIndexModel<PlayerParticipationRecord>(
+                            Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.LastCollectionDateTimeUtc)));
                     collection.Indexes.CreateOne(
-                        Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.IsBanned));
+                            new CreateIndexModel<PlayerParticipationRecord>(
+                            Builders<PlayerParticipationRecord>.IndexKeys.Ascending(a => a.IsBanned)));
                 });
 
             Register<FursuitParticipantRepository, IEntityRepository<FursuitParticipationRecord>, FursuitParticipationRecord>(builder,
                 collection =>
                 {
                     collection.Indexes.CreateOne(
-                        Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.OwnerUid));
+                        new CreateIndexModel<FursuitParticipationRecord>(
+                            Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.OwnerUid)));
                     collection.Indexes.CreateOne(
-                        Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.TokenValue),
-                        new CreateIndexOptions() { Unique = true });
+                        new CreateIndexModel<FursuitParticipationRecord>(
+                            Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.TokenValue),
+                            new CreateIndexOptions() { Unique = true }));
                     collection.Indexes.CreateOne(
-                        Builders<FursuitParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount));
+                        new CreateIndexModel<FursuitParticipationRecord>(
+                            Builders<FursuitParticipationRecord>.IndexKeys.Descending(a => a.CollectionCount)));
                     collection.Indexes.CreateOne(
-                        Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.LastCollectionDateTimeUtc));
+                        new CreateIndexModel<FursuitParticipationRecord>(
+                            Builders<FursuitParticipationRecord>.IndexKeys.Ascending(a => a.LastCollectionDateTimeUtc)));
                 });
 
             Register<TokenRepository, IEntityRepository<TokenRecord>, TokenRecord>(builder,
                 collection => collection.Indexes.CreateOne(
-                    Builders<TokenRecord>.IndexKeys.Ascending(a => a.Value),
-                    new CreateIndexOptions() { Unique = true }));
+                    new CreateIndexModel<TokenRecord>(
+                        Builders<TokenRecord>.IndexKeys.Ascending(a => a.Value),
+                        new CreateIndexOptions() { Unique = true })));
 
             Register<ItemActivityRepository, IEntityRepository<ItemActivityRecord>, ItemActivityRecord>(builder,
                 collection => collection.Indexes.CreateOne(
-                    Builders<ItemActivityRecord>.IndexKeys.Ascending(a => a.ImportHash)));
+                    new CreateIndexModel<ItemActivityRecord>(
+                        Builders<ItemActivityRecord>.IndexKeys.Ascending(a => a.ImportHash))));
 
             Register<TableRegistrationRepository, IEntityRepository<TableRegistrationRecord>, TableRegistrationRecord>(builder);
         }

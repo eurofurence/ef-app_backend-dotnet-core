@@ -10,7 +10,7 @@ namespace Eurofurence.App.Tests.Common.InMemoryRepository
 {
     public class InMemoryEntityRepository<T> : IEntityRepository<T> where T : EntityBase
     {
-         private List<T> _entities = new List<T>();
+        private List<T> _entities = new List<T>();
 
         public Task DeleteAllAsync()
         {
@@ -102,19 +102,20 @@ namespace Eurofurence.App.Tests.Common.InMemoryRepository
             return Task.CompletedTask;
         }
 
-        private IQueryable<T> ApplyFilterOptions<T>(IQueryable<T> input, FilterOptions<T> filterOptions)
+        private IQueryable<T> ApplyFilterOptions(IQueryable<T> input, FilterOptions<T> filterOptions)
         {
             if (filterOptions == null) return input;
 
             IOrderedQueryable<T> inputSorted = null;
 
-            foreach(var sort in filterOptions.SortFields)
+            foreach (var sort in filterOptions.SortFields)
             {
                 switch (sort.Order)
                 {
                     case FilterOptions<T>.SortOrderEnum.Ascending:
                         inputSorted = inputSorted?.ThenBy(sort.Field) ?? input.OrderBy(sort.Field);
                         break;
+
                     case FilterOptions<T>.SortOrderEnum.Descending:
                         inputSorted = inputSorted?.ThenByDescending(sort.Field) ?? input.OrderByDescending(sort.Field);
                         break;

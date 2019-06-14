@@ -585,7 +585,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private async Task CommandTableRegistration()
         {
-            Func<Task> c1 = null, c2 = null, c3 = null;
+            Func<Task> c1 = null, c2 = null;
             var title = "Table Registration";
             var requesterUid = $"Telegram:@{_user.Username}";
 

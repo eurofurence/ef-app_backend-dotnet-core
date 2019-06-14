@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -31,7 +30,6 @@ using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Validation;
 using Microsoft.Extensions.Configuration;
-using System;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
 {
