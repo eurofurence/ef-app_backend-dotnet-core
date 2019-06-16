@@ -10,6 +10,9 @@ namespace Eurofurence.App.Server.Web.Extensions
         public string Redirect { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public string AppIdITunes { get; set; }
+        public string AppIdPlay { get; set; }
+        public string ImageUrl { get; set; }
 
         public WebPreviewMetadata()
         {
@@ -38,6 +41,18 @@ namespace Eurofurence.App.Server.Web.Extensions
         public WebPreviewMetadata WithRedirect(string targetUrl)
         {
             Redirect = targetUrl;
+            return this;
+        }
+
+        public WebPreviewMetadata WithAppIdITunes(string appIdITunes)
+        {
+            AppIdITunes = appIdITunes;
+            return this;
+        }
+
+        public WebPreviewMetadata WithAppIdPlay(string appIdPlay)
+        {
+            AppIdPlay = appIdPlay;
             return this;
         }
 

@@ -38,6 +38,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
 
             return new WebPreviewMetadata()
+                .WithAppIdITunes(_conventionSettings.AppIdITunes)
+                .WithAppIdPlay(_conventionSettings.AppIdPlay)
                 .WithTitle(@event.Title)
                 .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
                 .AsViewResult();
@@ -50,6 +52,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (dealer == null) return NotFound();
 
             return new WebPreviewMetadata()
+                .WithAppIdITunes(_conventionSettings.AppIdITunes)
+                .WithAppIdPlay(_conventionSettings.AppIdPlay)
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty)
