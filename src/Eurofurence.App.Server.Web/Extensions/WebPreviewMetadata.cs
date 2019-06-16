@@ -58,6 +58,7 @@ namespace Eurofurence.App.Server.Web.Extensions
 
         public WebPreviewMetadata WithImage(string imageUrl)
         {
+            ImageUrl = imageUrl;
             Properties.Add("og:image", imageUrl);
             return this;
         }
