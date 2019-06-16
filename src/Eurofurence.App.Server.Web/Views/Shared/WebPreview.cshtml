@@ -26,11 +26,14 @@
     {
     <meta property="@property.Key" content="@property.Value" />
     }
+
+    if (!string.IsNullOrEmpty(Model.AppIdITunes))
+    {
+    <meta name="apple-itunes-app" content="app-id=@Model.AppIdITunes,app-argument=@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}")" />
+    }
+
 }
 </head>
-<body>
-
-    This is content that you can see with our <a href="/">mobile apps</a>.
-
+<body style="font-family: sans-serif;">
 </body>
 </html>
