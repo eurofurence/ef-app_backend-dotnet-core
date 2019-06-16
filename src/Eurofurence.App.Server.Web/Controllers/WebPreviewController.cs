@@ -60,5 +60,35 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .AsViewResult();
         }
 
+        [HttpGet("manifest.json")]
+        public ActionResult GetManifest()
+        {
+            return Json(new {
+                short_name = "Eurofurence",
+                name = "Eurofurence",
+                icons = new[] {
+                    new {
+                        //TODO: provide actual icon for Android app
+                        src = "/images/icon192.png",
+                        type = "image/png",
+                        sizes = "192x192"
+                    },
+                    new {
+                        //TODO: provide actual icon for Android app
+                        src = "/images/icon512.png",
+                        type = "image/png",
+                        sizes = "512x512"
+                    }
+                },
+                prefer_related_applications = true,
+                related_applications = new[] {
+                    new {
+                        platform = "play",
+                        id = _conventionSettings.AppIdPlay
+                    }
+                }
+            });
+        }
+
     }
 }
