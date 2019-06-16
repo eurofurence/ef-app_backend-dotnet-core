@@ -37,7 +37,26 @@
     <link rel="manifest" href="/Web/manifest.json" />
     }
 }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>article,footer{width: 80%;max-width: 65ex;margin: auto;}section{display: flex;flex-wrap: wrap;justify-content: center;}section>*{flex: 1 1 30ex}</style>
 </head>
 <body style="font-family: sans-serif;">
+    <article>
+        <h1 style="text-align: center;">@Model.Title</h1>
+        <section>
+        @{
+            if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+            <img style="max-width: 30ex; max-height: 30ex; object-fit: contain;" src="@Model.ImageUrl" title="@Model.Title" />
+            }
+        }
+            <p>
+                @Model.Description
+            </p>
+        </section>
+    </article>
+    <footer style="font-size: 75%; margin-top: 1ex;">
+        This is a preview of content that you can see with our <a href="/">mobile apps</a>.
+    </footer>
 </body>
 </html>
