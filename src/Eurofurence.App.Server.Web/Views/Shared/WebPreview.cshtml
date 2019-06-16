@@ -32,6 +32,10 @@
     <meta name="apple-itunes-app" content="app-id=@Model.AppIdITunes,app-argument=@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}")" />
     }
 
+    if (!string.IsNullOrEmpty(Model.AppIdPlay))
+    {
+    <link rel="manifest" href="/Web/manifest.json" />
+    }
 }
 </head>
 <body style="font-family: sans-serif;">
