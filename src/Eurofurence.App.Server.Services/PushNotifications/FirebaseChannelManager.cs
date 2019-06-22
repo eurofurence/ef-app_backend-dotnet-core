@@ -49,7 +49,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         Event = "Announcement",
                         Title = announcement.Title.RemoveMarkdown(),
                         Text = announcement.Content.RemoveMarkdown(),
-                        RelatedId = announcement.Id
+                        RelatedId = announcement.Id,
+                        CID = _conventionSettings.ConventionIdentifier
                     },
                     to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
                 }), 
@@ -58,7 +59,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     data = new
                     {
                         @event = "announcement",
-                        announcement_id = announcement.Id,
+                        announcement_id = announcement.Id
                     },
                     notification = new {
                         title = announcement.Title.RemoveMarkdown(),
@@ -105,7 +106,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             Event = "Notification",
                             Title = toastTitle,
                             Message = toastMessage,
-                            RelatedId = relatedId
+                            RelatedId = relatedId,
+                            CID = _conventionSettings.ConventionIdentifier
                         },
                         to = recipient.DeviceId
                     });
@@ -121,6 +123,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     data = new
                     {
                         Event = "Sync",
+                        CID = _conventionSettings.ConventionIdentifier
                     },
                     to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
                 }),
