@@ -4,15 +4,42 @@
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
 
     var eventConferenceDay = (ViewData["eventConferenceDay"] as EventConferenceDayRecord);
+    var eventConferenceRoom = (ViewData["eventConferenceRoom"] as EventConferenceRoomRecord);
+    var eventConferenceTrack = (ViewData["eventConferenceTrack"] as EventConferenceTrackRecord);
+
+    ViewBag.Title = Model.Title;
+    ViewBag.SubTitle = Model.SubTitle;
 }
 
-<h1>EventPreview</h1>
+<header>
+    @Model.Abstract
+</header>
 
-Taking place on @eventConferenceDay.Date  (@eventConferenceDay.Name): <br /><br />
+<section>
+    <span><i class="fas fa-calendar"></i> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</span>
+    <span><i class="fas fa-clock"></i> @Model.StartDateTimeUtc.ToString("HH:mm:ss")</span>
+    <span><i class="fas fa-step-forward"></i> @Model.EndDateTimeUtc.ToString("HH:mm:ss")</span>
+    <span><i class="fas fa-map-marker-alt"></i> @eventConferenceRoom.Name</span>
+</section>
 
-This would be @Model.Slug taking place at @Model.StartDateTimeUtc until @Model.EndDateTimeUtc  That's a total of @Model.Duration.TotalSeconds seconds! Woohoo.
+<section>
+    <img src="@ViewBag.ContentBaseUrl/Clipboard01.png" title="@Model.Title" />
+</section>
 
-@section foobar {
-    Inject this.
-
+@if (Model.BannerImageId != null)
+{
+    <section>
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.BannerImageId.ToString()/Content" title="@Model.Title" />
+    </section>
 }
+
+<section class="half">
+    <p>
+        @Model.Description
+    </p>
+
+    @if (Model.PosterImageId != null)
+    {
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.PosterImageId.ToString()/Content" title="@Model.Title" />
+    }
+</section>

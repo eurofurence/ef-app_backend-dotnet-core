@@ -57,7 +57,7 @@
             font-family: sans-serif;
         }
 
-        article, footer {
+        article {
             width: 80%;
             max-width: 65ex;
             margin: auto;
@@ -72,15 +72,19 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
             margin: 2ex 0;
+            text-align: justify;
         }
 
         section > * {
             padding: 0 1ex;
+            max-width: 100%;
         }
 
         section.half > * {
             flex: 1 1 30ex;
+            margin: 1ex 0;
         }
 
         section.half > img {
@@ -89,12 +93,8 @@
             object-fit: contain;
         }
 
-        section > p {
-            text-align: justify;
-        }
-
-        div.header {
-            float: right;
+        header {
+            text-align: center;
         }
 
         footer {
@@ -118,10 +118,10 @@
             }
         </h1>
         @RenderBody()
+        <footer>
+            This is a preview of content that you can see with our <a href="/">mobile apps</a>.
+        </footer>
     </article>
-    <footer>
-        This is a preview of content that you can see with our <a href="/">mobile apps</a>.
-    </footer>
 </body>
 </html>
 

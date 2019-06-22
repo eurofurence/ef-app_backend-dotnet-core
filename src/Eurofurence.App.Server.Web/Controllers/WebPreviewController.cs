@@ -14,18 +14,24 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly ConventionSettings _conventionSettings;
         private readonly IEventService _eventService;
         private readonly IEventConferenceDayService _eventConferenceDayService;
+        private readonly IEventConferenceRoomService _eventConferenceRoomService;
+        private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IDealerService _dealerService;
 
         public WebPreviewController(
             ConventionSettings conventionSettings,
-            IEventService eventService, 
+            IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
+            IEventConferenceRoomService eventConferenceRoomService,
+            IEventConferenceTrackService eventConferenceTrackService,
             IDealerService dealerService
             )
         {
             _conventionSettings = conventionSettings;
             _eventService = eventService;
             _eventConferenceDayService = eventConferenceDayService;
+            _eventConferenceRoomService = eventConferenceRoomService;
+            _eventConferenceTrackService = eventConferenceTrackService;
             _dealerService = dealerService;
         }
 
@@ -36,6 +42,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (@event == null) return NotFound();
 
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
+            var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
+            var eventConferenceTrack = await _eventConferenceTrackService.FindOneAsync(@event.ConferenceTrackId);
 
             ViewData["Metadata"] = new WebPreviewMetadata()
                 .WithAppIdITunes(_conventionSettings.AppIdITunes)
@@ -47,6 +55,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData["ContentBaseUrl"] = _conventionSettings.ContentBaseUrl;
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
+            ViewData["eventConferenceRoom"] = eventConferenceRoom;
+            ViewData["eventConferenceTrack"] = eventConferenceTrack;
 
             return View("EventPreview", @event);
         }
