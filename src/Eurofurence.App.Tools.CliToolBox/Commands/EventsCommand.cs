@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule;
@@ -36,6 +38,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             command.Command("importCsvFile", importCsvFileCommand);
             command.Command("importImage", importImageCommand);
             command.Command("setTags", setTagsCommand);
+            command.Command("autoTags", autoTagsCommand);
             command.Command("clear", clearCommand);
         }
 
@@ -47,6 +50,68 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 _eventConferenceDayService.DeleteAllAsync().Wait();
                 _eventConferenceRoomService.DeleteAllAsync().Wait();
                 _eventConferenceTrackService.DeleteAllAsync().Wait();
+
+                return 0;
+            });
+        }
+
+        private void autoTagsCommand(CommandLineApplication command)
+        {
+            command.OnExecute(() =>
+            {
+                var events = _eventService.FindAllAsync().Result;
+                var eventConferenceRooms = _eventConferenceRoomService.FindAllAsync().Result;
+
+
+                Action<string[], IList<string>, string>  ensureTagExists = 
+                    (existing, @new, tag) => { if (!existing.Contains(tag)) @new.Add(tag); };
+
+                foreach(var @event in events)
+                {
+                    var existingTags = @event.Tags ?? new string[0];
+                    var newTags = new List<string>();
+
+                    var eventConferenceRoom = eventConferenceRooms.SingleOrDefault(a => a.Id == @event.ConferenceRoomId);
+                    if (eventConferenceRoom == null) continue;
+
+                    if (eventConferenceRoom.Name.StartsWith("Main Stage", StringComparison.InvariantCultureIgnoreCase)
+                        && !@event.SubTitle.Contains("Seating", StringComparison.InvariantCultureIgnoreCase))
+                        ensureTagExists(existingTags, newTags, "main_stage");
+
+                    if (@event.PanelHosts.Contains("Onkel Kage", StringComparison.InvariantCultureIgnoreCase))
+                        ensureTagExists(existingTags, newTags, "kage");
+
+                    if (@event.Slug.StartsWith("art_show_") && !@event.Slug.Contains("_setup") && !@event.Slug.Contains("_artist"))
+                        ensureTagExists(existingTags, newTags, "art_show");
+
+                    if (@event.Slug.Contains("_photoshoot"))
+                        ensureTagExists(existingTags, newTags, "photoshoot");
+
+                    if (@event.Slug.StartsWith("dealers_den_") && !@event.Slug.Contains("_setup") && !@event.Slug.Contains("_artist"))
+                    {
+                        ensureTagExists(existingTags, newTags, "dealers_den");
+
+                        if (@event.Slug.Contains("_sponsors_supersponsors"))
+                        {
+                            ensureTagExists(existingTags, newTags, "sponsors_only");
+                        }
+                        else if (@event.Slug.Contains("_supersponsors"))
+                        {
+                            ensureTagExists(existingTags, newTags, "supersponsors_only");
+                        }
+                    }
+
+                    if (newTags.Count > 0)
+                    {
+                        @event.Tags = existingTags.Concat(newTags).ToArray();
+                        @event.Touch();
+
+                        _eventService.ReplaceOneAsync(@event).Wait();
+
+                        command.Out.WriteLine($"Event {@event.Id} ({@event.Slug} / {@event.Title}):");
+                        command.Out.WriteLine($"  Existing Tags: {String.Join(",", existingTags)}, New Tags: {String.Join(",", newTags)}");
+                    }
+                }
 
                 return 0;
             });
