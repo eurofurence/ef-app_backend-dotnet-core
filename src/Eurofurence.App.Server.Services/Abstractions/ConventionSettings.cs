@@ -10,9 +10,9 @@ namespace Eurofurence.App.Server.Services.Abstractions
         public string BaseUrl { get; set; }
         public string AppIdITunes { get; set; } 
         public string AppIdPlay { get; set; }
-        public string ApiBaseUrl => $"{BaseUrl}/Api/";
-        public string ContentBaseUrl => $"{BaseUrl}/Web/Static/";
-        public string WebBaseUrl => $"{BaseUrl}/Web/";
+        public string ApiBaseUrl => $"{BaseUrl}/Api";
+        public string ContentBaseUrl => $"{BaseUrl}/Web/Static";
+        public string WebBaseUrl => $"{BaseUrl}/Web";
 
         public static ConventionSettings FromConfiguration(IConfiguration configuration) 
             => new ConventionSettings()
