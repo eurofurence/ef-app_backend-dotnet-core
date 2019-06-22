@@ -85,6 +85,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         data = new
                         {
                             @event = "notification",
+                            message_id = relatedId
                         },
                         notification = new
                         {
