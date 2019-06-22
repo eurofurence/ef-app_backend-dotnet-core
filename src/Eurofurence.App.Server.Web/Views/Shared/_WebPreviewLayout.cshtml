@@ -73,11 +73,14 @@
         }
 
         section > * {
-            flex: 1 1 30ex;
             padding: 0 1ex;
         }
 
-        section > img {
+        section.half > * {
+            flex: 1 1 30ex;
+        }
+
+        section.half > img {
             max-width: 30ex;
             max-height: 30ex;
             object-fit: contain;
@@ -95,6 +98,10 @@
             text-align: center;
             font-size: 75%;
             margin-top: 1ex;
+        }
+
+        a:any-link {
+            color: #3AF;
         }
     </style>
 </head>

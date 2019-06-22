@@ -2,37 +2,70 @@
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
 
-    ViewBag.Title = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname)? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
+    ViewBag.Title = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname) ? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
     ViewBag.SubTitle = string.Join(", ", Model.Categories);
+
+    var days = new string[] {};
+
+    if (Model.AttendsOnThursday)
+    {
+        days.Append("Thursday");
+    }
+
+    if (Model.AttendsOnFriday)
+    {
+        days.Append("Friday");
+    }
+
+    if (Model.AttendsOnSaturday)
+    {
+        days.Append("Saturday");
+    }
 
 }
 
 <section>
-@{
-    if (Model.ArtistImageId != null)
+    @Model.ShortDescription
+</section>
+
+<section>
+    @if (!string.IsNullOrEmpty(Model.TwitterHandle))
     {
-    <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" />
+        <span><i class="fab fa-twitter"></i> <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@@Model.TwitterHandle">@Model.TwitterHandle</a></span>
     }
-}
+    @if (!string.IsNullOrEmpty(Model.TelegramHandle))
+    {
+        <span><i class="fab fa-telegram"></i> <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle">@Model.TelegramHandle</a></span>
+    }
+    @if (days.Length > 0)
+    {
+        <span><i class="fas fa-calendar"></i> Only on @string.Join(", ", days)</span>
+    }
+    @if (Model.IsAfterDark)
+    {
+        <span><i class="fas fa-moon"></i> After Dark</span>
+    }
+</section>
+
+<hr />
+
+<section class="half">
+    @if (Model.ArtistImageId != null)
+    {
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" />
+    }
     <p>
         @Model.AboutTheArtistText
     </p>
-</section>
-@{
-if (Model.ArtPreviewImageId != null || !string.IsNullOrEmpty(Model.AboutTheArtText))
-{
-<section>
-    @if (Model.ArtPreviewImageId != null)
-    {
-    <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" />
-    }
-
     @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
     {
-    <p>
-        @Model.AboutTheArtText
-    </p>
+        <p>
+            @Model.AboutTheArtText
+        </p>
     }
-</section>  
-}
-}
+
+    @if (Model.ArtPreviewImageId != null)
+    {
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" />
+    }
+</section>
