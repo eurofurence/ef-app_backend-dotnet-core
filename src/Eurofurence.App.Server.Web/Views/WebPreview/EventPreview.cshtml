@@ -1,0 +1,18 @@
+﻿@using Eurofurence.App.Domain.Model.Events
+@model EventRecord
+@{
+    Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+
+    var eventConferenceDay = (ViewData["eventConferenceDay"] as EventConferenceDayRecord);
+}
+
+<h1>EventPreview</h1>
+
+Taking place on @eventConferenceDay.Date  (@eventConferenceDay.Name): <br /><br />
+
+This would be @Model.Slug taking place at @Model.StartDateTimeUtc until @Model.EndDateTimeUtc  That's a total of @Model.Duration.TotalSeconds seconds! Woohoo.
+
+@section foobar {
+    Inject this.
+
+}

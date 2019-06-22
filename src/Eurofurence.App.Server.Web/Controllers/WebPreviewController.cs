@@ -37,12 +37,15 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
 
-            return new WebPreviewMetadata()
+            ViewData["Metadata"] = new WebPreviewMetadata()
                 .WithAppIdITunes(_conventionSettings.AppIdITunes)
                 .WithAppIdPlay(_conventionSettings.AppIdPlay)
                 .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
-                .AsViewResult();
+                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}");
+
+            ViewData["eventConferenceDay"] = eventConferenceDay;
+
+            return View("EventPreview", @event);
         }
 
         [HttpGet("Dealers/{Id}")]
@@ -51,13 +54,14 @@ namespace Eurofurence.App.Server.Web.Controllers
             var dealer = await _dealerService.FindOneAsync(Id);
             if (dealer == null) return NotFound();
 
-            return new WebPreviewMetadata()
+            ViewData["Metadata"] = new WebPreviewMetadata()
                 .WithAppIdITunes(_conventionSettings.AppIdITunes)
                 .WithAppIdPlay(_conventionSettings.AppIdPlay)
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
-                .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty)
-                .AsViewResult();
+                .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}Images/{dealer.ArtistImageId}/Content" : string.Empty);
+
+            return View("DealerPreview", dealer);
         }
 
         [HttpGet("manifest.json")]

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Eurofurence.App.Server.Web.Extensions
 {
@@ -63,16 +61,16 @@ namespace Eurofurence.App.Server.Web.Extensions
             return this;
         }
 
-        public ActionResult AsViewResult()
-        {
-            if (!Properties.ContainsKey("og:type")) Properties.Add("og:type", "website");
+        //public ActionResult AsViewResult()
+        //{
+        //    if (!Properties.ContainsKey("og:type")) Properties.Add("og:type", "website");
 
-            return new ViewResult() {
-                ViewName = "WebPreview",
-                ViewData = new ViewDataDictionary(
-                    new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider(),
-                    new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary()) { Model = this }
-            };
-        }
+        //    return new ViewResult() {
+        //        ViewName = "WebPreview",
+        //        ViewData = new ViewDataDictionary(
+        //            new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider(),
+        //            new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary()) { Model = this }
+        //    };
+        //}
     }
 }

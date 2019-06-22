@@ -1,0 +1,79 @@
+﻿@using Eurofurence.App.Server.Web.Extensions
+
+@{
+    var webPreviewMetadata = (ViewData["Metadata"] as WebPreviewMetadata);
+    if (webPreviewMetadata == null)
+    {
+        throw new ArgumentException();
+    }
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    @{
+        if (!string.IsNullOrEmpty(webPreviewMetadata.Title))
+        {
+            <title>@webPreviewMetadata.Title</title>
+        }
+
+        if (!string.IsNullOrEmpty(webPreviewMetadata.Description))
+        {
+            <meta name="description" content="@webPreviewMetadata.Description" />
+        }
+
+        if (!string.IsNullOrEmpty(webPreviewMetadata.Redirect))
+        {
+            <meta http-equiv="refresh" content="@($"0;url={Model.Redirect}")" />
+        }
+
+        foreach (var property in webPreviewMetadata.Properties)
+        {
+            <meta property="@property.Key" content="@property.Value" />
+        }
+
+        if (!string.IsNullOrEmpty(webPreviewMetadata.AppIdITunes))
+        {
+            <meta name="apple-itunes-app" content="app-id=@webPreviewMetadata.AppIdITunes,app-argument=@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}")" />
+        }
+
+        if (!string.IsNullOrEmpty(webPreviewMetadata.AppIdPlay))
+        {
+            <link rel="manifest" href="/Web/manifest.json" />
+        }
+    }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        article, footer {
+            width: 80%;
+            max-width: 65ex;
+            margin: auto;
+        }
+
+        section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+            section > * {
+                flex: 1 1 30ex
+            }
+    </style>
+</head>
+<body style="font-family: sans-serif;">
+    <article>
+        This is outside of the body.
+        <div style="border: 1px solid blue; padding: 5px;">
+            @RenderSection("foobar", false)
+        </div>
+        <div style="border: 1px solid red; padding: 5px;">
+            @RenderBody()
+        </div>
+</article>
+    <footer style="font-size: 75%; margin-top: 1ex;">
+        This is a preview of content that you can see with our <a href="/">mobile apps</a>.
+    </footer>
+</body>
+</html>
+
