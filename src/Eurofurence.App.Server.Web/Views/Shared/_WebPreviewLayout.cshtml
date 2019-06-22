@@ -6,6 +6,10 @@
     {
         throw new ArgumentException();
     }
+
+    ViewBag.ApiBaseUrl = (ViewData["ApiBaseUrl"] as String);
+    ViewBag.WebBaseUrl = (ViewData["WebBaseUrl"] as String);
+    ViewBag.ContentBaseUrl = (ViewData["ContentBaseUrl"] as String);
 }
 <!DOCTYPE html>
 
@@ -44,34 +48,68 @@
     }
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        html, body {
+            background: #333;
+            color: #DDD;
+            font-family: sans-serif;
+        }
+
         article, footer {
             width: 80%;
             max-width: 65ex;
             margin: auto;
         }
 
+        h1 span {
+            font-size: 50%;
+            display: block;
+        }
+
         section {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            margin: 2ex 0;
         }
 
-            section > * {
-                flex: 1 1 30ex
-            }
+        section > * {
+            flex: 1 1 30ex;
+            padding: 0 1ex;
+        }
+
+        section > img {
+            max-width: 30ex;
+            max-height: 30ex;
+            object-fit: contain;
+        }
+
+        section > p {
+            text-align: justify;
+        }
+
+        div.header {
+            float: right;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 75%;
+            margin-top: 1ex;
+        }
     </style>
 </head>
-<body style="font-family: sans-serif;">
+<body>
     <article>
-        This is outside of the body.
-        <div style="border: 1px solid blue; padding: 5px;">
-            @RenderSection("foobar", false)
-        </div>
-        <div style="border: 1px solid red; padding: 5px;">
-            @RenderBody()
-        </div>
-</article>
-    <footer style="font-size: 75%; margin-top: 1ex;">
+        <h1 style="text-align: center;">
+            @ViewBag.Title
+            @if (!string.IsNullOrEmpty(ViewBag.SubTitle))
+            {
+                <span>@ViewBag.SubTitle</span>
+            }
+        </h1>
+        @RenderBody()
+    </article>
+    <footer>
         This is a preview of content that you can see with our <a href="/">mobile apps</a>.
     </footer>
 </body>

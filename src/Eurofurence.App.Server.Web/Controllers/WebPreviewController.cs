@@ -42,6 +42,9 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithAppIdPlay(_conventionSettings.AppIdPlay)
                 .WithTitle(@event.Title)
                 .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}");
+            ViewData["ApiBaseUrl"] = _conventionSettings.ApiBaseUrl;
+            ViewData["WebBaseUrl"] = _conventionSettings.WebBaseUrl;
+            ViewData["ContentBaseUrl"] = _conventionSettings.ContentBaseUrl;
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
 
@@ -60,6 +63,9 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{dealer.ArtistImageId}/Content" : string.Empty);
+            ViewData["ApiBaseUrl"] = _conventionSettings.ApiBaseUrl;
+            ViewData["WebBaseUrl"] = _conventionSettings.WebBaseUrl;
+            ViewData["ContentBaseUrl"] = _conventionSettings.ContentBaseUrl;
 
             return View("DealerPreview", dealer);
         }

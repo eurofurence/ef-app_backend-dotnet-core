@@ -1,55 +1,76 @@
-﻿@model Eurofurence.App.Server.Web.Extensions.WebPreviewMetadata
+﻿@using Eurofurence.App.Server.Web.Extensions
+
 @{
-    Layout = null;
+    var webPreviewMetadata = (ViewData["Metadata"] as WebPreviewMetadata);
+    if (webPreviewMetadata == null)
+    {
+        throw new ArgumentException();
+    }
 }
 <!DOCTYPE html>
 
 <html>
 <head>
-@{
-    if (!string.IsNullOrEmpty(Model.Title))
-    {
-    <title>@Model.Title</title>
-    }
+    @{
+        if (!string.IsNullOrEmpty(Model.Title))
+        {
+            <title>@Model.Title</title>
+        }
 
-    if (!string.IsNullOrEmpty(Model.Description))
-    {
-    <meta name="description" content="@Model.Description" />
-    }
+        if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <meta name="description" content="@Model.Description" />
+        }
 
-    if (!string.IsNullOrEmpty(Model.Redirect))
-    {
-    <meta http-equiv="refresh" content="@($"0;url={Model.Redirect}")" />
-    }
+        if (!string.IsNullOrEmpty(Model.Redirect))
+        {
+            <meta http-equiv="refresh" content="@($"0;url={Model.Redirect}")" />
+        }
 
-    foreach (var property in Model.Properties)
-    {
-    <meta property="@property.Key" content="@property.Value" />
-    }
+        foreach (var property in Model.Properties)
+        {
+            <meta property="@property.Key" content="@property.Value" />
+        }
 
-    if (!string.IsNullOrEmpty(Model.AppIdITunes))
-    {
-    <meta name="apple-itunes-app" content="app-id=@Model.AppIdITunes,app-argument=@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}")" />
-    }
+        if (!string.IsNullOrEmpty(Model.AppIdITunes))
+        {
+            <meta name="apple-itunes-app" content="app-id=@Model.AppIdITunes,app-argument=@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}")" />
+        }
 
-    if (!string.IsNullOrEmpty(Model.AppIdPlay))
-    {
-    <link rel="manifest" href="/Web/manifest.json" />
+        if (!string.IsNullOrEmpty(Model.AppIdPlay))
+        {
+            <link rel="manifest" href="/Web/manifest.json" />
+        }
     }
-}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>article,footer{width: 80%;max-width: 65ex;margin: auto;}section{display: flex;flex-wrap: wrap;justify-content: center;}section>*{flex: 1 1 30ex}</style>
+    <style>
+        article, footer {
+            width: 80%;
+            max-width: 65ex;
+            margin: auto;
+        }
+
+        section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+            section > * {
+                flex: 1 1 30ex
+            }
+    </style>
 </head>
 <body style="font-family: sans-serif;">
     <article>
         <h1 style="text-align: center;">@Model.Title</h1>
         <section>
-        @{
-            if (!string.IsNullOrEmpty(Model.ImageUrl))
-            {
-            <img style="max-width: 30ex; max-height: 30ex; object-fit: contain;" src="@Model.ImageUrl" title="@Model.Title" />
+            @{
+                if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img style="max-width: 30ex; max-height: 30ex; object-fit: contain;" src="@Model.ImageUrl" title="@Model.Title" />
+                }
             }
-        }
             <p>
                 @Model.Description
             </p>

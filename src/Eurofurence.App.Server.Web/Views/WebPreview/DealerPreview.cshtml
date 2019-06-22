@@ -1,8 +1,38 @@
 ﻿@model Eurofurence.App.Domain.Model.Dealers.DealerRecord
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+
+    ViewBag.Title = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname)? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
+    ViewBag.SubTitle = string.Join(", ", Model.Categories);
+
 }
 
-<h1>DealerPreview</h1>
+<section>
+@{
+    if (Model.ArtistImageId != null)
+    {
+    <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" />
+    }
+}
+    <p>
+        @Model.AboutTheArtistText
+    </p>
+</section>
+@{
+if (Model.ArtPreviewImageId != null || !string.IsNullOrEmpty(Model.AboutTheArtText))
+{
+<section>
+    @if (Model.ArtPreviewImageId != null)
+    {
+    <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" />
+    }
 
-This would be @Model.DisplayName in categories @string.Join(", ", Model.Categories) - woohoo.
+    @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
+    {
+    <p>
+        @Model.AboutTheArtText
+    </p>
+    }
+</section>  
+}
+}
