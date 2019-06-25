@@ -14,6 +14,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         private readonly IEventConferenceDayService _eventConferenceDayService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
+        private readonly IEventFeedbackService _eventFeedbackService;
         private readonly IImageService _imageService;
 
         public EventsCommand(
@@ -21,6 +22,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
             IEventConferenceTrackService eventConferenceTrackService,
+            IEventFeedbackService eventFeedbackService,
             IImageService imageService
             )
         {
@@ -28,6 +30,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceTrackService = eventConferenceTrackService;
+            _eventFeedbackService = eventFeedbackService;
             _imageService = imageService;
         }
 
@@ -37,6 +40,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.Command("importCsvFile", importCsvFileCommand);
             command.Command("importImage", importImageCommand);
+            command.Command("exportCsvFeedback", exportCsvFeedbackCommand);
             command.Command("setTags", setTagsCommand);
             command.Command("autoTags", autoTagsCommand);
             command.Command("clear", clearCommand);
@@ -209,6 +213,40 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 Console.WriteLine(modifiedRecords);
 
                 return modifiedRecords == 0 ? 0 : 1;
+            });
+        }
+
+        private void exportCsvFeedbackCommand(CommandLineApplication command)
+        {
+            command.OnExecute(() =>
+            {
+                var eventFeedbackRecords = _eventFeedbackService.FindAllAsync().Result;
+                var distinctEventIds = eventFeedbackRecords.Select(a => a.EventId).Distinct().ToList();
+                var distinctEvents = _eventService.FindAllAsync(a => distinctEventIds.Contains(a.Id)).Result;
+
+                var records = new List<CsvFeedbackExporter.Record>();
+
+                foreach (var record in eventFeedbackRecords)
+                {
+                    var @event = distinctEvents.SingleOrDefault(a => a.Id == record.EventId);
+                    records.Add(new CsvFeedbackExporter.Record()
+                    {
+                        EventId = record.EventId,
+                        SourceEventId = @event?.SourceEventId.ToString() ?? "?",
+                        FeedbackReceivedDateTimeUtc = record.LastChangeDateTimeUtc,
+                        EventStartDateTimeUtc = @event?.StartDateTimeUtc ?? DateTime.MinValue,
+                        EventEndDateTimeUtc = @event?.EndDateTimeUtc ?? DateTime.MinValue,
+                        Slug = @event?.Slug,
+                        Message = record.Message,
+                        Rating = record.Rating
+                    });
+
+                }
+
+                var exporter = new CsvFeedbackExporter();
+                exporter.Write(records, Console.Out);
+
+                return 0;
             });
         }
     }
