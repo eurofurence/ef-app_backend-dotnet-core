@@ -19,6 +19,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             public TimeSpan Duration { get; set; }
             public string ConferenceRoom { get; set; }
             public string PanelHosts { get; set; }
+            public string AppFeedback { get; set; }
         }
     }
 }

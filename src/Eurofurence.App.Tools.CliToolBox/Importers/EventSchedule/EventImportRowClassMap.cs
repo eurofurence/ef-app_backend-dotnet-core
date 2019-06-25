@@ -21,6 +21,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                 Map(m => m.Duration).Name("duration");
                 Map(m => m.ConferenceRoom).Name("conference_room");
                 Map(m => m.PanelHosts).Name("pannel_hosts");
+                Map(m => m.AppFeedback).Name("appfeedback");
             }
         }
     }
