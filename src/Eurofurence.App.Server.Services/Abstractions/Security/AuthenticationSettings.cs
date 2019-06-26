@@ -10,7 +10,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Security
         public static AuthenticationSettings FromConfiguration(IConfiguration configuration)
             => new AuthenticationSettings
             {
-                DefaultTokenLifeTime = TimeSpan.FromDays(30)
+                DefaultTokenLifeTime = TimeSpan.FromDays(90)
             };
     }
 }
