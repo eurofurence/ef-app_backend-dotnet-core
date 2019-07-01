@@ -64,7 +64,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     notification = new {
                         title = announcement.Title.RemoveMarkdown(),
                         body = announcement.Content.RemoveMarkdown(),
-                        sound = "notification_default.caf"
+                        sound = "generic_notification.caf"
                     },
                     content_available = true,
                     priority = "high",
@@ -92,7 +92,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         {
                             title = toastTitle,
                             body = toastMessage,
-                            sound = "notification_default.caf"
+                            sound = "personal_notification.caf"
                         },
                         to = recipient.DeviceId
                     });
