@@ -115,7 +115,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 AuthorName = "Artist Alley",
                 RecipientUid = identity.Uid,
                 Subject = "Your table registration was accepted",
-                Message = message
+                Message = message,
+                ToastTitle = "Artist Alley",
+                ToastMessage = "Your table registration was accepted"
             };
 
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
@@ -191,7 +193,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 AuthorName = "Artist Alley",
                 RecipientUid = identity.Uid,
                 Subject = "Your table registration was rejected",
-                Message = message
+                Message = message,
+                ToastTitle = "Artist Alley",
+                ToastMessage = "Your table registration was rejected"
             };
 
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
