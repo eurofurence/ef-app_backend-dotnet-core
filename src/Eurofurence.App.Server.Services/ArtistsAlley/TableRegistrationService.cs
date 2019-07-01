@@ -108,7 +108,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await BroadcastAsync(record);
 
-            var message = $"Dear {identity.Username},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/imags you provided) has been posted on our Twitter and Telegram channels.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
+            var message = $"Dear {identity.Username},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Twitter and Telegram channels.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
 
             var sendPrivateMessageRequest = new SendPrivateMessageRequest()
             {
