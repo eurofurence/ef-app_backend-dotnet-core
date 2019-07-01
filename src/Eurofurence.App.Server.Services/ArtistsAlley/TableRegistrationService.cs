@@ -108,7 +108,17 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await BroadcastAsync(record);
 
-            // Todo: Send a message to user.
+            var message = $"Dear {identity.Username},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/imags you provided) has been posted on our Twitter and Telegram channels.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
+
+            var sendPrivateMessageRequest = new SendPrivateMessageRequest()
+            {
+                AuthorName = "Artist Alley",
+                RecipientUid = identity.Uid,
+                Subject = "Your table registration was accepted",
+                Message = message
+            };
+
+            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
         }
 
         private async Task BroadcastAsync(TableRegistrationRecord record)
@@ -174,7 +184,17 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
                 $"*Rejected:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
 
-            // Todo: Send a message to user. 
+            var message = $"Dear {identity.Username},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
+
+            var sendPrivateMessageRequest = new SendPrivateMessageRequest()
+            {
+                AuthorName = "Artist Alley",
+                RecipientUid = identity.Uid,
+                Subject = "Your table registration was rejected",
+                Message = message
+            };
+
+            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
         }
 
         public async Task<TableRegistrationRecord> GetLatestRegistrationByUid(string uid)
