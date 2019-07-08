@@ -60,6 +60,16 @@
             font-family: "Fira Sans", sans-serif;
         }
 
+        header {
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 75%;
+            margin-top: 1ex;
+        }
+
         h1 span {
             font-size: 50%;
             display: block;
@@ -73,21 +83,22 @@
             text-align: justify;
         }
 
-        .row.reverse {
-            flex-direction: row-reverse;
-        }
-
-        .button.nohover:hover {
+        /* apply Skeleton's non-hover style on hover */
+        .button.nohover, .button.nohover:hover {
             cursor: initial;
             color: #555;
             border-color: #bbb;
         }
 
-        @@media (max-width: 550px) {
-            .button {
-                width: 100%;
-                box-sizing: border-box;
-            }
+        .button.button-primary.nohover, .button.button-primary.nohover:hover {
+            color: #FFF;
+            background-color: #33C3F0;
+            border-color: #33C3F0;
+        }
+
+        /* allow for Skeleton rows to use reverse sorting */
+        .row.reverse {
+            flex-direction: row-reverse;
         }
 
         @@media (min-width: 550px) {
@@ -114,18 +125,16 @@
             max-width: 100%;
         }
 
+        @@media (max-width: 550px) {
+            .button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
+        /* apply Skeleton's block margins to images as well */
         section.row > img {
             margin-bottom: 2.5rem;
-        }
-
-        header {
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            font-size: 75%;
-            margin-top: 1ex;
         }
     </style>
 </head>
