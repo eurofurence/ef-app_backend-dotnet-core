@@ -551,28 +551,40 @@ namespace Eurofurence.App.Server.Services.Telegram
             await c1();
         }
 
-        private IReplyMarkup MarkupFromCommands(string[] commands)
+        private IReplyMarkup MarkupFromCommands(string[] commands, bool pivot = false)
         {
             if (commands == null || commands.Length == 0) return new ReplyKeyboardRemove();
             //return new InlineKeyboardMarkup(commands.Select(c  => new[] { new InlineKeyboardButton(c, c) }).ToArray());
-            return new InlineKeyboardMarkup(new [] {commands.Select(c =>
+
+
+            var inlineCommands = commands.Select(c =>
             {
                 var parts = c.Split('=');
 
                 if (parts.Length == 2) return InlineKeyboardButton.WithCallbackData(parts[0], parts[1]);
                 return InlineKeyboardButton.WithCallbackData(c, c);
-            }).ToArray()});
+            }).ToArray();
+
+
+            if (pivot)
+                return new InlineKeyboardMarkup(inlineCommands.Select(_ => new[] { _ }).ToArray());
+
+            return new InlineKeyboardMarkup(new[] { inlineCommands });
         }
 
-        public async Task AskAsync(string question, Func<string, Task> responseCallBack, params string[] commandOptions)
+        public Task AskAsync(string question, Func<string, Task> responseCallBack, params string[] commandOptions)
+        {
+            return AskAsync(question, responseCallBack, false, commandOptions);
+        }
+
+        public async Task AskAsync(string question, Func<string, Task> responseCallBack, bool pivot, params string[] commandOptions)
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {question}");
 
-            var message = await BotClient.SendTextMessageAsync(ChatId, question, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
+            var message = await BotClient.SendTextMessageAsync(ChatId, question, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions, pivot: pivot));
             _awaitingResponseCallback = responseCallBack;
             _lastAskMessage = message;
         }
-
 
         public ChatId ChatId { get; set; }
 
@@ -585,7 +597,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         private async Task CommandTableRegistration()
         {
-            Func<Task> c1 = null, c2 = null;
+            Func<Task> c1 = null, c2 = null, c3 = null;
             var title = "Table Registration";
             var requesterUid = $"Telegram:@{_user.Username}";
 
@@ -599,64 +611,70 @@ namespace Eurofurence.App.Server.Services.Telegram
                         var ownerIdentities = await _regSysIdentityRepository.FindAllAsync(a => ownerUids.Contains(a.Uid));
 
                         var list = records.Select(record =>
-                            $"{record.Id} / {record.OwnerUid} {ownerIdentities.Single(a => a.Uid == record.OwnerUid).Username.RemoveMarkdown()}\n*{record.DisplayName.RemoveMarkdown()}*"
-                        );
+                            $"{record.OwnerUid} {ownerIdentities.Single(a => a.Uid == record.OwnerUid).Username.RemoveMarkdown()}=*edit-{record.Id}"
+                        ).ToList();
 
-                        var response = $"There are currently *{records.Count()}* registrations pending reviews.\n\n{String.Join("\n\n", list)}";
+                        list.Add("Cancel=/cancel");
+
+                        var response = $"There are currently *{records.Count()}* registrations pending reviews.";
 
                         await ReplyAsync(response);
 
-                        await c1();
-                    }
-                    else if (c1a == "*review")
-                    {
-                        var records = await _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
-                        var nextRecord = records.OrderBy(a => a.LastChangeDateTimeUtc).FirstOrDefault();
-
-                        if (nextRecord == null)
-                        {
-                            await ReplyAsync("There are no registrations pending review.");
-                            await c1();
-                        } else
-                        {
-                            var ownerIdentity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == nextRecord.OwnerUid);
-
-                            var message = new StringBuilder();
-
-                            message.AppendLine("You are reviewing:");
-                            message.AppendLine($"*Id:*`{nextRecord.Id}` (from: { nextRecord.OwnerUid} { ownerIdentity.Username.RemoveMarkdown()})\n");
-
-                            message.AppendLine($"Location: `{nextRecord.Location.RemoveMarkdown()}`");
-                            message.AppendLine($"Display Name: *{nextRecord.DisplayName.RemoveMarkdown()}*");
-                            message.AppendLine($"Website URL: *{nextRecord.WebsiteUrl.RemoveMarkdown()}*");
-                            message.AppendLine($"Telegram Handle: *{nextRecord.TelegramHandle.RemoveMarkdown()}*");
-                            message.AppendLine($"Short Description: _{nextRecord.ShortDescription.RemoveMarkdown()}_\n");
-                            message.AppendLine($"Image: {(nextRecord.Image != null ? "Available (see below)" : "Not provided")}");
-
-                            await ReplyAsync(message.ToString());
-                            if (nextRecord.Image != null)
+                        c2 = () => AskAsync("Which one would you like to process?",
+                            async c2a =>
                             {
-                                var imageContent = new MemoryStream(nextRecord.Image.ImageBytes);
-                                await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
-                            }
+                                var id = Guid.Parse(c2a.Split(new [] { '-' }, 2)[1]);
 
-                            c2 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel and Twitter feed.",
-                                async c2a =>
+                                var nextRecord = records.SingleOrDefault(a => a.Id == id && a.State == Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
+
+                                if (nextRecord == null)
                                 {
-                                    await ReplyAsync("This will take just a moment... please wait...");
+                                    await ReplyAsync("Registration not found (maybe it has already been processed?)");
+                                }
+                                else
+                                {
+                                    var ownerIdentity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == nextRecord.OwnerUid);
 
-                                    if (c2a == "*approve") await _tableRegistrationService.ApproveByIdAsync(nextRecord.Id, requesterUid);
-                                    if (c2a == "*reject") await _tableRegistrationService.RejectByIdAsync(nextRecord.Id, requesterUid);
+                                    var message = new StringBuilder();
 
-                                    await ReplyAsync("Done. Send /tableRegistration again if you wish to review/view further items.");
-                                    
-                                }, "Approve=*approve", "Reject=*reject");
+                                    message.AppendLine("You are reviewing:");
+                                    message.AppendLine($"*Id:*`{nextRecord.Id}` (from: { nextRecord.OwnerUid} { ownerIdentity.Username.RemoveMarkdown()})\n");
 
-                            await c2();
-                        }
+                                    message.AppendLine($"Location: `{nextRecord.Location.RemoveMarkdown()}`");
+                                    message.AppendLine($"Display Name: *{nextRecord.DisplayName.RemoveMarkdown()}*");
+                                    message.AppendLine($"Website URL: *{nextRecord.WebsiteUrl.RemoveMarkdown()}*");
+                                    message.AppendLine($"Telegram Handle: *{nextRecord.TelegramHandle.RemoveMarkdown()}*");
+                                    message.AppendLine($"Short Description: _{nextRecord.ShortDescription.RemoveMarkdown()}_\n");
+                                    message.AppendLine($"Image: {(nextRecord.Image != null ? "Available (see below)" : "Not provided")}");
+
+                                    await ReplyAsync(message.ToString());
+                                    if (nextRecord.Image != null)
+                                    {
+                                        var imageContent = new MemoryStream(nextRecord.Image.ImageBytes);
+                                        await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
+                                    }
+
+                                    c3 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel and Twitter feed.",
+                                        async c3a =>
+                                        {
+                                            await ReplyAsync("This will take just a moment... please wait...");
+
+                                            if (c3a == "*approve") await _tableRegistrationService.ApproveByIdAsync(nextRecord.Id, requesterUid);
+                                            if (c3a == "*reject") await _tableRegistrationService.RejectByIdAsync(nextRecord.Id, requesterUid);
+
+                                            await ReplyAsync("Done. Send /tableRegistration again if you wish to review/view further items.");
+
+                                        }, "Approve=*approve", "Reject=*reject", "Cancel=/cancel");
+
+                                    await c3();
+                                }
+                            }, 
+                            pivot: true,
+                            list.ToArray());
+
+                        await c2();
                     }
-
-                }, "List all pending=*list", "Review next one=*review", "Cancel=/cancel");
+                }, "List all pending=*list", "Cancel=/cancel");
             await c1();
         }
 
