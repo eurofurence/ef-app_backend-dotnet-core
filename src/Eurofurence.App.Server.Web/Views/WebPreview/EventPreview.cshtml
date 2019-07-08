@@ -15,15 +15,11 @@
     @Model.Abstract
 </header>
 
-<section>
+<section class="summary">
     <span><i class="fas fa-calendar"></i> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</span>
     <span><i class="fas fa-clock"></i> @Model.StartDateTimeUtc.ToString("HH:mm:ss")</span>
     <span><i class="fas fa-step-forward"></i> @Model.EndDateTimeUtc.ToString("HH:mm:ss")</span>
     <span><i class="fas fa-map-marker-alt"></i> @eventConferenceRoom.Name</span>
-</section>
-
-<section>
-    <img src="@ViewBag.ContentBaseUrl/Clipboard01.png" title="@Model.Title" />
 </section>
 
 @if (Model.BannerImageId != null)
@@ -33,13 +29,13 @@
     </section>
 }
 
-<section class="half">
-    <p>
+<section class="row">
+    <p class="one-half column">
         @Model.Description
     </p>
 
     @if (Model.PosterImageId != null)
     {
-        <img src="@ViewBag.ApiBaseUrl/Images/@Model.PosterImageId.ToString()/Content" title="@Model.Title" />
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.PosterImageId.ToString()/Content" title="@Model.Title" class="one-half column" />
     }
 </section>

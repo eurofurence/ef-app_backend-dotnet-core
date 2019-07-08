@@ -51,20 +51,10 @@
     <link href="@ViewBag.ContentBaseUrl/css/solid.min.css" rel="stylesheet">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="@ViewBag.ContentBaseUrl/css/normalize.css" rel="stylesheet" />
+    <link href="@ViewBag.ContentBaseUrl/css/skeleton.css" rel="stylesheet" />
     <link rel="shortcut icon" href="@ViewBag.ContentBaseUrl/images/favicon.ico">
     <style>
-        html, body {
-            background: #333;
-            color: #DDD;
-            font-family: sans-serif;
-        }
-
-        article {
-            width: 80%;
-            max-width: 65ex;
-            margin: auto;
-        }
-
         h1 span {
             font-size: 50%;
             display: block;
@@ -75,24 +65,35 @@
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            margin: 2ex 0;
             text-align: justify;
         }
 
-        section > * {
-            padding: 0 1ex;
-            max-width: 100%;
+        .row.reverse {
+            flex-direction: row-reverse;
         }
 
-        section.half > * {
-            flex: 1 1 30ex;
-            margin: 1ex 0;
+        @@media (min-width: 550px) {
+            .row.reverse .column:first-child, .row.reverse .columns:first-child {
+                margin-left: 4%;
+            }
+
+            .row.reverse .column, .row.reverse .columns {
+                margin-left: 0;
+            }
         }
 
-        section.half > img {
-            max-width: 30ex;
-            max-height: 30ex;
-            object-fit: contain;
+        .summary {
+            margin: 1.5rem 0;
+        }
+
+            .summary > span {
+                text-wrap: avoid;
+                padding: 0 1ex;
+                max-width: 100%;
+            }
+
+        section.row > img {
+            margin-bottom: 2.5rem;
         }
 
         header {
@@ -104,14 +105,10 @@
             font-size: 75%;
             margin-top: 1ex;
         }
-
-        a:any-link {
-            color: #3AF;
-        }
     </style>
 </head>
 <body>
-    <article>
+    <div class="container">
         <h1 style="text-align: center;">
             @ViewBag.Title
             @if (!string.IsNullOrEmpty(ViewBag.SubTitle))
@@ -123,7 +120,7 @@
         <footer>
             This is a preview of content that you can see with our <a href="/">mobile apps</a>.
         </footer>
-    </article>
+    </div>
 </body>
 </html>
 

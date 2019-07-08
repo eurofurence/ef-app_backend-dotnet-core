@@ -5,7 +5,7 @@
     ViewBag.Title = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname) ? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
     ViewBag.SubTitle = string.Join(", ", Model.Categories);
 
-    var days = new string[] {};
+    var days = new string[] { };
 
     if (Model.AttendsOnThursday)
     {
@@ -28,7 +28,7 @@
     @Model.ShortDescription
 </header>
 
-<section>
+<section class="summary">
     @if (!string.IsNullOrEmpty(Model.TwitterHandle))
     {
         <span><i class="fab fa-twitter"></i> <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@@Model.TwitterHandle">@Model.TwitterHandle</a></span>
@@ -49,23 +49,25 @@
 
 <hr />
 
-<section class="half">
-    @if (Model.ArtistImageId != null)
-    {
-        <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" />
-    }
-    <p>
+<section class="row">
+    <p class="one-half column">
         @Model.AboutTheArtistText
     </p>
+    @if (Model.ArtistImageId != null)
+    {
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" class="one-half column" />
+    }
+</section>
+
+<section class="row reverse">
     @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
     {
-        <p>
+        <p class="one-half column">
             @Model.AboutTheArtText
         </p>
     }
-
     @if (Model.ArtPreviewImageId != null)
     {
-        <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" />
+        <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" class="one-half column" />
     }
 </section>
