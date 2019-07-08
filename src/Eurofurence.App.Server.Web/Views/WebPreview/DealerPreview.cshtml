@@ -50,9 +50,10 @@
 <hr />
 
 <section class="row">
-    <p class="one-half column">
-        @Model.AboutTheArtistText
-    </p>
+    <div class="one-half column">
+        <h4>About the Artist</h4>
+        <p>@Model.AboutTheArtistText</p>
+    </div>
     @if (Model.ArtistImageId != null)
     {
         <img src="@ViewBag.ApiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" class="one-half column" />
@@ -62,9 +63,11 @@
 <section class="row reverse">
     @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
     {
-        <p class="one-half column">
-            @Model.AboutTheArtText
-        </p>
+        <div class="one-half column">
+            <h4>About the Art</h4>
+
+           <p>@Model.AboutTheArtText</p>
+        </div>
     }
     @if (Model.ArtPreviewImageId != null)
     {
