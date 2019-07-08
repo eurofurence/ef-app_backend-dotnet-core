@@ -16,10 +16,10 @@
 </header>
 
 <section class="summary">
-    <span><i class="fas fa-calendar"></i> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</span>
-    <span><i class="fas fa-clock"></i> @Model.StartDateTimeUtc.ToString("HH:mm:ss")</span>
-    <span><i class="fas fa-step-forward"></i> @Model.EndDateTimeUtc.ToString("HH:mm:ss")</span>
-    <span><i class="fas fa-map-marker-alt"></i> @eventConferenceRoom.Name</span>
+    <span class="button nohover"><i class="fas fa-calendar"></i> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</span>
+    <span class="button nohover"><i class="fas fa-clock"></i> @Model.StartDateTimeUtc.ToString("HH:mm:ss")</span>
+    <span class="button nohover"><i class="fas fa-step-forward"></i> @Model.EndDateTimeUtc.ToString("HH:mm:ss")</span>
+    <span class="button nohover"><i class="fas fa-map-marker-alt"></i> @eventConferenceRoom.Name</span>
 </section>
 
 @if (Model.BannerImageId != null)

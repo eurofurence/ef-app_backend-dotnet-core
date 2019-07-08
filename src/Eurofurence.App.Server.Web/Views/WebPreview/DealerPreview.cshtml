@@ -31,19 +31,19 @@
 <section class="summary">
     @if (!string.IsNullOrEmpty(Model.TwitterHandle))
     {
-        <span><i class="fab fa-twitter"></i> <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@@Model.TwitterHandle">@Model.TwitterHandle</a></span>
+            <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@Model.TwitterHandle" class="button button-primary"><i class="fab fa-twitter"></i> @Model.TwitterHandle</a>
     }
     @if (!string.IsNullOrEmpty(Model.TelegramHandle))
     {
-        <span><i class="fab fa-telegram"></i> <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle">@Model.TelegramHandle</a></span>
+    <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fab fa-telegram"></i> @Model.TelegramHandle</a>
     }
     @if (days.Length > 0)
     {
-        <span><i class="fas fa-calendar"></i> Only on @string.Join(", ", days)</span>
+        <span class="button nohover"><i class="fas fa-calendar"></i> Only on @string.Join(", ", days)</span>
     }
     @if (Model.IsAfterDark)
     {
-        <span><i class="fas fa-moon"></i> After Dark</span>
+        <span class="button nohover"><i class="fas fa-moon"></i> After Dark</span>
     }
 </section>
 

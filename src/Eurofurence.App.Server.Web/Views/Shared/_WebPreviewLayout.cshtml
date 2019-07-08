@@ -77,6 +77,19 @@
             flex-direction: row-reverse;
         }
 
+        .button.nohover:hover {
+            cursor: initial;
+            color: #555;
+            border-color: #bbb;
+        }
+
+        @@media (max-width: 550px) {
+            .button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
         @@media (min-width: 550px) {
             .row.reverse .column:first-child, .row.reverse .columns:first-child {
                 margin-left: 4%;
@@ -85,17 +98,21 @@
             .row.reverse .column, .row.reverse .columns {
                 margin-left: 0;
             }
+
+            .summary > * {
+                margin-left: 1ex;
+                margin-right: 1ex;
+            }
         }
 
         .summary {
             margin: 1.5rem 0;
         }
 
-            .summary > span {
-                text-wrap: avoid;
-                padding: 0 1ex;
-                max-width: 100%;
-            }
+        .summary > * {
+            text-wrap: avoid;
+            max-width: 100%;
+        }
 
         section.row > img {
             margin-bottom: 2.5rem;
