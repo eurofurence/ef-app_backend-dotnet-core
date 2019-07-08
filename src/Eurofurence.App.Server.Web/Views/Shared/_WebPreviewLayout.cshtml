@@ -13,7 +13,7 @@
 }
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 <head>
     @{
         if (!string.IsNullOrEmpty(webPreviewMetadata.Title))
@@ -46,10 +46,12 @@
             <link rel="manifest" href="/Web/manifest.json" />
         }
     }
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="@ViewBag.ContentBaseUrl/css/fontawesome.min.css" rel="stylesheet">
     <link href="@ViewBag.ContentBaseUrl/css/brands.min.css" rel="stylesheet">
     <link href="@ViewBag.ContentBaseUrl/css/solid.min.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="@ViewBag.ContentBaseUrl/images/favicon.ico">
     <style>
         html, body {
             background: #333;
