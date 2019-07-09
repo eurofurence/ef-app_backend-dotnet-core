@@ -69,7 +69,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
+                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {@event.StartTime.ToString("hh\\:mm")}-{@event.EndTime.ToString("hh\\:mm")}, {eventConferenceRoom.Name}\n\n{@event.Description}")
                 .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
