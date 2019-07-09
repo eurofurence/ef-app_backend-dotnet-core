@@ -137,6 +137,9 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public IList<string> Categories { get; set; }
 
+        public string DisplayNameOrAttendeeNickname =>
+            !string.IsNullOrWhiteSpace(DisplayName) ? DisplayName : AttendeeNickname;
+
         public DealerRecord()
         {
             Categories = new List<string>();

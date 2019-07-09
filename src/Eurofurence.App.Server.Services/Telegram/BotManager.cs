@@ -161,42 +161,45 @@ namespace Eurofurence.App.Server.Services.Telegram
             var eventConferenceRooms = await _eventConferenceRoomService.FindAllAsync();
 
             return events.Select(e =>
-                {
-                    e.ConferenceRoom = eventConferenceRooms.Single(r => r.Id == e.ConferenceRoomId);
+            {
+                e.ConferenceRoom = eventConferenceRooms.Single(r => r.Id == e.ConferenceRoomId);
 
-                    var messageBuilder = new StringBuilder();
-                    messageBuilder.Append($"*{e.Title}*");
-
-                    if (!string.IsNullOrEmpty(e.SubTitle))
-                        messageBuilder.Append($" - ({e.SubTitle})");
-
-                    messageBuilder.Append(
-                        $"\n{e.StartDateTimeUtc.DayOfWeek}, {e.StartTime} to {e.EndTime} in {e.ConferenceRoom.Name}");
-
-                    if (!string.IsNullOrEmpty(e.Description))
-                    {
-                        var desc = e.Description;
-                        if (desc.Length > 500) desc = desc.Substring(0, 500) + "...";
-                        messageBuilder.Append($"\n\n_{desc}_");
-                    }
-
-                    messageBuilder.Append($"\n\n[Read more...](https://www.eurofurence.org/{_conventionSettings.ConventionIdentifier}/schedule/events/{e.SourceEventId}.en.html)");
-
-                    var inputMessageContent = new InputTextMessageContent(messageBuilder.ToString())
+                return new InlineQueryResultArticle(
+                    e.Id.ToString(),
+                    $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime.ToString("hh\\:mm")}-{e.EndTime.ToString("hh\\:mm")}: {e.Title} " + (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
+                    new InputTextMessageContent($"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
                     {
                         ParseMode = ParseMode.Markdown
-                    };
+                    });
+            })
+            .ToArray();
+        }
 
-                    return new InlineQueryResultArticle(
-                        e.Id.ToString(),
-                        e.Title + (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
-                        inputMessageContent)
+        private async Task<InlineQueryResultBase[]> QueryDealers(string query)
+        {
+            if (query.Length < 3) return new InlineQueryResultBase[0];
+
+            var dealers =
+                (await _dealerService.FindAllAsync(a => a.IsDeleted == 0 && (
+                    a.DisplayName.ToLower().Contains(query.ToLower()) || a.AttendeeNickname.ToLower().Contains(query.ToLower())
+                )))
+                .OrderBy(a => a.DisplayNameOrAttendeeNickname)
+                .Take(10)
+                .ToList();
+
+            if (dealers.Count == 0) return new InlineQueryResultBase[0];
+
+            return dealers.Select(e =>
+            {
+                return new InlineQueryResultArticle(
+                    e.Id.ToString(),
+                    $"DEALER: {e.DisplayNameOrAttendeeNickname}",
+                    new InputTextMessageContent($"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
                     {
-                        Description =
-                            $"{e.StartDateTimeUtc.DayOfWeek}, {e.StartDateTimeUtc.Day}.{e.StartDateTimeUtc.Month} - {e.StartTime} until {e.EndTime}"
-                    };
-                })
-                .ToArray();
+                        ParseMode = ParseMode.Markdown
+                    });
+            })
+            .ToArray();
         }
 
         private async Task<InlineQueryResultBase[]> QueryFursuitBadges(string query)
@@ -232,6 +235,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 var queries = new[]
                 {
                     QueryEvents(queryString),
+                    QueryDealers(queryString)
                 };
 
                 Task.WaitAll(queries);
