@@ -92,6 +92,11 @@ namespace Eurofurence.App.Server.Web
                     });
                 });
 
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;
+            });
+
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSwaggerGen(options =>
@@ -260,6 +265,8 @@ namespace Eurofurence.App.Server.Web
 
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
+
+            app.UseStaticFiles("/Web/Static");
 
             app.Use(async (context, next) =>
             {

@@ -1,0 +1,52 @@
+﻿@using Eurofurence.App.Server.Web.Controllers
+@using Eurofurence.App.Domain.Model.Events
+@model EventRecord
+@{
+    Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+
+    var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
+    var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
+    var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
+
+    var eventConferenceDay = (ViewData["eventConferenceDay"] as EventConferenceDayRecord);
+    var eventConferenceRoom = (ViewData["eventConferenceRoom"] as EventConferenceRoomRecord);
+    var eventConferenceTrack = (ViewData["eventConferenceTrack"] as EventConferenceTrackRecord);
+
+    var title = Model.Title;
+    var subTitle = Model.SubTitle;
+}
+
+<header>
+    @if (Model.BannerImageId != null)
+    {
+        <img src="apiBaseUrl/Images/@Model.BannerImageId.ToString()/Content" title="@Model.Title"
+             style="max-width: 100%;" />
+    }
+
+    <h1>
+        @title
+        <span>@subTitle</span>
+    </h1>
+    @Model.Abstract
+</header>
+
+<section class="summary">
+    <span class="button nohover"><i class="fas fa-calendar"></i> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</span>
+    <span class="button nohover"><i class="fas fa-clock"></i> @Model.StartDateTimeUtc.ToString("HH:mm:ss")</span>
+    <span class="button nohover"><i class="fas fa-step-forward"></i> @Model.EndDateTimeUtc.ToString("HH:mm:ss")</span>
+    <span class="button nohover"><i class="fas fa-map-marker-alt"></i> @eventConferenceRoom.Name</span>
+</section>
+
+<section class="row">
+    <p class="one-half column">
+        @Model.Description
+    </p>
+
+    @if (Model.PosterImageId != null)
+    {
+        <img src="apiBaseUrl/Images/@Model.PosterImageId.ToString()/Content"
+             style="max-width: 100%;"
+             title="@Model.Title"
+             class="one-half column" />
+    }
+</section>

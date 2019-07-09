@@ -1,0 +1,74 @@
+﻿@using Eurofurence.App.Server.Web.Controllers
+@model Eurofurence.App.Domain.Model.Dealers.DealerRecord
+@{
+    Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+
+    var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
+
+    var displayName  = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname) ? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
+    var categories = string.Join(", ", Model.Categories);
+
+    var days = new string[] {
+            Model.AttendsOnThursday ? "Thursday" : string.Empty,
+            Model.AttendsOnFriday ? "Friday" : string.Empty,
+            Model.AttendsOnSaturday ? "Saturday" : string.Empty,
+    }
+    .Where(day => !string.IsNullOrWhiteSpace(day))
+    .ToArray();
+}
+
+<header>
+    <h1>
+        @displayName
+        <span>@categories</span>
+    </h1>
+    <p>
+        @Model.ShortDescription
+    </p>
+</header>
+
+<section class="summary">
+    @if (!string.IsNullOrEmpty(Model.TwitterHandle))
+    {
+        <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@Model.TwitterHandle" class="button button-primary"><i class="fab fa-twitter"></i> @Model.TwitterHandle</a>
+    }
+    @if (!string.IsNullOrEmpty(Model.TelegramHandle))
+    {
+        <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fab fa-telegram"></i> @Model.TelegramHandle</a>
+    }
+    @if (days.Length > 0)
+    {
+        <span class="button nohover"><i class="fas fa-calendar"></i> Available on @string.Join(", ", days)</span>
+    }
+    @if (Model.IsAfterDark)
+    {
+        <span class="button nohover"><i class="fas fa-moon"></i> After Dark</span>
+    }
+</section>
+
+<hr />
+
+<section class="row">
+    <div class="one-half column">
+        <h4>About the Artist</h4>
+        <p>@Model.AboutTheArtistText</p>
+    </div>
+    @if (Model.ArtistImageId != null)
+    {
+        <img src="@apiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" class="one-half column" />
+    }
+</section>
+
+<section class="row reverse">
+    @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
+    {
+        <div class="one-half column">
+            <h4>About the Art</h4>
+            <p>@Model.AboutTheArtText</p>
+        </div>
+    }
+    @if (Model.ArtPreviewImageId != null)
+    {
+        <img src="@apiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" class="one-half column" />
+    }
+</section>

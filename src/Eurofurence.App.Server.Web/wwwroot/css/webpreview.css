@@ -1,0 +1,81 @@
+﻿body {
+    font-family: "Fira Sans", sans-serif;
+    padding: 4rem 0 2rem 0;
+}
+
+header {
+    text-align: center;
+}
+
+footer {
+    text-align: center;
+    font-size: 75%;
+    margin-top: 1ex;
+}
+
+h1 span {
+    font-size: 0.6em;
+    display: block;
+}
+
+section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    text-align: justify;
+}
+
+/* apply Skeleton's non-hover style on hover */
+.button.nohover, .button.nohover:hover {
+    cursor: initial;
+    color: #555;
+    border-color: #bbb;
+}
+
+.button.button-primary.nohover, .button.button-primary.nohover:hover {
+    color: #FFF;
+    background-color: #33C3F0;
+    border-color: #33C3F0;
+}
+
+/* allow for Skeleton rows to use reverse sorting */
+.row.reverse {
+    flex-direction: row-reverse;
+}
+
+@@media (min-width: 550px) {
+    .row.reverse .column:first-child, .row.reverse .columns:first-child {
+        margin-left: 4%;
+    }
+
+    .row.reverse .column, .row.reverse .columns {
+        margin-left: 0;
+    }
+
+    .summary > * {
+        margin-left: 1ex;
+        margin-right: 1ex;
+    }
+}
+
+.summary {
+    margin: 1.5rem 0;
+}
+
+    .summary > * {
+        text-wrap: avoid;
+        max-width: 100%;
+    }
+
+@@media (max-width: 550px) {
+    .button {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+/* apply Skeleton's block margins to images as well */
+section.row > img {
+    margin-bottom: 2.5rem;
+}

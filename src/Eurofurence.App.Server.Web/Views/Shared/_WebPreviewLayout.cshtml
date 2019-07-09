@@ -1,0 +1,73 @@
+﻿@using Eurofurence.App.Server.Web.Extensions
+@using Eurofurence.App.Server.Web.Controllers
+@{
+    var openGraphMetadata = (ViewData[WebPreviewController.VIEWDATA_OPENGRAPH_METADATA] as OpenGraphMetadata);
+    if (openGraphMetadata == null)
+    {
+        throw new ArgumentException("Missing Open Graph Metadata");
+    }
+
+    var baseUrl = ViewData[WebPreviewController.VIEWDATA_BASE_URL] as string;
+    var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
+    var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
+    var appIdITunes = ViewData[WebPreviewController.VIEWDATA_APPID_ITUNES] as string;
+    var appIdPlay = ViewData[WebPreviewController.VIEWDATA_APPID_PLAY] as string;
+}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    @{
+        if (!string.IsNullOrEmpty(openGraphMetadata.Title))
+        {
+            <title>@openGraphMetadata.Title</title>
+        }
+
+        if (!string.IsNullOrEmpty(openGraphMetadata.Description))
+        {
+            <meta name="description" content="@openGraphMetadata.Description" />
+        }
+
+        if (!string.IsNullOrEmpty(openGraphMetadata.Redirect))
+        {
+            <meta http-equiv="refresh" content="@($"0;url={openGraphMetadata.Redirect}")" />
+        }
+
+        foreach (var property in openGraphMetadata.Properties)
+        {
+            <meta property="@property.Key" content="@property.Value" />
+        }
+
+        if (!string.IsNullOrEmpty(appIdITunes))
+        {
+            <meta name="apple-itunes-app" content="app-id=@appIdITunes,app-argument=@($"{baseUrl}{Context.Request.Path}{Context.Request.QueryString}")" />
+        }
+
+        if (!string.IsNullOrEmpty(appIdPlay))
+        {
+            <link rel="manifest" href="@($"{webBaseUrl}/manifest.json")" />
+        }
+    }
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="//fonts.googleapis.com/css?family=Fira+Sans:400,300,600" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/fontawesome.min.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/brands.min.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/solid.min.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" rel="stylesheet" />
+    <link href="@contentBaseUrl/css/webpreview.css" rel="stylesheet" />
+    <link rel="shortcut icon" href="@contentBaseUrl/images/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        @RenderBody()
+        <footer>
+            <hr />
+            This is a content preview.<br />
+            The mobile app may contain additional features &amp; information. <br />
+            <a class="button" href="/">Download the Eurofurence mobile app</a>
+        </footer>
+    </div>
+</body>
+</html>
