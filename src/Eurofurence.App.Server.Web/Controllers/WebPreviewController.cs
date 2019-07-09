@@ -59,6 +59,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             var @event = await _eventService.FindOneAsync(Id);
             if (@event == null) return NotFound();
 
+            var previewImageId = @event.PosterImageId.HasValue ? @event.PosterImageId : @event.BannerImageId;
+
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
             var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
             var eventConferenceTrack = await _eventConferenceTrackService.FindOneAsync(@event.ConferenceTrackId);
@@ -67,7 +69,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}");
+                .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}")
+                .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
             ViewData["eventConferenceRoom"] = eventConferenceRoom;

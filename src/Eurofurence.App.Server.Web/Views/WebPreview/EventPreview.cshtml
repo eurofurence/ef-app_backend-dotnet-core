@@ -19,7 +19,7 @@
 <header>
     @if (Model.BannerImageId != null)
     {
-        <img src="apiBaseUrl/Images/@Model.BannerImageId.ToString()/Content" title="@Model.Title"
+        <img src="@apiBaseUrl/Images/@Model.BannerImageId.ToString()/Content" title="@Model.Title"
              style="max-width: 100%;" />
     }
 
@@ -44,7 +44,7 @@
 
     @if (Model.PosterImageId != null)
     {
-        <img src="apiBaseUrl/Images/@Model.PosterImageId.ToString()/Content"
+        <img src="@apiBaseUrl/Images/@Model.PosterImageId.ToString()/Content"
              style="max-width: 100%;"
              title="@Model.Title"
              class="one-half column" />
