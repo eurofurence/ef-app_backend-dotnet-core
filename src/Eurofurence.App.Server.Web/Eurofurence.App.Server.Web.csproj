@@ -45,7 +45,6 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
-    <Folder Include="wwwroot\css\" />
   </ItemGroup>
 
 </Project>

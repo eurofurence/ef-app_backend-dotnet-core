@@ -18,6 +18,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IDealerService _dealerService;
 
+        public const string VIEWDATA_OPENGRAPH_METADATA = nameof(OpenGraphMetadata);
+        public const string VIEWDATA_APPID_ITUNES = nameof(ConventionSettings.AppIdITunes);
+        public const string VIEWDATA_APPID_PLAY = nameof(ConventionSettings.AppIdPlay);
+        public const string VIEWDATA_BASE_URL = nameof(ConventionSettings.BaseUrl);
+        public const string VIEWDATA_API_BASE_URL = nameof(ConventionSettings.ApiBaseUrl);
+        public const string VIEWDATA_CONTENT_BASE_URL = nameof(ConventionSettings.ContentBaseUrl);
+        public const string VIEWDATA_WEB_BASE_URL = nameof(ConventionSettings.WebBaseUrl);
+
         public WebPreviewController(
             ConventionSettings conventionSettings,
             IEventService eventService,
@@ -35,6 +43,16 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
         }
 
+        private void PopulateViewData()
+        {
+            ViewData[VIEWDATA_API_BASE_URL] = _conventionSettings.ApiBaseUrl;
+            ViewData[VIEWDATA_BASE_URL] = _conventionSettings.BaseUrl;
+            ViewData[VIEWDATA_WEB_BASE_URL] = _conventionSettings.WebBaseUrl;
+            ViewData[VIEWDATA_CONTENT_BASE_URL] = _conventionSettings.ContentBaseUrl;
+            ViewData[VIEWDATA_APPID_ITUNES] = _conventionSettings.AppIdITunes;
+            ViewData[VIEWDATA_APPID_PLAY] = _conventionSettings.AppIdPlay;
+        }
+
         [HttpGet("Events/{Id}")]
         public async Task<ActionResult> GetEventById(Guid Id)
         {
@@ -45,14 +63,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
             var eventConferenceTrack = await _eventConferenceTrackService.FindOneAsync(@event.ConferenceTrackId);
 
-            ViewData["Metadata"] = new WebPreviewMetadata()
-                .WithAppIdITunes(_conventionSettings.AppIdITunes)
-                .WithAppIdPlay(_conventionSettings.AppIdPlay)
+            PopulateViewData();
+
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(@event.Title)
                 .WithDescription($"{eventConferenceDay.Name} {@event.StartTime}-{@event.EndTime}\n{@event.Description}");
-            ViewData["ApiBaseUrl"] = _conventionSettings.ApiBaseUrl;
-            ViewData["WebBaseUrl"] = _conventionSettings.WebBaseUrl;
-            ViewData["ContentBaseUrl"] = _conventionSettings.ContentBaseUrl;
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
             ViewData["eventConferenceRoom"] = eventConferenceRoom;
@@ -67,15 +82,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             var dealer = await _dealerService.FindOneAsync(Id);
             if (dealer == null) return NotFound();
 
-            ViewData["Metadata"] = new WebPreviewMetadata()
-                .WithAppIdITunes(_conventionSettings.AppIdITunes)
-                .WithAppIdPlay(_conventionSettings.AppIdPlay)
+            PopulateViewData();
+
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{dealer.ArtistImageId}/Content" : string.Empty);
-            ViewData["ApiBaseUrl"] = _conventionSettings.ApiBaseUrl;
-            ViewData["WebBaseUrl"] = _conventionSettings.WebBaseUrl;
-            ViewData["ContentBaseUrl"] = _conventionSettings.ContentBaseUrl;
 
             return View("DealerPreview", dealer);
         }
@@ -83,7 +95,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("manifest.json")]
         public ActionResult GetManifest()
         {
-            return Json(new {
+            return Json(new
+            {
                 short_name = "Eurofurence",
                 name = "Eurofurence",
                 icons = new[] {

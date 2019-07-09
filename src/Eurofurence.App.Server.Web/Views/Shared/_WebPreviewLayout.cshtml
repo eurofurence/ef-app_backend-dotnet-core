@@ -1,49 +1,51 @@
 ﻿@using Eurofurence.App.Server.Web.Extensions
-
+@using Eurofurence.App.Server.Web.Controllers
 @{
-    var webPreviewMetadata = (ViewData["Metadata"] as WebPreviewMetadata);
-    if (webPreviewMetadata == null)
+    var openGraphMetadata = (ViewData[WebPreviewController.VIEWDATA_OPENGRAPH_METADATA] as OpenGraphMetadata);
+    if (openGraphMetadata == null)
     {
-        throw new ArgumentException();
+        throw new ArgumentException("Missing Open Graph Metadata");
     }
 
-    ViewBag.ApiBaseUrl = (ViewData["ApiBaseUrl"] as String);
-    ViewBag.WebBaseUrl = (ViewData["WebBaseUrl"] as String);
-    ViewBag.ContentBaseUrl = (ViewData["ContentBaseUrl"] as String);
+    var baseUrl = ViewData[WebPreviewController.VIEWDATA_BASE_URL] as string;
+    var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
+    var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
+    var appIdITunes = ViewData[WebPreviewController.VIEWDATA_APPID_ITUNES] as string;
+    var appIdPlay = ViewData[WebPreviewController.VIEWDATA_APPID_PLAY] as string;
 }
 <!DOCTYPE html>
 
 <html lang="en">
 <head>
     @{
-        if (!string.IsNullOrEmpty(webPreviewMetadata.Title))
+        if (!string.IsNullOrEmpty(openGraphMetadata.Title))
         {
-            <title>@webPreviewMetadata.Title</title>
+            <title>@openGraphMetadata.Title</title>
         }
 
-        if (!string.IsNullOrEmpty(webPreviewMetadata.Description))
+        if (!string.IsNullOrEmpty(openGraphMetadata.Description))
         {
-            <meta name="description" content="@webPreviewMetadata.Description" />
+            <meta name="description" content="@openGraphMetadata.Description" />
         }
 
-        if (!string.IsNullOrEmpty(webPreviewMetadata.Redirect))
+        if (!string.IsNullOrEmpty(openGraphMetadata.Redirect))
         {
-            <meta http-equiv="refresh" content="@($"0;url={Model.Redirect}")" />
+            <meta http-equiv="refresh" content="@($"0;url={openGraphMetadata.Redirect}")" />
         }
 
-        foreach (var property in webPreviewMetadata.Properties)
+        foreach (var property in openGraphMetadata.Properties)
         {
             <meta property="@property.Key" content="@property.Value" />
         }
 
-        if (!string.IsNullOrEmpty(webPreviewMetadata.AppIdITunes))
+        if (!string.IsNullOrEmpty(appIdITunes))
         {
-            <meta name="apple-itunes-app" content="app-id=@webPreviewMetadata.AppIdITunes,app-argument=@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}")" />
+            <meta name="apple-itunes-app" content="app-id=@appIdITunes,app-argument=@($"{baseUrl}{Context.Request.Path}{Context.Request.QueryString}")" />
         }
 
-        if (!string.IsNullOrEmpty(webPreviewMetadata.AppIdPlay))
+        if (!string.IsNullOrEmpty(appIdPlay))
         {
-            <link rel="manifest" href="/Web/manifest.json" />
+            <link rel="manifest" href="@($"{webBaseUrl}/manifest.json")" />
         }
     }
     <meta charset="utf-8">
@@ -54,104 +56,18 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/solid.min.css" rel="stylesheet" />
     <link href="//cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
     <link href="//cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" rel="stylesheet" />
-    <link rel="shortcut icon" href="@ViewBag.ContentBaseUrl/images/favicon.ico">
-    <style>
-        body {
-            font-family: "Fira Sans", sans-serif;
-        }
-
-        header {
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            font-size: 75%;
-            margin-top: 1ex;
-        }
-
-        h1 span {
-            font-size: 50%;
-            display: block;
-        }
-
-        section {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            text-align: justify;
-        }
-
-        /* apply Skeleton's non-hover style on hover */
-        .button.nohover, .button.nohover:hover {
-            cursor: initial;
-            color: #555;
-            border-color: #bbb;
-        }
-
-        .button.button-primary.nohover, .button.button-primary.nohover:hover {
-            color: #FFF;
-            background-color: #33C3F0;
-            border-color: #33C3F0;
-        }
-
-        /* allow for Skeleton rows to use reverse sorting */
-        .row.reverse {
-            flex-direction: row-reverse;
-        }
-
-        @@media (min-width: 550px) {
-            .row.reverse .column:first-child, .row.reverse .columns:first-child {
-                margin-left: 4%;
-            }
-
-            .row.reverse .column, .row.reverse .columns {
-                margin-left: 0;
-            }
-
-            .summary > * {
-                margin-left: 1ex;
-                margin-right: 1ex;
-            }
-        }
-
-        .summary {
-            margin: 1.5rem 0;
-        }
-
-        .summary > * {
-            text-wrap: avoid;
-            max-width: 100%;
-        }
-
-        @@media (max-width: 550px) {
-            .button {
-                width: 100%;
-                box-sizing: border-box;
-            }
-        }
-
-        /* apply Skeleton's block margins to images as well */
-        section.row > img {
-            margin-bottom: 2.5rem;
-        }
-    </style>
+    <link href="@contentBaseUrl/css/webpreview.css" rel="stylesheet" />
+    <link rel="shortcut icon" href="@contentBaseUrl/images/favicon.ico">
 </head>
 <body>
     <div class="container">
-        <h1 style="text-align: center;">
-            @ViewBag.Title
-            @if (!string.IsNullOrEmpty(ViewBag.SubTitle))
-            {
-                <span>@ViewBag.SubTitle</span>
-            }
-        </h1>
         @RenderBody()
         <footer>
-            This is a preview of content that you can see with our <a href="/">mobile apps</a>.
+            <hr />
+            This is a content preview.<br />
+            The mobile app may contain additional features &amp; information. <br />
+            <a class="button" href="/">Download the Eurofurence mobile app</a>
         </footer>
     </div>
 </body>
 </html>
-
