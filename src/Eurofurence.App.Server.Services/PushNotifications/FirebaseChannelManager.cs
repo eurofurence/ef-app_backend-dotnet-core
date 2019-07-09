@@ -66,6 +66,13 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         body = announcement.Content.RemoveMarkdown(),
                         sound = "generic_notification.caf"
                     },
+                    apns = new {
+                        headers = new Dictionary<string, object>() 
+                        {
+                            { "apns-priority", 5 },
+                            { "apns-push-type", "alert" },
+                        }
+                    },
                     content_available = true,
                     priority = "high",
                     to = $"/topics/{_conventionSettings.ConventionIdentifier}-ios"
@@ -93,6 +100,14 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             title = toastTitle,
                             body = toastMessage,
                             sound = "personal_notification.caf"
+                        },
+                        apns = new
+                        {
+                            headers = new Dictionary<string, object>()
+                            {
+                                { "apns-priority", 5 },
+                                { "apns-push-type", "alert" },
+                            }
                         },
                         to = recipient.DeviceId
                     });
@@ -132,6 +147,14 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     data = new
                     {
                         @event = "sync",
+                    },
+                    apns = new
+                    {
+                        headers = new Dictionary<string, object>()
+                            {
+                                { "apns-priority", 5 },
+                                { "apns-push-type", "background" },
+                            }
                     },
                     content_available = true,
                     priority = "high",
