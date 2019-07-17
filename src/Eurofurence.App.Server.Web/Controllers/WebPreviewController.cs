@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var @event = await _eventService.FindOneAsync(Id);
             if (@event == null) return NotFound();
 
-            var previewImageId = @event.PosterImageId.HasValue ? @event.PosterImageId : @event.BannerImageId;
+            var previewImageId = @event.PosterImageId ?? @event.BannerImageId ?? null;
 
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
             var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
@@ -87,10 +87,12 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             PopulateViewData();
 
+            var previewImageId = dealer.ArtistImageId ?? dealer.ArtistImageId ?? null;
+
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
-                .WithImage(dealer.ArtistImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{dealer.ArtistImageId}/Content" : string.Empty);
+                .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
 
             return View("DealerPreview", dealer);
         }
