@@ -135,14 +135,14 @@ namespace Eurofurence.App.Domain.Model.Dealers
         /// **(pba)** List of standardized categories that apply to the goods/services sold/offered by the dealer.
         /// </summary>
         [DataMember]
-        public IList<string> Categories { get; set; }
+        public string[] Categories { get; set; }
 
         public string DisplayNameOrAttendeeNickname =>
             !string.IsNullOrWhiteSpace(DisplayName) ? DisplayName : AttendeeNickname;
 
         public DealerRecord()
         {
-            Categories = new List<string>();
+            Categories = new string[0];
         }
     }
 }

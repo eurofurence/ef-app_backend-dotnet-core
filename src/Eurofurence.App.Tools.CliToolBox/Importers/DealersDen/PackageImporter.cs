@@ -64,7 +64,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                         TelegramHandle = record.Telegram,
                         TwitterHandle = record.Twitter,
                         IsAfterDark = !string.IsNullOrWhiteSpace(record.AfterDark),
-                        Categories = record.GetCategories()
+                        Categories = record.GetCategories().ToArray()
                     };
 
                     dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{record.RegNo}.",
