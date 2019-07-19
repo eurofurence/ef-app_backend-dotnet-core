@@ -44,7 +44,7 @@
     }
     @if (days.Length > 0)
     {
-        <span class="button nohover"><i class="fas fa-calendar"></i> Available on @string.Join(", ", days)</span>
+        <div class="infobox"><label><i class="fas fa-calendar"></i> Available:</label> @string.Join(", ", days)</div>
     }
     @if (Model.IsAfterDark)
     {

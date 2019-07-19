@@ -16,6 +16,7 @@
     var subTitle = Model.SubTitle;
 
     bool showAbstract = !Model.Abstract.Equals(Model.Description, StringComparison.InvariantCultureIgnoreCase);
+    bool hasPoster = Model.PosterImageId.HasValue;
 }
 
 <header>
@@ -37,14 +38,14 @@
 </header>
 
 <section class="summary">
-    <span class="button nohover"><i class="fas fa-calendar"></i> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</span>
-    <span class="button nohover"><i class="fas fa-clock"></i> @Model.StartTime.ToString("hh\\:mm")</span>
-    <span class="button nohover"><i class="fas fa-step-forward"></i> @Model.EndTime.ToString("hh\\:mm")</span>
-    <span class="button nohover"><i class="fas fa-map-marker-alt"></i> @eventConferenceRoom.Name</span>
+    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</div>
+    <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @Model.StartTime.ToString("hh\\:mm")</div>
+    <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @Model.EndTime.ToString("hh\\:mm")</div>
+    <div class="infobox"><label><i class="fas fa-map-marker-alt"></i>Where:</label> @eventConferenceRoom.Name</span>
 </section>
 
 <section class="row">
-    <p class="one-half column">
+    <p class="@(hasPoster ? "one-half" : "three") column">
         @Model.Description
     </p>
 
