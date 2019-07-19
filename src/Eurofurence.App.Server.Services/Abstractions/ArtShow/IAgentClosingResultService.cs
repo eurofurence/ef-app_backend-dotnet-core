@@ -4,11 +4,10 @@ using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
 {
-    public interface IItemActivityService
+    public interface IAgentClosingResultService
     {
-        Task ImportActivityLogAsync(TextReader logReader);
+        Task ImportAgentClosingResultLogAsync(TextReader logReader);
 
-        Task<IList<ItemActivityNotificationResult>> SimulateNotificationRunAsync();
         Task ExecuteNotificationRunAsync();
     }
 }

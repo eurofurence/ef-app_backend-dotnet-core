@@ -13,14 +13,17 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ArtShowController : BaseController
     {
         private readonly IItemActivityService _itemActivityService;
+        private readonly IAgentClosingResultService _agentClosingResultService;
         private readonly IApiPrincipal _apiPrincipal;
 
         public ArtShowController(
             IItemActivityService itemActivityService,
+            IAgentClosingResultService agentClosingResultService,
             IApiPrincipal apiPrincipal
             )
         {
             _itemActivityService = itemActivityService;
+            _agentClosingResultService = agentClosingResultService;
             _apiPrincipal = apiPrincipal;
         }
 
@@ -37,7 +40,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "System,Developer")]
         [HttpGet("ItemActivites/NotificationBundles/Simulation")]
         [ProducesResponseType(200)]
-        public Task<IList<NotificationResult>> SimulateNotificationRunAsync()
+        public Task<IList<ItemActivityNotificationResult>> SimulateNotificationRunAsync()
         {
             return _itemActivityService.SimulateNotificationRunAsync();
         }
@@ -51,5 +54,23 @@ namespace Eurofurence.App.Server.Web.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "System,Developer")]
+        [HttpPost("AgentClosingResults/Log")]
+        [ProducesResponseType(201)]
+        [BinaryPayload(Description = "Agent closing result log contents")]
+        public async Task<ActionResult> ImportAgentClosingResultLogAsync()
+        {
+            await _agentClosingResultService.ImportAgentClosingResultLogAsync(new StreamReader(Request.Body));
+            return NoContent();
+        }
+
+        [Authorize(Roles = "System,Developer")]
+        [HttpPost("AgentClosingResults/NotificationBundles/Send")]
+        [ProducesResponseType(200)]
+        public async Task<ActionResult> ExecuteAgentNotificationRunAsync()
+        {
+            await _agentClosingResultService.ExecuteNotificationRunAsync();
+            return NoContent();
+        }
     }
 } 

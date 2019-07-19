@@ -64,6 +64,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
         private void RegisterServices(ContainerBuilder builder)
         {
+            builder.RegisterType<AgentClosingResultService>().As<IAgentClosingResultService>();
             builder.RegisterType<AnnouncementService>().As<IAnnouncementService>();
             builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();
             builder.RegisterType<BotManager>().As<BotManager>();

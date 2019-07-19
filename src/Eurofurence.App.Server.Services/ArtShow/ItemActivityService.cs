@@ -178,12 +178,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
             }
         }
 
-        public async Task<IList<NotificationResult>> SimulateNotificationRunAsync()
+        public async Task<IList<ItemActivityNotificationResult>> SimulateNotificationRunAsync()
         {
             var notificationBundles = await BuildNotificationBundlesAsync();
 
             return notificationBundles
-                .Select(bundle => new NotificationResult()
+                .Select(bundle => new ItemActivityNotificationResult()
                 {
                     RecipientUid = bundle.RecipientUid,
                     IdsSold = bundle.ItemsSold.Select(a => a.ASIDNO).ToList(),

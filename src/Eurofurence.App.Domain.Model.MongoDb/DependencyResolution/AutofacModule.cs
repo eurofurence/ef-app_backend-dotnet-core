@@ -168,6 +168,11 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                     new CreateIndexModel<ItemActivityRecord>(
                         Builders<ItemActivityRecord>.IndexKeys.Ascending(a => a.ImportHash))));
 
+            Register<AgentClosingResultRepository, IEntityRepository<AgentClosingResultRecord>, AgentClosingResultRecord>(builder,
+                collection => collection.Indexes.CreateOne(
+                    new CreateIndexModel<AgentClosingResultRecord>(
+                        Builders<AgentClosingResultRecord>.IndexKeys.Ascending(a => a.ImportHash))));
+
             Register<TableRegistrationRepository, IEntityRepository<TableRegistrationRecord>, TableRegistrationRecord>(builder);
         }
     }
