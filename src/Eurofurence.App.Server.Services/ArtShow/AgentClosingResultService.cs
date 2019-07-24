@@ -34,35 +34,45 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
         public async Task ImportAgentClosingResultLogAsync(TextReader logReader)
         {
-            var csv = new CsvReader(logReader);
-
-            csv.Configuration.RegisterClassMap<AgentClosingResultImportRowClassMap>();
-            csv.Configuration.Delimiter = ",";
-            csv.Configuration.HasHeaderRecord = false;
-
-            var csvRecords = csv.GetRecords<AgentClosingResultImportRow>().ToList();
-
-            foreach (var csvRecord in csvRecords)
+            try
             {
-                var existingRecord = await _agentClosingResultRepository.FindOneAsync(a => a.ImportHash == csvRecord.Hash.Value);
-                if (existingRecord != null) continue;
+                await _semaphore.WaitAsync();
 
-                var newRecord = new AgentClosingResultRecord()
+                var csv = new CsvReader(logReader);
+
+                csv.Configuration.RegisterClassMap<AgentClosingResultImportRowClassMap>();
+                csv.Configuration.Delimiter = ",";
+                csv.Configuration.HasHeaderRecord = false;
+
+                var csvRecords = csv.GetRecords<AgentClosingResultImportRow>().ToList();
+
+                foreach (var csvRecord in csvRecords)
                 {
-                    Id = Guid.NewGuid(),
-                    OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{csvRecord.AgentBadgeNo}",
-                    AgentBadgeNo = csvRecord.AgentBadgeNo,
-                    AgentName = csvRecord.AgentName,
-                    ArtistName = csvRecord.ArtistName,
-                    TotalCashAmount = csvRecord.TotalCashAmount,
-                    ExhibitsSold = csvRecord.ExhibitsSold,
-                    ExhibitsUnsold = csvRecord.ExhibitsUnsold,
-                    ImportDateTimeUtc = DateTime.UtcNow,
-                    ImportHash = csvRecord.Hash.Value
-                };
-                newRecord.Touch();
+                    var existingRecord = await _agentClosingResultRepository.FindOneAsync(a => a.ImportHash == csvRecord.Hash.Value);
+                    if (existingRecord != null) continue;
 
-                await _agentClosingResultRepository.InsertOneAsync(newRecord);
+                    var newRecord = new AgentClosingResultRecord()
+                    {
+                        Id = Guid.NewGuid(),
+                        OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{csvRecord.AgentBadgeNo}",
+                        AgentBadgeNo = csvRecord.AgentBadgeNo,
+                        AgentName = csvRecord.AgentName,
+                        ArtistName = csvRecord.ArtistName,
+                        TotalCashAmount = csvRecord.TotalCashAmount,
+                        ExhibitsSold = csvRecord.ExhibitsSold,
+                        ExhibitsUnsold = csvRecord.ExhibitsUnsold,
+                        ExhibitsToAuction = csvRecord.ExhibitsToAuction,
+                        ImportDateTimeUtc = DateTime.UtcNow,
+                        ImportHash = csvRecord.Hash.Value
+                    };
+                    newRecord.Touch();
+
+                    await _agentClosingResultRepository.InsertOneAsync(newRecord);
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
 
@@ -90,9 +100,10 @@ namespace Eurofurence.App.Server.Services.ArtShow
             var message = new StringBuilder();
 
             message
-                .AppendLine($"Dear {result.AgentName}, as acting agent for {result.ArtistName} we'd like to inform you:\n")
-                .AppendLine($"Of {result.ExhibitsTotal} total exhibits, {result.ExhibitsSold} were sold, resulting in a payout of € {result.TotalCashAmount}.\n")
-                .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) and collect the payout in the Art Show during sales hours.\n\nThank you!");
+                .AppendLine($"Dear {result.AgentName},\n\nWe'd like to inform you about the Art Show results for artist {result.ArtistName}.\n")
+                .AppendLine($"Of {result.ExhibitsTotal} total exhibits:\n\n{result.ExhibitsUnsold} remain unsold\n{result.ExhibitsSold} were sold (before/during closing)\n{result.ExhibitsToAuction} are going to the art auction\n")
+                .AppendLine($"Your expected payout as of now is {result.TotalCashAmount} € (charity percentages, where applicable, already deducted).\n\nIf any exhibits are heading to the auction, the actual payout amount may still increase.\n")
+                .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) in the Art Show during Sales & Unsold Art Pickup times and collect your payout during Artists' Payout times.\n\nThank you!");
 
             var request = new SendPrivateMessageRequest()
             {
@@ -101,7 +112,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 Message = message.ToString(),
                 RecipientUid = result.OwnerUid,
                 ToastTitle = "Art Show Agent Results",
-                ToastMessage = $"{result.ArtistName} ({result.ExhibitsSold} sold, {result.ExhibitsUnsold} unsold to pickup)"
+                ToastMessage = $"{result.ArtistName}: ({result.ExhibitsSold} sold, {result.ExhibitsUnsold} unsold, {result.ExhibitsToAuction} to auction)"
             };
 
             var privateMessageId = await _privateMessageService.SendPrivateMessageAsync(request);

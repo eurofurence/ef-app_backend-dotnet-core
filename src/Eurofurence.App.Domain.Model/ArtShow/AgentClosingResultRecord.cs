@@ -12,7 +12,8 @@ namespace Eurofurence.App.Domain.Model.ArtShow
         public string ArtistName { get; set; }
         public int ExhibitsSold { get; set; }
         public int ExhibitsUnsold { get; set; }
-        public int ExhibitsTotal => ExhibitsSold + ExhibitsUnsold;
+        public int ExhibitsToAuction { get; set; }
+        public int ExhibitsTotal => ExhibitsSold + ExhibitsUnsold + ExhibitsToAuction;
         public decimal TotalCashAmount { get; set; }
 
         public DateTime ImportDateTimeUtc { get; set; }

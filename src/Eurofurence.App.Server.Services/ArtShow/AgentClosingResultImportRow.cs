@@ -11,8 +11,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
         public decimal TotalCashAmount { get; set; }
         public int ExhibitsSold { get; set; }
         public int ExhibitsUnsold { get; set; }
+        public int ExhibitsToAuction { get; set; }
 
         public Lazy<string> Hash => new Lazy<string>(
-            () => Hashing.ComputeHashSha1(AgentBadgeNo, AgentName, ArtistName, TotalCashAmount, ExhibitsSold, ExhibitsUnsold));
+            () => Hashing.ComputeHashSha1(AgentBadgeNo, AgentName, ArtistName, TotalCashAmount, ExhibitsSold, ExhibitsUnsold, ExhibitsToAuction));
     }
 }

@@ -12,6 +12,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             Map(m => m.TotalCashAmount).Index(3);
             Map(m => m.ExhibitsSold).Index(4);
             Map(m => m.ExhibitsUnsold).Index(5);
+            Map(m => m.ExhibitsToAuction).Index(6);
         }
     }
 }
