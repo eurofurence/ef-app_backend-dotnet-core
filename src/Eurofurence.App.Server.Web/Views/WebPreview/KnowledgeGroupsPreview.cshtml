@@ -1,0 +1,58 @@
+﻿@using Eurofurence.App.Server.Web.Controllers
+@using System.Linq
+@model IList<Eurofurence.App.Domain.Model.Knowledge.KnowledgeGroupRecord>
+@{
+    Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+
+    var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
+
+    var knowledgeGroups = Model.OrderBy(a => a.Order);
+    var knowledgeEntries = (ViewData["knowledgeEntries"] as IList<Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord>);
+}
+
+@section head {
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+}
+
+<header>
+    <h1>
+        Knowledge Base
+        <span>Helpful information across all areas & departments</span>
+    </h1>
+</header>
+
+@foreach (var knowledgeGroup in knowledgeGroups) {
+
+    <hr id="@knowledgeGroup.Id"/>
+
+    <section class="row desktopOnly">
+        <div class="one columns">
+            <h4><i class="fa">&#x@(knowledgeGroup.FontAwesomeIconCharacterUnicodeAddress);</i></h4>
+        </div>
+        <div class="eleven columns">
+            <h4>@knowledgeGroup.Name</h4>
+            <p>@knowledgeGroup.Description</p>
+        </div>
+    </section>
+
+
+    <section class="mobileOnly center nomargin">
+        <h2><i class="fa">&#x@(knowledgeGroup.FontAwesomeIconCharacterUnicodeAddress);</i></h2>
+        <h4>@knowledgeGroup.Name</h4>
+        <small>@knowledgeGroup.Description</small>
+        <br /><br />
+    </section>
+
+
+    @foreach (var knowledgeEntry in knowledgeEntries.Where(a => a.KnowledgeGroupId == knowledgeGroup.Id).OrderBy(a => a.Order)) {
+        <section class="row">
+            <div class="one columns desktopOnly">&nbsp;</div>
+            <div class="eleven columns">
+                <a class="button" href="@webBaseUrl/KnowledgeEntries/@knowledgeEntry.Id">
+                    @knowledgeEntry.Title
+                </a>
+            </div>
+        </section>
+    }
+
+}

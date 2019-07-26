@@ -1,0 +1,32 @@
+﻿@using Eurofurence.App.Server.Web.Controllers
+@using System.Linq
+@model Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord
+@{
+    Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+
+    var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
+    var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
+
+    var knowledgeGroup = (ViewData["knowledgeGroup"] as Eurofurence.App.Domain.Model.Knowledge.KnowledgeGroupRecord);
+}
+
+<header>
+    <a href="@webBaseUrl/KnowledgeGroups#@knowledgeGroup.Id" class="button">@knowledgeGroup.Name</a>
+    <h1>
+        @Model.Title
+    </h1>
+</header>
+
+<hr />
+
+@if (Model.ImageIds?.Length > 0) {
+    <section class="center">
+        <img src="@apiBaseUrl/Images/@Model.ImageIds[0].ToString()/Content" style="max-width: 100%;" />
+    </section>
+}
+
+<section class="row">
+    <p class="three column">
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Text))
+    </p>
+</section>

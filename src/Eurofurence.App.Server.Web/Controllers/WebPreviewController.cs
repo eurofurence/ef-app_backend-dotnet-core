@@ -1,6 +1,7 @@
 ﻿using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -17,6 +18,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IDealerService _dealerService;
+        private readonly IKnowledgeGroupService _knowledgeGroupService;
+        private readonly IKnowledgeEntryService _knowledgeEntryService;
 
         public const string VIEWDATA_OPENGRAPH_METADATA = nameof(OpenGraphMetadata);
         public const string VIEWDATA_APPID_ITUNES = nameof(ConventionSettings.AppIdITunes);
@@ -32,7 +35,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
             IEventConferenceTrackService eventConferenceTrackService,
-            IDealerService dealerService
+            IDealerService dealerService,
+            IKnowledgeGroupService knowledgeGroupService,
+            IKnowledgeEntryService knowledgeEntryService
             )
         {
             _conventionSettings = conventionSettings;
@@ -41,6 +46,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceTrackService = eventConferenceTrackService;
             _dealerService = dealerService;
+            _knowledgeGroupService = knowledgeGroupService;
+            _knowledgeEntryService = knowledgeEntryService;
         }
 
         private void PopulateViewData()
@@ -95,6 +102,39 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
 
             return View("DealerPreview", dealer);
+        }
+
+        [HttpGet("KnowledgeGroups")]
+        public async Task<ActionResult> GetKnowledgeGroups()
+        {
+            var knowledgeGroups = await _knowledgeGroupService.FindAllAsync();
+            var knowledgeEntries = await _knowledgeEntryService.FindAllAsync();
+
+            PopulateViewData();
+
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                .WithTitle("Knowledge Base")
+                .WithDescription("Helpful information across all areas & departments");
+
+            ViewData["knowledgeEntries"] = knowledgeEntries;
+            return View("KnowledgeGroupsPreview", knowledgeGroups);
+        }
+
+        [HttpGet("KnowledgeEntries/{Id}")]
+        public async Task<ActionResult> GetKnowledgeEntryById(Guid Id)
+        {
+            var knowledgeEntry = await _knowledgeEntryService.FindOneAsync(Id);
+            var knowledgeGroup = await _knowledgeGroupService.FindOneAsync(knowledgeEntry.KnowledgeGroupId);
+            
+            PopulateViewData();
+
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                .WithTitle(knowledgeEntry.Title)
+                .WithDescription(knowledgeGroup.Name)
+                .WithImage(knowledgeEntry.ImageIds?.Length > 0 ? $"{_conventionSettings.ApiBaseUrl}/Images/{knowledgeEntry.ImageIds[0]}/Content" : string.Empty);
+
+            ViewData["knowledgeGroup"] = knowledgeGroup;
+            return View("KnowledgeEntryPreview", knowledgeEntry);
         }
 
         [HttpGet("manifest.json")]

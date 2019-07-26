@@ -18,7 +18,7 @@ h1 span {
     display: block;
 }
 
-section {
+section.summary {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -41,6 +41,26 @@ section {
 
 .button {
     flex-grow: 1;
+}
+
+.button.wrapped {
+    width: auto;
+    height: auto;
+    display: block;
+    text-align: inherit;
+    text-transform: none;
+    margin: auto;
+    margin-bottom: 0.5em;
+    padding: 1em 2em;
+    font-size: 1em;
+    letter-spacing: initial;
+    font-weight: inherit;
+    line-height: initial;
+    white-space: inherit;
+}
+
+section.nomargin > * {
+    margin: 0;
 }
 
 .infobox {
@@ -81,6 +101,10 @@ section {
 }
 
 @media (min-width: 550px) {
+    .mobileOnly {
+        display: none !important;
+    }
+
     .infobox {
         text-align: center;
         border-radius: 4px;
@@ -108,12 +132,20 @@ section {
     width: 100%;
 }
 
+.center {
+    text-align: center;
+}
+
     .summary > * {
         text-wrap: avoid;
         max-width: 100%;
     }
 
 @media (max-width: 550px) {
+
+    .desktopOnly {
+        display: none !important;
+    }
     .button {
         width: 100%;
         box-sizing: border-box;
@@ -124,3 +156,6 @@ section {
 section.row > img {
     margin-bottom: 2.5rem;
 }
+
+
+
