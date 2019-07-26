@@ -29,4 +29,11 @@
     <p class="three column">
         @Html.Raw(Markdig.Markdown.ToHtml(Model.Text))
     </p>
+
+    @foreach (var linkFragment in Model.Links?.Where(a => a.FragmentType == Eurofurence.App.Domain.Model.Fragments.LinkFragment.FragmentTypeEnum.WebExternal)) {
+
+    <a href="@linkFragment.Target" target="_blank" class="button button-primary">@linkFragment.Name</a>
+
+    }
+
 </section>
