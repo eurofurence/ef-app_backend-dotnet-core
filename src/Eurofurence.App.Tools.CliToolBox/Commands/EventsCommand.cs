@@ -44,6 +44,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             command.Command("setTags", setTagsCommand);
             command.Command("autoTags", autoTagsCommand);
             command.Command("clear", clearCommand);
+            command.Command("resetStorageDelta", resetStorageDeltaCommand);
         }
 
         private void clearCommand(CommandLineApplication command)
@@ -215,6 +216,20 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 return modifiedRecords == 0 ? 0 : 1;
             });
         }
+
+        private void resetStorageDeltaCommand(CommandLineApplication command)
+        {
+            command.OnExecute(() =>
+            {
+                _eventService.ResetStorageDeltaAsync().Wait();
+                _eventConferenceDayService.ResetStorageDeltaAsync().Wait();
+                _eventConferenceRoomService.ResetStorageDeltaAsync().Wait();
+                _eventConferenceTrackService.ResetStorageDeltaAsync().Wait();
+
+                return 0;
+            });
+        }
+
 
         private void exportCsvFeedbackCommand(CommandLineApplication command)
         {

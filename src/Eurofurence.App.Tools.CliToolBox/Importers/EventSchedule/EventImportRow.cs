@@ -27,6 +27,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             public string[] CalculateTags()
             {
                 var tags = this.Tags.Split(",")
+                    .Where(tag => !String.IsNullOrWhiteSpace(tag))
+                    .Select(tag => tag.Trim())
                     .Select(tag => tag.Replace("fsps", "photoshoot"))
                     .ToArray();
 
