@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 {
@@ -20,6 +21,17 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             public string ConferenceRoom { get; set; }
             public string PanelHosts { get; set; }
             public string AppFeedback { get; set; }
+            public string Tags { get; set; }
+            public string CustomTags { get; set; }
+
+            public string[] CalculateTags()
+            {
+                var tags = this.Tags.Split(",")
+                    .Select(tag => tag.Replace("fsps", "photoshoot"))
+                    .ToArray();
+
+                return tags;
+            }
         }
     }
 }

@@ -136,7 +136,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                         .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc),
                     t => t.EndDateTimeUtc)
                 .Map(s => s.PanelHosts, t => t.PanelHosts)
-                .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase), t => t.IsAcceptingFeedback);
+                .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase), t => t.IsAcceptingFeedback)
+                .Map(s => s.CalculateTags(), t => t.Tags);
 
             var diff = patch.Patch(ImportEventEntries, eventRecords);
 
