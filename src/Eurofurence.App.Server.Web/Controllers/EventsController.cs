@@ -31,6 +31,24 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
+        ///     Retrieves a list of all events in the event schedule that
+        ///     conflict with the specified start/end time, +/- a tolerance
+        ///     in minutes that is considered when calculating overlaps.
+        /// </summary>
+        /// <returns>All events in the event schedule that conflict with a specified start/endtime + tolerance.</returns>
+        [HttpGet(":conflicts")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
+        public Task<IEnumerable<EventRecord>> GetConflictingEventsAsync(
+            DateTime conflictStartTime,
+            DateTime conflictEndTime,
+            int toleranceInMinutes
+            )
+        {
+            return _eventService.FindConflictsAsync(conflictStartTime, conflictEndTime, TimeSpan.FromMinutes(toleranceInMinutes));
+        }
+
+        /// <summary>
         ///     Retrieve a single event in the event schedule.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
