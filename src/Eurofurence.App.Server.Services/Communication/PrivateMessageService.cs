@@ -141,5 +141,10 @@ namespace Eurofurence.App.Server.Services.Communication
 
             return flushedMessageCount;
         }
+
+        public int GetNotificationQueueSize()
+        {
+            return _notificationQueue.Count;
+        }
     }
 }

@@ -110,5 +110,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             return _privateMessageService.GetPrivateMessagesForSenderAsync(_apiPrincipal.Uid);
         }
 
+        [HttpGet("NotificationQueue/Count")]
+        [Authorize(Roles = "Developer,System")]
+        [ProducesResponseType(typeof(int), 200)]
+        public int GetNotificationQueueSize()
+        {
+            return _privateMessageService.GetNotificationQueueSize();
+        }
     }
 }

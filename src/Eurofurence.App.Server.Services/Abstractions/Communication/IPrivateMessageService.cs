@@ -18,5 +18,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
         Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid messageId);
 
         Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForSenderAsync(string senderUid);
+
+        int GetNotificationQueueSize();
     }
 }
