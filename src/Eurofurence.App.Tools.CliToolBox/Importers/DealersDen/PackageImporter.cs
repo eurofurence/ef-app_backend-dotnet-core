@@ -248,7 +248,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             if (!string.IsNullOrWhiteSpace(CategoryArtwork)) categories.Add("Artwork");
             if (!string.IsNullOrWhiteSpace(CategoryFursuits)) categories.Add("Fursuits");
             if (!string.IsNullOrWhiteSpace(CategoryCommissions)) categories.Add("Commissions");
-            if (!string.IsNullOrWhiteSpace(CategoryMiscellaneous)) categories.Add("Miscellaneous");
+            if (!string.IsNullOrWhiteSpace(CategoryMiscellaneous) || categories.Count == 0) categories.Add("Miscellaneous");
 
             return categories;
         }
