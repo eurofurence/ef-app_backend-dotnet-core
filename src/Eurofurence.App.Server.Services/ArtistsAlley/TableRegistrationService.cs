@@ -136,8 +136,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
             {
-                telegramMessageBuilder.AppendLine($"Telgram: {record.TelegramHandle.RemoveMarkdown()}"); 
-                twitterMessageBuilder.AppendLine($"Telgram: https://t.me/{record.TelegramHandle.Replace("@", "")}");
+                telegramMessageBuilder.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}"); 
+                twitterMessageBuilder.AppendLine($"Telegram: https://t.me/{record.TelegramHandle.Replace("@", "")}");
             }
             if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
             {
