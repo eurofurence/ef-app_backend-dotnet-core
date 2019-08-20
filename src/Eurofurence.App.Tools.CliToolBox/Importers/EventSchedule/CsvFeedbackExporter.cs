@@ -12,6 +12,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
         {
             public Guid EventId { get; set; }
             public string SourceEventId { get; set; }
+            public string SourceEventTitle { get; set; }
+            public string SourceEventSubTitle { get; set; }
             public string Slug { get; set; }
             public DateTime EventStartDateTimeUtc { get; set; }
             public DateTime EventEndDateTimeUtc { get; internal set; }

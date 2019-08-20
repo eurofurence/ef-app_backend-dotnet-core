@@ -248,6 +248,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     {
                         EventId = record.EventId,
                         SourceEventId = @event?.SourceEventId.ToString() ?? "?",
+                        SourceEventTitle = @event?.Title ?? "?",
+                        SourceEventSubTitle = @event.SubTitle ?? "?",
                         FeedbackReceivedDateTimeUtc = record.LastChangeDateTimeUtc,
                         EventStartDateTimeUtc = @event?.StartDateTimeUtc ?? DateTime.MinValue,
                         EventEndDateTimeUtc = @event?.EndDateTimeUtc ?? DateTime.MinValue,
