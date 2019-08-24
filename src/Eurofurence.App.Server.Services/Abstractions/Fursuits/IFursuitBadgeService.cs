@@ -11,6 +11,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 
         Task<byte[]> GetFursuitBadgeImageAsync(Guid id);
 
-        Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync();
+        Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync(FursuitBadgeFilter filter = null);
     }
 }

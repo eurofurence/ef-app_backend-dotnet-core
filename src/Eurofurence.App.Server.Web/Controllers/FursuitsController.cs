@@ -56,9 +56,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Badges")]
         [ProducesResponseType(typeof(FursuitBadgeRecord[]), 200)]
         [ProducesResponseType(401)]
-        public Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync()
+        public Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync(FursuitBadgeFilter filter)
         {
-            return _fursuitBadgeService.GetFursuitBadgesAsync();
+            return _fursuitBadgeService.GetFursuitBadgesAsync(filter);
         }
 
         /// <summary>
