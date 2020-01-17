@@ -71,6 +71,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var response = new AggregatedDeltaResponse
             {
                 ConventionIdentifier = _conventionSettings.ConventionIdentifier,
+                State = _conventionSettings.State,
                 Since = since,
                 CurrentDateTimeUtc = DateTime.UtcNow,
 

@@ -14,6 +14,7 @@ namespace Eurofurence.App.Domain.Model.Sync
 
         public DateTime? Since { get; set; }
         public DateTime CurrentDateTimeUtc { get; set; }
+        public string State { get; set; }
 
         public DeltaResponse<EventRecord> Events { get; set; }
         public DeltaResponse<EventConferenceDayRecord> EventConferenceDays { get; set; }

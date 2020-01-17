@@ -6,6 +6,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
     public class ConventionSettings
     {
         public string ConventionIdentifier { get; set; }
+        public string State { get; set; }
         public bool IsRegSysAuthenticationEnabled { get; set; }
         public string BaseUrl { get; set; }
         public string AppIdITunes { get; set; } 
@@ -18,6 +19,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
             => new ConventionSettings()
             {
                 ConventionIdentifier = configuration["global:conventionIdentifier"],
+                State = configuration["global:state"],
                 IsRegSysAuthenticationEnabled = Convert.ToInt32(configuration["global:regSysAuthenticationEnabled"]) == 1,
                 BaseUrl = configuration["global:baseUrl"],
                 AppIdITunes = configuration["global:appIdITunes"],
