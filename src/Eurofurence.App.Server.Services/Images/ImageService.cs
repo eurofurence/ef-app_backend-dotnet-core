@@ -177,13 +177,13 @@ namespace Eurofurence.App.Server.Services.Images
                 ctx.Resize(new ResizeOptions()
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(width, height),
+                    Size = new SixLabors.ImageSharp.Size(width, height),
                     Sampler = new BicubicResampler()
                 })
             );
 
             var ms = new MemoryStream();
-            rawImage.SaveAsJpeg(ms, new JpegEncoder() { IgnoreMetadata = true, Quality = 85 });
+            rawImage.SaveAsJpeg(ms, new JpegEncoder() {  Quality = 85 });
             var newFragment = GenerateFragmentFromBytes(ms.ToArray());
             ms.Dispose();
 

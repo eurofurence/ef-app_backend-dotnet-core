@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 
                 TextReader reader = new StreamReader(csvEntry.Open(), true);
 
-                var csvReader = new CsvReader(reader);
+                var csvReader = new CsvReader(reader, CultureInfo.CurrentCulture);
                 csvReader.Configuration.RegisterClassMap<DealerImportRowClassMap>();
                 csvReader.Configuration.Delimiter = ";";
                 var csvRecords = csvReader.GetRecords<DealerImportRow>().ToList();

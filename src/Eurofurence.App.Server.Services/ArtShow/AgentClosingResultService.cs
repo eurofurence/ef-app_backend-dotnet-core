@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,7 +39,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 await _semaphore.WaitAsync();
 
-                var csv = new CsvReader(logReader);
+                var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
 
                 csv.Configuration.RegisterClassMap<AgentClosingResultImportRowClassMap>();
                 csv.Configuration.Delimiter = ",";

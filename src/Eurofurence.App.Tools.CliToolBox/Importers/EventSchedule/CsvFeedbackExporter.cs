@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -50,7 +51,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 
         public void Write(IEnumerable<Record> records, TextWriter output)
         {
-            var writer = new CsvHelper.CsvWriter(output, true);
+            var writer = new CsvHelper.CsvWriter(output, CultureInfo.CurrentCulture, true);
             writer.WriteRecords(records);
         }
     }

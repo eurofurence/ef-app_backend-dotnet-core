@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper;
@@ -152,7 +153,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             var stream = new FileStream(inputPath, FileMode.Open);
             TextReader r = new StreamReader(stream);
 
-            var csv = new CsvReader(r);
+            var csv = new CsvReader(r, CultureInfo.CurrentCulture);
             csv.Configuration.RegisterClassMap<EventImportRowClassMap>();
             csv.Configuration.Delimiter = ",";
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
