@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -30,7 +31,6 @@ using Serilog.Context;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
-using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Text;
@@ -40,10 +40,10 @@ namespace Eurofurence.App.Server.Web
 {
     public class Startup
     {
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         private ILogger _logger;
 
-        public Startup(IHostingEnvironment hostingEnvironment, IConfiguration configuration)
+        public Startup(IWebHostEnvironment hostingEnvironment, IConfiguration configuration)
         {
             _hostingEnvironment = hostingEnvironment;
             Configuration = configuration;
@@ -69,28 +69,29 @@ namespace Eurofurence.App.Server.Web
 
             services.AddCors(options =>
             {
-                options.AddPolicy("CorsPolicy",
-                    cpb => cpb.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials());
+                //options.AddPolicy("CorsPolicy",
+                //    cpb => cpb.AllowAnyOrigin()
+                //        .AllowAnyMethod()
+                //        .AllowAnyHeader()
+                //        .AllowCredentials());
             });
 
             services.AddMvc(options =>
             {
+                options.EnableEndpointRouting = false;
                 options.MaxModelValidationErrors = 0;
                 options.Filters.Add(new CustomValidationAttributesFilter());
             })
-                .AddJsonOptions(options =>
+            .AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
+                options.SerializerSettings.Formatting = Formatting.Indented;
+                options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                options.SerializerSettings.Converters.Add(new IsoDateTimeConverter
                 {
-                    options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
-                    options.SerializerSettings.Formatting = Formatting.Indented;
-                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
-                    options.SerializerSettings.Converters.Add(new IsoDateTimeConverter
-                    {
-                        DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffK"
-                    });
+                    DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffK"
                 });
+            });
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -101,37 +102,52 @@ namespace Eurofurence.App.Server.Web
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("api", new Info
+                options.SwaggerDoc("api", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Version = conventionSettings.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
-                    Contact = new Contact
+                    Contact = new Microsoft.OpenApi.Models.OpenApiContact
                     {
                         Name = "Eurofurence IT Department",
                         Email = "it@eurofurence.org",
-                        Url = "https://help.eurofurence.org/contact/it"
+                        Url = new Uri("https://help.eurofurence.org/contact/it")
                     }
                 });
 
-                options.AddSecurityDefinition("Bearer", new ApiKeyScheme
+                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
                     Name = "Authorization",
-                    In = "header",
-                    Type = "apiKey"
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
                 });
 
-                options.DescribeAllEnumsAsStrings();
+                //options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Domain.Model.xml");
 
-                options.SchemaFilter<IgnoreVirtualPropertiesSchemaFilter>();
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
                 options.OperationFilter<BinaryPayloadFilter>();
-                options.DocumentFilter<BasePathFilter>(
-                    Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1"
-                    ? $"/{conventionSettings.ConventionIdentifier}" : "/");
+
+
+                if (Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1")
+                {
+                    options.AddServer(new Microsoft.OpenApi.Models.OpenApiServer()
+                    {
+                        Description = "nginx (CID in path)",
+                        Url = $"/{conventionSettings.ConventionIdentifier}"
+                    });
+                }
+                else
+                {
+                    options.AddServer(new Microsoft.OpenApi.Models.OpenApiServer()
+                    {
+                        Description = "local",
+                        Url = "/"
+                    });
+                }
+
             });
 
             var oAuthBearerAuthenticationPolicy =
@@ -194,9 +210,9 @@ namespace Eurofurence.App.Server.Web
 
         public void Configure(
             IApplicationBuilder app,
-            IHostingEnvironment env,
+            IWebHostEnvironment env,
             ILoggerFactory loggerFactory,
-            IApplicationLifetime appLifetime
+            IHostApplicationLifetime appLifetime
         )
         {
             var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();

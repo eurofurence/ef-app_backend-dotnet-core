@@ -3,14 +3,14 @@ using System.Linq;
 using Autofac;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Eurofurence.App.Server.Web.Swagger
 {
     public class AddAuthorizationHeaderParameterOperationFilter : IOperationFilter
     {
-        public void Apply(Operation operation, OperationFilterContext context)
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             var apiDescription = context.ApiDescription;
 
@@ -33,25 +33,37 @@ namespace Eurofurence.App.Server.Web.Swagger
                 .OrderBy(a => a)
                 .ToList();
 
-            operation.Security = new List<IDictionary<string, IEnumerable<string>>>();
+            operation.Security = new List<OpenApiSecurityRequirement>();
 
-            if (operation.Security == null)
-                operation.Security = new List<IDictionary<string, IEnumerable<string>>>();
+            var oAuthRequirements =
+               new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
 
-            var oAuthRequirements = new Dictionary<string, IEnumerable<string>>
-            {
-                {"Bearer", new List<string>()}
-            };
+                        },
+                        new List<string>()
+                    }
+                };
 
             operation.Security.Add(oAuthRequirements);
-            operation.Parameters = operation.Parameters ?? new List<IParameter>();
+            operation.Parameters = operation.Parameters ?? new List<OpenApiParameter>();
 
             var existingDescription = operation.Description;
 
             operation.Description = "  * Requires authorization  \n";
 
             if (!operation.Responses.ContainsKey("401"))
-                operation.Responses.Add("401", new Response {Description = "Authorization required"});
+                operation.Responses.Add("401", new OpenApiResponse {Description = "Authorization required"});
 
             if (requiredRoles.Count > 0)
             {
@@ -59,7 +71,7 @@ namespace Eurofurence.App.Server.Web.Swagger
                                          + string.Join(", ", requiredRoles.Select(a => $"**`{a}`**"));
 
                 if (!operation.Responses.ContainsKey("403"))
-                    operation.Responses.Add("403", new Response
+                    operation.Responses.Add("403", new OpenApiResponse
                     {
                         Description = "Authorization not sufficient (Missing Role)  \n"
                                       + string.Join("\n", requiredRoles.Select(a => $"  * Not in role **`{a}`**"))
