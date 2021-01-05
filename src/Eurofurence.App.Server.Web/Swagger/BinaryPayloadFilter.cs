@@ -1,12 +1,13 @@
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Eurofurence.App.Server.Web.Swagger
 {
     public class BinaryPayloadFilter : IOperationFilter
     {
-        public void Apply(Operation operation, OperationFilterContext context)
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             var apiDescription = context.ApiDescription;
 
@@ -20,21 +21,24 @@ namespace Eurofurence.App.Server.Web.Swagger
                 return;
             }
 
-            operation.Consumes.Clear();
-            operation.Consumes.Add(attribute.MediaType);
-
-            operation.Parameters.Add(new BodyParameter()
+            operation.RequestBody = new OpenApiRequestBody()
             {
-                Name = attribute.ParameterName,
-                In = "body",
-                Required = attribute.Required,
-                Description = attribute.Description,
-                Schema = new Schema()
+                Required = true,
+                Content = new Dictionary<string, OpenApiMediaType>()
                 {
-                    Type = "string",
-                    Format = "byte"
+                    { "Content", 
+                        new OpenApiMediaType()
+                        {
+                            Schema = new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "byte"
+                            }
+                        }
+                    }
                 }
-            });
+            };
         }
+
     }
 }

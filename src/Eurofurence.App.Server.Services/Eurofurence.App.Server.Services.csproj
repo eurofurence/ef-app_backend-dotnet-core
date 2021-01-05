@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Eurofurence.App.Server.Services</AssemblyName>
     <PackageId>Eurofurence.App.Server.Services</PackageId>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -14,16 +14,16 @@
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.9.2" />
-    <PackageReference Include="CsvHelper" Version="12.1.2" />
+    <PackageReference Include="Autofac" Version="6.1.0" />
+    <PackageReference Include="CsvHelper" Version="19.0.0" />
     <PackageReference Include="linqtotwitter" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="5.4.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.10" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0005" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.4.0" />
-    <PackageReference Include="Telegram.Bot" Version="14.12.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />
+    <PackageReference Include="Telegram.Bot" Version="15.7.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

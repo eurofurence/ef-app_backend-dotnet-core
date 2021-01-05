@@ -88,13 +88,13 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         ctx.Resize(new ResizeOptions()
                         {
                             Mode = ResizeMode.Max,
-                            Size = new Size(240, 320),
+                            Size = new SixLabors.ImageSharp.Size(240, 320),
                             Sampler = new BicubicResampler()
                         })
                     );
 
                     var ms = new MemoryStream();
-                    image.SaveAsJpeg(ms, new JpegEncoder() { IgnoreMetadata = true, Quality = 85 });
+                    image.SaveAsJpeg(ms, new JpegEncoder() { Quality = 85 });
                     imageRecord.SizeInBytes = ms.Length;
                     imageRecord.ImageBytes = ms.ToArray();
                     ms.Dispose();

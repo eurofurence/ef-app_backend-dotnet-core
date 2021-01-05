@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
