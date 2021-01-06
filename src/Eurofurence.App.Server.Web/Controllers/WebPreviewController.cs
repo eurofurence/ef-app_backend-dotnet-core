@@ -60,10 +60,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData[VIEWDATA_APPID_PLAY] = _conventionSettings.AppIdPlay;
         }
 
-        [HttpGet("Events/{Id}")]
-        public async Task<ActionResult> GetEventById(Guid Id)
+        [HttpGet("Events/{id}")]
+        public async Task<ActionResult> GetEventById(Guid id)
         {
-            var @event = await _eventService.FindOneAsync(Id);
+            var @event = await _eventService.FindOneAsync(id);
             if (@event == null) return NotFound();
 
             var previewImageId = @event.PosterImageId ?? @event.BannerImageId ?? null;
@@ -86,10 +86,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             return View("EventPreview", @event);
         }
 
-        [HttpGet("Dealers/{Id}")]
-        public async Task<ActionResult> GetDealerById(Guid Id)
+        [HttpGet("Dealers/{id}")]
+        public async Task<ActionResult> GetDealerById(Guid id)
         {
-            var dealer = await _dealerService.FindOneAsync(Id);
+            var dealer = await _dealerService.FindOneAsync(id);
             if (dealer == null) return NotFound();
 
             PopulateViewData();
@@ -120,10 +120,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             return View("KnowledgeGroupsPreview", knowledgeGroups);
         }
 
-        [HttpGet("KnowledgeEntries/{Id}")]
-        public async Task<ActionResult> GetKnowledgeEntryById(Guid Id)
+        [HttpGet("KnowledgeEntries/{id}")]
+        public async Task<ActionResult> GetKnowledgeEntryById(Guid id)
         {
-            var knowledgeEntry = await _knowledgeEntryService.FindOneAsync(Id);
+            var knowledgeEntry = await _knowledgeEntryService.FindOneAsync(id);
             var knowledgeGroup = await _knowledgeGroupService.FindOneAsync(knowledgeEntry.KnowledgeGroupId);
             
             PopulateViewData();
@@ -167,6 +167,5 @@ namespace Eurofurence.App.Server.Web.Controllers
                 }
             });
         }
-
     }
 }

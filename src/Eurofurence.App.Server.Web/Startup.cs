@@ -82,6 +82,7 @@ namespace Eurofurence.App.Server.Web
                 options.MaxModelValidationErrors = 0;
                 options.Filters.Add(new CustomValidationAttributesFilter());
             })
+            .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null)
             .AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();

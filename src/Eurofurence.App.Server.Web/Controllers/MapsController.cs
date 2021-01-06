@@ -40,13 +40,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Get a specific map
         /// </summary>
         /// <response code="404">
-        ///     * No map found for `Id`
+        ///     * No map found for `id`
         /// </response>
-        [HttpGet("{Id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(MapRecord), 200)]
-        public async Task<MapRecord> GetMapAsync([FromRoute] Guid Id)
+        public async Task<MapRecord> GetMapAsync([FromRoute] Guid id)
         {
-            return (await _mapService.FindOneAsync(Id)).Transient404(HttpContext);
+            return (await _mapService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
 
@@ -54,27 +54,27 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Get all map entries for a specific map
         /// </summary>
         /// <response code="404">
-        ///     * No map found for `Id`
+        ///     * No map found for `id`
         /// </response>
-        [HttpGet("{Id}/Entries")]
+        [HttpGet("{id}/Entries")]
         [ProducesResponseType(typeof(ICollection<MapEntryRecord>), 200)]
-        public async Task<ICollection<MapEntryRecord>> GetMapEntriesAsync([FromRoute] Guid Id)
+        public async Task<ICollection<MapEntryRecord>> GetMapEntriesAsync([FromRoute] Guid id)
         {
-            return (await _mapService.FindOneAsync(Id)).Transient404(HttpContext)?.Entries;
+            return (await _mapService.FindOneAsync(id)).Transient404(HttpContext)?.Entries;
         }
 
         /// <summary>
         ///     Get all specific map entry for a specific map
         /// </summary>
         /// <response code="404">
-        ///     * No map found for `Id`
-        ///     * No entry found for `EntryId`on map
+        ///     * No map found for `id`
+        ///     * No entry found for `entryId`on map
         /// </response>
-        [HttpGet("{Id}/Entries/{EntryId}")]
+        [HttpGet("{id}/Entries/{entryId}")]
         [ProducesResponseType(typeof(MapEntryRecord), 200)]
-        public async Task<MapEntryRecord> GetSingleMapEntryAsync([FromRoute] Guid Id, [FromRoute] Guid EntryId)
+        public async Task<MapEntryRecord> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
-            return ((await _mapService.FindOneAsync(Id))?.Entries.SingleOrDefault(a => a.Id == EntryId))
+            return ((await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId))
                 .Transient404(HttpContext);
         }
 
@@ -82,17 +82,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete all map entries for a specific map
         /// </summary>
         /// <response code="400">
-        ///     * Unable to parse `Id`
-        ///     * No map found for the given `Id`
+        ///     * Unable to parse `id`
+        ///     * No map found for the given `id`
         /// </response>
-        [HttpDelete("{Id}/Entries")]
+        [HttpDelete("{id}/Entries")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(204)]
-        public async Task<ActionResult> DeleteMapEntriesAsync([FromRoute] Guid Id)
+        public async Task<ActionResult> DeleteMapEntriesAsync([FromRoute] Guid id)
         {
-            if (Id == Guid.Empty) return BadRequest("Error parsing Id");
+            if (id == Guid.Empty) return BadRequest("Error parsing Id");
 
-            var map = await _mapService.FindOneAsync(Id);
+            var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
 
             map.Entries.Clear();
@@ -104,23 +104,23 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Delete a specific map entry for a specific map
         /// </summary>
-        /// <response code="404">No entry found on the map for the given `EntryId`</response>
+        /// <response code="404">No entry found on the map for the given `entryId`</response>
         /// <response code="400">
-        ///     * Unable to parse `Id` or `EntryId`
-        ///     * No map found for the given `Id`
+        ///     * Unable to parse `id` or `entryId`
+        ///     * No map found for the given `id`
         /// </response>
-        [HttpDelete("{Id}/Entries/{EntryId}")]
+        [HttpDelete("{id}/Entries/{entryId}")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(204)]
-        public async Task<ActionResult> DeleteSingleMapEntryAsync([FromRoute] Guid Id, [FromRoute] Guid EntryId)
+        public async Task<ActionResult> DeleteSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
-            if (Id == Guid.Empty) return BadRequest("Error parsing Id");
-            if (EntryId == Guid.Empty) return BadRequest("Error parsing EntryId");
+            if (id == Guid.Empty) return BadRequest("Error parsing Id");
+            if (entryId == Guid.Empty) return BadRequest("Error parsing EntryId");
 
-            var map = await _mapService.FindOneAsync(Id);
+            var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
 
-            var entry = map.Entries.SingleOrDefault(a => a.Id == EntryId);
+            var entry = map.Entries.SingleOrDefault(a => a.Id == entryId);
             if (entry == null) return NotFound();
 
             map.Entries.Remove(entry);
@@ -134,22 +134,22 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create a new map entry in a specific map
         /// </summary>
         /// <remarks>If you can generate guids client-side, you can also use the PUT variant for both create and update.</remarks>
-        /// <param name="Record">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
-        /// <param name="Id">"Id" of the map</param>
+        /// <param name="record">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
+        /// <param name="id">"Id" of the map</param>
         /// <returns>The id of the new map entry (guid)</returns>
         /// <response code="400">
-        ///     * Unable to parse `Record` or `Id`
+        ///     * Unable to parse `record` or `id`
         /// </response>
-        [HttpPost("{Id}/Entries")]
+        [HttpPost("{id}/Entries")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRecord Record, [FromRoute] Guid Id)
+        public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id)
         {
-            if (Record == null) return BadRequest("Error parsing Record");
-            if (Id == Guid.Empty) return BadRequest("Error parsing Id");
+            if (record == null) return BadRequest("Error parsing Record");
+            if (id == Guid.Empty) return BadRequest("Error parsing Id");
 
-            Record.Id = Guid.NewGuid();
-            return await PutSingleMapEntryAsync(Record, Id, Record.Id);
+            record.Id = Guid.NewGuid();
+            return await PutSingleMapEntryAsync(record, id, record.Id);
         }
 
         /// <summary>
@@ -157,42 +157,42 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <remarks>
         ///     This both works for updating an existing entry and creating a new entry. The id property of the
-        ///     model (request body) must match the {EntryId} part of the uri.
+        ///     model (request body) must match the {entryId} part of the uri.
         /// </remarks>
-        /// <param name="Record">"Id" property must match the {EntryId} part of the uri</param>
-        /// <param name="Id">"Id" of the map.</param>
-        /// <param name="EntryId">"Id" of the entry that gets inserted.</param>
+        /// <param name="record">"Id" property must match the {EntryId} part of the uri</param>
+        /// <param name="id">"Id" of the map.</param>
+        /// <param name="entryId">"Id" of the entry that gets inserted.</param>
         /// <response code="400">
-        ///     * Unable to parse `Record`, `Id` or `EntryId`
-        ///     * `Record.Id` does not match `EntryId` from uri.
+        ///     * Unable to parse `record`, `id` or `entryId`
+        ///     * `record.Id` does not match `entryId` from uri.
         ///     * No map found with for the specified id.
         /// </response>
-        [HttpPut("{Id}/Entries/{EntryId}")]
+        [HttpPut("{id}/Entries/{EntryId}")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRecord Record, [FromRoute] Guid Id,
-            [FromRoute] Guid EntryId)
+        public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id,
+            [FromRoute] Guid entryId)
         {
-            if (Record == null) return BadRequest("Error parsing Record");
-            if (Id == Guid.Empty) return BadRequest("Error parsing Id");
-            if (EntryId == Guid.Empty) return BadRequest("Error parsing EntryId");
-            if (Record.Id != EntryId) return BadRequest("EntityId must match Record.Id");
+            if (record == null) return BadRequest("Error parsing Record");
+            if (id == Guid.Empty) return BadRequest("Error parsing Id");
+            if (entryId == Guid.Empty) return BadRequest("Error parsing EntryId");
+            if (record.Id != entryId) return BadRequest("EntityId must match Record.Id");
 
-            var map = await _mapService.FindOneAsync(Id);
+            var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
 
 
-            foreach (var link in Record.Links)
+            foreach (var link in record.Links)
             {
                 var linkValidation = await _linkFragmentValidator.ValidateAsync(link);
                 if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
             }
 
-            map.Entries.Remove(map.Entries.SingleOrDefault(a => a.Id == EntryId));
-            map.Entries.Add(Record);
+            map.Entries.Remove(map.Entries.SingleOrDefault(a => a.Id == entryId));
+            map.Entries.Add(record);
 
             await _mapService.ReplaceOneAsync(map);
-            return Ok(Record.Id);
+            return Ok(record.Id);
         }
     }
 }

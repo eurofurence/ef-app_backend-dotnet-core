@@ -52,7 +52,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single event in the event schedule.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
-        [HttpGet("{Id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(EventRecord), 200)]
         public async Task<EventRecord> GetEventAsync([FromRoute] Guid id)

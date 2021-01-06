@@ -35,7 +35,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single knowledge entry.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
-        [HttpGet("{Id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(KnowledgeEntryRecord), 200)]
         public async Task<KnowledgeEntryRecord> GetKnowledgeEntryAsync([FromRoute] Guid id)
@@ -47,21 +47,21 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Update an existing knowledge entry.
         /// </summary>
-        /// <param name="Record"></param>
-        /// <param name="Id"></param>
+        /// <param name="record"></param>
+        /// <param name="id"></param>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull][HttpPut("{Id}")]
+        [EnsureNotNull][HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeEntryAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("Id")] KnowledgeEntryRecord Record,
-            [EnsureNotNull][FromRoute] Guid Id)
+            [EnsureNotNull][FromBody][EnsureEntityIdMatches("Id")] KnowledgeEntryRecord record,
+            [EnsureNotNull][FromRoute] Guid id)
         {
-            var existingRecord = await _knowledgeEntryService.FindOneAsync(Id);
-            if (existingRecord == null) return NotFound($"No record found with it {Id}");
+            var existingRecord = await _knowledgeEntryService.FindOneAsync(id);
+            if (existingRecord == null) return NotFound($"No record found with it {id}");
 
-            Record.Touch();
-            await _knowledgeEntryService.ReplaceOneAsync(Record);
+            record.Touch();
+            await _knowledgeEntryService.ReplaceOneAsync(record);
 
             return NoContent();
         }
@@ -88,19 +88,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Delete a knowledge entry.
         /// </summary>
-        /// <param name="Id"></param>
+        /// <param name="id"></param>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [HttpDelete("{Id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteKnowledgeEntryAsync(
-            [EnsureNotNull][FromRoute] Guid Id
+            [EnsureNotNull][FromRoute] Guid id
         )
         {
-            var existingRecord = await _knowledgeEntryService.FindOneAsync(Id);
-            if (existingRecord == null) return NotFound($"No record found with it {Id}");
+            var existingRecord = await _knowledgeEntryService.FindOneAsync(id);
+            if (existingRecord == null) return NotFound($"No record found with it {id}");
 
-            await _knowledgeEntryService.DeleteOneAsync(Id);
+            await _knowledgeEntryService.DeleteOneAsync(id);
 
             return NoContent();
         }

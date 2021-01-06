@@ -34,36 +34,36 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieve a single knowledge group.
         /// </summary>
-        /// <param name="Id">id of the requested entity</param>
-        [HttpGet("{Id}")]
+        /// <param name="id">id of the requested entity</param>
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(KnowledgeGroupRecord), 200)]
         public async Task<KnowledgeGroupRecord> GetKnowledgeGroupAsync(
-            [EnsureNotNull][FromRoute] Guid Id
+            [EnsureNotNull][FromRoute] Guid id
             )
         {
-            return (await _knowledgeGroupService.FindOneAsync(Id)).Transient404(HttpContext);
+            return (await _knowledgeGroupService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
         /// <summary>
         ///     Update an existing knowledge group.
         /// </summary>
-        /// <param name="Record"></param>
-        /// <param name="Id"></param>
+        /// <param name="record"></param>
+        /// <param name="id"></param>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [HttpPut("{Id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeGroupAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("Id")] KnowledgeGroupRecord Record,
-            [EnsureNotNull][FromRoute] Guid Id
+            [EnsureNotNull][FromBody][EnsureEntityIdMatches("id")] KnowledgeGroupRecord record,
+            [EnsureNotNull][FromRoute] Guid id
         )
         {
-            var existingRecord = await _knowledgeGroupService.FindOneAsync(Id);
-            if (existingRecord == null) return NotFound($"No record found with it {Id}");
+            var existingRecord = await _knowledgeGroupService.FindOneAsync(id);
+            if (existingRecord == null) return NotFound($"No record found with id {id}");
 
-            Record.Touch();
-            await _knowledgeGroupService.ReplaceOneAsync(Record);
+            record.Touch();
+            await _knowledgeGroupService.ReplaceOneAsync(record);
 
             return NoContent();
         }
@@ -90,19 +90,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Delete a knowledge group.
         /// </summary>
-        /// <param name="Id"></param>
+        /// <param name="id"></param>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [HttpDelete("{Id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteKnowledgeGroupAsync(
-            [EnsureNotNull][FromRoute] Guid Id
+            [EnsureNotNull][FromRoute] Guid id
         )
         {
-            var existingRecord = await _knowledgeGroupService.FindOneAsync(Id);
-            if (existingRecord == null) return NotFound($"No record found with it {Id}");
+            var existingRecord = await _knowledgeGroupService.FindOneAsync(id);
+            if (existingRecord == null) return NotFound($"No record found with it {id}");
 
-            await _knowledgeGroupService.DeleteOneAsync(Id);
+            await _knowledgeGroupService.DeleteOneAsync(id);
 
             return NoContent();
         }

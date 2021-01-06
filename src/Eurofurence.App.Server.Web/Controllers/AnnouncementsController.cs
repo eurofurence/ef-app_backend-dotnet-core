@@ -38,7 +38,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single announcement.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
-        [HttpGet("{Id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(AnnouncementRecord), 200)]
         public async Task<AnnouncementRecord> GetAnnouncementAsync([FromRoute] Guid id)
@@ -46,7 +46,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
-        [HttpDelete("{Id}")]
+        [HttpDelete("{id}")]
         [Authorize(Roles = "System,Developer")]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {

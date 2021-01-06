@@ -46,21 +46,21 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     will not update the `ReadDateTimeUtc` property, but return the
         ///     `ReadDateTimeUtc` value of the first call.
         /// </remarks>
-        /// <param name="MessageId">`Id` of the message to mark as read</param>
-        /// <param name="IsRead">boolean, expected to be 'true' always</param>
+        /// <param name="messageId">`Id` of the message to mark as read</param>
+        /// <param name="isRead">boolean, expected to be 'true' always</param>
         /// <returns>The current timestamp on the server that will be persisted in the messages `ReadDateTimeUtc` property.</returns>
         /// <response code="400">`MessageId` is invalid or not accessible by the user.</response>
         [Authorize(Roles = "Attendee")]
-        [HttpPost("PrivateMessages/{MessageId}/Read")]
+        [HttpPost("PrivateMessages/{messageId}/Read")]
         [ProducesResponseType(typeof(DateTime), 200)]
         public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync(
-            [EnsureNotNull][FromRoute] Guid MessageId,
-            [EnsureNotNull][FromBody] bool IsRead
+            [EnsureNotNull][FromRoute] Guid messageId,
+            [EnsureNotNull][FromBody] bool isRead
         )
         {
-            if (!IsRead) return BadRequest("Message can only be marked as read; not as unread.");
+            if (!isRead) return BadRequest("Message can only be marked as read; not as unread.");
 
-            var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(MessageId, _apiPrincipal.Uid);
+            var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(messageId, _apiPrincipal.Uid);
             return result.HasValue ? (ActionResult) Json(result) : BadRequest();
         }
 
@@ -91,14 +91,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
-        [HttpGet("PrivateMessages/{MessageId}/Status")]
+        [HttpGet("PrivateMessages/{messageId}/Status")]
         [Authorize(Roles = "Developer,System,Action-PrivateMessages-Query")]
         [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(
-            [FromRoute][EnsureNotNull] Guid MessageId)
+            [FromRoute][EnsureNotNull] Guid messageId)
         {
-            var result = await _privateMessageService.GetPrivateMessageStatusAsync(MessageId);
+            var result = await _privateMessageService.GetPrivateMessageStatusAsync(messageId);
             return result.Transient404(HttpContext);
         }
 

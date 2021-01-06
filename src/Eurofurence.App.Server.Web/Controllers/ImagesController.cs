@@ -36,7 +36,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single image.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
-        [HttpGet("{Id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(ImageRecord), 200)]
         public async Task<ImageRecord> GetImageAsync([FromRoute] Guid id)
@@ -48,7 +48,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single image content.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
-        [HttpGet("{Id}/Content")]
+        [HttpGet("{id}/Content")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(byte[]), 200)]
         public async Task<ActionResult> GetImageContentAsync([FromRoute] Guid id)
@@ -65,7 +65,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         /// <param name="contentHashBase64Encoded">Base64 Encoded ContentHashSha1 of the requested entity</param>
-        [HttpGet("{Id}/Content/with-hash:{contentHashBase64Encoded}")]
+        [HttpGet("{id}/Content/with-hash:{contentHashBase64Encoded}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(byte[]), 200)]
         [ResponseCache(Duration = 60 * 60 * 24, Location = ResponseCacheLocation.Any)]
@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
-        [HttpPut("{Id}/Content")]
+        [HttpPut("{id}/Content")]
         public async Task<ActionResult> PutImageContentAsync([FromRoute] Guid id, [FromBody] string ImageContent)
         {
             var record = await _imageService.FindOneAsync(id);

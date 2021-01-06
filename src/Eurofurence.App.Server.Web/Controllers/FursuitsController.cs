@@ -64,14 +64,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieve the badge image content for a given fursuit badge id
         /// </summary>
-        /// <param name="Id">"Id" of the fursuit badge</param>
+        /// <param name="id">"Id" of the fursuit badge</param>
         [ProducesResponseType(typeof(byte[]), 200)]
         [ProducesResponseType(404)]
-        [HttpGet("Badges/{Id}/Image")]
+        [HttpGet("Badges/{id}/Image")]
         [ResponseCache(Duration = 60 * 30, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult> GetFursuitBadgeImageAsync([FromRoute] Guid Id)
+        public async Task<ActionResult> GetFursuitBadgeImageAsync([FromRoute] Guid id)
         {
-            var content = await _fursuitBadgeService.GetFursuitBadgeImageAsync(Id);
+            var content = await _fursuitBadgeService.GetFursuitBadgeImageAsync(id);
             if (content == null) return NotFound();
 
             return File(content, "image/jpeg");
@@ -80,25 +80,25 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Register (link/assign) a valid, unused token to a fursuit badge.
         /// </summary>
-        /// <param name="FursuitBadgeId"></param>
+        /// <param name="fursuitBadgeId"></param>
         /// <param name="TokenValue"></param>
         /// <returns></returns>
         [Authorize(Roles = "Attendee")]
-        [HttpPost("CollectingGame/FursuitParticpation/Badges/{FursuitBadgeId}/Token")]
+        [HttpPost("CollectingGame/FursuitParticpation/Badges/{fursuitBadgeId}/Token")]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
-        public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerAsync([FromRoute] Guid FursuitBadgeId, [FromBody] string TokenValue)
+        public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerAsync([FromRoute] Guid fursuitBadgeId, [FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, FursuitBadgeId, TokenValue.ToUpper());
+            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, fursuitBadgeId, TokenValue.ToUpper());
             return result.AsActionResult();
         }
 
         [Authorize(Roles = "Attendee")]
-        [HttpPost("CollectingGame/FursuitParticpation/Badges/{FursuitBadgeId}/Token:safe")]
+        [HttpPost("CollectingGame/FursuitParticpation/Badges/{fursuitBadgeId}/Token:safe")]
         [ProducesResponseType(typeof(ApiSafeResult), 200)]
-        public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerSafeAsync([FromRoute] Guid FursuitBadgeId, [FromBody] string TokenValue)
+        public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerSafeAsync([FromRoute] Guid fursuitBadgeId, [FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, FursuitBadgeId, TokenValue.ToUpper());
+            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, fursuitBadgeId, TokenValue.ToUpper());
             return result.AsActionResultSafeVariant();
         }
 
