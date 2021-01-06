@@ -41,6 +41,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement)
         {
+            if (!_configuration.IsConfigured) return Task.CompletedTask;
+
             return Task.WhenAll(
                 SendPushNotificationAsync(new
                 {
@@ -82,6 +84,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage, Guid relatedId)
         {
+            if (!_configuration.IsConfigured) return;
+
             var recipients = await GetRecipientChannelAsync(recipientUid);
 
             foreach (var recipient in recipients)
@@ -132,6 +136,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public Task PushSyncRequestAsync()
         {
+            if (!_configuration.IsConfigured) return Task.CompletedTask;
+
             return Task.WhenAll(
                 SendPushNotificationAsync(new
                 {
@@ -165,7 +171,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private async Task SendPushNotificationAsync(object payload)
         {
-
             var jsonPayload = JsonConvert.SerializeObject(payload);
 
             using (var client = new HttpClient())

@@ -4,6 +4,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Telegram
 {
     public class TelegramConfiguration
     {
+        public bool IsConfigured => !string.IsNullOrEmpty(AccessToken);
         public string AccessToken { get; set; }
         public string Proxy { get; set; }
 

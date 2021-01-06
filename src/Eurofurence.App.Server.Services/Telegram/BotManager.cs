@@ -107,9 +107,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             _conventionSettings = conventionSettings;
             _telegramMessageBroker = telegramMessageBroker;
 
-            if (string.IsNullOrWhiteSpace(telegramConfiguration.AccessToken))
+            if (!telegramConfiguration.IsConfigured)
             {
-                _logger.LogInformation("No access token for Telegram Bot provided - not running bot.");
+                _logger.LogWarning("Telegram configuration not available. Telegram bot will not be run.");
                 return;
             }
 

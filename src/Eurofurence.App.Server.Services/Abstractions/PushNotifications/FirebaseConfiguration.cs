@@ -4,6 +4,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 {
     public class FirebaseConfiguration
     {
+        public bool IsConfigured => !string.IsNullOrEmpty(AuthorizationKey);
         public string AuthorizationKey { get; set; }
 
         public static FirebaseConfiguration FromConfiguration(IConfiguration configuration)
