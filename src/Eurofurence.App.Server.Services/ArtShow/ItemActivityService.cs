@@ -33,8 +33,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
             _privateMessageService = privateMessageService;
         }
 
-        public async Task ImportActivityLogAsync(TextReader logReader)
+        public async Task<ImportResult> ImportActivityLogAsync(TextReader logReader)
         {
+            var importResult = new ImportResult();
             var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
 
             csv.Configuration.RegisterClassMap<LogImportRowClassMap>();
@@ -46,7 +47,11 @@ namespace Eurofurence.App.Server.Services.ArtShow
             foreach (var csvRecord in csvRecords)
             {
                 var existingRecord = await _itemActivityRepository.FindOneAsync(a => a.ImportHash == csvRecord.Hash.Value);
-                if (existingRecord != null) continue;
+                if (existingRecord != null)
+                {
+                    importResult.RowsSkippedAsDuplicate++;
+                    continue;
+                }
 
                 var newRecord = new ItemActivityRecord()
                 {
@@ -63,9 +68,14 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 newRecord.Touch();
 
                 await _itemActivityRepository.InsertOneAsync(newRecord);
+                importResult.RowsImported++;
             }
+
+            return importResult;
         }
 
+        private Task<IEnumerable<ItemActivityRecord>> GetUnprocessedImportRows()
+            => _itemActivityRepository.FindAllAsync(a => a.NotificationDateTimeUtc == null);
 
         private class NotificationBundle
         {
@@ -76,7 +86,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
         private async Task<IList<NotificationBundle>> BuildNotificationBundlesAsync()
         {
-            var newActivities = await _itemActivityRepository.FindAllAsync(a => a.NotificationDateTimeUtc == null);
+            var newActivities = await GetUnprocessedImportRows();
 
             return newActivities
                 .GroupBy(a => a.OwnerUid)
@@ -191,6 +201,14 @@ namespace Eurofurence.App.Server.Services.ArtShow
                     IdsToAuction = bundle.ItemsToAuction.Select(a => a.ASIDNO).ToList()
                 })
                 .ToList();
+        }
+
+        public async Task DeleteUnprocessedImportRowsAsync()
+        {
+            var recordsToDelete = await GetUnprocessedImportRows();
+
+            foreach (var record in recordsToDelete)
+                await _itemActivityRepository.DeleteOneAsync(record.Id);
         }
     }
 }
