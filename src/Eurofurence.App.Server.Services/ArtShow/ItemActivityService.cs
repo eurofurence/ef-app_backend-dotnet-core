@@ -42,7 +42,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             csv.Configuration.Delimiter = ",";
             csv.Configuration.HasHeaderRecord = false;
 
-            var csvRecords = csv.GetRecords<LogImportRow>().ToList();
+            var csvRecords = await csv.GetRecordsAsync<LogImportRow>().ToListAsync();
             
             foreach (var csvRecord in csvRecords)
             {
