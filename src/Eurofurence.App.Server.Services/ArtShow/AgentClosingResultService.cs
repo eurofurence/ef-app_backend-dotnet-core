@@ -33,24 +33,30 @@ namespace Eurofurence.App.Server.Services.ArtShow
             _privateMessageService = privateMessageService;
         }
 
-        public async Task ImportAgentClosingResultLogAsync(TextReader logReader)
+        public async Task<ImportResult> ImportAgentClosingResultLogAsync(TextReader logReader)
         {
+            var importResult = new ImportResult();
+
             try
             {
                 await _semaphore.WaitAsync();
-
+                
                 var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
 
                 csv.Configuration.RegisterClassMap<AgentClosingResultImportRowClassMap>();
                 csv.Configuration.Delimiter = ",";
                 csv.Configuration.HasHeaderRecord = false;
 
-                var csvRecords = csv.GetRecords<AgentClosingResultImportRow>().ToList();
+                var csvRecords = await csv.GetRecordsAsync<AgentClosingResultImportRow>().ToListAsync();
 
                 foreach (var csvRecord in csvRecords)
                 {
                     var existingRecord = await _agentClosingResultRepository.FindOneAsync(a => a.ImportHash == csvRecord.Hash.Value);
-                    if (existingRecord != null) continue;
+                    if (existingRecord != null)
+                    {
+                        importResult.RowsSkippedAsDuplicate++;
+                        continue;
+                    }
 
                     var newRecord = new AgentClosingResultRecord()
                     {
@@ -69,13 +75,20 @@ namespace Eurofurence.App.Server.Services.ArtShow
                     newRecord.Touch();
 
                     await _agentClosingResultRepository.InsertOneAsync(newRecord);
+                    importResult.RowsImported++;
                 }
             }
             finally
             {
                 _semaphore.Release();
             }
+
+            return importResult;
         }
+
+        private Task<IEnumerable<AgentClosingResultRecord>> GetUnprocessedImportRows()
+            => _agentClosingResultRepository.FindAllAsync(a => a.NotificationDateTimeUtc == null);
+
 
         public async Task ExecuteNotificationRunAsync()
         {
@@ -83,7 +96,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 await _semaphore.WaitAsync();
 
-                var newNotifications = await _agentClosingResultRepository.FindAllAsync(a => a.NotificationDateTimeUtc == null);
+                var newNotifications = await GetUnprocessedImportRows();
 
                 var tasks = newNotifications.Select(result => SendAgentClosingResultNotificationAsync(result));
 
@@ -122,6 +135,32 @@ namespace Eurofurence.App.Server.Services.ArtShow
             result.NotificationDateTimeUtc = DateTime.UtcNow;
 
             await _agentClosingResultRepository.ReplaceOneAsync(result);
+        }
+
+        public async Task<IList<AgentClosingNotificationResult>> SimulateNotificationRunAsync()
+        {
+            var newNotifications = await GetUnprocessedImportRows();
+
+            return newNotifications
+                .Select(item => new AgentClosingNotificationResult()
+                {
+                    AgentBadgeNo = item.AgentBadgeNo,
+                    AgentName = item.AgentName,
+                    ArtistName = item.ArtistName,
+                    ExhibitsSold = item.ExhibitsSold,
+                    ExhibitsUnsold = item.ExhibitsUnsold,
+                    ExhibitsToAuction = item.ExhibitsToAuction
+                })
+                .ToList();
+
+        }
+
+        public async Task DeleteUnprocessedImportRowsAsync()
+        {
+            var recordsToDelete = await GetUnprocessedImportRows();
+
+            foreach (var record in recordsToDelete)
+                await _agentClosingResultRepository.DeleteOneAsync(record.Id);
         }
     }
 }

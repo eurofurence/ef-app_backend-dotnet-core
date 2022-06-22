@@ -6,8 +6,12 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
 {
     public interface IAgentClosingResultService
     {
-        Task ImportAgentClosingResultLogAsync(TextReader logReader);
+        Task<ImportResult> ImportAgentClosingResultLogAsync(TextReader logReader);
 
         Task ExecuteNotificationRunAsync();
+
+        Task<IList<AgentClosingNotificationResult>> SimulateNotificationRunAsync();
+
+        Task DeleteUnprocessedImportRowsAsync();
     }
 }
