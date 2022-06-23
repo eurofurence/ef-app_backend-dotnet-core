@@ -69,11 +69,10 @@ namespace Eurofurence.App.Server.Web
 
             services.AddCors(options =>
             {
-                //options.AddPolicy("CorsPolicy",
-                //    cpb => cpb.AllowAnyOrigin()
-                //        .AllowAnyMethod()
-                //        .AllowAnyHeader()
-                //        .AllowCredentials());
+                options.AddPolicy("CorsPolicy",
+                    cpb => cpb.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
             });
 
             services.AddMvc(options =>
