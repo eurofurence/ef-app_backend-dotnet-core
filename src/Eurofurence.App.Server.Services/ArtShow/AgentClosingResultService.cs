@@ -149,7 +149,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
                     ArtistName = item.ArtistName,
                     ExhibitsSold = item.ExhibitsSold,
                     ExhibitsUnsold = item.ExhibitsUnsold,
-                    ExhibitsToAuction = item.ExhibitsToAuction
+                    ExhibitsToAuction = item.ExhibitsToAuction,
+                    TotalCashAmount = item.TotalCashAmount
                 })
                 .ToList();
 
