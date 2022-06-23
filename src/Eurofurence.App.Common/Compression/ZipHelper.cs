@@ -16,7 +16,7 @@ namespace Eurofurence.App.Common.Compression
 
             var serializer = new JsonSerializer();
 
-            using (var streamWriter = new StreamWriter(stream, Encoding.ASCII))
+            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
             using (var textWriter = new JsonTextWriter(streamWriter))
             {
                 serializer.Serialize(textWriter, item);
@@ -39,7 +39,7 @@ namespace Eurofurence.App.Common.Compression
 
             var serializer = new JsonSerializer();
 
-            using (var streamReader = new StreamReader(stream, Encoding.ASCII))
+            using (var streamReader = new StreamReader(stream, Encoding.UTF8))
             using (var textReader = new JsonTextReader(streamReader))
             {
                 return serializer.Deserialize<T>(textReader);
