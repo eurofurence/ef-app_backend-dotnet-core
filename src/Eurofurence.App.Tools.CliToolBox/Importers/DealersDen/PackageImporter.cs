@@ -52,18 +52,18 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                     var dealerRecord = new DealerRecord
                     {
                         RegistrationNumber = record.RegNo,
-                        AttendeeNickname = record.Nickname,
-                        AboutTheArtistText = record.AboutTheArtist,
-                        AboutTheArtText = record.AboutTheArt,
-                        ArtPreviewCaption = record.ArtPreviewCaption,
-                        DisplayName = record.DisplayName,
-                        ShortDescription = record.ShortDescription,
-                        Merchandise = record.Merchandise,
+                        AttendeeNickname = record.Nickname.Trim(),
+                        AboutTheArtistText = record.AboutTheArtist.Trim(),
+                        AboutTheArtText = record.AboutTheArt.Trim(),
+                        ArtPreviewCaption = record.ArtPreviewCaption.Trim(),
+                        DisplayName = record.DisplayName.Trim(),
+                        ShortDescription = record.ShortDescription.Trim(),
+                        Merchandise = record.Merchandise.Trim(),
                         AttendsOnThursday = !string.IsNullOrWhiteSpace(record.AttendsThu),
                         AttendsOnFriday = !string.IsNullOrWhiteSpace(record.AttendsFri),
                         AttendsOnSaturday = !string.IsNullOrWhiteSpace(record.AttendsSat),
-                        TelegramHandle = record.Telegram,
-                        TwitterHandle = record.Twitter,
+                        TelegramHandle = record.Telegram.Trim(),
+                        TwitterHandle = record.Twitter.Trim(),
                         IsAfterDark = !string.IsNullOrWhiteSpace(record.AfterDark),
                         Categories = record.GetCategories().ToArray()
                     };
