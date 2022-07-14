@@ -153,7 +153,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             {
                                 @event = "Notification",
                                 title = toastTitle,
-                                tessage = toastMessage,
+                                message = toastMessage,
                                 relatedId = relatedId,
                                 cid = _conventionSettings.ConventionIdentifier,
                             }
