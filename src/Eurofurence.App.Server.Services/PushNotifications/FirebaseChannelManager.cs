@@ -17,6 +17,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 {
     public class FirebaseChannelManager : IFirebaseChannelManager
     {
+        private const string ASN_InterruptionLevel_Passive = "passive";
+        private const string ASN_InterruptionLevel_Active = "active";
+        private const string ASN_InterruptionLevel_TimeSensitive = "time-sensitive";
+        private const string ASN_InterruptionLevel_Critical = "critical";
+
         private readonly FirebaseConfiguration _configuration;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationRepository;
         private readonly ConventionSettings _conventionSettings;
@@ -48,11 +53,25 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 {
                     data = new
                     {
+                        // For Legacy Native Android App
                         Event = "Announcement",
                         Title = announcement.Title.RemoveMarkdown(),
                         Text = announcement.Content.RemoveMarkdown(),
                         RelatedId = announcement.Id,
-                        CID = _conventionSettings.ConventionIdentifier
+                        CID = _conventionSettings.ConventionIdentifier,
+
+
+                        // For Expo / React Native
+                        experienceId = _configuration.ExpoExperienceId,
+                        scopeKey = _configuration.ExpoScopeKey,
+                        body = new
+                        {
+                            @event = "Announcement",
+                            title = announcement.Title.RemoveMarkdown(),
+                            text = announcement.Content.RemoveMarkdown(),
+                            relatedId = announcement.Id,
+                            cid = _conventionSettings.ConventionIdentifier
+                        }
                     },
                     to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
                 }), 
@@ -66,7 +85,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     notification = new {
                         title = announcement.Title.RemoveMarkdown(),
                         body = announcement.Content.RemoveMarkdown(),
-                        sound = "generic_notification.caf"
+                        sound = "generic_notification.caf",
                     },
                     apns = new {
                         headers = new Dictionary<string, object>() 
@@ -75,8 +94,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             { "apns-push-type", "alert" },
                         }
                     },
-                    content_available = true,
-                    priority = "high",
                     to = $"/topics/{_conventionSettings.ConventionIdentifier}-ios"
                 })
             );
@@ -122,11 +139,24 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     {
                         data = new
                         {
+                            // For Legacy Native Android App
                             Event = "Notification",
                             Title = toastTitle,
                             Message = toastMessage,
                             RelatedId = relatedId,
-                            CID = _conventionSettings.ConventionIdentifier
+                            CID = _conventionSettings.ConventionIdentifier,
+
+                            // For Expo / React Native
+                            experienceId = _configuration.ExpoExperienceId,
+                            scopeKey = _configuration.ExpoScopeKey,
+                            body = new
+                            {
+                                @event = "Notification",
+                                title = toastTitle,
+                                tessage = toastMessage,
+                                relatedId = relatedId,
+                                cid = _conventionSettings.ConventionIdentifier,
+                            }
                         },
                         to = recipient.DeviceId
                     });
@@ -143,8 +173,18 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 {
                     data = new
                     {
+                        // For Legacy Native Android App
                         Event = "Sync",
-                        CID = _conventionSettings.ConventionIdentifier
+                        CID = _conventionSettings.ConventionIdentifier,
+                        
+                        // For Expo / React Native
+                        experienceId = _configuration.ExpoExperienceId,
+                        scopeKey = _configuration.ExpoScopeKey,
+                        body = new
+                        {
+                            @event = "Sync",
+                            cid = _conventionSettings.ConventionIdentifier
+                        }
                     },
                     to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
                 }),
