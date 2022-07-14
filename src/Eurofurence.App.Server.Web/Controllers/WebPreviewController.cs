@@ -1,10 +1,15 @@
-﻿using Eurofurence.App.Server.Services.Abstractions;
+﻿using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -20,6 +25,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IDealerService _dealerService;
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly IKnowledgeEntryService _knowledgeEntryService;
+        private readonly IMapService _mapService;
+        private readonly IImageService _imageService;
 
         public const string VIEWDATA_OPENGRAPH_METADATA = nameof(OpenGraphMetadata);
         public const string VIEWDATA_APPID_ITUNES = nameof(ConventionSettings.AppIdITunes);
@@ -37,7 +44,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             IEventConferenceTrackService eventConferenceTrackService,
             IDealerService dealerService,
             IKnowledgeGroupService knowledgeGroupService,
-            IKnowledgeEntryService knowledgeEntryService
+            IKnowledgeEntryService knowledgeEntryService,
+            IMapService mapService,
+            IImageService imageService
             )
         {
             _conventionSettings = conventionSettings;
@@ -48,6 +57,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
             _knowledgeGroupService = knowledgeGroupService;
             _knowledgeEntryService = knowledgeEntryService;
+            _mapService = mapService;
+            _imageService = imageService;
         }
 
         private void PopulateViewData()
@@ -92,6 +103,33 @@ namespace Eurofurence.App.Server.Web.Controllers
             var dealer = await _dealerService.FindOneAsync(id);
             if (dealer == null) return NotFound();
 
+
+            var maps = await _mapService.FindAllAsync();
+            var mapEntries = new List<MapEntryRecord>();
+
+            foreach (var map in maps)
+            {
+                foreach (var entry in map.Entries.Where(
+                                entry => entry.Links.Any(
+                                    link => link.FragmentType == Domain.Model.Fragments.LinkFragment.FragmentTypeEnum.DealerDetail
+                                        && link.Target.Equals(dealer.Id.ToString(), StringComparison.CurrentCultureIgnoreCase))))
+                {
+                    entry.Map = map;
+                    entry.Map.Image = await _imageService.FindOneAsync(entry.Map.ImageId);
+                    mapEntries.Add(entry);
+
+                }
+            }
+
+
+            ViewData["MapEntries"] = mapEntries;
+
+            
+            
+
+            
+
+
             PopulateViewData();
 
             var previewImageId = dealer.ArtistImageId ?? dealer.ArtistImageId ?? null;
@@ -100,6 +138,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
+
+            
 
             return View("DealerPreview", dealer);
         }

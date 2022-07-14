@@ -1,4 +1,5 @@
-﻿@using Eurofurence.App.Server.Web.Controllers
+﻿@using Eurofurence.App.Domain.Model.Maps
+@using Eurofurence.App.Server.Web.Controllers
 @model Eurofurence.App.Domain.Model.Dealers.DealerRecord
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
@@ -8,6 +9,8 @@
     var displayName  = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname) ? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
     var categories = string.Join(", ", Model.Categories);
 
+    var mapEntries = ViewData["MapEntries"] as List<MapEntryRecord>;
+
     var days = new string[] {
             Model.AttendsOnThursday ? "Thursday" : string.Empty,
             Model.AttendsOnFriday ? "Friday" : string.Empty,
@@ -15,6 +18,17 @@
     }
     .Where(day => !string.IsNullOrWhiteSpace(day))
     .ToArray();
+
+    int mapId = 0;
+}
+
+@section head {
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+   integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+   integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+   crossorigin=""></script>
 }
 
 <header>
@@ -59,8 +73,8 @@
         <h4>About the Artist</h4>
         <p>@Model.AboutTheArtistText</p>
     </div>
-
 </section>
+
 
 <section class="row">
     @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
@@ -80,8 +94,39 @@
             @if (Model.ArtPreviewCaption != null)
             {
                 <br />
-                <small>@Model.ArtPreviewCaption</small>
+                <p><small>@Model.ArtPreviewCaption></small></p>
             }
         </div>
     }
 </section>
+
+
+@foreach (var mapEntry in mapEntries)
+{
+    <section class="row">
+        <div class="three column">
+            <h4>@mapEntry.Map.Description Location</h4>
+            <div id="map_@mapId" style="width: 100%; height: 40vh; border: 1px solid silver;"></div>
+
+            <script type="text/javascript">
+                var map = L.map('map_@mapId', { crs: L.CRS.Simple, minZoom: 0, maxZoom: 4, zoom: 2 });
+                var bounds = [[0,0], [@mapEntry.Map.Image.Height/10, @mapEntry.Map.Image.Width/10]];
+                var image = L.imageOverlay('@apiBaseUrl/Images/@mapEntry.Map.ImageId.ToString()/Content', bounds, {attribution: '© Eurofurence'}).addTo(map);
+
+                var point = [(@mapEntry.Map.Image.Height -  @mapEntry.Y)/10, @mapEntry.X/10];
+                L.circle(point, {
+                    color: 'red',
+                    fillColor: '#f03',
+                    fillOpacity: 0.5,
+                    radius: (@mapEntry.TapRadius/10)
+                }).addTo(map);
+                
+                map.setView(point);
+            </script>
+        </div>
+
+
+    </section>
+
+    mapId++;
+}

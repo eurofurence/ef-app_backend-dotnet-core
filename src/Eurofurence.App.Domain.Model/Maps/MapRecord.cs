@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Eurofurence.App.Domain.Model.Images;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
@@ -28,5 +29,9 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember]
         [Required]
         public IList<MapEntryRecord> Entries { get; set; }
+
+        [IgnoreDataMember]
+        public virtual ImageRecord Image { get; set; }
+
     }
 }
