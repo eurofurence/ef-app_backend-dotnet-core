@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Results;
 using Eurofurence.App.Domain.Model.Announcements;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
@@ -14,7 +15,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 
         Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage, Guid relatedId);
 
-        Task SubscribeToTopicAsync(string deviceId, string topic);
-        Task UnsubscribeFromTopicAsync(string deviceId, string topic);
+        Task<IResult> SubscribeToTopicAsync(string deviceId, string topic);
+        Task<IResult> UnsubscribeFromTopicAsync(string deviceId, string topic);
     }
 }

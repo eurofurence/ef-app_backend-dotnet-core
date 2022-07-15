@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
+using Eurofurence.App.Common.Results;
 using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
@@ -265,14 +266,27 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _pushNotificationRepository.ReplaceOneAsync(record);
         }
 
-        public async Task SubscribeToTopicAsync(string deviceId, string topic)
+        public async Task<IResult> SubscribeToTopicAsync(string deviceId, string topic)
         {
-            await _firebaseMessaging.SubscribeToTopicAsync(new string[] { deviceId }, topic);
+            if (!_configuration.FirebaseTopics.Contains(topic)) return Result.Error("INVALID_TOPIC", "Topic not accepted");
+
+            var response = await _firebaseMessaging.SubscribeToTopicAsync(new string[] { deviceId }, topic);
+
+            return response.FailureCount > 0
+                ? Result.Error("FCM_ERROR", response.Errors.FirstOrDefault()?.Reason)
+                : Result.Ok;
         }
 
-        public async Task UnsubscribeFromTopicAsync(string deviceId, string topic)
+        public async Task<IResult> UnsubscribeFromTopicAsync(string deviceId, string topic)
         {
-            await _firebaseMessaging.UnsubscribeFromTopicAsync(new string[] { deviceId }, topic);           
+            if (!_configuration.FirebaseTopics.Contains(topic)) return Result.Error("INVALID_TOPIC", "Topic not accepted");
+
+            var response = await _firebaseMessaging.UnsubscribeFromTopicAsync(new string[] { deviceId }, topic);
+
+            return response.FailureCount > 0
+                ? Result.Error("FCM_ERROR", response.Errors.FirstOrDefault()?.Reason)
+                : Result.Ok;
         }
+
     }
 }

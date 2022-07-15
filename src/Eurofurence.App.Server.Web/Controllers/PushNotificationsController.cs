@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -82,19 +83,21 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpPut("Topics/{topic}/{deviceId}")]
         [ProducesResponseType(204)]
-        public async Task<ActionResult> SubscribeToTopicAsync(string deviceId, string topic)
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> SubscribeToTopicAsync(string topic, string deviceId)
         {
-            await _firebaseChannelManager.SubscribeToTopicAsync(deviceId, topic);
-            return NoContent();
+            var result = await _firebaseChannelManager.SubscribeToTopicAsync(deviceId, topic);
+            return result.AsActionResult();
         }
 
 
         [HttpDelete("Topics/{topic}/{deviceId}")]
         [ProducesResponseType(204)]
-        public async Task<ActionResult> UnsubscribeFromTopicAsync(string deviceId, string topic)
+        [ProducesResponseType(typeof(ApiErrorResult), 400)]
+        public async Task<ActionResult> UnsubscribeFromTopicAsync(string topic, string deviceId)
         {
-            await _firebaseChannelManager.UnsubscribeFromTopicAsync(deviceId, topic);
-            return NoContent();
+            var result = await _firebaseChannelManager.UnsubscribeFromTopicAsync(deviceId, topic);
+            return result.AsActionResult();
         }
 
 
