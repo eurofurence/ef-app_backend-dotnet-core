@@ -80,6 +80,24 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
+        [HttpPost("SubscribeToTopic")]
+        [ProducesResponseType(204)]
+        public async Task<ActionResult> SubscribeToTopicAsync(string deviceId, string topic)
+        {
+            await _firebaseChannelManager.SubscribeToTopicAsync(deviceId, topic);
+            return NoContent();
+        }
+
+
+        [HttpPost("UnsubscribeFromTopic")]
+        [ProducesResponseType(204)]
+        public async Task<ActionResult> UnsubscribeFromTopicAsync(string deviceId, string topic)
+        {
+            await _firebaseChannelManager.UnsubscribeFromTopicAsync(deviceId, topic);
+            return NoContent();
+        }
+
+
         public class ToastTest
         {
             public string Topic { get; set; }

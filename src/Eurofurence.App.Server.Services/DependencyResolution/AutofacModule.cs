@@ -75,7 +75,9 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<EventConferenceTrackService>().As<IEventConferenceTrackService>();
             builder.RegisterType<EventFeedbackService>().As<IEventFeedbackService>();
             builder.RegisterType<EventService>().As<IEventService>();
-            builder.RegisterType<FirebaseChannelManager>().As<IFirebaseChannelManager>();
+            builder.RegisterType<FirebaseChannelManager>()
+                .As<IFirebaseChannelManager>()
+                .SingleInstance();
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
             builder.RegisterType<ImageService>().As<IImageService>();
             builder.RegisterType<ItemActivityService>().As<IItemActivityService>();

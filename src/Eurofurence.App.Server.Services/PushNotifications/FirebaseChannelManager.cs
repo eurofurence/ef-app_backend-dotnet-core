@@ -11,6 +11,9 @@ using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
+using Google.Apis.Auth.OAuth2;
 using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
@@ -25,6 +28,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly FirebaseConfiguration _configuration;
         private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationRepository;
         private readonly ConventionSettings _conventionSettings;
+        private readonly FirebaseApp _firebaseApp;
+        private readonly FirebaseMessaging _firebaseMessaging;
 
         public FirebaseChannelManager(
             FirebaseConfiguration configuration,
@@ -36,6 +41,12 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _configuration = configuration;
             _pushNotificationRepository = pushNotificationRepository;
             _conventionSettings = conventionSettings;
+
+
+            var googleCredential = GoogleCredential.FromFile(_configuration.GoogleServiceCredentialKeyFile);
+
+            _firebaseApp = FirebaseApp.Create(new AppOptions { Credential = googleCredential });
+            _firebaseMessaging = FirebaseMessaging.GetMessaging(_firebaseApp);
         }
 
         private Task<IEnumerable<PushNotificationChannelRecord>> GetRecipientChannelAsync(string recipientUid)
@@ -48,23 +59,22 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         {
             if (!_configuration.IsConfigured) return Task.CompletedTask;
 
-            return Task.WhenAll(
-                SendPushNotificationAsync(new
+            var androidMessage = new Message()
+            {
+                Topic = $"{_conventionSettings.ConventionIdentifier}-android",
+                Data = new Dictionary<string, string>() 
                 {
-                    data = new
-                    {
-                        // For Legacy Native Android App
-                        Event = "Announcement",
-                        Title = announcement.Title.RemoveMarkdown(),
-                        Text = announcement.Content.RemoveMarkdown(),
-                        RelatedId = announcement.Id,
-                        CID = _conventionSettings.ConventionIdentifier,
+                    // For Legacy Native Android App
+                    { "Event", "Announcement" },
+                    { "Title", announcement.Title.RemoveMarkdown() },
+                    { "Text", announcement.Content.RemoveMarkdown() },
+                    { "RelatedId", announcement.Id.ToString() },
+                    { "CID", _conventionSettings.ConventionIdentifier },
 
-
-                        // For Expo / React Native
-                        experienceId = _configuration.ExpoExperienceId,
-                        scopeKey = _configuration.ExpoScopeKey,
-                        body = new
+                    // For Expo / React Native
+                    { "experienceId", _configuration.ExpoExperienceId },
+                    { "scopeKey", _configuration.ExpoScopeKey },
+                    { "body", JsonConvert.SerializeObject(new 
                         {
                             @event = "Announcement",
                             title = announcement.Title.RemoveMarkdown(),
@@ -72,31 +82,38 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             relatedId = announcement.Id,
                             cid = _conventionSettings.ConventionIdentifier
                         }
-                    },
-                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
-                }), 
-                SendPushNotificationAsync(new
+                    )}
+                }
+            };
+
+            var apnsMessage = new Message()
+            {
+                Topic = $"{_conventionSettings.ConventionIdentifier}-ios",
+                Data = new Dictionary<string, string>()
                 {
-                    data = new
+                    { "event", "Announcement" },
+                    { "announcement_id", announcement.Id.ToString() }
+                },
+                Notification = new Notification()
+                {
+                    Title = announcement.Title.RemoveMarkdown(),
+                    Body = announcement.Content.RemoveMarkdown()
+                },
+                Apns = new ApnsConfig()
+                {
+                    Headers = new Dictionary<string, string>()
                     {
-                        @event = "announcement",
-                        announcement_id = announcement.Id
+                            { "apns-priority", "5" },
+                            { "apns-push-type", "alert" }
                     },
-                    notification = new {
-                        title = announcement.Title.RemoveMarkdown(),
-                        body = announcement.Content.RemoveMarkdown(),
-                        sound = "generic_notification.caf",
-                    },
-                    apns = new {
-                        headers = new Dictionary<string, object>() 
-                        {
-                            { "apns-priority", 5 },
-                            { "apns-push-type", "alert" },
-                        }
-                    },
-                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-ios"
-                })
-            );
+                    Aps = new Aps()
+                    {
+                        Sound = "generic_notification.caf",
+                    }
+                }
+            };
+
+            return _firebaseMessaging.SendAllAsync(new Message[] { androidMessage, apnsMessage });
         }
 
         public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage, Guid relatedId)
@@ -105,125 +122,122 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var recipients = await GetRecipientChannelAsync(recipientUid);
 
+            var messages = new List<Message>();
+
             foreach (var recipient in recipients)
             {
                 if (recipient.Topics.Contains("ios", StringComparer.CurrentCultureIgnoreCase))
                 {
-                    await SendPushNotificationAsync(new
+                    messages.Add(new Message()
                     {
-                        data = new
+                        Token = recipient.DeviceId.ToString(),
+                        Data = new Dictionary<string, string>()
                         {
-                            @event = "notification",
-                            message_id = relatedId
+                            { "event", "notification" },
+                            { "message_id", relatedId.ToString() }
                         },
-                        notification = new
+                        Notification = new Notification()
                         {
-                            title = toastTitle,
-                            body = toastMessage,
-                            sound = "personal_notification.caf"
+                            Title = toastTitle,
+                            Body = toastMessage,
                         },
-                        apns = new
+                        Apns = new ApnsConfig()
                         {
-                            headers = new Dictionary<string, object>()
+                            Headers = new Dictionary<string, string>()
                             {
-                                { "apns-priority", 5 },
-                                { "apns-push-type", "alert" },
+                                { "apns-priority", "5" },
+                                { "apns-push-type", "alert" }
+                            },
+                            Aps = new Aps()
+                            {
+                                Sound = "personal_notification.caf",
                             }
-                        },
-                        to = recipient.DeviceId
+                        }
                     });
                 }
                 else
                 {
-                    await SendPushNotificationAsync(new
+                    messages.Add(new Message()
                     {
-                        data = new
+                        Token = recipient.DeviceId.ToString(),
+                        Data = new Dictionary<string, string>()
                         {
                             // For Legacy Native Android App
-                            Event = "Notification",
-                            Title = toastTitle,
-                            Message = toastMessage,
-                            RelatedId = relatedId,
-                            CID = _conventionSettings.ConventionIdentifier,
+                            { "Event", "Notification" },
+                            { "Title", toastTitle },
+                            { "Message", toastMessage },
+                            { "RelatedId", relatedId.ToString() },
+                            { "CID", _conventionSettings.ConventionIdentifier },
 
                             // For Expo / React Native
-                            experienceId = _configuration.ExpoExperienceId,
-                            scopeKey = _configuration.ExpoScopeKey,
-                            body = new
-                            {
-                                @event = "Notification",
-                                title = toastTitle,
-                                message = toastMessage,
-                                relatedId = relatedId,
-                                cid = _conventionSettings.ConventionIdentifier,
-                            }
-                        },
-                        to = recipient.DeviceId
+                            { "experienceId", _configuration.ExpoExperienceId },
+                            { "scopeKey", _configuration.ExpoScopeKey },
+                            { "body", JsonConvert.SerializeObject(new
+                                {
+                                    @event = "Notification",
+                                    title = toastTitle,
+                                    message = toastMessage,
+                                    relatedId = relatedId,
+                                    cid = _conventionSettings.ConventionIdentifier
+                                }
+                            )}
+                        }
                     });
                 }
             }
+
+            await _firebaseMessaging.SendAllAsync(messages);
         }
 
         public Task PushSyncRequestAsync()
         {
             if (!_configuration.IsConfigured) return Task.CompletedTask;
 
-            return Task.WhenAll(
-                SendPushNotificationAsync(new
+            var androidMessage = new Message()
+            {
+                Topic = $"{_conventionSettings.ConventionIdentifier}-android",
+                Data = new Dictionary<string, string>()
                 {
-                    data = new
-                    {
-                        // For Legacy Native Android App
-                        Event = "Sync",
-                        CID = _conventionSettings.ConventionIdentifier,
-                        
-                        // For Expo / React Native
-                        experienceId = _configuration.ExpoExperienceId,
-                        scopeKey = _configuration.ExpoScopeKey,
-                        body = new
+                    // For Legacy Native Android App
+                    { "Event", "Sync" },
+                    { "CID", _conventionSettings.ConventionIdentifier },
+
+                    // For Expo / React Native
+                    { "experienceId", _configuration.ExpoExperienceId },
+                    { "scopeKey", _configuration.ExpoScopeKey },
+                    { "body", JsonConvert.SerializeObject(new
                         {
                             @event = "Sync",
                             cid = _conventionSettings.ConventionIdentifier
                         }
-                    },
-                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-android"
-                }),
-                SendPushNotificationAsync(new
-                {
-                    data = new
-                    {
-                        @event = "sync",
-                    },
-                    apns = new
-                    {
-                        headers = new Dictionary<string, object>()
-                            {
-                                { "apns-priority", 5 },
-                                { "apns-push-type", "background" },
-                            }
-                    },
-                    content_available = true,
-                    priority = "high",
-                    to = $"/topics/{_conventionSettings.ConventionIdentifier}-ios"
-                })
-            );
-        }
+                    )}
+                }
+            };
 
-        private async Task SendPushNotificationAsync(object payload)
-        {
-            var jsonPayload = JsonConvert.SerializeObject(payload);
-
-            using (var client = new HttpClient())
+            var apnsMessage = new Message()
             {
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Key", $"={_configuration.AuthorizationKey}");
+                Topic = $"{_conventionSettings.ConventionIdentifier}-ios",
+                Data = new Dictionary<string, string>()
+                {
+                    { "event", "Sync" },
+                },
+                Apns = new ApnsConfig()
+                {
+                    Headers = new Dictionary<string, string>()
+                    {
+                            { "apns-priority", "5" },
+                            { "apns-push-type", "background" }
+                    },
+                    Aps = new Aps()
+                    {
+                        ContentAvailable = true
+                    }
+                }
+            };
 
-                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-                var result = await client.PostAsync("https://fcm.googleapis.com/fcm/send", content);
-                result.EnsureSuccessStatusCode();
-            }
+            return _firebaseMessaging.SendAllAsync(new Message[] { androidMessage, apnsMessage });
         }
+
 
         public async Task RegisterDeviceAsync(string deviceId, string uid, string[] topics)
         {
@@ -249,6 +263,16 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _pushNotificationRepository.InsertOneAsync(record);
             else
                 await _pushNotificationRepository.ReplaceOneAsync(record);
+        }
+
+        public async Task SubscribeToTopicAsync(string deviceId, string topic)
+        {
+            await _firebaseMessaging.SubscribeToTopicAsync(new string[] { deviceId }, topic);
+        }
+
+        public async Task UnsubscribeFromTopicAsync(string deviceId, string topic)
+        {
+            await _firebaseMessaging.UnsubscribeFromTopicAsync(new string[] { deviceId }, topic);           
         }
     }
 }
