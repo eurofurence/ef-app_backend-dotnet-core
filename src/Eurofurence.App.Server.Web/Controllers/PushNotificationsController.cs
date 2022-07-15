@@ -80,7 +80,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
-        [HttpPost("SubscribeToTopic")]
+        [HttpPut("Topics/{topic}/{deviceId}")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> SubscribeToTopicAsync(string deviceId, string topic)
         {
@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
-        [HttpPost("UnsubscribeFromTopic")]
+        [HttpDelete("Topics/{topic}/{deviceId}")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> UnsubscribeFromTopicAsync(string deviceId, string topic)
         {
