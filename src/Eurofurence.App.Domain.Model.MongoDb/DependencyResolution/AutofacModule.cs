@@ -11,10 +11,12 @@ using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.MongoDb.ArtShow;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits.CollectingGame;
+using Eurofurence.App.Domain.Model.MongoDb.LostAndFound;
 using Eurofurence.App.Domain.Model.MongoDb.Repositories;
 using Eurofurence.App.Domain.Model.MongoDb.Security;
 using Eurofurence.App.Domain.Model.MongoDb.Telegram;
@@ -174,6 +176,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                         Builders<AgentClosingResultRecord>.IndexKeys.Ascending(a => a.ImportHash))));
 
             Register<TableRegistrationRepository, IEntityRepository<TableRegistrationRecord>, TableRegistrationRecord>(builder);
+            Register<LostAndFoundRepository, IEntityRepository<LostAndFoundRecord>, LostAndFoundRecord>(builder);
         }
     }
 }

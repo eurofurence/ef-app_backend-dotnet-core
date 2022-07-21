@@ -193,6 +193,7 @@ namespace Eurofurence.App.Server.Web
                 .As<IApiPrincipal>();
 
             builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
+            builder.RegisterType<UpdateLostAndFoundJob>().WithAttributeFiltering().AsSelf();
             builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
             builder.Register(c => Configuration.GetSection("jobs:updateNews"))
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
@@ -310,12 +311,12 @@ namespace Eurofurence.App.Server.Web
                 c.EnableDeepLinking();
             });
 
-            //if (env.IsProduction())
-            //{
+            if (env.IsProduction())
+            {
                 _logger.LogDebug("Starting JobManager to run jobs");
                 JobManager.JobFactory = new ServiceProviderJobFactory(app.ApplicationServices);
                 JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
-            //}
+            }
 
             _logger.LogInformation($"Startup complete ({env.EnvironmentName})");
         }

@@ -9,6 +9,8 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Services.Abstractions.Lassie;
+using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
@@ -23,6 +25,8 @@ using Eurofurence.App.Server.Services.Events;
 using Eurofurence.App.Server.Services.Fursuits;
 using Eurofurence.App.Server.Services.Images;
 using Eurofurence.App.Server.Services.Knowledge;
+using Eurofurence.App.Server.Services.Lassie;
+using Eurofurence.App.Server.Services.LostAndFound;
 using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Security;
@@ -60,6 +64,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterInstance(TelegramConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(LassieConfiguration.FromConfiguration(_configuration));
         }
 
         private void RegisterServices(ContainerBuilder builder)
@@ -83,7 +88,10 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<ItemActivityService>().As<IItemActivityService>();
             builder.RegisterType<KnowledgeEntryService>().As<IKnowledgeEntryService>();
             builder.RegisterType<KnowledgeGroupService>().As<IKnowledgeGroupService>();
+            builder.RegisterType<LassieApiClient>().As<ILassieApiClient>();
             builder.RegisterType<LinkFragmentValidator>().As<ILinkFragmentValidator>();
+            builder.RegisterType<LostAndFoundService>().As<ILostAndFoundService>();
+            builder.RegisterType<LostAndFoundLassieImporter>().As<ILostAndFoundLassieImporter>();
             builder.RegisterType<MapService>().As<IMapService>();
             builder.RegisterType<PrivateMessageService>()
                 .As<IPrivateMessageService>()
