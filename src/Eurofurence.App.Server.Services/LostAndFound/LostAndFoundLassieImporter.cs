@@ -5,6 +5,7 @@ using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Eurofurence.App.Server.Services.LostAndFound
 {
@@ -43,13 +44,13 @@ namespace Eurofurence.App.Server.Services.LostAndFound
 
             patch
                 .Map(s => s.Id, t => t.ExternalId)
-                .Map(s => s.Title, t => t.Title)
-                .Map(s => s.Description, t => t.Description)
+                .Map(s => HttpUtility.HtmlDecode(s.Title), t => t.Title)
+                .Map(s => HttpUtility.HtmlDecode(s.Description), t => t.Description)
                 .Map(s => s.ImageUrl, t => t.ImageUrl)
                 .Map(s => statusConverter(s.Status), t => t.Status)
-                .Map(s => s.LostDateTimeLocal?.ToUniversalTime(), t => t.LostDateTimeUtc)
-                .Map(s => s.ReturnDateTimeLocal?.ToUniversalTime(), t => t.ReturnDateTimeUtc)
-                .Map(s => s.FoundDateTimeLocal?.ToUniversalTime(), t => t.FoundDateTimeUtc);
+                .Map(s => s.LostDateTimeLocal.HasValue ? DateTime.SpecifyKind(s.LostDateTimeLocal.Value, DateTimeKind.Utc).AddHours(-2) : s.LostDateTimeLocal, t => t.LostDateTimeUtc)
+                .Map(s => s.ReturnDateTimeLocal.HasValue ? DateTime.SpecifyKind(s.ReturnDateTimeLocal.Value, DateTimeKind.Utc).AddHours(-2) : s.ReturnDateTimeLocal, t => t.ReturnDateTimeUtc)
+                .Map(s => s.FoundDateTimeLocal.HasValue ? DateTime.SpecifyKind(s.FoundDateTimeLocal.Value, DateTimeKind.Utc).AddHours(-2) : s.FoundDateTimeLocal, t => t.FoundDateTimeUtc);
 
             var patchResult = patch.Patch(newRecords, existingRecords);
 
