@@ -37,7 +37,7 @@ namespace Eurofurence.App.Server.Services.Lassie
                 var dataResponse = JsonConvert.DeserializeObject<DataResponseWrapper<LostAndFoundResponse>>(content,
                     new JsonSerializerSettings() { DateTimeZoneHandling = DateTimeZoneHandling.Local });
 
-                return dataResponse.Data;
+                return dataResponse.Data ?? new LostAndFoundResponse[0];
             }
         }
     }
