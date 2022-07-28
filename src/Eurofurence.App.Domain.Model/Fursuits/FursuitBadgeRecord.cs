@@ -32,5 +32,7 @@ namespace Eurofurence.App.Domain.Model.Fursuits
 
         [DataMember]
         public bool IsPublic { get; set; }
+
+        public string CollectionCode { get; set; }
     }
 }

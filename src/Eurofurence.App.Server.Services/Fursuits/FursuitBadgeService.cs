@@ -9,7 +9,6 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 using System.Threading;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -60,6 +59,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 record.Species = registration.Species;
                 record.IsPublic = (registration.DontPublish == 0);
                 record.WornBy = registration.WornBy;
+                record.CollectionCode = registration.CollectionCode;
                 record.Touch();
 
                 var imageRecord = await _fursuitBadgeImageRepository.FindOneAsync(record.Id);

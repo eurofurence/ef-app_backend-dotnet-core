@@ -10,5 +10,6 @@
         public string Gender { get; set; }
         public string ImageContent { get; set; }
         public int DontPublish { get; set; }
+        public string CollectionCode { get; set; }
     }
 }
