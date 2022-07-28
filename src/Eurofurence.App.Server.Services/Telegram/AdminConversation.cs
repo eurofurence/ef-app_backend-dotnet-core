@@ -654,7 +654,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
                                     }
 
-                                    c3 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel and Twitter feed.",
+                                    c3 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel.",
                                         async c3a =>
                                         {
                                             await ReplyAsync("This will take just a moment... please wait...");
