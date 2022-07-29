@@ -22,6 +22,10 @@ namespace Eurofurence.App.Domain.Model.Maps
         [Required]
         public string Description { get; set; }
 
+        [Required]
+        [DataMember]
+        public int Order { get; set; }
+
         [DataMember]
         [Required]
         public bool IsBrowseable { get; set; }

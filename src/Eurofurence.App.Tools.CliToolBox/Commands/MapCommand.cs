@@ -79,6 +79,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
             var idOption = command.Option("-id", "Guid of the map entry", CommandOptionType.SingleValue);
             var isBrowseableOption = command.Option("-isBrowseable", "", CommandOptionType.SingleValue);
+            var orderOption = command.Option("-order", "", CommandOptionType.SingleValue);
             var descriptionOption = command.Option("-description", "", CommandOptionType.SingleValue);
 
             command.OnExecute(() =>
@@ -108,6 +109,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 {
                     map.Description = descriptionOption.Value();
                     command.Out.WriteLine($"  Setting Description to {map.Description}");
+                }
+
+                int newOrder = 0;
+                if (orderOption.HasValue() && Int32.TryParse(orderOption.Value(), out newOrder))
+                {
+                    map.Order = newOrder;
+                    command.Out.WriteLine($"  Setting Order to {map.Order}");
                 }
 
                 _mapService.ReplaceOneAsync(map).Wait();
