@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using CsvHelper;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Events;
@@ -90,7 +91,21 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
             );
 
-            patch.Map(s => s, t => t.Name);
+            var roomShortNameRegex = new Regex("(\\P{Pd}+)\\p{Pd}(\\P{Pd}+)");
+
+            patch
+                .Map(s => s, t => t.Name)
+                .Map(s => {
+                        if (roomShortNameRegex.IsMatch(s))
+                        {
+                            var matches = roomShortNameRegex.Matches(s);
+                            return matches[0].Groups[1].Value.Trim();
+                        }
+                        else
+                            return s;
+                    },
+                    t => t.ShortName);
+
             var diff = patch.Patch(importConferenceRooms, eventConferenceRoomRecords);
 
             _eventConferenceRoomService.ApplyPatchOperationAsync(diff).Wait();
@@ -193,14 +208,14 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                 }
             }
 
-            var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
+            //var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
             var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
             var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, ref modifiedRecords);
-            var eventEntries = UpdateEventEntries(csvRecords,
-                eventConferenceTracks,
-                eventConferenceRooms,
-                eventConferenceDays,
-                ref modifiedRecords);
+            //var eventEntries = UpdateEventEntries(csvRecords,
+            //    eventConferenceTracks,
+            //    eventConferenceRooms,
+            //    eventConferenceDays,
+            //    ref modifiedRecords);
 
             return modifiedRecords;
         }
