@@ -123,11 +123,16 @@ namespace Eurofurence.App.Server.Services.Fursuits
         {
             return filter == null ?
                 _fursuitBadgeRepository.FindAllAsync() :
-                _fursuitBadgeRepository.FindAllAsync(record =>
-                    (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
-                    && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid))
-                    && (string.IsNullOrWhiteSpace(filter.Name) || record.Name.ToLowerInvariant().Contains(filter.Name.ToLowerInvariant()))
-                );
+
+                string.IsNullOrWhiteSpace(filter.Name) ?
+                    _fursuitBadgeRepository.FindAllAsync(record =>
+                        (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
+                        && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid)))
+                    :
+                    _fursuitBadgeRepository.FindAllAsync(record =>
+                        (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
+                        && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid))
+                        && record.Name.ToLowerInvariant().Contains(filter.Name.ToLowerInvariant()));
         }
     }
 }
