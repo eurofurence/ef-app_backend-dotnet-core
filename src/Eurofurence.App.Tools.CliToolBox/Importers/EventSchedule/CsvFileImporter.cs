@@ -208,14 +208,14 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                 }
             }
 
-            //var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
+            var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
             var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
             var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, ref modifiedRecords);
-            //var eventEntries = UpdateEventEntries(csvRecords,
-            //    eventConferenceTracks,
-            //    eventConferenceRooms,
-            //    eventConferenceDays,
-            //    ref modifiedRecords);
+            var eventEntries = UpdateEventEntries(csvRecords,
+               eventConferenceTracks,
+               eventConferenceRooms,
+               eventConferenceDays,
+               ref modifiedRecords);
 
             return modifiedRecords;
         }
