@@ -22,5 +22,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
         Task<IResult> UnbanPlayerAsync(string playerUid);
 
         Task<IResult> RecalculateAsync();
+
+        Task UpdateFursuitParticipationAsync();
     }
 }

@@ -296,7 +296,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     }
 
                     var fursuitParticipation =
-                        await _fursuitParticipationRepository.FindOneAsync(a => a.TokenValue == tokenValue);
+                        await _fursuitParticipationRepository.FindOneAsync(a => a.TokenValue == tokenValue && a.IsBanned == false);
 
                     if (fursuitParticipation == null)
                     {
@@ -596,6 +596,71 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 _semaphore.Release();
             }
+        }
+
+        public async Task UpdateFursuitParticipationAsync()
+        {
+            try
+            {
+                await _semaphore.WaitAsync();
+
+                var participatingFursuitBadges = await _fursuitBadgeRepository.FindAllAsync(badge => !string.IsNullOrEmpty(badge.CollectionCode));
+                var fursuitParticipationRecords = await _fursuitParticipationRepository.FindAllAsync();
+
+                var toJoin = participatingFursuitBadges.Where(badge => !fursuitParticipationRecords.Any(fpr => fpr.FursuitBadgeId == badge.Id)).ToList();
+                var toVerify = fursuitParticipationRecords.ToList();
+
+
+                foreach (var badge in toJoin)
+                {
+                    var newParticipation = new FursuitParticipationRecord()
+                    {
+                        Id = Guid.NewGuid(),
+                        FursuitBadgeId = badge.Id,
+                        TokenValue = badge.CollectionCode,
+                        TokenRegistrationDateTimeUtc = DateTime.UtcNow,
+                        CollectionCount = 0,
+                        OwnerUid = badge.OwnerUid
+                    };
+
+                    await _fursuitParticipationRepository.InsertOneAsync(newParticipation);
+                }
+
+                foreach (var existingParticipation in toVerify)
+                {
+                    var badge = participatingFursuitBadges.SingleOrDefault(badge => badge.Id == existingParticipation.FursuitBadgeId);
+
+                    // Badge exists, collection code is the same? Move on.
+                    if (badge != null && existingParticipation.TokenValue == badge.CollectionCode) continue;
+
+                    // Badge exists, collection code has changed? Update it & move on.
+                    if (badge != null && existingParticipation.TokenValue != badge.CollectionCode)
+                    {
+                        existingParticipation.TokenValue = badge.CollectionCode;
+                        existingParticipation.IsBanned = false;
+                        await _fursuitParticipationRepository.ReplaceOneAsync(existingParticipation);
+                        continue;
+                    }
+
+                    // No or non-participating badge and already banned? Move on.
+                    if (badge == null && existingParticipation.IsBanned) continue;
+
+                    // We have no badge (=not existing, or no more collection code) - ban the participation.
+                    if (badge == null && !existingParticipation.IsBanned)
+                    {
+                        existingParticipation.TokenValue = string.Empty;
+                        existingParticipation.IsBanned = true;
+                        await _fursuitParticipationRepository.ReplaceOneAsync(existingParticipation);
+                        continue;
+                    }
+                }
+
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+
         }
     }
 }

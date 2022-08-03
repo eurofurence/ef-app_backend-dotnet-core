@@ -13,6 +13,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             Schedule<FlushPrivateMessageNotificationsJob>().ToRunEvery(1).Seconds();
             Schedule<UpdateNewsJob>().ToRunNow().AndEvery(Convert.ToInt32(configuration["updateNews:secondsInterval"])).Seconds();
             Schedule<UpdateLostAndFoundJob>().ToRunNow().AndEvery(60).Seconds();
+            Schedule<UpdateFursuitCollectionGameParticipationJob>().ToRunNow().AndEvery(60).Seconds();
         }
     }
 }

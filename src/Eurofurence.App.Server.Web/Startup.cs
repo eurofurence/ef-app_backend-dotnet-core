@@ -194,6 +194,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
             builder.RegisterType<UpdateLostAndFoundJob>().WithAttributeFiltering().AsSelf();
+            builder.RegisterType<UpdateFursuitCollectionGameParticipationJob>().WithAttributeFiltering().AsSelf();
             builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
             builder.Register(c => Configuration.GetSection("jobs:updateNews"))
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
