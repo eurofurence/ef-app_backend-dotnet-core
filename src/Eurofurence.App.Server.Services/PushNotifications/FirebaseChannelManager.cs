@@ -63,14 +63,12 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var androidMessage = new Message()
             {
                 Topic = $"{_conventionSettings.ConventionIdentifier}-android",
-                Notification =
+                Android = new AndroidConfig()
                 {
-                    Title = announcement.Title.RemoveMarkdown(),
-                    Body = announcement.Content.RemoveMarkdown(),
-                },
-                Android = {
-                    Notification =
+                    Notification = new AndroidNotification()
                     {
+                        Title = announcement.Title.RemoveMarkdown(),
+                        Body = announcement.Content.RemoveMarkdown(),
                         Icon = "notification_icon",
                         Color = "#006459"
                     }
@@ -164,14 +162,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     messages.Add(new Message()
                     {
                         Token = recipient.DeviceId.ToString(),
-                        Notification =
-                        {
-                            Title = toastTitle,
-                            Body = toastMessage
-                        },
-                        Android = {
-                            Notification =
+                        Android = new AndroidConfig() { 
+                            Notification = new AndroidNotification()
                             {
+                                Title = toastTitle,
+                                Body = toastMessage,
                                 Icon = "notification_icon",
                                 Color = "#006459"
                             }
