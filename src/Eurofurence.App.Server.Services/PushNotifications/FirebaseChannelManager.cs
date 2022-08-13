@@ -63,6 +63,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var androidMessage = new Message()
             {
                 Topic = $"{_conventionSettings.ConventionIdentifier}-android",
+                Android = {
+                    Notification =
+                    {
+                        Title = announcement.Title.RemoveMarkdown(),
+                        Body = announcement.Content.RemoveMarkdown(),
+                        Icon = "notification_icon",
+                        Color = "#006459"
+                    }
+                },
                 Data = new Dictionary<string, string>() 
                 {
                     // For Legacy Native Android App
@@ -75,15 +84,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     // For Expo / React Native
                     { "experienceId", _configuration.ExpoExperienceId },
                     { "scopeKey", _configuration.ExpoScopeKey },
-                    { "body", JsonConvert.SerializeObject(new 
-                        {
-                            @event = "Announcement",
-                            title = announcement.Title.RemoveMarkdown(),
-                            text = announcement.Content.RemoveMarkdown(),
-                            relatedId = announcement.Id,
-                            cid = _conventionSettings.ConventionIdentifier
-                        }
-                    )}
                 }
             };
 
@@ -161,6 +161,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     messages.Add(new Message()
                     {
                         Token = recipient.DeviceId.ToString(),
+                        Android = {
+                            Notification =
+                            {
+                                Title = toastTitle,
+                                Body = toastMessage,
+                                Icon = "notification_icon",
+                                Color = "#006459"
+                            }
+                        },
                         Data = new Dictionary<string, string>()
                         {
                             // For Legacy Native Android App
@@ -172,16 +181,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
                             // For Expo / React Native
                             { "experienceId", _configuration.ExpoExperienceId },
-                            { "scopeKey", _configuration.ExpoScopeKey },
-                            { "body", JsonConvert.SerializeObject(new
-                                {
-                                    @event = "Notification",
-                                    title = toastTitle,
-                                    message = toastMessage,
-                                    relatedId = relatedId,
-                                    cid = _conventionSettings.ConventionIdentifier
-                                }
-                            )}
+                            { "scopeKey", _configuration.ExpoScopeKey }
                         }
                     });
                 }
