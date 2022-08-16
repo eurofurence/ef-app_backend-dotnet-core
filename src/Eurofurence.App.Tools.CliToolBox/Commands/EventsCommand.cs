@@ -40,6 +40,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.Command("importCsvFile", importCsvFileCommand);
             command.Command("importImage", importImageCommand);
+            command.Command("setImage", setImageCommand);
+            command.Command("clearImage", clearImageCommand);
             command.Command("exportCsvFeedback", exportCsvFeedbackCommand);
             command.Command("setTags", setTagsCommand);
             command.Command("autoTags", autoTagsCommand);
@@ -185,6 +187,90 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     return -1;
                 }
                 
+                return 0;
+            });
+        }
+
+        private void clearImageCommand(CommandLineApplication command)
+        {
+            var eventIdOption = command.Option("-eventId", "Event Id", CommandOptionType.SingleValue);
+            var purposeOption = command.Option("-purpose", "Banner or Poster", CommandOptionType.SingleValue);
+
+            command.OnExecute(() =>
+            {
+                ImageImporter.PurposeEnum purpose = ImageImporter.PurposeEnum.Banner;
+                Guid eventId = Guid.Empty;
+
+                if (!Enum.TryParse(purposeOption.Value(), out purpose) || !Guid.TryParse(eventIdOption.Value(), out eventId))
+                {
+                    Console.WriteLine("Invalid value for -purpose or -eventId");
+                    return -1;
+                }
+
+                var @event = _eventService.FindOneAsync(eventId).Result;
+
+                if (@event == null)
+                {
+                    Console.WriteLine("Event not found.");
+                    return -1;
+                }
+
+                switch (purpose)
+                {
+                    case ImageImporter.PurposeEnum.Banner:
+                        @event.BannerImageId = null;
+                        break;
+                    case ImageImporter.PurposeEnum.Poster:
+                        @event.PosterImageId = null;
+                        break;
+                }
+
+                _eventService.ReplaceOneAsync(@event);
+                Console.WriteLine("Event updated.");
+
+                return 0;
+            });
+        }
+
+        private void setImageCommand(CommandLineApplication command)
+        {
+            var eventIdOption = command.Option("-eventId", "Event Id", CommandOptionType.SingleValue);
+            var imageIdOption = command.Option("-imageId", "Image Id", CommandOptionType.SingleValue);
+            var purposeOption = command.Option("-purpose", "Banner or Poster", CommandOptionType.SingleValue);
+
+            command.OnExecute(() =>
+            {
+                ImageImporter.PurposeEnum purpose = ImageImporter.PurposeEnum.Banner;
+                Guid eventId = Guid.Empty;
+                Guid imageId = Guid.Empty;
+
+                if (!Enum.TryParse(purposeOption.Value(), out purpose) || !Guid.TryParse(eventIdOption.Value(), out eventId) || !Guid.TryParse(imageIdOption.Value(), out imageId))
+                {
+                    Console.WriteLine("Invalid value for -purpose or -eventId or -imageId");
+                    return -1;
+                }
+
+                var @event = _eventService.FindOneAsync(eventId).Result;
+
+                if (@event == null)
+                {
+                    Console.WriteLine("Event not found.");
+                    return -1;
+                }
+
+                switch (purpose)
+                {
+                    case ImageImporter.PurposeEnum.Banner:
+                        @event.BannerImageId = imageId;
+                        break;
+                    case ImageImporter.PurposeEnum.Poster:
+                        @event.PosterImageId = imageId;
+                        break;
+                }
+
+                _eventService.ReplaceOneAsync(@event);
+                Console.WriteLine("Event updated.");
+
                 return 0;
             });
         }
