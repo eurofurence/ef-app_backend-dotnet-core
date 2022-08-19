@@ -130,7 +130,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 $"{items.Count} item(s) on which you have been the last bidder will be part of the auction.\n");
 
             foreach (var item in items)
-                message.AppendLine($"{item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
+                message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
 
             message.AppendLine("\nIf you wish to defend your current bids against other potential higher bids, please attend the auction.\n\nThank you!");
 
