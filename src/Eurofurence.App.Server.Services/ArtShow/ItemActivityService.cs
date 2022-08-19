@@ -164,7 +164,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 $"Congratulations! You have won {items.Count} item(s) from the Art Show:\n");
 
             foreach (var item in items)
-                message.AppendLine($"{item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
+                message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
 
             message.AppendLine("\nPlease pick them up at the Art Show during sales hours (these are announced in the event schedule and can be found both in your con book or the mobile app).\n\nThank you!");
 
