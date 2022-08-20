@@ -648,7 +648,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     // We have no badge (=not existing, or no more collection code) - ban the participation.
                     if (badge == null && !existingParticipation.IsBanned)
                     {
-                        existingParticipation.TokenValue = string.Empty;
                         existingParticipation.IsBanned = true;
                         await _fursuitParticipationRepository.ReplaceOneAsync(existingParticipation);
                         continue;
