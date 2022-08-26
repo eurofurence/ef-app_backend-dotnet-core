@@ -62,6 +62,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 record.CollectionCode = registration.CollectionCode;
                 record.Touch();
 
+                if (string.IsNullOrWhiteSpace(record.ExternalReference)) return Guid.Empty;
+
                 var imageRecord = await _fursuitBadgeImageRepository.FindOneAsync(record.Id);
 
                 if (imageRecord == null)
