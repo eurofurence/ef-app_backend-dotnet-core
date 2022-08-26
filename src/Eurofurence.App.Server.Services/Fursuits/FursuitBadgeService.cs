@@ -115,6 +115,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 await _fursuitBadgeRepository.DeleteOneAsync(id);
                 await _fursuitBadgeImageRepository.DeleteOneAsync(id);
+
+                return Guid.Empty;
             }
             finally
             {
