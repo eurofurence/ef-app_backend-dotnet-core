@@ -40,6 +40,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
             await _sync.WaitAsync();
 
+            Guid id = Guid.Empty;
+
             try
             {
                 var record = await _fursuitBadgeRepository.FindOneAsync(a => a.ExternalReference == registration.BadgeNo.ToString());
@@ -52,6 +54,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     await _fursuitBadgeRepository.InsertOneAsync(record);
                 }
 
+                id = record.Id;
+
                 record.ExternalReference = registration.BadgeNo.ToString();
                 record.OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{registration.RegNo}";
                 record.Gender = registration.Gender;
@@ -61,8 +65,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 record.WornBy = registration.WornBy;
                 record.CollectionCode = registration.CollectionCode;
                 record.Touch();
-
-                if (string.IsNullOrWhiteSpace(record.ExternalReference)) return Guid.Empty;
 
                 var imageRecord = await _fursuitBadgeImageRepository.FindOneAsync(record.Id);
 
@@ -108,6 +110,11 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 await _fursuitBadgeRepository.ReplaceOneAsync(record);
 
                 return record.Id;
+            }
+            catch (Exception ex)
+            {
+                await _fursuitBadgeRepository.DeleteOneAsync(id);
+                await _fursuitBadgeImageRepository.DeleteOneAsync(id);
             }
             finally
             {
