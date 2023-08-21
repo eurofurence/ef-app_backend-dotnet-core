@@ -4,11 +4,12 @@ services:
     build: .
     ports:
       - "30001:30001"
+    volumes:
+      - './appsettings.json:/app/appsettings.json'
+      - './firebase.json:/app/firebase.json'
     depends_on:
-      - "mongo"
-    links:
-      - 'mongo:database'
-  mongo:
+      - "database"
+  database:
     image: mongo
     volumes:
       - './docker/mongo:/data/db'

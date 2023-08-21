@@ -1,5 +1,6 @@
 ## Application Specific Settings
 appsettings.json
+firebase.json
 
 
 ## Ignore Visual Studio temporary files, build results, and

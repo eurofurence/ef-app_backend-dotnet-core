@@ -1,4 +1,17 @@
-# Eurofurence Mobile Apps (Backend) 
+# Eurofurence Mobile Apps (Backend)
+
+## Run locally using Docker Compose (or Podman)
+
+1. Copy `appsettings.example.json` to `appsettings.json` (defaults should suffice for local development).
+2. Retrieve a JSON with Google Application Credentials for Firebase (see [Initialize the SDK in non-Google environments](https://firebase.google.com/docs/admin/setup#initialize_the_sdk_in_non-google_environments)).
+3. Store credential file as `firebase.json`.
+4. Run `docker compose up`.
+5. Wait until you see a message starting with `Application started.` from the `api` container.
+6. Go [home](http://localhost:30001/swagger/ui).
+7. …
+8. Profit.
+
+# Potentially outdated information below (Here be dragons!)
 
 - Backend is written in .NET Core an requires at least the Microsoft.NETCore.App 1.0.3 runtime.
 
@@ -7,6 +20,8 @@
 
 - Our production backend is located at https://app.eurofurence.org/api/v2/ - it will return data (~3 months before of a convention usually fresh data, otherwise from last year) to test and design against.
   - You are free to consume the API from your own website/project/application! Please keep the request rates sane and feel free to share your work with us, we'd love to see!
+
+
 
 ## How to set up
 
