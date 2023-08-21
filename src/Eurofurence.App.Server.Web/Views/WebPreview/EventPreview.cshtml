@@ -33,7 +33,7 @@
     
     @if (showAbstract)
     {
-        @Model.Abstract
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Abstract))
     }
 </header>
 
@@ -46,7 +46,7 @@
 
 <section class="row">
     <p class="@(hasPoster ? "one-half" : "three") column">
-        @Model.Description
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Description))
     </p>
 
     @if (Model.PosterImageId != null)
