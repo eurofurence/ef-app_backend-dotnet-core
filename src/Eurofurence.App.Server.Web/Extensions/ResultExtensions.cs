@@ -22,7 +22,7 @@ namespace Eurofurence.App.Server.Web.Extensions
             return obj;
         }
 
-        public static ActionResult AsActionResult(this IResult obj)
+        public static ActionResult AsActionResult(this Eurofurence.App.Common.Results.IResult obj)
         {
             if (obj.IsSuccessful) return new NoContentResult();
             return new BadRequestObjectResult(new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage });
@@ -34,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Extensions
             return new BadRequestObjectResult(new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage });
         }
 
-        public static ActionResult AsActionResultSafeVariant(this IResult obj)
+        public static ActionResult AsActionResultSafeVariant(this Eurofurence.App.Common.Results.IResult obj)
         {
             var result = new ApiSafeResult()
             {
