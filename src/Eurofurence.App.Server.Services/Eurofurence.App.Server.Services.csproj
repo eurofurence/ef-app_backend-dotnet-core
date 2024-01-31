@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Eurofurence.App.Server.Services</AssemblyName>
     <PackageId>Eurofurence.App.Server.Services</PackageId>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -14,17 +14,18 @@
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="6.4.0" />
-    <PackageReference Include="CsvHelper" Version="18.0.0" />
-    <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.26" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.26" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.20.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0005" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.20.0" />
+    <PackageReference Include="Autofac" Version="8.0.0" />
+    <PackageReference Include="CsvHelper" Version="30.1.0" />
+    <PackageReference Include="FirebaseAdmin" Version="2.4.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.3.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.2" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="Telegram.Bot" Version="16.0.0" />
+    <PackageReference Include="Telegram.Bot" Version="19.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
