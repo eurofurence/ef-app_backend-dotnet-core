@@ -111,7 +111,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 return record.Id;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await _fursuitBadgeRepository.DeleteOneAsync(id);
                 await _fursuitBadgeImageRepository.DeleteOneAsync(id);
