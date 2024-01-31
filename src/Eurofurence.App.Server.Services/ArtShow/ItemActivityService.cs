@@ -38,9 +38,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
             var importResult = new ImportResult();
             var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
 
-            csv.Configuration.RegisterClassMap<LogImportRowClassMap>();
-            csv.Configuration.Delimiter = ",";
-            csv.Configuration.HasHeaderRecord = false;
+            csv.Context.RegisterClassMap<LogImportRowClassMap>();
+            csv.Context.Configuration.Delimiter = ",";
+            csv.Context.Configuration.HasHeaderRecord = false;
 
             var csvRecords = await csv.GetRecordsAsync<LogImportRow>().ToListAsync();
             
