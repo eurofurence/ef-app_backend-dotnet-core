@@ -22,7 +22,7 @@ using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
-using Telegram.Bot.Types.InputFiles;
+//using Telegram.Bot.Types.InputFiles;
 using Eurofurence.App.Domain.Model.Security;
 
 namespace Eurofurence.App.Server.Services.Telegram
@@ -226,7 +226,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
                     var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
-                    await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
+                    await BotClient.SendPhotoAsync(chatId: ChatId, photo: new InputFileStream(imageContent));
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -581,7 +581,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {question}");
 
-            var message = await BotClient.SendTextMessageAsync(ChatId, question, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions, pivot: pivot));
+            var message = await BotClient.SendTextMessageAsync(chatId: ChatId, text: question, parseMode: ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions, pivot: pivot));
             _awaitingResponseCallback = responseCallBack;
             _lastAskMessage = message;
         }
@@ -592,7 +592,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {message}");
 
-            await BotClient.SendTextMessageAsync(ChatId, message, ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
+            await BotClient.SendTextMessageAsync(chatId: ChatId, text: message, parseMode: ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
         }
 
         private async Task CommandTableRegistration()
@@ -651,7 +651,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     if (nextRecord.Image != null)
                                     {
                                         var imageContent = new MemoryStream(nextRecord.Image.ImageBytes);
-                                        await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
+                                        await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
                                     }
 
                                     c3 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel.",
@@ -779,7 +779,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
 
                             var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
-                            await BotClient.SendPhotoAsync(ChatId, new InputOnlineFile(imageContent));
+                            await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
 
                             askTokenValue = () => AskAsync(
                                 $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",
@@ -914,7 +914,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 if (availableCommands.Count == 0)
                 {
                     response.AppendLine(
-                        "Sorry, I don't have any commands for you that you have access to. If you think this is in error, contact @Pinselohrkater");
+                        "Sorry, I don't have any commands for you that you have access to. If you think this is in error, contact @Fenrikur");
                 }
                 else
                 {
@@ -969,20 +969,20 @@ namespace Eurofurence.App.Server.Services.Telegram
             return Task.CompletedTask;
         }
 
-        public Task OnCallbackQueryAsync(CallbackQueryEventArgs e)
+        public Task OnCallbackQueryAsync(CallbackQuery callbackQuery)
         {
-            _user = e.CallbackQuery.Message.From;
+            _user = callbackQuery.Message.From;
 
             return BotClient.EditMessageReplyMarkupAsync(
-                    e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, null)
-                .ContinueWith(_ => ProcessMessageAsync(e.CallbackQuery.Data, e.CallbackQuery.Message));
+                    callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId, null)
+                .ContinueWith(_ => ProcessMessageAsync(callbackQuery.Data, callbackQuery.Message));
         }
 
 
-        public Task OnMessageAsync(MessageEventArgs e)
+        public Task OnMessageAsync(Message message)
         {
-            _user = e.Message.From;
-            return ProcessMessageAsync(e.Message.Text, e.Message);
+            _user = message.From;
+            return ProcessMessageAsync(message.Text, message);
         }
     }
 }

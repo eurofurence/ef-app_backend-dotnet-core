@@ -10,19 +10,23 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+//using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputFiles;
+//using Telegram.Bot.Types.InputFiles;
 
 // ReSharper disable CoVariantArrayConversion
 
@@ -117,7 +121,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                 string.IsNullOrEmpty(telegramConfiguration.Proxy)
                     ? new TelegramBotClient(telegramConfiguration.AccessToken)
                     : new TelegramBotClient(telegramConfiguration.AccessToken,
-                        new MiniProxy(telegramConfiguration.Proxy));
+                        new HttpClient(
+                            new HttpClientHandler {
+                                Proxy = new MiniProxy(telegramConfiguration.Proxy),
+                                UseProxy = true
+                            }));
 
             _conversationManager = new ConversationManager(
                 loggerFactory,
@@ -137,18 +145,13 @@ namespace Eurofurence.App.Server.Services.Telegram
                     )
                 );
 
-            _botClient.OnMessage += BotClientOnOnMessage;
-            _botClient.OnCallbackQuery += BotClientOnOnCallbackQuery;
-
-            _botClient.OnInlineQuery += BotClientOnOnInlineQuery;
-
             _telegramMessageBroker.OnSendMarkdownMessageToChatAsync += _telegramMessageBroker_OnSendMarkdownMessageToChatAsync;
             _telegramMessageBroker.OnSendImageToChatAsync += _telegramMessageBroker_OnSendImageToChatAsync;
         }
 
-        private async Task<InlineQueryResultBase[]> QueryEvents(string query)
+        private async Task<InlineQueryResult[]> QueryEvents(string query)
         {
-            if (query.Length < 3) return new InlineQueryResultBase[0];
+            if (query.Length < 3) return new InlineQueryResult[0];
 
             var events =
                 (await _eventService.FindAllAsync(a => a.IsDeleted == 0 && a.Title.ToLower().Contains(query.ToLower())))
@@ -156,7 +159,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .Take(10)
                 .ToList();
 
-            if (events.Count == 0) return new InlineQueryResultBase[0];
+            if (events.Count == 0) return new InlineQueryResult[0];
 
             var eventConferenceRooms = await _eventConferenceRoomService.FindAllAsync();
 
@@ -175,9 +178,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             .ToArray();
         }
 
-        private async Task<InlineQueryResultBase[]> QueryDealers(string query)
+        private async Task<InlineQueryResult[]> QueryDealers(string query)
         {
-            if (query.Length < 3) return new InlineQueryResultBase[0];
+            if (query.Length < 3) return new InlineQueryResult[0];
 
             var dealers =
                 (await _dealerService.FindAllAsync(a => a.IsDeleted == 0 && (
@@ -187,7 +190,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .Take(10)
                 .ToList();
 
-            if (dealers.Count == 0) return new InlineQueryResultBase[0];
+            if (dealers.Count == 0) return new InlineQueryResult[0];
 
             return dealers.Select(e =>
             {
@@ -202,9 +205,9 @@ namespace Eurofurence.App.Server.Services.Telegram
             .ToArray();
         }
 
-        private async Task<InlineQueryResultBase[]> QueryFursuitBadges(string query)
+        private async Task<InlineQueryResult[]> QueryFursuitBadges(string query)
         {
-            if (query.Length < 3) return new InlineQueryResultBase[0];
+            if (query.Length < 3) return new InlineQueryResult[0];
 
             var badges =
                 (await _fursuitBadgeRepository.FindAllAsync(
@@ -212,7 +215,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .Take(5)
                 .ToList();
 
-            if (badges.Count == 0) return new InlineQueryResultBase[0];
+            if (badges.Count == 0) return new InlineQueryResult[0];
 
             return badges.Select(e =>
                 {
@@ -227,11 +230,33 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .ToArray();
         }
 
-        private async void BotClientOnOnInlineQuery(object sender, InlineQueryEventArgs inlineQueryEventArgs)
+        public void Start()
+        {
+            //_botClient?.StartReceiving();
+            using var cts = new CancellationTokenSource();
+            _botClient?.StartReceiving(HandleUpdateAsync, PollingErrorHandler, null, cts.Token);
+        }
+
+        async Task HandleUpdateAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
+        {
+            Task handler = update switch
+            {
+                { Message: { } message } => BotClientOnMessage(message, cancellationToken),
+                { EditedMessage: { } message } => BotClientOnMessage(message, cancellationToken),
+                { CallbackQuery: { } callbackQuery } => BotClientOnCallbackQuery(callbackQuery, cancellationToken),
+                { InlineQuery: { } inlineQuery } => BotClientOnInlineQuery(inlineQuery, cancellationToken),
+                { ChosenInlineResult: { } chosenInlineResult } => BotOnChosenInlineResultReceived(chosenInlineResult, cancellationToken),
+                _ => UnknownUpdateHandlerAsync(update, cancellationToken)
+            };
+
+            await handler;
+        }
+
+        private async Task BotClientOnInlineQuery(InlineQuery inlineQuery, CancellationToken cancellationToken)
         {
             try
             {
-                var queryString = inlineQueryEventArgs.InlineQuery.Query;
+                var queryString = inlineQuery.Query;
                 var queries = new[]
                 {
                     QueryEvents(queryString),
@@ -244,27 +269,36 @@ namespace Eurofurence.App.Server.Services.Telegram
                 if (results.Length == 0) return;
 
                 await _botClient.AnswerInlineQueryAsync(
-                    inlineQueryEventArgs.InlineQuery.Id,
+                    inlineQuery.Id,
                     results,
                     cacheTime: 0);
             }
             catch (Exception ex)
             {
-                _logger.LogError("BotClientOnOnInlineQuery failed: {Message} {StackTrace}",
+                _logger.LogError("BotClientOnInlineQuery failed: {Message} {StackTrace}",
                     ex.Message, ex.StackTrace);
             }
         }
 
-        public void Start()
+        private async Task BotOnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult, CancellationToken cancellationToken)
         {
-            _botClient?.StartReceiving();
-        }
+            // TODO: Implement
 
-        private async void BotClientOnOnCallbackQuery(object sender, CallbackQueryEventArgs e)
+            _logger.LogInformation("Received inline result: {ChosenInlineResultId}", chosenInlineResult.ResultId);
+
+            await _botClient.SendTextMessageAsync(
+                chatId: chosenInlineResult.From.Id,
+                text: $"You chose result with Id: {chosenInlineResult.ResultId}",
+                cancellationToken: cancellationToken);
+        }
+        private async Task BotClientOnCallbackQuery(CallbackQuery callbackQuery, CancellationToken cancellationToken)
         {
             try
             {
-                await _botClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
+                await _botClient.AnswerCallbackQueryAsync(
+                    callbackQueryId: callbackQuery.Id,
+                    //text: $"Received {callbackQuery.Data}",
+                    cancellationToken: cancellationToken);
 
                 lock (_answerredQueries)
                 {
@@ -272,48 +306,65 @@ namespace Eurofurence.App.Server.Services.Telegram
                         .ToList()
                         .ForEach(a => _answerredQueries.Remove(a.Key));
 
-                    if (e.CallbackQuery.Message.Date < DateTime.UtcNow.AddMinutes(-5))
+                    if (callbackQuery.Message.Date < DateTime.UtcNow.AddMinutes(-5))
                         return;
 
-                    if (_answerredQueries.ContainsKey(e.CallbackQuery.Message.MessageId))
+                    if (_answerredQueries.ContainsKey(callbackQuery.Message.MessageId))
                         return;
 
-                    _answerredQueries.Add(e.CallbackQuery.Message.MessageId, DateTime.UtcNow);
+                    _answerredQueries.Add(callbackQuery.Message.MessageId, DateTime.UtcNow);
                 }
 
-                await _conversationManager[e.CallbackQuery.From.Id].OnCallbackQueryAsync(e);
+                await _conversationManager[callbackQuery.From.Id].OnCallbackQueryAsync(callbackQuery);
             }
             catch (Exception ex)
             {
-                _logger.LogError("BotClientOnOnCallbackQuery failed: {Message} {StackTrace}",
+                _logger.LogError("BotClientOnCallbackQuery failed: {Message} {StackTrace}",
                     ex.Message, ex.StackTrace);
             }
         }
 
-        private async void BotClientOnOnMessage(object sender, MessageEventArgs e)
+        private async Task BotClientOnMessage(Message message, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(e.Message.From.Username)) return;
+            if (string.IsNullOrEmpty(message.From.Username)) return;
 
             try
             {
-                await _conversationManager[e.Message.From.Id].OnMessageAsync(e);
+                await _conversationManager[message.From.Id].OnMessageAsync(message);
             }
             catch (Exception ex)
             {
-                _logger.LogError("BotClientOnOnMessage failed: {Message} {StackTrace}",
+                _logger.LogError("BotClientOnMessage failed: {Message} {StackTrace}",
                     ex.Message, ex.StackTrace);
             }
+        }
+
+#pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable RCS1163 // Unused parameter.
+        private Task UnknownUpdateHandlerAsync(Update update, CancellationToken cancellationToken)
+#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore IDE0060 // Remove unused parameter
+        {
+            _logger.LogInformation("Unknown update type: {UpdateType}", update.Type);
+            return Task.CompletedTask;
+        }
+
+        Task PollingErrorHandler(ITelegramBotClient bot, Exception ex, CancellationToken ct)
+        {
+            Console.WriteLine($"Exception while polling for updates: {ex}");
+            return Task.CompletedTask;
         }
 
         private async Task _telegramMessageBroker_OnSendMarkdownMessageToChatAsync(string chatId, string message)
         {
-            await _botClient.SendTextMessageAsync(chatId, message, ParseMode.Markdown);
+            await _botClient.SendTextMessageAsync(chatId: chatId, text: message, parseMode: ParseMode.Markdown);
         }
 
         private async Task _telegramMessageBroker_OnSendImageToChatAsync(string chatId, byte[] imageBytes, string message)
         {
             await _botClient.SendPhotoAsync(
-                chatId, new InputOnlineFile(new MemoryStream(imageBytes)),
+                chatId: chatId, 
+                photo: new InputFileStream(new MemoryStream(imageBytes)),
                 caption: message,
                 parseMode: ParseMode.Markdown);
         }

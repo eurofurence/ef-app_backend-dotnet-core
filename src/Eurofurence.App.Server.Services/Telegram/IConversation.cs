@@ -12,7 +12,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         DateTime LastActivityUtc { get; set; }
         ITelegramBotClient BotClient { set; }
 
-        Task OnCallbackQueryAsync(CallbackQueryEventArgs callbackQueryEventArgs);
-        Task OnMessageAsync(MessageEventArgs e);
+        Task OnCallbackQueryAsync(CallbackQuery callbackQuery);
+        Task OnMessageAsync(Message message);
     }
 }
