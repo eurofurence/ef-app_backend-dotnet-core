@@ -13,7 +13,6 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using Eurofurence.App.Domain.Model.Fragments;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.ImageSharp.Formats.Jpeg;
 
@@ -83,7 +82,8 @@ namespace Eurofurence.App.Server.Services.Images
                 return existingRecord.Id;
             }
 
-            var image = Image.Load(imageBytes, out IImageFormat imageFormat);
+            var image = Image.Load(imageBytes);
+            IImageFormat imageFormat = image.Metadata.DecodedImageFormat;
 
             var record = new ImageRecord
             {
@@ -148,7 +148,8 @@ namespace Eurofurence.App.Server.Services.Images
 
             try
             {
-                var image = Image.Load(imageBytes, out IImageFormat imageFormat);
+                var image = Image.Load(imageBytes);
+                IImageFormat imageFormat = image.Metadata.DecodedImageFormat;
                 return new ImageFragment()
                 {
                     SizeInBytes = imageBytes.LongLength,
