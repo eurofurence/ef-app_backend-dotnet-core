@@ -169,8 +169,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             TextReader r = new StreamReader(stream);
 
             var csv = new CsvReader(r, CultureInfo.CurrentCulture);
-            csv.Configuration.RegisterClassMap<EventImportRowClassMap>();
-            csv.Configuration.Delimiter = ",";
+            csv.Context.RegisterClassMap<EventImportRowClassMap>();
+            csv.Context.Configuration.Delimiter = ",";
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
 
             csvRecords = csvRecords
