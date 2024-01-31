@@ -245,7 +245,6 @@ namespace Eurofurence.App.Server.Services.Telegram
                 { EditedMessage: { } message } => BotClientOnMessage(message, cancellationToken),
                 { CallbackQuery: { } callbackQuery } => BotClientOnCallbackQuery(callbackQuery, cancellationToken),
                 { InlineQuery: { } inlineQuery } => BotClientOnInlineQuery(inlineQuery, cancellationToken),
-                { ChosenInlineResult: { } chosenInlineResult } => BotOnChosenInlineResultReceived(chosenInlineResult, cancellationToken),
                 _ => UnknownUpdateHandlerAsync(update, cancellationToken)
             };
 
@@ -280,17 +279,6 @@ namespace Eurofurence.App.Server.Services.Telegram
             }
         }
 
-        private async Task BotOnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult, CancellationToken cancellationToken)
-        {
-            // TODO: Implement
-
-            _logger.LogInformation("Received inline result: {ChosenInlineResultId}", chosenInlineResult.ResultId);
-
-            await _botClient.SendTextMessageAsync(
-                chatId: chosenInlineResult.From.Id,
-                text: $"You chose result with Id: {chosenInlineResult.ResultId}",
-                cancellationToken: cancellationToken);
-        }
         private async Task BotClientOnCallbackQuery(CallbackQuery callbackQuery, CancellationToken cancellationToken)
         {
             try
