@@ -1,7 +1,8 @@
-﻿using Eurofurence.App.Server.Services.Abstractions.Lassie;
-using Newtonsoft.Json;
+﻿using System;
+using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Lassie
@@ -29,16 +30,13 @@ namespace Eurofurence.App.Server.Services.Lassie
                 new KeyValuePair<string, string>("command", command)
             };
 
-            using (var client = new HttpClient())
-            {
-                var response = await client.PostAsync(_configuration.BaseApiUrl, new FormUrlEncodedContent(outgoingQuery));
-                var content = await response.Content.ReadAsStringAsync();
+            using var client = new HttpClient();
+            var response = await client.PostAsync(_configuration.BaseApiUrl, new FormUrlEncodedContent(outgoingQuery));
+            var content = await response.Content.ReadAsStringAsync();
 
-                var dataResponse = JsonConvert.DeserializeObject<DataResponseWrapper<LostAndFoundResponse>>(content,
-                    new JsonSerializerSettings() { DateTimeZoneHandling = DateTimeZoneHandling.Local });
+            var dataResponse = JsonSerializer.Deserialize<DataResponseWrapper<LostAndFoundResponse>>(content);
 
-                return dataResponse.Data ?? new LostAndFoundResponse[0];
-            }
+            return dataResponse.Data ?? Array.Empty<LostAndFoundResponse>();
         }
     }
 }
