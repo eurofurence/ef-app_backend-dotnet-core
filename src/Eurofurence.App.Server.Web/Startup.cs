@@ -84,7 +84,6 @@ namespace Eurofurence.App.Server.Web
             .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null)
             .AddNewtonsoftJson(options =>
             {
-                options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
                 options.SerializerSettings.Formatting = Formatting.Indented;
                 options.SerializerSettings.Converters.Add(new StringEnumConverter());
                 options.SerializerSettings.Converters.Add(new IsoDateTimeConverter
