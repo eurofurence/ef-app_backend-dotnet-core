@@ -1,9 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
+﻿using System.IO.Compression;
+using System.Text.Json;
 
 namespace Eurofurence.App.Common.Compression
 {
@@ -14,13 +10,7 @@ namespace Eurofurence.App.Common.Compression
             var entry = archive.CreateEntry(entryName, compressionLevel);
             var stream = entry.Open();
 
-            var serializer = new JsonSerializer();
-
-            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
-            using (var textWriter = new JsonTextWriter(streamWriter))
-            {
-                serializer.Serialize(textWriter, item);
-            }
+            JsonSerializer.Serialize(stream, item);
         }
 
         public static void AddAsBinary(this ZipArchive archive, string entryName, byte[] data, CompressionLevel compressionLevel = CompressionLevel.Optimal)
@@ -37,13 +27,7 @@ namespace Eurofurence.App.Common.Compression
             var entry = archive.GetEntry(entryName);
             var stream = entry.Open();
 
-            var serializer = new JsonSerializer();
-
-            using (var streamReader = new StreamReader(stream, Encoding.UTF8))
-            using (var textReader = new JsonTextReader(streamReader))
-            {
-                return serializer.Deserialize<T>(textReader);
-            }
+            return JsonSerializer.Deserialize<T>(stream);
         }
 
         public static byte[] ReadAsBinary(this ZipArchive archive, string entryName)
