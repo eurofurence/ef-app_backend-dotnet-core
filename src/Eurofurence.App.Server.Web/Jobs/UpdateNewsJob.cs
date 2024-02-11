@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Common.DataDiffUtils;
@@ -12,8 +13,6 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FluentScheduler;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
@@ -75,25 +74,26 @@ namespace Eurofurence.App.Server.Web.Jobs
                 return;
             }
 
+            var jsonDocument = JsonDocument.Parse(response);
+            var records = jsonDocument.RootElement.EnumerateArray();
 
-            var records = JsonConvert.DeserializeObject<JObject[]>(response);
             var unixReference = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
             var mapping = records.Select(j => new
             {
                 Record = new AnnouncementRecord()
                 {
-                    ExternalReference = j["id"].Value<string>(),
-                    Area = j["news"]["type"].Value<string>().UppercaseFirst(),
-                    Author = j["news"]?["department"]?.Value<string>().UppercaseFirst() ?? "Eurofurence",
-                    Title = j["news"]["title"].Value<string>(),
-                    Content = j["news"]["message"].Value<string>(),
-                    ValidFromDateTimeUtc = unixReference.AddSeconds(j["date"].Value<double>()).ToUniversalTime(),
+                    ExternalReference = j.GetProperty("id").GetString(),
+                    Area = j.GetProperty("news").GetProperty("type").GetString().UppercaseFirst(),
+                    Author = j.GetProperty("news").GetProperty("department").GetString().UppercaseFirst() ?? "Eurofurence",
+                    Title = j.GetProperty("news").GetProperty("title").GetString(),
+                    Content = j.GetProperty("news").GetProperty("message").GetString(),
+                    ValidFromDateTimeUtc = unixReference.AddSeconds(j.GetProperty("date").GetDouble()).ToUniversalTime(),
                     ValidUntilDateTimeUtc = unixReference
-                        .AddSeconds(j["news"]["valid_until"].Value<double>()).ToUniversalTime(),
-                    ImageId = GetImageIdForEntryAsync(j["id"].Value<string>(), j["data"]?["imagedata"]?.Value<string>()).Result
+                        .AddSeconds(j.GetProperty("news").GetProperty("valid_until").GetDouble()).ToUniversalTime(),
+                    ImageId = GetImageIdForEntryAsync(j.GetProperty("id").GetString(), j.GetProperty("data").GetProperty("imagedata").GetString()).Result
                 },
-                Type = j["news"]["type"].Value<string>()
+                Type = j.GetProperty("news").GetProperty("type").GetString()
             }).ToList();
 
             foreach (var item in mapping)
