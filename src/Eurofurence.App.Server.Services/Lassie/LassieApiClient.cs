@@ -9,16 +9,18 @@ namespace Eurofurence.App.Server.Services.Lassie
 {
     public class LassieApiClient : ILassieApiClient
     {
-        private class DataResponseWrapper<T>
+        public class DataResponseWrapper<T>
         {
             public T[] Data { get; set; }
         }
 
         private LassieConfiguration _configuration;
+        private JsonSerializerOptions _serializerOptions;
 
-        public LassieApiClient(LassieConfiguration configuration)
+        public LassieApiClient(LassieConfiguration configuration, JsonSerializerOptions serializerOptions)
         {
             _configuration = configuration;
+            _serializerOptions = serializerOptions;
         }
 
         public async Task<LostAndFoundResponse[]> QueryLostAndFoundDbAsync(string command = "lostandfound")
@@ -34,9 +36,14 @@ namespace Eurofurence.App.Server.Services.Lassie
             var response = await client.PostAsync(_configuration.BaseApiUrl, new FormUrlEncodedContent(outgoingQuery));
             var content = await response.Content.ReadAsStringAsync();
 
-            var dataResponse = JsonSerializer.Deserialize<DataResponseWrapper<LostAndFoundResponse>>(content);
+            var dataResponse = DeserializeLostAndFoundResponse(content);
 
             return dataResponse.Data ?? Array.Empty<LostAndFoundResponse>();
+        }
+
+        public DataResponseWrapper<LostAndFoundResponse> DeserializeLostAndFoundResponse(string content)
+        {
+            return JsonSerializer.Deserialize<DataResponseWrapper<LostAndFoundResponse>>(content, _serializerOptions);
         }
     }
 }

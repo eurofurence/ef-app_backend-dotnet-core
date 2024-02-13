@@ -32,6 +32,7 @@ using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -83,11 +84,21 @@ namespace Eurofurence.App.Server.Web
                 .AddJsonOptions(opt =>
                 {
                     opt.JsonSerializerOptions.PropertyNamingPolicy = null;
+                    opt.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                     opt.JsonSerializerOptions.WriteIndented = true;
                     opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     opt.JsonSerializerOptions.Converters.Add(new JsonDateTimeConverter());
-
                 });
+
+            JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = null,
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true,
+                Converters = { new JsonStringEnumConverter(), new JsonDateTimeConverter() }
+            };
+
+            services.AddSingleton(s => serializerOptions);
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
