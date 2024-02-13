@@ -15,6 +15,7 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Eurofurence.App.Server.Web\Eurofurence.App.Server.Web.csproj" />
     <ProjectReference Include="..\Eurofurence.App.Tests.Common\Eurofurence.App.Tests.Common.csproj" />
     <ProjectReference Include="..\..\src\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
   </ItemGroup>
