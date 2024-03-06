@@ -64,7 +64,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create a new meetup.
         /// </summary>
         /// <param name="meetup"></param>
-        /// <returns>Id of the newly created dealer</returns>
+        /// <returns>Id of the newly created meetup</returns>
         [Authorize(Roles = "System,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(400)]
