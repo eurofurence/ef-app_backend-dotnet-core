@@ -13,6 +13,7 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Domain.Model.Meetups;
 using Eurofurence.App.Domain.Model.MongoDb.ArtShow;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits;
 using Eurofurence.App.Domain.Model.MongoDb.Fursuits.CollectingGame;
@@ -96,6 +97,7 @@ namespace Eurofurence.App.Domain.Model.MongoDb.DependencyResolution
                 PushNotificationChannelRecord>(builder);
             Register<MapRepository, IEntityRepository<MapRecord>, MapRecord>(builder);
             Register<PrivateMessageRepository, IEntityRepository<PrivateMessageRecord>, PrivateMessageRecord>(builder);
+            Register<MeetupRepository, IEntityRepository<Meetup>, Meetup>(builder);
 
             Register<RegSysAlternativePinRepository, IEntityRepository<RegSysAlternativePinRecord>, RegSysAlternativePinRecord>(builder);
             Register<RegSysIdentityRepository, IEntityRepository<RegSysIdentityRecord>, RegSysIdentityRecord>(builder,
