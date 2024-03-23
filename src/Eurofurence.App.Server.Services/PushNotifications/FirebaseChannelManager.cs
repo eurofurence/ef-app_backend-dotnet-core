@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Common.Results;
@@ -15,7 +13,6 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
@@ -207,7 +204,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     // For Expo / React Native
                     { "experienceId", _configuration.ExpoExperienceId },
                     { "scopeKey", _configuration.ExpoScopeKey },
-                    { "body", JsonConvert.SerializeObject(new
+                    { "body", JsonSerializer.Serialize(new
                         {
                             @event = "Sync",
                             cid = _conventionSettings.ConventionIdentifier

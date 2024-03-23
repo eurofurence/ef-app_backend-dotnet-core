@@ -1,32 +1,32 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Lassie
 {
     public class LostAndFoundResponse
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonProperty("image")]
+        [JsonPropertyName("image")]
         public string ImageUrl { get; set; }
 
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; }
         
-        [JsonProperty("description")]
+        [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; set; }
 
-        [JsonProperty("lost_timestamp")]
+        [JsonPropertyName("lost_timestamp")]
         public DateTime? LostDateTimeLocal { get; set; }
 
-        [JsonProperty("found_timestamp")]
+        [JsonPropertyName("found_timestamp")]
         public DateTime? FoundDateTimeLocal { get; set; }
 
-        [JsonProperty("return_timestamp")]
+        [JsonPropertyName("return_timestamp")]
         public DateTime? ReturnDateTimeLocal { get; set; }
     }
 }
