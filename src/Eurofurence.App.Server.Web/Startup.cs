@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,6 +35,7 @@ using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Text;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -185,9 +187,15 @@ namespace Eurofurence.App.Server.Web
 
             var builder = new ContainerBuilder();
 
+            services.AddDbContextPool<AppDbContext>(options =>
+            {
+                var connectionString = Configuration.GetConnectionString("Eurofurence");
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            });
+            
             builder.Build();
 
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule());
+            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
