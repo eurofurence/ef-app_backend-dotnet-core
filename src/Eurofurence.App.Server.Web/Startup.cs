@@ -4,7 +4,6 @@ using Amazon.Runtime;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
-using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
@@ -24,7 +23,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
@@ -55,8 +53,6 @@ namespace Eurofurence.App.Server.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            BsonClassMapping.Register();
-
             var conventionSettings = ConventionSettings.FromConfiguration(Configuration);
 
             services.AddLogging(options =>
@@ -211,15 +207,6 @@ namespace Eurofurence.App.Server.Web
             builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
             builder.Register(c => Configuration.GetSection("jobs:updateNews"))
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
-
-            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
-            var database = client.GetDatabase(Configuration["mongoDb:database"]);
-
-            container
-                .Resolve<Domain.Model.MongoDb.DependencyResolution.IMongoDatabaseBroker>()
-                .Setup(database);
-
-            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
 
         }
 
