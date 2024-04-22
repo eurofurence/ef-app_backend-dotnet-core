@@ -31,7 +31,6 @@ namespace Eurofurence.App.Domain.Model.Maps
         public bool IsBrowseable { get; set; }
 
         [DataMember]
-        [Required]
         public IList<MapEntryRecord> Entries { get; set; }
 
         [IgnoreDataMember]

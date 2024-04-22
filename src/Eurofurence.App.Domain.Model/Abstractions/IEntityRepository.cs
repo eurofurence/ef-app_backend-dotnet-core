@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
@@ -7,44 +8,29 @@ using Eurofurence.App.Domain.Model.Sync;
 
 namespace Eurofurence.App.Domain.Model.Abstractions
 {
-    public interface IEntityRepository<TEntity> where TEntity : EntityBase
-    {
-        Task<TEntity> FindOneAsync(Guid id, bool includeDeletedRecords = false);
-        Task<TEntity> FindOneAsync(Expression<Func<TEntity, bool>> filter);
-        Task<bool> HasAsync(Guid id, bool includeDeletedRecords = false);
-        Task<bool> HasManyAsync(Guid[] ids, bool includeDeletedRecords = false);
+    //public interface IEntityRepository<TEntity> where TEntity : EntityBase
+    //{
+    //    Task<TEntity> FindOneAsync(Expression<Func<TEntity, bool>> where, bool includeDeletedRecords = false);
 
-        Task<IEnumerable<TEntity>> FindAllAsync(
-            bool includeDeletedRecords = false,
-            DateTime? minLastDateTimeChangedUtc = null,
-            FilterOptions<TEntity> filterOptions = null
-        );
+    //    Task<TEntity> FindOneByIdAsync(Guid id, bool includeDeletedRecords = false);
+        
+    //    bool Has(Guid id, bool includeDeletedRecords = false);
 
-        Task<IEnumerable<TEntity>> FindAllAsync(
-            IEnumerable<Guid> ids,
-            bool includeDeletedRecords = false,
-            FilterOptions<TEntity> filterOptions = null
-        );
+    //    bool HasMany(Guid[] ids, bool includeDeletedRecords = false);
 
-        Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> filter, FilterOptions<TEntity> filterOptions = null);
-        Task ReplaceOneAsync(TEntity entity);
-        Task InsertOneAsync(TEntity entity);
-        Task DeleteOneAsync(Guid id);
-        Task DeleteAllAsync();
+    //    IQueryable<TEntity> FindAll(
+    //        IEnumerable<Guid> ids = null,
+    //        bool includeDeletedRecords = false,
+    //        DateTime? minLastDateTimeChangedUtc = null
+    //    );
 
-    }
+    //    Task ReplaceOneAsync(TEntity entity);
 
+    //    Task InsertOneAsync(TEntity entity);
 
-    public interface IEventRepository : IEntityRepository<EventRecord>
-    {
-    }
+    //    Task DeleteOneAsync(Guid id);
 
-    public interface IEventConferenceTrackRepository : IEntityRepository<EventConferenceTrackRecord>
-    {
-    }
+    //    Task DeleteAllAsync();
 
-    public interface IEntityStorageInfoRepository : IEntityRepository<EntityStorageInfoRecord>
-    {
-        Task<EntityStorageInfoRecord> FindOneAsync(string entityType);
-    }
+    //}
 }
