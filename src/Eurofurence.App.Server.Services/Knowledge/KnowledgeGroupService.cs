@@ -1,5 +1,5 @@
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 
@@ -9,10 +9,10 @@ namespace Eurofurence.App.Server.Services.Knowledge
         IKnowledgeGroupService
     {
         public KnowledgeGroupService(
-            IEntityRepository<KnowledgeGroupRecord> entityRepository,
+            AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory
         )
-            : base(entityRepository, storageServiceFactory)
+            : base(appDbContext, storageServiceFactory)
         {
         }
     }

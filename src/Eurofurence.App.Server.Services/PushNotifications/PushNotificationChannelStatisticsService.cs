@@ -1,34 +1,34 @@
-﻿using Eurofurence.App.Domain.Model.Abstractions;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+﻿using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
     public class PushNotificationChannelStatisticsService : IPushNotificationChannelStatisticsService
     {
-        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
+        private readonly AppDbContext _appDbContext;
 
         public PushNotificationChannelStatisticsService(
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository
+            AppDbContext appDbContext
         )
         {
-            _pushNotificationChannelRepository = pushNotificationChannelRepository;
+            _appDbContext = appDbContext;
         }
 
-        public async Task<PushNotificationChannelStatistics> PushNotificationChannelStatisticsAsync(DateTime? sinceLastSeenDateTimeUtc)
+        public async Task<PushNotificationChannelStatistics> PushNotificationChannelStatisticsAsync(
+            DateTime? sinceLastSeenDateTimeUtc)
         {
             if (!sinceLastSeenDateTimeUtc.HasValue)
                 sinceLastSeenDateTimeUtc = DateTime.UtcNow.AddMonths(-1);
 
-            var records = (await _pushNotificationChannelRepository.FindAllAsync())
-                .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc)
-                .ToList();
+            var records = await _appDbContext.PushNotificationChannels
+                .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc).ToListAsync();
 
             var devicesWithSessions =
-                records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase));
+                records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase)).ToList();
 
             var devicesWithSessionCount = devicesWithSessions.Count();
             var uniqueUserIds = devicesWithSessions.Select(a => a.Uid).Distinct().Count();

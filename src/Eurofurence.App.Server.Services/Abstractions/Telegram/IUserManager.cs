@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Telegram;
 
@@ -11,6 +10,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Telegram
 
         Task SetAclForUserAsync<TEnum>(string username, TEnum acl);
 
-        Task<IList<UserRecord>> GetUsersAsync();
+        IQueryable<UserRecord> GetUsers();
     }
 }

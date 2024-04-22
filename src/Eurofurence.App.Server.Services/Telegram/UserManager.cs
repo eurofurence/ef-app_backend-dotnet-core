@@ -1,26 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Telegram;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
     public class UserManager : IUserManager
     {
-        private readonly IEntityRepository<UserRecord> _telegramUserRepository;
+        private readonly AppDbContext _appDbContext;
 
-        public UserManager(IEntityRepository<UserRecord> telegramUserRepository)
+        public UserManager(AppDbContext appDbContext)
         {
-            _telegramUserRepository = telegramUserRepository;
+            _appDbContext = appDbContext;
         }
 
 
         public async Task<TEnum> GetAclForUserAsync<TEnum>(string username) where TEnum : struct
         {
-            var record = await _telegramUserRepository.FindOneAsync(a => a.Username.ToLower() == username.ToLower());
+            var record = await _appDbContext.Users.FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
 
             TEnum acl = default(TEnum);
             Enum.TryParse(record?.Acl, out acl);
@@ -30,7 +30,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task SetAclForUserAsync<TEnum>(string username, TEnum acl)
         {
-            var record = await _telegramUserRepository.FindOneAsync(a => a.Username.ToLower() == username.ToLower());
+            var record = await _appDbContext.Users.FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
 
             if (record == null)
             {
@@ -41,7 +41,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                 record.NewId();
                 record.Touch();
 
-                await _telegramUserRepository.InsertOneAsync(record);
+                _appDbContext.Users.Add(record);
+                await _appDbContext.SaveChangesAsync();
                 await SetAclForUserAsync(username, acl);
 
                 return;
@@ -50,12 +51,13 @@ namespace Eurofurence.App.Server.Services.Telegram
             record.Acl = acl.ToString();
             record.Touch();
 
-            await _telegramUserRepository.ReplaceOneAsync(record);
+            _appDbContext.Users.Update(record);
+            await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task<IList<UserRecord>> GetUsersAsync()
+        public IQueryable<UserRecord> GetUsers()
         {
-            return (await _telegramUserRepository.FindAllAsync()).ToList();
+            return _appDbContext.Users;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
 
@@ -7,7 +7,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
 {
     public interface IPrivateMessageService
     {
-        Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(string recipientUid);
+        Task<IQueryable<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(string recipientUid);
 
         Task<DateTime?> MarkPrivateMessageAsReadAsync(Guid messageId, string recipientUid = null);
 
@@ -17,7 +17,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
 
         Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(Guid messageId);
 
-        Task<IEnumerable<PrivateMessageRecord>> GetPrivateMessagesForSenderAsync(string senderUid);
+        IQueryable<PrivateMessageRecord> GetPrivateMessagesForSender(string senderUid);
 
         int GetNotificationQueueSize();
     }

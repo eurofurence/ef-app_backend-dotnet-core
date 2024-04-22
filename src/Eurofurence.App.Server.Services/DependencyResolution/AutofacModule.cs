@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -33,6 +34,7 @@ using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
@@ -69,6 +71,15 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
         private void RegisterServices(ContainerBuilder builder)
         {
+            var connectionString = _configuration.GetConnectionString("Eurofurence");
+            var dbContextOptionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            dbContextOptionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+
+            builder
+                .RegisterType<AppDbContext>()
+                .WithParameter("options", dbContextOptionsBuilder.Options)
+                .InstancePerLifetimeScope();
+
             builder.RegisterType<AgentClosingResultService>().As<IAgentClosingResultService>();
             builder.RegisterType<AnnouncementService>().As<IAnnouncementService>();
             builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();

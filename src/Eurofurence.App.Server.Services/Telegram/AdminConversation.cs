@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Common.Validation;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -14,7 +13,6 @@ using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
-using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -22,19 +20,17 @@ using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
-//using Telegram.Bot.Types.InputFiles;
 using Eurofurence.App.Domain.Model.Security;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
     public class AdminConversation : Conversation, IConversation
     {
+        private readonly AppDbContext _appDbContext;
         private readonly IUserManager _userManager;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
-        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
-        private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
-        private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
-        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly ICollectingGameService _collectingGameService;
@@ -87,12 +83,9 @@ namespace Eurofurence.App.Server.Services.Telegram
         private ILogger _logger;
 
         public AdminConversation(
+            AppDbContext appDbContext,
             IUserManager userManager,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
-            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
-            IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository,
-            IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
             IPrivateMessageService privateMessageService,
             ITableRegistrationService tableRegistrationService,
             ICollectingGameService collectingGameService,
@@ -100,13 +93,10 @@ namespace Eurofurence.App.Server.Services.Telegram
             ILoggerFactory loggerFactory
             )
         {
+            _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
             _userManager = userManager;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
-            _pushNotificationChannelRepository = pushNotificationChannelRepository;
-            _fursuitBadgeRepository = fursuitBadgeRepository;
-            _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
-            _regSysIdentityRepository = regSysIdentityRepository;
             _privateMessageService = privateMessageService;
             _tableRegistrationService = tableRegistrationService;
             _collectingGameService = collectingGameService;
@@ -214,7 +204,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     }
 
                     var badge =
-                        await _fursuitBadgeRepository.FindOneAsync(a => a.ExternalReference == badgeNo.ToString());
+                        await _appDbContext.FursuitBadges.FirstOrDefaultAsync(a => a.ExternalReference == badgeNo.ToString());
 
                     if (badge == null)
                     {
@@ -225,7 +215,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
-                    var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
+                    var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
                     await BotClient.SendPhotoAsync(chatId: ChatId, photo: new InputFileStream(imageContent));
                 }, "Cancel=/cancel");
             await c1();
@@ -276,9 +266,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var records =
-                        (await _pushNotificationChannelRepository.FindAllAsync(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}")))
-                        .ToList();
+                    var records = await _appDbContext.PushNotificationChannels.Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
+                        .ToListAsync();
 
                     if (records.Count == 0)
                     {
@@ -392,8 +381,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                     }
 
                     var records =
-                        (await _pushNotificationChannelRepository.FindAllAsync(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}")))
-                        .ToList();
+                        await _appDbContext.PushNotificationChannels.Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
+                        .ToListAsync();
 
                     if (records.Count == 0)
                     {
@@ -416,7 +405,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task CommandStatistics()
         {
-            var records = (await _pushNotificationChannelRepository.FindAllAsync()).ToList();
+            var records = _appDbContext.PushNotificationChannels;
 
             var devicesWithSessions =
                 records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase));
@@ -428,7 +417,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 String.Join(", ", a.Topics.OrderByDescending(b => b))));
 
             var message = new StringBuilder();
-            message.AppendLine($"*{records.Count}* devices in reach of global / targeted push.");
+            message.AppendLine($"*{records.Count()}* devices in reach of global / targeted push.");
 
             foreach (var group in groups.OrderByDescending(g => g.Count()))
             {
@@ -534,7 +523,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                             break;
 
                         case ("*listusers"):
-                            var users = await _userManager.GetUsersAsync();
+                            var users = _userManager.GetUsers();
 
                             var response = new StringBuilder();
                             response.AppendLine($"*{title}*\nCurrent Users in Database:\n");
@@ -606,9 +595,9 @@ namespace Eurofurence.App.Server.Services.Telegram
                 {
                     if (c1a == "*list")
                     {
-                        var records = await _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
+                        var records = _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
                         var ownerUids = records.Select(a => a.OwnerUid);
-                        var ownerIdentities = await _regSysIdentityRepository.FindAllAsync(a => ownerUids.Contains(a.Uid));
+                        var ownerIdentities = _appDbContext.RegSysIdentities.Where(a => ownerUids.Contains(a.Uid));
 
                         var list = records.Select(record =>
                             $"{record.OwnerUid} {ownerIdentities.Single(a => a.Uid == record.OwnerUid).Username.RemoveMarkdown()}=*edit-{record.Id}"
@@ -633,7 +622,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 }
                                 else
                                 {
-                                    var ownerIdentity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == nextRecord.OwnerUid);
+                                    var ownerIdentity = await _appDbContext.RegSysIdentities.FirstOrDefaultAsync(a => a.Uid == nextRecord.OwnerUid);
 
                                     var message = new StringBuilder();
 
@@ -760,7 +749,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 return;
                             }
 
-                            var badge = await _fursuitBadgeRepository.FindOneAsync(
+                            var badge = await _appDbContext.FursuitBadges.FirstOrDefaultAsync(
                                 a => a.ExternalReference == fursuitBadgeNo.ToString());
 
                             if (badge == null)
@@ -778,7 +767,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                             await ReplyAsync(
                                 $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
 
-                            var imageContent = new MemoryStream((await _fursuitBadgeImageRepository.FindOneAsync(badge.Id)).ImageBytes);
+                            var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
                             await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
 
                             askTokenValue = () => AskAsync(
