@@ -49,14 +49,14 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private async Task<ImageRecord[]> GetUnusedImagesAsync()
         {
-            var images = await _imageService.FindAllAsync();
+            var images = _imageService.FindAll();
 
             var usedImageIdSources = new IEnumerable<Guid?>[] {
-                (await _dealerService.FindAllAsync()).SelectMany(a => new Guid?[] { a.ArtistImageId, a.ArtistThumbnailImageId, a.ArtPreviewImageId }),
-                (await _eventService.FindAllAsync()).SelectMany(a => new Guid?[] { a.BannerImageId, a.PosterImageId }),
-                (await _announcementService.FindAllAsync()).Select(a => a.ImageId),
-                (await _knowledgeEntryService.FindAllAsync()).SelectMany(a => a.ImageIds.Select(b => b as Guid?)),
-                (await _mapService.FindAllAsync()).Select(a => a.ImageId as Guid?)
+                ( _dealerService.FindAll()).SelectMany(a => new Guid?[] { a.ArtistImageId, a.ArtistThumbnailImageId, a.ArtPreviewImageId }),
+                ( _eventService.FindAll()).SelectMany(a => new Guid?[] { a.BannerImageId, a.PosterImageId }),
+                ( _announcementService.FindAll()).Select(a => a.ImageId),
+                ( _knowledgeEntryService.FindAll()).SelectMany(a => a.ImageIds.Select(b => b as Guid?)),
+                ( _mapService.FindAll()).Select(a => a.ImageId as Guid?)
             };
 
             var usedImageIds = usedImageIdSources

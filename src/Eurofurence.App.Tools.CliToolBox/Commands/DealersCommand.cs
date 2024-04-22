@@ -31,7 +31,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.OnExecute(() =>
             {
-                var dealers = _dealerService.FindAllAsync().Result;
+                var dealers = _dealerService.FindAll();
 
 
                 Action<Guid?> dropImage = imageId =>
@@ -77,10 +77,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 Console.WriteLine("Cleaning images");
 
                 var images = _imageService
-                    .FindAllAsync(image => image.InternalReference.StartsWith("dealer:"))
-                    .Result;
+                    .FindAll(image => image.InternalReference.StartsWith("dealer:"));
 
-                var dealers = _dealerService.FindAllAsync().Result;
+                var dealers = _dealerService.FindAll();
 
                 var usedImages = dealers
                     .SelectMany(dealer => new Guid?[] { dealer.ArtistImageId, dealer.ArtistThumbnailImageId, dealer.ArtPreviewImageId })

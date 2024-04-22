@@ -98,7 +98,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
 
 #pragma warning disable RECS0063 // Warns when a culture-aware 'StartsWith' call is used by default.
             var knowledgeImages =
-                await _imageService.FindAllAsync(a => a.IsDeleted == 0 &&
+                _imageService.FindAll(a => a.IsDeleted == 0 &&
                                                       a.InternalReference.StartsWith("knowledge:"));
 #pragma warning restore RECS0063 // Warns when a culture-aware 'StartsWith' call is used by default.
 
@@ -151,10 +151,12 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
 
                     if (Uri.IsWellFormedUriString(target, UriKind.Absolute))
                     {
-                        linkFragments.Add(new LinkFragment(
-                            LinkFragment.FragmentTypeEnum.WebExternal,
-                            name,
-                            target));
+                        linkFragments.Add(new LinkFragment()
+                        {
+                            FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
+                            Name = name,
+                            Target = target
+                        });
                     }
                 }
             }
@@ -178,7 +180,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             ref int modifiedRecords
         )
         {
-            var knowledgeGroupRecords = service.FindAllAsync().Result;
+            var knowledgeGroupRecords = service.FindAll();
 
             var patch = new PatchDefinition<KnowledgeGroupRecord, KnowledgeGroupRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Id == source.Id)
@@ -205,7 +207,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             ref int modifiedRecords
         )
         {
-            var knowledgeEntryRecords = service.FindAllAsync().Result;
+            var knowledgeEntryRecords = service.FindAll();
 
             var patch = new PatchDefinition<KnowledgeEntryRecord, KnowledgeEntryRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Id == source.Id)

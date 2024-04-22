@@ -47,7 +47,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.OnExecute(() =>
             {
-                foreach (var map in _mapService.FindAllAsync().Result)
+                foreach (var map in _mapService.FindAll())
                     Console.WriteLine($"{map.Id} {map.Description}");
                 return 0;
             });

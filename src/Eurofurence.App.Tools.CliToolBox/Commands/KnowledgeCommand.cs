@@ -89,11 +89,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             {
                 var archive = ZipFile.Open(outputPathArgument.Value, ZipArchiveMode.Create);
 
-                var knowledgeGroups = _knowledgeGroupService.FindAllAsync().Result;
-                var knowledgeEntries = _knowledgeEntryService.FindAllAsync().Result;
+                var knowledgeGroups = _knowledgeGroupService.FindAll();
+                var knowledgeEntries = _knowledgeEntryService.FindAll();
 
                 var imageIds = knowledgeEntries.SelectMany(_ => _.ImageIds).ToList();
-                var images = _imageService.FindAllAsync(image => imageIds.Contains(image.Id)).Result;
+                var images = _imageService.FindAll(image => imageIds.Contains(image.Id));
 
                 archive.AddAsJson("knowledgeGroups", knowledgeGroups);
                 archive.AddAsJson("knowledgeEntries", knowledgeEntries);

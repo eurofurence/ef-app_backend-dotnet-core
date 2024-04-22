@@ -82,7 +82,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                 }
             }
 
-            var existingRecords = await _dealerService.FindAllAsync();
+            var existingRecords = _dealerService.FindAll();
 
             var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) =>
                 list.SingleOrDefault(a => a.RegistrationNumber == source.RegistrationNumber));
@@ -163,9 +163,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                     !assumedUri.StartsWith("https://", StringComparison.CurrentCultureIgnoreCase))
                     assumedUri = $"http://{part}";
 
-                if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute))
-                    linkFragments.Add(new LinkFragment(LinkFragment.FragmentTypeEnum.WebExternal, string.Empty,
-                        assumedUri));
+                if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute)) {}
+                    linkFragments.Add(new LinkFragment()
+                    {
+                        FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
+                        Name = string.Empty,
+                        Target = assumedUri
+                    });
             }
 
             dealerRecord.Links = linkFragments.ToArray();
