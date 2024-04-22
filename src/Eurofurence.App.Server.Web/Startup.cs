@@ -43,7 +43,7 @@ namespace Eurofurence.App.Server.Web
         private readonly IWebHostEnvironment _hostingEnvironment;
         private ILogger _logger;
 
-        public Startup(IWebHostEnvironment hostingEnvironment, IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
             Configuration = configuration;
@@ -51,7 +51,7 @@ namespace Eurofurence.App.Server.Web
 
         public IConfiguration Configuration { get; set; }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             BsonClassMapping.Register();
 
@@ -184,9 +184,14 @@ namespace Eurofurence.App.Server.Web
             });
 
             var builder = new ContainerBuilder();
-            builder.Populate(services);
+
+            builder.Build();
 
             builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule());
+        }
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
             builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
@@ -199,8 +204,6 @@ namespace Eurofurence.App.Server.Web
             builder.Register(c => Configuration.GetSection("jobs:updateNews"))
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
 
-            var container = builder.Build();
-
             var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
             var database = client.GetDatabase(Configuration["mongoDb:database"]);
 
@@ -210,7 +213,6 @@ namespace Eurofurence.App.Server.Web
 
             CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
 
-            return container.Resolve<IServiceProvider>();
         }
 
         public void Configure(
@@ -260,7 +262,9 @@ namespace Eurofurence.App.Server.Web
                         )
                 );
 
-            var cgc = app.ApplicationServices.GetService<CollectionGameConfiguration>();
+            var cgc = new CollectionGameConfiguration();
+            Configuration.GetSection(CollectionGameConfiguration.CollectionGame).Bind(cgc);
+            
             loggerConfiguration
                 .WriteTo
                 .Logger(lc =>
