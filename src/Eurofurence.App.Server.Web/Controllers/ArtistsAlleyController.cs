@@ -35,7 +35,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("TableRegistration/:my-latest")]
         public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
         {
-            var record = await _tableRegistrationService.GetLatestRegistrationByUid(_apiPrincipal.Uid);
+            var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(_apiPrincipal.Uid);
             return record.Transient404(HttpContext);
         }
     }

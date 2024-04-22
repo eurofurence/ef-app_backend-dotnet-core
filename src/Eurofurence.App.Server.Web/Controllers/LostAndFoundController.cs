@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
@@ -25,9 +26,9 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("Items")]
-        public  Task<IEnumerable<LostAndFoundRecord>> GetItemsAsync()
+        public  IQueryable<LostAndFoundRecord> GetItemsAsync()
         {
-            return _lostAndFoundService.FindAllAsync();
+            return _lostAndFoundService.FindAll();
         }
     }
 } 
