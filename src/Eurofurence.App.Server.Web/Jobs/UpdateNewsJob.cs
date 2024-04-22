@@ -100,7 +100,7 @@ namespace Eurofurence.App.Server.Web.Jobs
                 if (new[] { "new", "reschedule" }.Contains(item.Type))
                     item.Record.ValidUntilDateTimeUtc = item.Record.ValidFromDateTimeUtc.AddHours(48);
 
-            var existingRecords = await _announcementService.FindAllAsync();
+            var existingRecords = _announcementService.FindAll();
 
             var patch = new PatchDefinition<AnnouncementRecord, AnnouncementRecord>((source, list) =>
                 list.SingleOrDefault(a => a.ExternalReference == source.ExternalReference));
