@@ -91,7 +91,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory
-            )
+        )
         {
             _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -124,8 +124,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     Description = "Manage Users",
                     RequiredPermission = PermissionFlags.UserAdmin,
                     CommandHandler = CommandUserAdmin
-                }
-                ,
+                },
                 new CommandInfo()
                 {
                     Command = "/statistics",
@@ -156,28 +155,28 @@ namespace Eurofurence.App.Server.Services.Telegram
                 },
                 new CommandInfo()
                 {
-                    Command ="/fursuitBadgeById",
+                    Command = "/fursuitBadgeById",
                     Description = "Lookup fursuit badge (by id)",
                     RequiredPermission = PermissionFlags.CollectionGameAdmin,
                     CommandHandler = CommandFursuitBadge
                 },
                 new CommandInfo()
                 {
-                    Command ="/collectionGameRegisterFursuit",
+                    Command = "/collectionGameRegisterFursuit",
                     Description = "Register a fursuit for the game",
                     RequiredPermission = PermissionFlags.CollectionGameAdmin,
                     CommandHandler = CommandCollectionGameRegisterFursuit
                 },
                 new CommandInfo()
                 {
-                    Command ="/collectionGameUnban",
+                    Command = "/collectionGameUnban",
                     Description = "Unban someone from the game",
                     RequiredPermission = PermissionFlags.CollectionGameAdmin,
                     CommandHandler = CommandCollectionGameUnban
                 },
                 new CommandInfo()
                 {
-                    Command ="/tableRegistration",
+                    Command = "/tableRegistration",
                     Description = "Manage Table Registrations",
                     RequiredPermission = PermissionFlags.TableRegistrationAdmin,
                     CommandHandler = CommandTableRegistration
@@ -204,7 +203,9 @@ namespace Eurofurence.App.Server.Services.Telegram
                     }
 
                     var badge =
-                        await _appDbContext.FursuitBadges.FirstOrDefaultAsync(a => a.ExternalReference == badgeNo.ToString());
+                        await _appDbContext.FursuitBadges
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(a => a.ExternalReference == badgeNo.ToString());
 
                     if (badge == null)
                     {
@@ -215,7 +216,9 @@ namespace Eurofurence.App.Server.Services.Telegram
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
-                    var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
+                    var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
                     await BotClient.SendPhotoAsync(chatId: ChatId, photo: new InputFileStream(imageContent));
                 }, "Cancel=/cancel");
             await c1();
@@ -252,7 +255,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             var title = "Send Message";
             var requesterUid = $"Telegram:@{_user.Username}";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
+            c1 = () => AskAsync(
+                $"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
@@ -261,66 +265,69 @@ namespace Eurofurence.App.Server.Services.Telegram
                     var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
-                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await ReplyAsync(
+                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
                         await c1();
                         return;
                     }
 
-                    var records = await _appDbContext.PushNotificationChannels.Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
+                    var records = await _appDbContext.PushNotificationChannels
+                        .AsNoTracking()
+                        .Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
                         .ToListAsync();
 
                     if (records.Count == 0)
                     {
-                        await ReplyAsync($"*WARNING: RegNo {regNo} is not logged in on any known device - they will receive the message when they login.*");
+                        await ReplyAsync(
+                            $"*WARNING: RegNo {regNo} is not logged in on any known device - they will receive the message when they login.*");
                     }
 
-                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nPlease specify the subject of the message.", async subject =>
-                    {
-                        await ClearLastAskResponseOptions();
-                        c3 = () => AskAsync($"*{title} - Step 3 of 3*\nPlease specify the body of the message.", async body =>
+                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nPlease specify the subject of the message.",
+                        async subject =>
                         {
                             await ClearLastAskResponseOptions();
-                            var from = $"{_user.FirstName} {_user.LastName}";
-
-                            c4 = () => AskAsync(
-
-                                $"*{title} - Review*\n\nFrom: *{from.EscapeMarkdown()}*\nTo: *{regNo}*\nSubject: *{subject.EscapeMarkdown()}*\n\nMessage:\n*{body.EscapeMarkdown()}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
-                                async c4a =>
+                            c3 = () => AskAsync($"*{title} - Step 3 of 3*\nPlease specify the body of the message.",
+                                async body =>
                                 {
-                                    if (c4a != "*send")
-                                    {
-                                        await c3();
-                                        return;
-                                    }
+                                    await ClearLastAskResponseOptions();
+                                    var from = $"{_user.FirstName} {_user.LastName}";
 
-                                    var recipientUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}";
-                                    var messageId = await _privateMessageService.SendPrivateMessageAsync(new SendPrivateMessageRequest()
-                                    {
-                                        AuthorName = $"{from}",
-                                        RecipientUid = recipientUid,
-                                        Message = body,
-                                        Subject = subject,
-                                        ToastTitle = "You received a new personal message",
-                                        ToastMessage = "Open the Eurofurence App to read it."
-                                    });
+                                    c4 = () => AskAsync(
+                                        $"*{title} - Review*\n\nFrom: *{from.EscapeMarkdown()}*\nTo: *{regNo}*\nSubject: *{subject.EscapeMarkdown()}*\n\nMessage:\n*{body.EscapeMarkdown()}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
+                                        async c4a =>
+                                        {
+                                            if (c4a != "*send")
+                                            {
+                                                await c3();
+                                                return;
+                                            }
 
-                                    _logger.LogInformation(
-                                        LogEvents.Audit,
-                                        "{requesterUid} sent a PM {messsageId} to {recipientUid} via Telegram Bot",
-                                        requesterUid, messageId, recipientUid);
+                                            var recipientUid =
+                                                $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}";
+                                            var messageId = await _privateMessageService.SendPrivateMessageAsync(
+                                                new SendPrivateMessageRequest()
+                                                {
+                                                    AuthorName = $"{from}",
+                                                    RecipientUid = recipientUid,
+                                                    Message = body,
+                                                    Subject = subject,
+                                                    ToastTitle = "You received a new personal message",
+                                                    ToastMessage = "Open the Eurofurence App to read it."
+                                                });
 
-                                    await ReplyAsync("Message sent.");
-                                }, "Send=*send", "Cancel=/cancel");
-                            await c4();
+                                            _logger.LogInformation(
+                                                LogEvents.Audit,
+                                                "{requesterUid} sent a PM {messsageId} to {recipientUid} via Telegram Bot",
+                                                requesterUid, messageId, recipientUid);
 
+                                            await ReplyAsync("Message sent.");
+                                        }, "Send=*send", "Cancel=/cancel");
+                                    await c4();
+                                }, "Cancel=/cancel");
+                            await c3();
                         }, "Cancel=/cancel");
-                        await c3();
-
-                    },"Cancel=/cancel");
 
                     await c2();
-
-
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -330,7 +337,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null;
             var title = "Collecting Game Unban";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
+            c1 = () => AskAsync(
+                $"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async regNoAsString =>
                 {
                     await ClearLastAskResponseOptions();
@@ -339,13 +347,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                     var regNoWithLetter = regNoAsString.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
-                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await ReplyAsync(
+                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
                         await c1();
                         return;
                     }
 
                     var result = await _collectingGameService.UnbanPlayerAsync(
-                            $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}");
+                        $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}");
 
                     if (result.IsSuccessful)
                     {
@@ -355,8 +364,6 @@ namespace Eurofurence.App.Server.Services.Telegram
                     {
                         await ReplyAsync($"*{title}* - Error\n\n{result.ErrorMessage} ({result.ErrorCode})");
                     }
-
-
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -366,7 +373,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null;
             var title = "Locate User";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
+            c1 = () => AskAsync(
+                $"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
@@ -375,14 +383,17 @@ namespace Eurofurence.App.Server.Services.Telegram
                     var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
-                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await ReplyAsync(
+                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
                         await c1();
                         return;
                     }
 
                     var records =
-                        await _appDbContext.PushNotificationChannels.Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
-                        .ToListAsync();
+                        await _appDbContext.PushNotificationChannels
+                            .AsNoTracking()
+                            .Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
+                            .ToListAsync();
 
                     if (records.Count == 0)
                     {
@@ -399,13 +410,13 @@ namespace Eurofurence.App.Server.Services.Telegram
 
 
                     await ReplyAsync(response.ToString());
-                },"Cancel=/cancel");
+                }, "Cancel=/cancel");
             await c1();
         }
 
         public async Task CommandStatistics()
         {
-            var records = _appDbContext.PushNotificationChannels;
+            var records = _appDbContext.PushNotificationChannels.AsNoTracking();
 
             var devicesWithSessions =
                 records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase));
@@ -458,7 +469,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             return;
                                         }
 
-                                        var verbs = new[] {"add", "remove"}.ToList();
+                                        var verbs = new[] { "add", "remove" }.ToList();
                                         var verb = c3a;
                                         if (!verbs.Contains(verb))
                                         {
@@ -494,7 +505,8 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                                             if (typedFlag.HasFlag(PermissionFlags.UserAdmin))
                                             {
-                                                await ReplyAsync("Sorry - user administration flag may not be changed via the bot interface.");
+                                                await ReplyAsync(
+                                                    "Sorry - user administration flag may not be changed via the bot interface.");
                                                 await c4();
                                                 return;
                                             }
@@ -502,7 +514,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             var myPermissions = await GetPermissionsAsync();
                                             if (!HasPermission(myPermissions, typedFlag))
                                             {
-                                                await ReplyAsync("Sorry - you may only add/remove flags that you own yourself.");
+                                                await ReplyAsync(
+                                                    "Sorry - you may only add/remove flags that you own yourself.");
                                                 await c4();
                                                 return;
                                             }
@@ -512,12 +525,10 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                                             await _userManager.SetAclForUserAsync(username, acl);
                                             await c3();
-                                        },"Back=*back", "Cancel=/cancel");
+                                        }, "Back=*back", "Cancel=/cancel");
                                         await c4();
-
-                                    },"Add=add","Remove=remove","Back=*back","Cancel=/cancel");
+                                    }, "Add=add", "Remove=remove", "Back=*back", "Cancel=/cancel");
                                 await c3();
-
                             }, "Cancel=/cancel");
                             await c2();
                             break;
@@ -566,11 +577,13 @@ namespace Eurofurence.App.Server.Services.Telegram
             return AskAsync(question, responseCallBack, false, commandOptions);
         }
 
-        public async Task AskAsync(string question, Func<string, Task> responseCallBack, bool pivot, params string[] commandOptions)
+        public async Task AskAsync(string question, Func<string, Task> responseCallBack, bool pivot,
+            params string[] commandOptions)
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {question}");
 
-            var message = await BotClient.SendTextMessageAsync(chatId: ChatId, text: question, parseMode: ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions, pivot: pivot));
+            var message = await BotClient.SendTextMessageAsync(chatId: ChatId, text: question,
+                parseMode: ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions, pivot: pivot));
             _awaitingResponseCallback = responseCallBack;
             _lastAskMessage = message;
         }
@@ -581,7 +594,8 @@ namespace Eurofurence.App.Server.Services.Telegram
         {
             Debug.WriteLine($"Bot -> @{_user.Username}: {message}");
 
-            await BotClient.SendTextMessageAsync(chatId: ChatId, text: message, parseMode: ParseMode.Markdown, replyMarkup: MarkupFromCommands(commandOptions));
+            await BotClient.SendTextMessageAsync(chatId: ChatId, text: message, parseMode: ParseMode.Markdown,
+                replyMarkup: MarkupFromCommands(commandOptions));
         }
 
         private async Task CommandTableRegistration()
@@ -595,9 +609,12 @@ namespace Eurofurence.App.Server.Services.Telegram
                 {
                     if (c1a == "*list")
                     {
-                        var records = _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
+                        var records = _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley
+                            .TableRegistrationRecord.RegistrationStateEnum.Pending);
                         var ownerUids = records.Select(a => a.OwnerUid);
-                        var ownerIdentities = _appDbContext.RegSysIdentities.Where(a => ownerUids.Contains(a.Uid));
+                        var ownerIdentities = _appDbContext.RegSysIdentities
+                            .AsNoTracking()
+                            .Where(a => ownerUids.Contains(a.Uid));
 
                         var list = records.Select(record =>
                             $"{record.OwnerUid} {ownerIdentities.Single(a => a.Uid == record.OwnerUid).Username.RemoveMarkdown()}=*edit-{record.Id}"
@@ -612,9 +629,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                         c2 = () => AskAsync("Which one would you like to process?",
                             async c2a =>
                             {
-                                var id = Guid.Parse(c2a.Split(new [] { '-' }, 2)[1]);
+                                var id = Guid.Parse(c2a.Split(new[] { '-' }, 2)[1]);
 
-                                var nextRecord = records.SingleOrDefault(a => a.Id == id && a.State == Domain.Model.ArtistsAlley.TableRegistrationRecord.RegistrationStateEnum.Pending);
+                                var nextRecord = records.SingleOrDefault(a =>
+                                    a.Id == id && a.State == Domain.Model.ArtistsAlley.TableRegistrationRecord
+                                        .RegistrationStateEnum.Pending);
 
                                 if (nextRecord == null)
                                 {
@@ -622,19 +641,27 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 }
                                 else
                                 {
-                                    var ownerIdentity = await _appDbContext.RegSysIdentities.FirstOrDefaultAsync(a => a.Uid == nextRecord.OwnerUid);
+                                    var ownerIdentity =
+                                        await _appDbContext.RegSysIdentities
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync(a =>
+                                            a.Uid == nextRecord.OwnerUid);
 
                                     var message = new StringBuilder();
 
                                     message.AppendLine("You are reviewing:");
-                                    message.AppendLine($"*Id:*`{nextRecord.Id}` (from: { nextRecord.OwnerUid} { ownerIdentity.Username.RemoveMarkdown()})\n");
+                                    message.AppendLine(
+                                        $"*Id:*`{nextRecord.Id}` (from: {nextRecord.OwnerUid} {ownerIdentity.Username.RemoveMarkdown()})\n");
 
                                     message.AppendLine($"Location: `{nextRecord.Location.RemoveMarkdown()}`");
                                     message.AppendLine($"Display Name: *{nextRecord.DisplayName.RemoveMarkdown()}*");
                                     message.AppendLine($"Website URL: *{nextRecord.WebsiteUrl.RemoveMarkdown()}*");
-                                    message.AppendLine($"Telegram Handle: *{nextRecord.TelegramHandle.RemoveMarkdown()}*");
-                                    message.AppendLine($"Short Description: _{nextRecord.ShortDescription.RemoveMarkdown()}_\n");
-                                    message.AppendLine($"Image: {(nextRecord.Image != null ? "Available (see below)" : "Not provided")}");
+                                    message.AppendLine(
+                                        $"Telegram Handle: *{nextRecord.TelegramHandle.RemoveMarkdown()}*");
+                                    message.AppendLine(
+                                        $"Short Description: _{nextRecord.ShortDescription.RemoveMarkdown()}_\n");
+                                    message.AppendLine(
+                                        $"Image: {(nextRecord.Image != null ? "Available (see below)" : "Not provided")}");
 
                                     await ReplyAsync(message.ToString());
                                     if (nextRecord.Image != null)
@@ -643,21 +670,26 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
                                     }
 
-                                    c3 = () => AskAsync($"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel.",
+                                    c3 = () => AskAsync(
+                                        $"Do you wish to approve `{nextRecord.Id}`? Doing so will trigger an post both to the Telegram announcement channel.",
                                         async c3a =>
                                         {
                                             await ReplyAsync("This will take just a moment... please wait...");
 
-                                            if (c3a == "*approve") await _tableRegistrationService.ApproveByIdAsync(nextRecord.Id, requesterUid);
-                                            if (c3a == "*reject") await _tableRegistrationService.RejectByIdAsync(nextRecord.Id, requesterUid);
+                                            if (c3a == "*approve")
+                                                await _tableRegistrationService.ApproveByIdAsync(nextRecord.Id,
+                                                    requesterUid);
+                                            if (c3a == "*reject")
+                                                await _tableRegistrationService.RejectByIdAsync(nextRecord.Id,
+                                                    requesterUid);
 
-                                            await ReplyAsync("Done. Send /tableRegistration again if you wish to review/view further items.");
-
+                                            await ReplyAsync(
+                                                "Done. Send /tableRegistration again if you wish to review/view further items.");
                                         }, "Approve=*approve", "Reject=*reject", "Cancel=/cancel");
 
                                     await c3();
                                 }
-                            }, 
+                            },
                             pivot: true,
                             list.ToArray());
 
@@ -672,7 +704,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             Func<Task> c1 = null;
             var title = "PIN Info";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
+            c1 = () => AskAsync(
+                $"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
@@ -681,13 +714,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                     var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
-                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await ReplyAsync(
+                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
                         await c1();
                         return;
                     }
 
                     var record = await _regSysAlternativePinAuthenticationProvider.GetAlternativePinAsync(regNo);
-                    
+
                     if (record == null)
                     {
                         await ReplyAsync($"Sorry, there is no pin record for RegNo {regNo}.");
@@ -711,10 +745,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                     response.AppendLine("```");
 
                     await ReplyAsync(response.ToString());
-                },"Cancel=/cancel");
+                }, "Cancel=/cancel");
             await c1();
-
-
         }
 
         private async Task CommandCollectionGameRegisterFursuit()
@@ -723,77 +755,88 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             var title = "Collection Game Fursuit Registration";
 
-            askForRegNo = () => AskAsync($"*{title} - Step 1 of 3*\nPlease enter the `attendee registration number` on the con badge.",
-                async regNoAsString =>
-                {
-                    await ClearLastAskResponseOptions();
-
-                    int regNo;
-                    if (!Int32.TryParse(regNoAsString, out regNo))
+            askForRegNo = () =>
+                AskAsync($"*{title} - Step 1 of 3*\nPlease enter the `attendee registration number` on the con badge.",
+                    async regNoAsString =>
                     {
-                        await ReplyAsync($"*{regNoAsString}* is not a valid number.");
-                        await askForRegNo();
-                        return;
-                    }
+                        await ClearLastAskResponseOptions();
 
-                    askForFursuitBadgeNo = () => AskAsync($"*{title} - Step 2 of 3*\nPlease enter the `fursuit badge number`.",
-                        async fursuitBadgeNoAsString =>
+                        int regNo;
+                        if (!Int32.TryParse(regNoAsString, out regNo))
                         {
-                            await ClearLastAskResponseOptions();
+                            await ReplyAsync($"*{regNoAsString}* is not a valid number.");
+                            await askForRegNo();
+                            return;
+                        }
 
-                            int fursuitBadgeNo;
-                            if (!Int32.TryParse(fursuitBadgeNoAsString, out fursuitBadgeNo))
-                            {
-                                await ReplyAsync($"*{fursuitBadgeNo}* is not a valid number.");
-                                await askForFursuitBadgeNo();
-                                return;
-                            }
-
-                            var badge = await _appDbContext.FursuitBadges.FirstOrDefaultAsync(
-                                a => a.ExternalReference == fursuitBadgeNo.ToString());
-
-                            if (badge == null)
-                            {
-                                await ReplyAsync($"*Error:* No fursuit badge with no *{fursuitBadgeNo}* found. Aborting.");
-                                return;
-                            }
-
-                            if (badge.OwnerUid != $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}")
-                            {
-                                await ReplyAsync($"*Error*: Fursuit badge with no *{fursuitBadgeNo}* exists, but does *not* belong to reg no *{regNo}*. Aborting.");
-                                return;
-                            }
-
-                            await ReplyAsync(
-                                $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
-
-                            var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
-                            await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
-
-                            askTokenValue = () => AskAsync(
-                                $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",
-                                async tokenValue =>
+                        askForFursuitBadgeNo = () =>
+                            AskAsync($"*{title} - Step 2 of 3*\nPlease enter the `fursuit badge number`.",
+                                async fursuitBadgeNoAsString =>
                                 {
-                                    tokenValue = tokenValue.ToUpper();
-                                    var registrationResult = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(
-                                        badge.OwnerUid, badge.Id, tokenValue);
+                                    await ClearLastAskResponseOptions();
 
-                                    if (registrationResult.IsSuccessful)
+                                    int fursuitBadgeNo;
+                                    if (!Int32.TryParse(fursuitBadgeNoAsString, out fursuitBadgeNo))
+                                    {
+                                        await ReplyAsync($"*{fursuitBadgeNo}* is not a valid number.");
+                                        await askForFursuitBadgeNo();
+                                        return;
+                                    }
+
+                                    var badge = await _appDbContext.FursuitBadges
+                                        .AsNoTracking()
+                                        .FirstOrDefaultAsync(
+                                        a => a.ExternalReference == fursuitBadgeNo.ToString());
+
+                                    if (badge == null)
                                     {
                                         await ReplyAsync(
-                                            $"*{title} Result*\n`Success!` - Token *{tokenValue}* successfully linked to *({badge.ExternalReference}) {badge.Name}*!\n\nNext one? /collectionGameRegisterFursuit");
+                                            $"*Error:* No fursuit badge with no *{fursuitBadgeNo}* found. Aborting.");
+                                        return;
                                     }
-                                    else
+
+                                    if (badge.OwnerUid != $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}")
                                     {
                                         await ReplyAsync(
-                                            $"*Error*: `{registrationResult.ErrorMessage}`");
-                                        await askTokenValue();
+                                            $"*Error*: Fursuit badge with no *{fursuitBadgeNo}* exists, but does *not* belong to reg no *{regNo}*. Aborting.");
+                                        return;
                                     }
+
+                                    await ReplyAsync(
+                                        $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
+
+                                    var imageContent = new MemoryStream(
+                                        (await _appDbContext.FursuitBadgeImages
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync(entity =>
+                                            entity.Id == badge.Id)).ImageBytes);
+                                    await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
+
+                                    askTokenValue = () => AskAsync(
+                                        $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",
+                                        async tokenValue =>
+                                        {
+                                            tokenValue = tokenValue.ToUpper();
+                                            var registrationResult = await _collectingGameService
+                                                .RegisterTokenForFursuitBadgeForOwnerAsync(
+                                                    badge.OwnerUid, badge.Id, tokenValue);
+
+                                            if (registrationResult.IsSuccessful)
+                                            {
+                                                await ReplyAsync(
+                                                    $"*{title} Result*\n`Success!` - Token *{tokenValue}* successfully linked to *({badge.ExternalReference}) {badge.Name}*!\n\nNext one? /collectionGameRegisterFursuit");
+                                            }
+                                            else
+                                            {
+                                                await ReplyAsync(
+                                                    $"*Error*: `{registrationResult.ErrorMessage}`");
+                                                await askTokenValue();
+                                            }
+                                        }, "Cancel=/cancel");
+                                    await askTokenValue();
                                 }, "Cancel=/cancel");
-                            await askTokenValue();
-                        }, "Cancel=/cancel");
-                    await askForFursuitBadgeNo();
-                }, "Cancel=/cancel");
+                        await askForFursuitBadgeNo();
+                    }, "Cancel=/cancel");
             await askForRegNo();
         }
 
@@ -804,7 +847,8 @@ namespace Eurofurence.App.Server.Services.Telegram
             var title = "PIN Creation";
             var requesterUid = $"Telegram:@{_user.Username}";
 
-            c1 = () => AskAsync($"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?", 
+            c1 = () => AskAsync(
+                $"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
                 async c1a =>
                 {
                     await ClearLastAskResponseOptions();
@@ -813,12 +857,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                     var regNoWithLetter = c1a.Trim().ToUpper();
                     if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
                     {
-                        await ReplyAsync($"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
+                        await ReplyAsync(
+                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
                         await c1();
                         return;
                     }
 
-                    c2 = () => AskAsync($"*{title} - Step 2 of 3*\nOn badge no {regNo}, what is the _nickname_ printed on the badge (not the real name)?",
+                    c2 = () => AskAsync(
+                        $"*{title} - Step 2 of 3*\nOn badge no {regNo}, what is the _nickname_ printed on the badge (not the real name)?",
                         async c2a =>
                         {
                             await ClearLastAskResponseOptions();
@@ -842,12 +888,13 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         return;
                                     }
 
-                                    var result = await _regSysAlternativePinAuthenticationProvider.RequestAlternativePinAsync(
-                                        new RegSysAlternativePinRequest()
-                                        {
-                                            NameOnBadge = nameOnBadge,
-                                            RegNoOnBadge = regNoWithLetter,
-                                        }, requesterUid: requesterUid);
+                                    var result = await _regSysAlternativePinAuthenticationProvider
+                                        .RequestAlternativePinAsync(
+                                            new RegSysAlternativePinRequest()
+                                            {
+                                                NameOnBadge = nameOnBadge,
+                                                RegNoOnBadge = regNoWithLetter,
+                                            }, requesterUid: requesterUid);
 
                                     var response = new StringBuilder();
 
@@ -856,13 +903,17 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     response.AppendLine($"Name on Badge: *{result.NameOnBadge.EscapeMarkdown()}*");
                                     response.AppendLine($"PIN: *{result.Pin}*");
                                     response.AppendLine();
-                                    response.AppendLine($"User can login to the Eurofurence Apps (mobile devices and web) with their registration number (*{result.RegNo}*) and PIN (*{result.Pin}*) as their password. They can type in any username, it does not matter.");
-                                    response.AppendLine($"\n_Generation/Access of this PIN by {requesterUid.EscapeMarkdown()} has been recorded._");
+                                    response.AppendLine(
+                                        $"User can login to the Eurofurence Apps (mobile devices and web) with their registration number (*{result.RegNo}*) and PIN (*{result.Pin}*) as their password. They can type in any username, it does not matter.");
+                                    response.AppendLine(
+                                        $"\n_Generation/Access of this PIN by {requesterUid.EscapeMarkdown()} has been recorded._");
 
-                                    _logger.LogInformation(LogEvents.Audit, "{requesterUid} created PIN for {regNo} {nameOnBadge}", requesterUid, result.RegNo, result.NameOnBadge);
+                                    _logger.LogInformation(LogEvents.Audit,
+                                        "{requesterUid} created PIN for {regNo} {nameOnBadge}", requesterUid,
+                                        result.RegNo, result.NameOnBadge);
 
                                     await ReplyAsync(response.ToString());
-                                }, "Confirm=*confirm","Restart=*restart","Cancel=/cancel");
+                                }, "Confirm=*confirm", "Restart=*restart", "Cancel=/cancel");
                             await c3();
                         }, "Cancel=/cancel");
                     await c2();
@@ -913,11 +964,13 @@ namespace Eurofurence.App.Server.Services.Telegram
                         response.AppendLine($"{cmd.Command} - {cmd.Description}");
                     }
                 }
+
                 await ReplyAsync(response.ToString());
                 return;
             }
 
-            var matchingCommand = _commands.SingleOrDefault(a => a.Command.Equals(message, StringComparison.CurrentCultureIgnoreCase));
+            var matchingCommand =
+                _commands.SingleOrDefault(a => a.Command.Equals(message, StringComparison.CurrentCultureIgnoreCase));
             if (matchingCommand != null && HasPermission(userPermissions, matchingCommand.RequiredPermission))
             {
                 await matchingCommand.CommandHandler();
@@ -931,6 +984,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     await BotClient.SendTextMessageAsync(rawMessage.Chat.Id,
                         $"ChatId={rawMessage.Chat.Id} ({rawMessage.Chat.Title})");
                 }
+
                 if (message.StartsWith("/leave@", StringComparison.CurrentCultureIgnoreCase))
                 {
                     await BotClient.LeaveChatAsync(rawMessage.Chat.Id);

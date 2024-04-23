@@ -38,12 +38,12 @@ namespace Eurofurence.App.Server.Services
 
         public virtual IQueryable<T> FindAll()
         {
-            return _appDbContext.Set<T>();
+            return _appDbContext.Set<T>().AsNoTracking();
         }
 
         public IQueryable<T> FindAll(Expression<Func<T, bool>> filter)
         {
-            return _appDbContext.Set<T>().Where(filter);
+            return _appDbContext.Set<T>().Where(filter).AsNoTracking();
         }
 
         public virtual async Task ReplaceOneAsync(T entity)

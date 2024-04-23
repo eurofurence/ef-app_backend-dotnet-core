@@ -1,6 +1,5 @@
 using Autofac;
 using Eurofurence.App.Common.Results;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Security;
@@ -11,6 +10,8 @@ using Moq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Eurofurence.App.Server.Services.Tests
@@ -18,11 +19,7 @@ namespace Eurofurence.App.Server.Services.Tests
     public class CollectionGameServiceTests
     {
         protected IContainer _container;
-        private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
-        private readonly IEntityRepository<FursuitParticipationRecord> _fursuitParticipationRepository;
-        private readonly IEntityRepository<PlayerParticipationRecord> _playerParticipationRepository;
-        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
-        private readonly IEntityRepository<TokenRecord> _tokenRepository;
+        private readonly AppDbContext _appDbContext;
         private readonly ICollectingGameService _collectingGameService;
         private const string INVALID_TOKEN = "INVALID-TOKEN";
 
@@ -42,11 +39,7 @@ namespace Eurofurence.App.Server.Services.Tests
             _container = builder.Build();
 
             _collectingGameService = _container.Resolve<ICollectingGameService>();
-            _fursuitParticipationRepository = _container.Resolve<IEntityRepository<FursuitParticipationRecord>>();
-            _playerParticipationRepository = _container.Resolve<IEntityRepository<PlayerParticipationRecord>>();
-            _regSysIdentityRepository = _container.Resolve<IEntityRepository<RegSysIdentityRecord>>();
-            _fursuitBadgeRepository = _container.Resolve<IEntityRepository<FursuitBadgeRecord>>();
-            _tokenRepository = _container.Resolve<IEntityRepository<TokenRecord>>();
+            _appDbContext = _container.Resolve<AppDbContext>();
         }
 
         private async Task<RegSysIdentityRecord> CreateRegSysIdentityAsync()
@@ -60,7 +53,8 @@ namespace Eurofurence.App.Server.Services.Tests
                 Roles = new[] { "Attendee" },
             };
 
-            await _regSysIdentityRepository.InsertOneAsync(record);
+            _appDbContext.RegSysIdentities.Add(record);
+            await _appDbContext.SaveChangesAsync();
             return record;
         }
 
@@ -73,7 +67,8 @@ namespace Eurofurence.App.Server.Services.Tests
                 Name = $"Suit of attendee {ownerUid}"
             };
 
-            await _fursuitBadgeRepository.InsertOneAsync(record);
+            _appDbContext.FursuitBadges.Add(record);
+            await _appDbContext.SaveChangesAsync();
             return record;
         }
 
@@ -86,7 +81,8 @@ namespace Eurofurence.App.Server.Services.Tests
                 Value = id.ToString()
             };
 
-            await _tokenRepository.InsertOneAsync(record);
+            _appDbContext.Tokens.Add(record);
+            await _appDbContext.SaveChangesAsync();
             return record;
         }
 
@@ -100,8 +96,8 @@ namespace Eurofurence.App.Server.Services.Tests
             var testUserFursuitBadge = await CreateFursuitBadgeAsync(ownerUid: testUser.Uid);
             
             var result = await cgs.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, testUserFursuitBadge.Id, testToken.Value);
-            var testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
-            testToken = await _tokenRepository.FindOneAsync(testToken.Id);
+            var testUserFursuitParticipation = await _appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.Uid);
+            testToken = await _appDbContext.Tokens.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == testToken.Id);
 
             Assert.True(result.IsSuccessful);
             Assert.NotNull(testUserFursuitParticipation);
@@ -122,7 +118,7 @@ namespace Eurofurence.App.Server.Services.Tests
             Assert.NotNull(testUserFursuitBadge);
 
             var result = await cgs.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, testUserFursuitBadge.Id, testToken);
-            var testUserFursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == testUser.Uid);
+            var testUserFursuitParticipation = await _appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.Uid);
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_TOKEN", result.ErrorCode);
@@ -185,14 +181,18 @@ namespace Eurofurence.App.Server.Services.Tests
                 setup.player1Token.Value
             );
 
-            var player1FursuitParticipation = await _fursuitParticipationRepository.FindOneAsync(a => a.OwnerUid == setup.player1WithFursuit.Uid);
-            var player2PlayerParticipation = await _playerParticipationRepository.FindOneAsync(a => a.PlayerUid == setup.player2WithoutFursuit.Uid);
+            var player1FursuitParticipation = await _appDbContext.FursuitParticipations
+                .AsNoTracking()
+                .Include(fursuitParticipationRecord => fursuitParticipationRecord.CollectionEntries).FirstOrDefaultAsync(a => a.OwnerUid == setup.player1WithFursuit.Uid);
+            var player2PlayerParticipation = await _appDbContext.PlayerParticipations
+                .AsNoTracking()
+                .Include(playerParticipationRecord => playerParticipationRecord.CollectionEntries).FirstOrDefaultAsync(a => a.PlayerUid == setup.player2WithoutFursuit.Uid);
 
             Assert.True(result.IsSuccessful);
             Assert.Equal(1, player1FursuitParticipation.CollectionCount);
             Assert.Equal(1, player2PlayerParticipation.CollectionCount);
-            Assert.Contains(player1FursuitParticipation.CollectionEntries, a => a.PlayerParticipationUid == setup.player2WithoutFursuit.Uid);
-            Assert.Contains(player2PlayerParticipation.CollectionEntries, a => a.FursuitParticipationUid == player1FursuitParticipation.Id);
+            Assert.Contains(player1FursuitParticipation.CollectionEntries, a => a.PlayerParticipationId == setup.player2WithoutFursuit.Uid);
+            Assert.Contains(player2PlayerParticipation.CollectionEntries, a => a.FursuitParticipationId == player1FursuitParticipation.Id);
         }
 
         [Fact(DisplayName = "Collect Token: Collecting valid token twice fails")]

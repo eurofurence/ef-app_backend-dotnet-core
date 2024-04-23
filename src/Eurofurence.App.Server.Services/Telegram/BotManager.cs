@@ -86,7 +86,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory,
             ITelegramMessageBroker telegramMessageBroker
-            )
+        )
         {
             _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -112,7 +112,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                     ? new TelegramBotClient(telegramConfiguration.AccessToken)
                     : new TelegramBotClient(telegramConfiguration.AccessToken,
                         new HttpClient(
-                            new HttpClientHandler {
+                            new HttpClientHandler
+                            {
                                 Proxy = new MiniProxy(telegramConfiguration.Proxy),
                                 UseProxy = true
                             }));
@@ -129,10 +130,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                     _collectingGameService,
                     _conventionSettings,
                     loggerFactory
-                    )
-                );
+                )
+            );
 
-            _telegramMessageBroker.OnSendMarkdownMessageToChatAsync += _telegramMessageBroker_OnSendMarkdownMessageToChatAsync;
+            _telegramMessageBroker.OnSendMarkdownMessageToChatAsync +=
+                _telegramMessageBroker_OnSendMarkdownMessageToChatAsync;
             _telegramMessageBroker.OnSendImageToChatAsync += _telegramMessageBroker_OnSendImageToChatAsync;
 
             Start();
@@ -151,18 +153,21 @@ namespace Eurofurence.App.Server.Services.Telegram
             if (events.Count == 0) return Array.Empty<InlineQueryResult>();
 
             return events.Select(e =>
-            {
-                e.ConferenceRoom = _eventConferenceRoomService.FindAll().FirstOrDefault(ecr => ecr.Id == e.ConferenceRoomId);
+                {
+                    e.ConferenceRoom = _eventConferenceRoomService.FindAll()
+                        .FirstOrDefault(ecr => ecr.Id == e.ConferenceRoomId);
 
-                return new InlineQueryResultArticle(
-                    e.Id.ToString(),
-                    $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime.ToString("hh\\:mm")}-{e.EndTime.ToString("hh\\:mm")}: {e.Title} " + (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
-                    new InputTextMessageContent($"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
-                    {
-                        ParseMode = ParseMode.Markdown
-                    });
-            })
-            .ToArray();
+                    return new InlineQueryResultArticle(
+                        e.Id.ToString(),
+                        $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime.ToString("hh\\:mm")}-{e.EndTime.ToString("hh\\:mm")}: {e.Title} " +
+                        (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
+                        new InputTextMessageContent(
+                            $"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
+                        {
+                            ParseMode = ParseMode.Markdown
+                        });
+                })
+                .ToArray();
         }
 
         private async Task<InlineQueryResult[]> QueryDealersAsync(string query)
@@ -170,23 +175,25 @@ namespace Eurofurence.App.Server.Services.Telegram
             if (query.Length < 3) return Array.Empty<InlineQueryResult>();
 
             var dealers =
-                 await _dealerService.FindAll(a => a.IsDeleted == 0 && (
-                    a.DisplayName.ToLower().Contains(query.ToLower()) || a.AttendeeNickname.ToLower().Contains(query.ToLower())
-                ))
-                .OrderBy(a => a.DisplayNameOrAttendeeNickname)
-                .Take(10)
-                .ToListAsync();
+                await _dealerService.FindAll(a => a.IsDeleted == 0 && (
+                        a.DisplayName.ToLower().Contains(query.ToLower()) ||
+                        a.AttendeeNickname.ToLower().Contains(query.ToLower())
+                    ))
+                    .OrderBy(a => a.DisplayNameOrAttendeeNickname)
+                    .Take(10)
+                    .ToListAsync();
 
             if (dealers.Count == 0) return Array.Empty<InlineQueryResult>();
 
             return dealers.Select(e => new InlineQueryResultArticle(
                     e.Id.ToString(),
                     $"DEALER: {e.DisplayNameOrAttendeeNickname}",
-                    new InputTextMessageContent($"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
+                    new InputTextMessageContent(
+                        $"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
                     {
                         ParseMode = ParseMode.Markdown
                     }))
-            .ToArray();
+                .ToArray();
         }
 
         private async Task<InlineQueryResult[]> QueryFursuitBadges(string query)
@@ -194,8 +201,10 @@ namespace Eurofurence.App.Server.Services.Telegram
             if (query.Length < 3) return Array.Empty<InlineQueryResult>();
 
             var badges = await
-                (_appDbContext.FursuitBadges.Where(
-                    a => a.IsDeleted == 0 && a.IsPublic && a.Name.ToLower().Contains(query.ToLower())))
+                (_appDbContext.FursuitBadges
+                    .AsNoTracking()
+                    .Where(
+                        a => a.IsDeleted == 0 && a.IsPublic && a.Name.ToLower().Contains(query.ToLower())))
                 .Take(5)
                 .ToListAsync();
 
@@ -208,7 +217,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                         $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image")
                     {
                         Title = e.Name,
-                        Caption = $"{e.Name}\n{e.Species} ({e.Gender})\n\nWorn by:{e.WornBy}\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
+                        Caption =
+                            $"{e.Name}\n{e.Species} ({e.Gender})\n\nWorn by:{e.WornBy}\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
                     };
                 })
                 .ToArray();
@@ -254,7 +264,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                 await _botClient.AnswerInlineQueryAsync(
                     inlineQuery.Id,
                     results,
-                    cacheTime: 0, 
+                    cacheTime: 0,
                     cancellationToken: cancellationToken);
             }
             catch (Exception ex)
@@ -333,10 +343,11 @@ namespace Eurofurence.App.Server.Services.Telegram
             await _botClient.SendTextMessageAsync(chatId: chatId, text: message, parseMode: ParseMode.Markdown);
         }
 
-        private async Task _telegramMessageBroker_OnSendImageToChatAsync(string chatId, byte[] imageBytes, string message)
+        private async Task _telegramMessageBroker_OnSendImageToChatAsync(string chatId, byte[] imageBytes,
+            string message)
         {
             await _botClient.SendPhotoAsync(
-                chatId: chatId, 
+                chatId: chatId,
                 photo: new InputFileStream(new MemoryStream(imageBytes)),
                 caption: message,
                 parseMode: ParseMode.Markdown);

@@ -49,7 +49,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private IQueryable<PushNotificationChannelRecord> GetRecipientChannel(string recipientUid)
         {
-            return _appDbContext.PushNotificationChannels.Where(
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(
                 a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Firebase && a.Uid == recipientUid);
         }
 

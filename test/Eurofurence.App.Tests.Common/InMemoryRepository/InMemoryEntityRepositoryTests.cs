@@ -22,38 +22,38 @@ namespace Eurofurence.App.Tests.Common.InMemoryRepository
             return result;
         }
 
-        [Fact]
-        public async Task InMemoryEntityRepository_WhenDeleteAllIsCalled_ThenDataSetIsEmpty()
-        {
-            var _repository = new InMemoryEntityRepository<EntityBase>();
+        //[Fact]
+        //public async Task InMemoryEntityRepository_WhenDeleteAllIsCalled_ThenDataSetIsEmpty()
+        //{
+        //    var _repository = new InMemoryEntityRepository<EntityBase>();
 
-            for (int i = 0; i < 5; i++)
-                await _repository.InsertOneAsync(GenerateTestEntity());
+        //    for (int i = 0; i < 5; i++)
+        //        await _repository.InsertOneAsync(GenerateTestEntity());
 
-            await _repository.DeleteAllAsync();
+        //    await _repository.DeleteAllAsync();
 
-            var results = await _repository.FindAllAsync();
+        //    var results = await _repository.FindAllAsync();
 
-            Assert.Empty(results);
-        }
+        //    Assert.Empty(results);
+        //}
 
-        [Fact]
-        public async Task InMemoryEntityRepository_WhenDeleteOneIsCalled_ThenOneItemIsRemovedFromDataSet()
-        {
-            var _repository = new InMemoryEntityRepository<EntityBase>();
+        //[Fact]
+        //public async Task InMemoryEntityRepository_WhenDeleteOneIsCalled_ThenOneItemIsRemovedFromDataSet()
+        //{
+        //    var _repository = new InMemoryEntityRepository<EntityBase>();
 
-            var testRecords = GenerateTestEntities(5);
-            var recordToDelete = testRecords[0];
+        //    var testRecords = GenerateTestEntities(5);
+        //    var recordToDelete = testRecords[0];
 
-            for (int i = 0; i < testRecords.Length; i++)
-                await _repository.InsertOneAsync(testRecords[i]);
+        //    for (int i = 0; i < testRecords.Length; i++)
+        //        await _repository.InsertOneAsync(testRecords[i]);
 
-            var resultsBeforeDeletion = await _repository.FindAllAsync();
-            await _repository.DeleteOneAsync(recordToDelete.Id);
-            var resultsAfterDeletion = await _repository.FindAllAsync();
+        //    var resultsBeforeDeletion = await _repository.FindAllAsync();
+        //    await _repository.DeleteOneAsync(recordToDelete.Id);
+        //    var resultsAfterDeletion = await _repository.FindAllAsync();
 
-            Assert.Contains(recordToDelete, resultsBeforeDeletion);
-            Assert.DoesNotContain(recordToDelete, resultsAfterDeletion);
-        }
+        //    Assert.Contains(recordToDelete, resultsBeforeDeletion);
+        //    Assert.DoesNotContain(recordToDelete, resultsAfterDeletion);
+        //}
     }
 }

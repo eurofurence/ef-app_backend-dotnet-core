@@ -7,6 +7,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Communication
 {
@@ -30,7 +31,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
         public async Task<IQueryable<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(string recipientUid)
         {
-            var messages = _appDbContext.PrivateMessages.Where(msg => msg.RecipientUid == recipientUid && msg.IsDeleted == 0);
+            var messages = _appDbContext.PrivateMessages.AsNoTracking().Where(msg => msg.RecipientUid == recipientUid && msg.IsDeleted == 0);
 
             foreach (var message in messages.Where(a => !a.ReceivedDateTimeUtc.HasValue))
             {

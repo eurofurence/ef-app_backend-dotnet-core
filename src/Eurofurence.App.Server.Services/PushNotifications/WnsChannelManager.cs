@@ -128,17 +128,23 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private IQueryable<PushNotificationChannelRecord> GetAllRecipients()
         {
-            return _appDbContext.PushNotificationChannels.Where(a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
         private IQueryable<PushNotificationChannelRecord> GetAllRecipientsAsyncByTopic(string topic)
         {
-            return _appDbContext.PushNotificationChannels.Where(a => a.Topics.Contains(topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(a => a.Topics.Contains(topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
         private IQueryable<PushNotificationChannelRecord> GetAllRecipientsAsyncByUid(string uid)
         {
-            return _appDbContext.PushNotificationChannels.Where(a => a.Uid == uid && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(a => a.Uid == uid && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
 

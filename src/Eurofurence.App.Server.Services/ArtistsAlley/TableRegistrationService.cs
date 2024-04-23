@@ -37,13 +37,13 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
         {
-            var records = _appDbContext.TableRegistrations.Where(a => !state.HasValue || a.State == state.Value);
+            var records = _appDbContext.TableRegistrations.Where(a => !state.HasValue || a.State == state.Value).AsNoTracking();
             return records;
         }
 
         public async Task RegisterTableAsync(string uid, TableRegistrationRequest request)
         {
-            var identity = await _appDbContext.RegSysIdentities.FirstOrDefaultAsync(a => a.Uid == uid);
+            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == uid);
 
             var imageBytes = Convert.FromBase64String(request.ImageContent);
             var imageFragment = _imageService.GenerateFragmentFromBytes(imageBytes);
@@ -77,7 +77,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                                                                            && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var identity = await _appDbContext.RegSysIdentities.FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
+            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
 
             record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             record.Touch();
@@ -143,7 +143,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                 && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var identity = await _appDbContext.RegSysIdentities.FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
+            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
 
             record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
             record.Touch();
@@ -171,6 +171,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public async Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid)
         {
             var request = await _appDbContext.TableRegistrations
+                .AsNoTracking()
                 .Where(a => a.OwnerUid == uid)
                 .OrderByDescending(a => a.CreatedDateTimeUtc)
                 .FirstOrDefaultAsync();

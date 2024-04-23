@@ -20,7 +20,9 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task<TEnum> GetAclForUserAsync<TEnum>(string username) where TEnum : struct
         {
-            var record = await _appDbContext.Users.FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
+            var record = await _appDbContext.Users
+                .AsNoTracking().
+                FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
 
             TEnum acl = default(TEnum);
             Enum.TryParse(record?.Acl, out acl);

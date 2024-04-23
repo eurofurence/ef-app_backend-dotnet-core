@@ -150,14 +150,19 @@ namespace Eurofurence.App.Server.Services.Fursuits
         public IQueryable<FursuitBadgeRecord> GetFursuitBadges(FursuitBadgeFilter filter = null)
         {
             return filter == null ?
-                _appDbContext.FursuitBadges :
+                _appDbContext.FursuitBadges
+                    .AsNoTracking() :
 
                 string.IsNullOrWhiteSpace(filter.Name) ?
-                    _appDbContext.FursuitBadges.Where(record =>
+                    _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .Where(record =>
                         (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
                         && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid)))
                     :
-                    _appDbContext.FursuitBadges.Where(record =>
+                    _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .Where(record =>
                         (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
                         && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid))
                         && record.Name.ToLowerInvariant().Contains(filter.Name.ToLowerInvariant()));

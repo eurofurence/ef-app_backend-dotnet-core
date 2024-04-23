@@ -47,7 +47,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             
             foreach (var csvRecord in csvRecords)
             {
-                var existingRecord = await _appDbContext.ItemActivitys.FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
+                var existingRecord = await _appDbContext.ItemActivitys.AsNoTracking().FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
                 if (existingRecord != null)
                 {
                     importResult.RowsSkippedAsDuplicate++;

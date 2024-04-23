@@ -48,14 +48,15 @@ namespace Eurofurence.App.Server.Services.Fursuits
                        "Benchmark: GetFursuitParticipationInfoForOwnerAsync({ownerUid}): {time} ms",
                        ownerUid, time.TotalMilliseconds)))
             {
-                var fursuitBadges = await _appDbContext.FursuitBadges.Where(badge => badge.OwnerUid == ownerUid)
+                var fursuitBadges = await _appDbContext.FursuitBadges.AsNoTracking()
+                    .Where(badge => badge.OwnerUid == ownerUid)
                     .ToListAsync();
 
                 var results = await Task.WhenAll(fursuitBadges.Select(fursuitBadge => Task.Run(async () =>
                 {
                     var result = new FursuitParticipationInfo() { Badge = fursuitBadge };
                     var participationRecord =
-                        await _appDbContext.FursuitParticipations.FirstOrDefaultAsync(
+                        await _appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(
                             fursuit => fursuit.FursuitBadgeId == fursuitBadge.Id);
 
                     if (participationRecord != null)
@@ -82,6 +83,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 var response = new PlayerParticipationInfo() { Name = playerName };
                 var playerParticipation =
                     await _appDbContext.PlayerParticipations
+                        .AsNoTracking()
                         .Include(playerParticipation => playerParticipation.CollectionEntries)
                         .FirstOrDefaultAsync(playerParticipation => playerParticipation.PlayerUid == playerUid);
 
@@ -98,14 +100,18 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 var recentlyCollectedIds = recentlyCollected.Select(a => a.FursuitParticipationId);
 
                 var recentlyCollectedFursuitParticipations =
-                    _appDbContext.FursuitParticipations.Where(entity => recentlyCollectedIds.Contains(entity.Id));
+                    _appDbContext.FursuitParticipations
+                        .AsNoTracking()
+                        .Where(entity => recentlyCollectedIds.Contains(entity.Id));
 
                 var recentlyCollectedFursuitParticipationIds =
                     recentlyCollectedFursuitParticipations.Select(a => a.FursuitBadgeId);
 
                 var recentlyCollectedFursuitBadges =
-                    _appDbContext.FursuitBadges.Where(entity =>
-                        recentlyCollectedFursuitParticipationIds.Contains(entity.Id));
+                    _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .Where(entity =>
+                            recentlyCollectedFursuitParticipationIds.Contains(entity.Id));
 
                 response.RecentlyCollected = recentlyCollected.Select(a =>
                     {
@@ -122,9 +128,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     })
                     .ToList();
 
-                var playersAhead = _appDbContext.PlayerParticipations.Where(
-                    a => !a.IsBanned && a.PlayerUid != playerParticipation.PlayerUid
-                                     && a.CollectionCount >= playerParticipation.CollectionCount);
+                var playersAhead = _appDbContext.PlayerParticipations
+                    .AsNoTracking()
+                    .Where(a => !a.IsBanned && a.PlayerUid != playerParticipation.PlayerUid
+                                            && a.CollectionCount >= playerParticipation.CollectionCount);
 
                 response.ScoreboardRank =
                     playersAhead.Count(a => a.CollectionCount > playerParticipation.CollectionCount
@@ -148,9 +155,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 var playerParticipation =
                     await _appDbContext.PlayerParticipations
+                        .AsNoTracking()
                         .Include(playerParticipationRecord => playerParticipationRecord.CollectionEntries)
                         .FirstOrDefaultAsync(a => a.PlayerUid == playerUid);
-                if (playerParticipation == null) return new PlayerCollectionEntry[0];
+                if (playerParticipation == null) return Array.Empty<PlayerCollectionEntry>();
 
                 var collectionEntries = playerParticipation.CollectionEntries
                     .OrderByDescending(a => a.EventDateTimeUtc);
@@ -158,12 +166,15 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 var collectionEntryIds = collectionEntries.Select(a => a.FursuitParticipationId);
 
                 var fursuitParticipations = _appDbContext.FursuitParticipations
+                    .AsNoTracking()
                     .Where(entity => collectionEntryIds.Contains(entity.Id));
 
                 var fursuitParticipationIds = fursuitParticipations.Select(a => a.FursuitBadgeId);
 
                 var fursuitBadges =
-                    _appDbContext.FursuitBadges.Where(entity => fursuitParticipationIds.Contains(entity.Id));
+                    _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .Where(entity => fursuitParticipationIds.Contains(entity.Id));
 
                 return collectionEntries.Select(a =>
                     {
@@ -199,8 +210,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 {
                     await _semaphore.WaitAsync();
 
-                    var fursuitBadge = await _appDbContext.FursuitBadges.FirstOrDefaultAsync(
-                        badge => badge.OwnerUid == ownerUid && badge.Id == fursuitBadgeId);
+                    var fursuitBadge = await _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(
+                            badge => badge.OwnerUid == ownerUid && badge.Id == fursuitBadgeId);
                     if (fursuitBadge == null)
                     {
                         _logger.LogDebug(LogEvents.CollectionGame,
@@ -220,8 +233,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     }
 
                     var existingParticipation =
-                        await _appDbContext.FursuitParticipations.FirstOrDefaultAsync(p =>
-                            p.FursuitBadgeId == fursuitBadgeId);
+                        await _appDbContext.FursuitParticipations
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(p =>
+                                p.FursuitBadgeId == fursuitBadgeId);
                     if (existingParticipation != null)
                     {
                         _logger.LogDebug(LogEvents.CollectionGame,
@@ -409,8 +424,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     }
 
                     var fursuitBadge = await
-                        _appDbContext.FursuitBadges.FirstOrDefaultAsync(
-                            a => a.Id == fursuitParticipation.FursuitBadgeId);
+                        _appDbContext.FursuitBadges
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(
+                                a => a.Id == fursuitParticipation.FursuitBadgeId);
 
                     _logger.LogInformation(
                         LogEvents.CollectionGame,
@@ -441,14 +458,18 @@ namespace Eurofurence.App.Server.Services.Fursuits
                        "Benchmark: GetPlayerScoreboardEntriesAsync({top}): {time} ms",
                        top, time.TotalMilliseconds)))
             {
-                var topPlayers = _appDbContext.PlayerParticipations.Where(
+                var topPlayers = _appDbContext.PlayerParticipations
+                    .AsNoTracking()
+                    .Where(
                         a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0
                     ).OrderByDescending(a => a.CollectionCount)
                     .ThenBy(a => a.LastCollectionDateTimeUtc)
                     .Take(top);
 
                 var topPlayersUids = topPlayers.Select(a => a.PlayerUid);
-                var identities = _appDbContext.RegSysIdentities.Where(a => topPlayersUids.Contains(a.Uid));
+                var identities = _appDbContext.RegSysIdentities
+                    .AsNoTracking()
+                    .Where(a => topPlayersUids.Contains(a.Uid));
 
                 var result = await topPlayers
                     .Select(a => new PlayerScoreboardEntry()
@@ -470,7 +491,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
                        "Benchmark: GetFursuitScoreboardEntriesAsync({top}): {time} ms",
                        top, time.TotalMilliseconds)))
             {
-                var topFursuits = await _appDbContext.FursuitParticipations.Where(
+                var topFursuits = await _appDbContext.FursuitParticipations
+                    .AsNoTracking()
+                    .Where(
                         a => !a.IsBanned && a.IsDeleted == 0 && a.CollectionCount > 0)
                     .OrderByDescending(a => a.CollectionCount)
                     .ThenBy(a => a.LastCollectionDateTimeUtc)
@@ -479,7 +502,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 var topFursuitBadgeIds = topFursuits.Select(a => a.FursuitBadgeId);
 
-                var fursuitBadges = _appDbContext.FursuitBadges.Where(entity => topFursuitBadgeIds.Contains(entity.Id));
+                var fursuitBadges = _appDbContext.FursuitBadges
+                    .AsNoTracking()
+                    .Where(entity => topFursuitBadgeIds.Contains(entity.Id));
 
                 var result = topFursuits
                     .Select(entry =>
@@ -635,13 +660,12 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 await _semaphore.WaitAsync();
 
-                var participatingFursuitBadges = _appDbContext.FursuitBadges.Where(badge => !string.IsNullOrEmpty(badge.CollectionCode));
+                var participatingFursuitBadges =
+                    _appDbContext.FursuitBadges.Where(badge => !string.IsNullOrEmpty(badge.CollectionCode));
                 var fursuitParticipationRecords = _appDbContext.FursuitParticipations;
 
                 var toJoin = participatingFursuitBadges
                     .Where(badge => !fursuitParticipationRecords.Any(fpr => fpr.FursuitBadgeId == badge.Id)).ToList();
-                var toVerify = fursuitParticipationRecords.ToList();
-
 
                 foreach (var badge in toJoin)
                 {
@@ -658,7 +682,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     _appDbContext.FursuitParticipations.Add(newParticipation);
                 }
 
-                foreach (var existingParticipation in toVerify)
+                foreach (var existingParticipation in fursuitParticipationRecords)
                 {
                     var badge = participatingFursuitBadges.SingleOrDefault(badge =>
                         badge.Id == existingParticipation.FursuitBadgeId);

@@ -63,12 +63,16 @@ namespace Eurofurence.App.Server.Services.Images
             var hash = Hashing.ComputeHashSha1(imageBytes);
 
             var existingRecord = await
-                _appDbContext.Images.FirstOrDefaultAsync(entity => entity.InternalReference == internalReference);
+                _appDbContext.Images
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.InternalReference == internalReference);
 
             if (existingRecord != null && existingRecord.ContentHashSha1 == hash)
             {
                 // Ensure we still have the image!
-                var existingContentRecord = await _appDbContext.ImageContents.FirstOrDefaultAsync(entity => entity.Id == existingRecord.Id);
+                var existingContentRecord = await _appDbContext.ImageContents
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.Id == existingRecord.Id);
                 if (existingContentRecord == null)
                 {
                     _appDbContext.ImageContents.Add(new ImageContentRecord
@@ -126,7 +130,7 @@ namespace Eurofurence.App.Server.Services.Images
 
         public async Task<byte[]> GetImageContentByIdAsync(Guid id)
         {
-            var record = await _appDbContext.ImageContents.FirstOrDefaultAsync(entity => entity.Id == id);
+            var record = await _appDbContext.ImageContents.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == id);
             return record.Content;
         }
 
@@ -136,7 +140,7 @@ namespace Eurofurence.App.Server.Services.Images
             var output = new MemoryStream();
             image.SaveAsPng(output);
 
-            return output.ToArray();           
+            return output.ToArray();
         }
 
         public async Task InsertImageAsync(ImageRecord image, byte[] imageBytes)
@@ -188,7 +192,7 @@ namespace Eurofurence.App.Server.Services.Images
             );
 
             var ms = new MemoryStream();
-            rawImage.SaveAsJpeg(ms, new JpegEncoder() {  Quality = 85 });
+            rawImage.SaveAsJpeg(ms, new JpegEncoder() { Quality = 85 });
             var newFragment = GenerateFragmentFromBytes(ms.ToArray());
             ms.Dispose();
 

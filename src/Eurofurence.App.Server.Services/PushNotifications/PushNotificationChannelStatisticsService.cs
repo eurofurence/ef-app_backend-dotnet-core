@@ -25,7 +25,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 sinceLastSeenDateTimeUtc = DateTime.UtcNow.AddMonths(-1);
 
             var records = await _appDbContext.PushNotificationChannels
-                .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc).ToListAsync();
+                .AsNoTracking()
+                .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc)
+                .ToListAsync();
 
             var devicesWithSessions =
                 records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase)).ToList();
