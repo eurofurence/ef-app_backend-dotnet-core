@@ -25,34 +25,34 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         {
         }
 
-        public DbSet<AnnouncementRecord> Announcements { get; set; }
-        public DbSet<TableRegistrationRecord> TableRegistrations { get; set; }
-        public DbSet<AgentClosingResultRecord> AgentClosingResults { get; set; }
-        public DbSet<ItemActivityRecord> ItemActivitys { get; set; }
-        public DbSet<PrivateMessageRecord> PrivateMessages { get; set; }
-        public DbSet<DealerRecord> Dealers { get; set; }
-        public DbSet<EventConferenceDayRecord> EventConferenceDays { get; set; }
-        public DbSet<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
-        public DbSet<EventFeedbackRecord> EventFeedbacks { get; set; }
-        public DbSet<EventRecord> Events { get; set; }
-        public DbSet<FursuitParticipationRecord> FursuitParticipations { get; set; }
-        public DbSet<PlayerParticipationRecord> PlayerParticipations { get; set; }
-        public DbSet<TokenRecord> Tokens { get; set; }
-        public DbSet<FursuitBadgeImageRecord> FursuitBadgeImages { get; set; }
-        public DbSet<FursuitBadgeRecord> FursuitBadges { get; set; }
-        public DbSet<ImageContentRecord> ImageContents { get; set; }
-        public DbSet<ImageRecord> Images { get; set; }
-        public DbSet<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
-        public DbSet<KnowledgeGroupRecord> KnowledgeGroups { get; set; }
-        public DbSet<LostAndFoundRecord> LostAndFounds { get; set; }
-        public DbSet<MapEntryRecord> MapEntries { get; set; }
-        public DbSet<MapRecord> Maps { get; set; }
-        public DbSet<PushNotificationChannelRecord> PushNotificationChannels { get; set; }
-        public DbSet<RegSysAccessTokenRecord> RegSysAccessTokens { get; set; }
-        public DbSet<RegSysAlternativePinRecord> RegSysAlternativePins { get; set; }
-        public DbSet<RegSysIdentityRecord> RegSysIdentities { get; set; }
-        public DbSet<EntityStorageInfoRecord> EntityStorageInfos { get; set; }
-        public DbSet<UserRecord> Users { get; set; }
+        public virtual DbSet<AnnouncementRecord> Announcements { get; set; }
+        public virtual DbSet<TableRegistrationRecord> TableRegistrations { get; set; }
+        public virtual DbSet<AgentClosingResultRecord> AgentClosingResults { get; set; }
+        public virtual DbSet<ItemActivityRecord> ItemActivitys { get; set; }
+        public virtual DbSet<PrivateMessageRecord> PrivateMessages { get; set; }
+        public virtual DbSet<DealerRecord> Dealers { get; set; }
+        public virtual DbSet<EventConferenceDayRecord> EventConferenceDays { get; set; }
+        public virtual DbSet<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
+        public virtual DbSet<EventFeedbackRecord> EventFeedbacks { get; set; }
+        public virtual DbSet<EventRecord> Events { get; set; }
+        public virtual DbSet<FursuitParticipationRecord> FursuitParticipations { get; set; }
+        public virtual DbSet<PlayerParticipationRecord> PlayerParticipations { get; set; }
+        public virtual DbSet<TokenRecord> Tokens { get; set; }
+        public virtual DbSet<FursuitBadgeImageRecord> FursuitBadgeImages { get; set; }
+        public virtual DbSet<FursuitBadgeRecord> FursuitBadges { get; set; }
+        public virtual DbSet<ImageContentRecord> ImageContents { get; set; }
+        public virtual DbSet<ImageRecord> Images { get; set; }
+        public virtual DbSet<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
+        public virtual DbSet<KnowledgeGroupRecord> KnowledgeGroups { get; set; }
+        public virtual DbSet<LostAndFoundRecord> LostAndFounds { get; set; }
+        public virtual DbSet<MapEntryRecord> MapEntries { get; set; }
+        public virtual DbSet<MapRecord> Maps { get; set; }
+        public virtual DbSet<PushNotificationChannelRecord> PushNotificationChannels { get; set; }
+        public virtual DbSet<RegSysAccessTokenRecord> RegSysAccessTokens { get; set; }
+        public virtual DbSet<RegSysAlternativePinRecord> RegSysAlternativePins { get; set; }
+        public virtual DbSet<RegSysIdentityRecord> RegSysIdentities { get; set; }
+        public virtual DbSet<EntityStorageInfoRecord> EntityStorageInfos { get; set; }
+        public virtual DbSet<UserRecord> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
