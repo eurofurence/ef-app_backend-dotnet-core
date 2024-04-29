@@ -32,7 +32,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             {
                 command.Out.WriteLine($"Roles: {string.Join(",", rolesArgument.Values)}");
 
-                var token = _authenticationHandler.CreateRegSysAccessTokenAsync(rolesArgument.Values.ToArray()).Result;
+                var token = _authenticationHandler.CreateRegSysAccessTokenAsync(rolesArgument.Values.ToList()).Result;
 
                 command.Out.WriteLine($"Access Token: {token}");
 

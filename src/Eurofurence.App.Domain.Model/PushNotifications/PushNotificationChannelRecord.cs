@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.PushNotifications
 {
@@ -11,16 +10,11 @@ namespace Eurofurence.App.Domain.Model.PushNotifications
             Firebase
         }
 
-        public PushNotificationChannelRecord()
-        {
-            Topics = new List<string>();
-        }
-
         public PlatformEnum Platform { get; set; }
 
         public string ChannelUri { get; set; }
         public string Uid { get; set; }
         public string DeviceId { get; set; }
-        public IList<string> Topics { get; set; }
+        public List<string> Topics { get; set; } = new();
     }
 }

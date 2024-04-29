@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Tests
                 Id = id,
                 Uid = $"Test:{id}",
                 Username = $"Test Attendee {id}",
-                Roles = new[] { "Attendee" },
+                Roles = { "Attendee" },
             };
 
             appDbContext.RegSysIdentities.Add(record);

@@ -1,4 +1,7 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
 using Eurofurence.App.Domain.Model.CollectionGame;
@@ -16,6 +19,9 @@ using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Newtonsoft.Json;
 
 namespace Eurofurence.App.Infrastructure.EntityFramework
 {
@@ -52,6 +58,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<PushNotificationChannelRecord> PushNotificationChannels { get; set; }
         public virtual DbSet<RegSysAccessTokenRecord> RegSysAccessTokens { get; set; }
         public virtual DbSet<RegSysAlternativePinRecord> RegSysAlternativePins { get; set; }
+        public virtual DbSet<IssueRecord> IssueRecords { get; set; }
         public virtual DbSet<RegSysIdentityRecord> RegSysIdentities { get; set; }
         public virtual DbSet<EntityStorageInfoRecord> EntityStorageInfos { get; set; }
         public virtual DbSet<UserRecord> Users { get; set; }
@@ -59,6 +66,42 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PushNotificationChannelRecord>().Property(x => x.Topics)
+                .HasConversion(new ValueConverter<List<string>, string>(
+                    v => JsonConvert.SerializeObject(v),
+                    v => JsonConvert.DeserializeObject<List<string>>(v)),
+                    new ValueComparer<List<string>>(
+                        (c1, c2) => c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList()));
+
+            modelBuilder.Entity<RegSysAccessTokenRecord>().Property(x => x.GrantRoles)
+                .HasConversion(new ValueConverter<List<string>, string>(
+                    v => JsonConvert.SerializeObject(v),
+                    v => JsonConvert.DeserializeObject<List<string>>(v)),
+            new ValueComparer<List<string>>(
+                (c1, c2) => c1.SequenceEqual(c2),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()));
+
+            modelBuilder.Entity<RegSysAlternativePinRecord>().Property(x => x.PinConsumptionDatesUtc)
+                .HasConversion(new ValueConverter<List<DateTime>, string>(
+                    v => JsonConvert.SerializeObject(v),
+                    v => JsonConvert.DeserializeObject<List<DateTime>>(v)),
+                    new ValueComparer<List<DateTime>>(
+                        (c1, c2) => c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList()));
+
+            modelBuilder.Entity<RegSysIdentityRecord>().Property(x => x.Roles)
+                .HasConversion(new ValueConverter<List<string>, string>(
+                    v => JsonConvert.SerializeObject(v),
+                    v => JsonConvert.DeserializeObject<List<string>>(v)),
+                    new ValueComparer<List<string>>(
+                        (c1, c2) => c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList()));
         }
     }
 }

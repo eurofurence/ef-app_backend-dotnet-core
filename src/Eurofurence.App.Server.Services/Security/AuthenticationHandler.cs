@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Services.Security
                     identityRecord.Roles = identityRecord.Roles
                         .Concat(accessToken.GrantRoles)
                         .Distinct()
-                        .ToArray();
+                        .ToList();
 
                     accessToken.ClaimedByUid = identityRecord.Uid;
                     accessToken.ClaimedAtDateTimeUtc = DateTime.UtcNow;
@@ -136,7 +136,7 @@ namespace Eurofurence.App.Server.Services.Security
             return response;
         }
 
-        public async Task<string> CreateRegSysAccessTokenAsync(string[] rolesToGrant)
+        public async Task<string> CreateRegSysAccessTokenAsync(List<string> rolesToGrant)
         {
             string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
 

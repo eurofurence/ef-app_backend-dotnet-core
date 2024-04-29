@@ -47,12 +47,13 @@ namespace Eurofurence.App.Server.Services.Security
             alternativePin.IssuedDateTimeUtc = DateTime.UtcNow;
             alternativePin.Pin = GeneratePin();
             alternativePin.NameOnBadge = request.NameOnBadge;
-            alternativePin.IssueLog.Add(new RegSysAlternativePinRecord.IssueRecord()
+            var issueRecord = _appDbContext.IssueRecords.Add(new IssueRecord()
             {
                 RequestDateTimeUtc = DateTime.UtcNow,
                 NameOnBadge = request.NameOnBadge,
                 RequesterUid = requesterUid
             });
+            alternativePin.IssueLog.Add(issueRecord.Entity);
 
             alternativePin.Touch();
 
