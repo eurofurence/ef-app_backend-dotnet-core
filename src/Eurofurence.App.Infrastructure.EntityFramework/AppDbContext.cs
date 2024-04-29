@@ -1,6 +1,7 @@
 ﻿using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
+using Eurofurence.App.Domain.Model.CollectionGame;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
@@ -37,6 +38,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<EventRecord> Events { get; set; }
         public virtual DbSet<FursuitParticipationRecord> FursuitParticipations { get; set; }
         public virtual DbSet<PlayerParticipationRecord> PlayerParticipations { get; set; }
+        public virtual DbSet<CollectionEntryRecord> CollectionEntries { get; set; }
         public virtual DbSet<TokenRecord> Tokens { get; set; }
         public virtual DbSet<FursuitBadgeImageRecord> FursuitBadgeImages { get; set; }
         public virtual DbSet<FursuitBadgeRecord> FursuitBadges { get; set; }

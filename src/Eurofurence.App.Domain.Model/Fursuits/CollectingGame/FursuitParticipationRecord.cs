@@ -29,6 +29,6 @@ namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
         public int CollectionCount { get; set; }
 
         [IgnoreDataMember]
-        public IList<CollectionEntry> CollectionEntries { get; set; } = new List<CollectionEntry>();
+        public IList<CollectionEntryRecord> CollectionEntries { get; set; } = new List<CollectionEntryRecord>();
     }
 }

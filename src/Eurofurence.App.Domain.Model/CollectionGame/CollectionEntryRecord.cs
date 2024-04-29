@@ -2,7 +2,7 @@
 
 namespace Eurofurence.App.Domain.Model.CollectionGame
 {
-    public class CollectionEntry : EntityBase
+    public class CollectionEntryRecord : EntityBase
     {
         public string PlayerParticipationId { get; set; }
         public Guid FursuitParticipationId { get; set; }
