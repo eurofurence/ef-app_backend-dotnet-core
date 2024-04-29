@@ -247,7 +247,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                     var newParticipation = new FursuitParticipationRecord()
                     {
-                        Id = Guid.NewGuid(),
                         FursuitBadgeId = fursuitBadgeId,
                         TokenValue = token.Value,
                         TokenRegistrationDateTimeUtc = DateTime.UtcNow,
@@ -304,7 +303,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     {
                         playerParticipation = new PlayerParticipationRecord()
                         {
-                            Id = Guid.NewGuid(),
                             PlayerUid = playerUid,
                             Karma = 0
                         };
@@ -336,7 +334,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
                             playerParticipation.IsBanned = true;
                         }
 
-                        _appDbContext.PlayerParticipations.Update(playerParticipation);
                         await _appDbContext.SaveChangesAsync();
 
                         var sb = new StringBuilder("The token you specified is not valid.");
@@ -396,30 +393,27 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                     playerParticipation.Karma = Math.Min(playerParticipation.Karma + 2, 10);
 
-                    playerParticipation.CollectionEntries.Add(new CollectionEntry()
+                    var collectionEntry = _appDbContext.CollectionEntries.Add(new CollectionEntryRecord()
                     {
                         EventDateTimeUtc = DateTime.UtcNow,
-                        FursuitParticipationId = fursuitParticipation.Id
+                        FursuitParticipationId = fursuitParticipation.Id,
+                        PlayerParticipationId = playerUid
                     });
+
+                    playerParticipation.CollectionEntries.Add(collectionEntry.Entity);
 
                     playerParticipation.LastCollectionDateTimeUtc = DateTime.UtcNow;
                     playerParticipation.CollectionCount = playerParticipation.CollectionEntries.Count;
-                    _appDbContext.PlayerParticipations.Update(playerParticipation);
 
                     await _appDbContext.SaveChangesAsync();
 
                     // This should never *not* happen, but makes testing a bit easier.
                     if (fursuitParticipation.CollectionEntries.All(a => a.PlayerParticipationId != playerUid))
                     {
-                        fursuitParticipation.CollectionEntries.Add(new CollectionEntry()
-                        {
-                            EventDateTimeUtc = DateTime.UtcNow,
-                            PlayerParticipationId = playerUid
-                        });
+                        fursuitParticipation.CollectionEntries.Add(collectionEntry.Entity);
 
                         fursuitParticipation.LastCollectionDateTimeUtc = DateTime.UtcNow;
                         fursuitParticipation.CollectionCount = fursuitParticipation.CollectionEntries.Count;
-                        _appDbContext.FursuitParticipations.Update(fursuitParticipation);
                         await _appDbContext.SaveChangesAsync();
                     }
 
@@ -533,7 +527,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
             var tokenRecord = new TokenRecord
             {
-                Id = Guid.NewGuid(),
                 LastChangeDateTimeUtc = DateTime.UtcNow,
                 Value = tokenValue
             };
@@ -671,7 +664,6 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 {
                     var newParticipation = new FursuitParticipationRecord()
                     {
-                        Id = Guid.NewGuid(),
                         FursuitBadgeId = badge.Id,
                         TokenValue = badge.CollectionCode,
                         TokenRegistrationDateTimeUtc = DateTime.UtcNow,
