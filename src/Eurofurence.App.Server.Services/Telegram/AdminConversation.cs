@@ -393,6 +393,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         await _appDbContext.PushNotificationChannels
                             .AsNoTracking()
                             .Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
+                            .Include(pushNotificationChannelRecord => pushNotificationChannelRecord.Topics)
                             .ToListAsync();
 
                     if (records.Count == 0)
@@ -406,7 +407,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     response.AppendLine($"RegNo *{regNo}* is logged in on *{records.Count}* devices:");
                     foreach (var record in records)
                         response.AppendLine(
-                            $"`{record.Platform} {string.Join(",", record.Topics)} ({record.LastChangeDateTimeUtc})`");
+                            $"`{record.Platform} {string.Join(",", record.Topics.Select(t => t.Name))} ({record.LastChangeDateTimeUtc})`");
 
 
                     await ReplyAsync(response.ToString());

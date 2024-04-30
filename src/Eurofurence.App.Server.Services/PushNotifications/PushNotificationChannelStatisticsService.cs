@@ -27,6 +27,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var records = await _appDbContext.PushNotificationChannels
                 .AsNoTracking()
                 .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc)
+                .Include(pushNotificationChannelRecord => pushNotificationChannelRecord.Topics)
                 .ToListAsync();
 
             var devicesWithSessions =
@@ -36,11 +37,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var uniqueUserIds = devicesWithSessions.Select(a => a.Uid).Distinct().Count();
 
             var groups = records
-                .GroupBy(a => $"{a.Platform}-{string.Join("-", a.Topics)}")
+                .GroupBy(a => $"{a.Platform}-{string.Join("-", a.Topics.Select(topic => topic.Name))}")
                 .Select(a => new PushNotificationChannelStatistics.PlatformTagInfo()
                 {
                     Platform = a.First().Platform.ToString(),
-                    Tags = a.First().Topics.ToArray(),
+                    Tags = a.First().Topics.Select(topic => topic.Name).ToArray(),
                     DeviceCount = a.Count()
                 })
                 .OrderByDescending(a => a.DeviceCount)

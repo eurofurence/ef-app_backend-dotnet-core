@@ -45,12 +45,19 @@ namespace Eurofurence.App.Server.Services.Tests
         private async Task<RegSysIdentityRecord> CreateRegSysIdentityAsync(AppDbContext appDbContext)
         {
             var id = Guid.NewGuid();
+
+            var role = new RoleRecord()
+            {
+                Name = "Attendee"
+            };
+            appDbContext.Roles.Add(role);
+
             var record = new RegSysIdentityRecord()
             {
                 Id = id,
                 Uid = $"Test:{id}",
                 Username = $"Test Attendee {id}",
-                Roles = { "Attendee" },
+                Roles = [role],
             };
 
             appDbContext.RegSysIdentities.Add(record);

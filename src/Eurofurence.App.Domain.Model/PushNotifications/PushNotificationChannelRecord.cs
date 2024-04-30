@@ -15,6 +15,6 @@ namespace Eurofurence.App.Domain.Model.PushNotifications
         public string ChannelUri { get; set; }
         public string Uid { get; set; }
         public string DeviceId { get; set; }
-        public List<string> Topics { get; set; } = new();
+        public List<TopicRecord> Topics { get; set; } = new();
     }
 }

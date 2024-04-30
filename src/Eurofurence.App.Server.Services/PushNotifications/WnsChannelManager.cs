@@ -102,7 +102,22 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             record.Touch();
             record.ChannelUri = channelUri;
             record.Uid = uid;
-            record.Topics = topics.ToList();
+
+            foreach (var topic in topics)
+            {
+                var topicRecord = await _appDbContext.Topics.FirstOrDefaultAsync(t => t.Name == topic);
+
+                if (topicRecord == null)
+                {
+                    topicRecord = new TopicRecord
+                    {
+                        Name = topic
+                    };
+                    _appDbContext.Topics.Add(topicRecord);
+                }
+                
+                record.Topics.Add(topicRecord);
+            }
 
             if (isNewRecord)
                 _appDbContext.PushNotificationChannels.Add(record);
@@ -137,7 +152,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         {
             return _appDbContext.PushNotificationChannels
                 .AsNoTracking()
-                .Where(a => a.Topics.Contains(topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+                .Where(a => a.Topics.Any(t => t.Name == topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
         private IQueryable<PushNotificationChannelRecord> GetAllRecipientsAsyncByUid(string uid)

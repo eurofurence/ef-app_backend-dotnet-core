@@ -6,6 +6,6 @@ namespace Eurofurence.App.Domain.Model.Security
     {
         public string Uid { get; set; }
         public string Username { get; set; }
-        public List<string> Roles { get; set; } = new();
+        public List<RoleRecord> Roles { get; set; } = new();
     }
 }

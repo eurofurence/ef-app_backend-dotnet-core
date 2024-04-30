@@ -127,7 +127,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             foreach (var recipient in recipients)
             {
-                if (recipient.Topics.Contains("ios", StringComparer.CurrentCultureIgnoreCase))
+                if (recipient.Topics.Any(topic => topic.Name.ToLower() == "ios"))
                 {
                     messages.Add(new Message()
                     {
@@ -258,7 +258,22 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             record.Touch();
             record.Uid = uid;
-            record.Topics = topics.ToList();
+
+            foreach (var topic in topics)
+            {
+                var topicRecord = await _appDbContext.Topics.FirstOrDefaultAsync(t => t.Name == topic);
+
+                if (topicRecord == null)
+                {
+                    topicRecord = new TopicRecord
+                    {
+                        Name = topic
+                    };
+                    _appDbContext.Topics.Add(topicRecord);
+                }
+
+                record.Topics.Add(topicRecord);
+            }
 
             if (isNewRecord)
                 _appDbContext.PushNotificationChannels.Add(record);
