@@ -33,7 +33,7 @@ namespace Eurofurence.App.Server.Services
 
         public virtual async Task<T> FindOneAsync(Guid id)
         {
-            return await _appDbContext.Set<T>().FirstOrDefaultAsync(entity => entity.Id == id);
+            return await _appDbContext.Set<T>().AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == id);
         }
 
         public virtual IQueryable<T> FindAll()
@@ -49,7 +49,7 @@ namespace Eurofurence.App.Server.Services
         public virtual async Task ReplaceOneAsync(T entity)
         {
             entity.Touch();
-            _appDbContext.Update(entity);
+            _appDbContext.Set<T>().Update(entity);
             await _storageService.TouchAsync();
             await _appDbContext.SaveChangesAsync();
         }
