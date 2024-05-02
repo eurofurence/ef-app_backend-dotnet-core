@@ -101,7 +101,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
                 foreach(var image in images)
                 {
-                    archive.AddAsBinary($"imageContent-{image.Id}", _imageService.GetImageContentByIdAsync(image.Id).Result);
+                    archive.AddAsBinary($"imageContent-{image.Id}", _imageService.GetImageContentByImageIdAsync(image.Id).Result);
                 }
 
                 archive.Dispose();

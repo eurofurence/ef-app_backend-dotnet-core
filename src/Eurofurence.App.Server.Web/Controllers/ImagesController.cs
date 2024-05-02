@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var record = await _imageService.FindOneAsync(id);
             if (record == null) return NotFound();
 
-            var content = await _imageService.GetImageContentByIdAsync(id);
+            var content = await _imageService.GetImageContentByImageIdAsync(id);
             return File(content, record.MimeType);
         }
         
@@ -85,7 +85,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return Redirect($"./with-hash:{Convert.ToBase64String(Encoding.Default.GetBytes(record.ContentHashSha1))}");
             }
 
-            var content = await _imageService.GetImageContentByIdAsync(id);
+            var content = await _imageService.GetImageContentByImageIdAsync(id);
             return File(content, record.MimeType);
         }
 

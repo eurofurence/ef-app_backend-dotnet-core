@@ -9,7 +9,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
     {
         Task InsertImageAsync(ImageRecord image, byte[] imageBytes);
         Task<ImageRecord> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes);
-        Task<byte[]> GetImageContentByIdAsync(Guid id);
+        Task<byte[]> GetImageContentByImageIdAsync(Guid id);
         byte[] GeneratePlaceholderImage();
         ImageFragment GenerateFragmentFromBytes(byte[] imageBytes);
         ImageFragment EnforceMaximumDimensions(ImageFragment image, int width, int height);

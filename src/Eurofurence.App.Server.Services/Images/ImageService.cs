@@ -45,7 +45,7 @@ namespace Eurofurence.App.Server.Services.Images
 
         public override async Task DeleteOneAsync(Guid id)
         {
-            var entity = await _appDbContext.ImageContents.FirstOrDefaultAsync(entity => entity.Id == id);
+            var entity = await _appDbContext.Images.FirstOrDefaultAsync(entity => entity.Id == id);
             _appDbContext.Remove(entity);
             await _appDbContext.SaveChangesAsync();
             await base.DeleteOneAsync(id);
@@ -53,7 +53,7 @@ namespace Eurofurence.App.Server.Services.Images
 
         public override async Task DeleteAllAsync()
         {
-            _appDbContext.RemoveRange(_appDbContext.ImageContents);
+            _appDbContext.RemoveRange(_appDbContext.Images);
             await _appDbContext.SaveChangesAsync();
             await base.DeleteAllAsync();
         }
@@ -72,12 +72,12 @@ namespace Eurofurence.App.Server.Services.Images
                 // Ensure we still have the image!
                 var existingContentRecord = await _appDbContext.ImageContents
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(entity => entity.Id == existingRecord.Id);
+                    .FirstOrDefaultAsync(entity => entity.ImageId == existingRecord.Id);
                 if (existingContentRecord == null)
                 {
                     _appDbContext.ImageContents.Add(new ImageContentRecord
                     {
-                        Id = existingRecord.Id,
+                        ImageId = existingRecord.Id,
                         IsDeleted = 0,
                         Content = imageBytes
                     });
@@ -104,7 +104,7 @@ namespace Eurofurence.App.Server.Services.Images
 
             var contentRecord = new ImageContentRecord
             {
-                Id = record.Id,
+                ImageId = record.Id,
                 IsDeleted = 0,
                 Content = imageBytes
             };
@@ -128,9 +128,9 @@ namespace Eurofurence.App.Server.Services.Images
             return record;
         }
 
-        public async Task<byte[]> GetImageContentByIdAsync(Guid id)
+        public async Task<byte[]> GetImageContentByImageIdAsync(Guid id)
         {
-            var record = await _appDbContext.ImageContents.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == id);
+            var record = await _appDbContext.ImageContents.AsNoTracking().FirstOrDefaultAsync(entity => entity.ImageId == id);
             return record.Content;
         }
 
