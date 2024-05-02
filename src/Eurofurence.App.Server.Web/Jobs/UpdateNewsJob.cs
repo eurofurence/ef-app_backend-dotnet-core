@@ -144,8 +144,8 @@ namespace Eurofurence.App.Server.Web.Jobs
             if (string.IsNullOrWhiteSpace(imageDataBase64)) return null;
             var imageBytes = Convert.FromBase64String(imageDataBase64);
 
-            var imageId = await _imageService.InsertOrUpdateImageAsync(reference, imageBytes);
-            return imageId;
+            var image = await _imageService.InsertOrUpdateImageAsync(reference, imageBytes);
+            return image.Id;
         }
     }
 }

@@ -172,7 +172,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(knowledgeEntry.Title)
                 .WithDescription(knowledgeGroup.Name)
-                .WithImage(knowledgeEntry.ImageIds?.Length > 0 ? $"{_conventionSettings.ApiBaseUrl}/Images/{knowledgeEntry.ImageIds[0]}/Content" : string.Empty);
+                .WithImage(knowledgeEntry.Images?.Count > 0 ? $"{_conventionSettings.ApiBaseUrl}/Images/{knowledgeEntry.Images[0].Id}/Content" : string.Empty);
 
             ViewData["knowledgeGroup"] = knowledgeGroup;
             return View("KnowledgeEntryPreview", knowledgeEntry);

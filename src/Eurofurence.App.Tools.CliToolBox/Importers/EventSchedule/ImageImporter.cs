@@ -35,15 +35,15 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             var imageTag = $"event:{imagePurpose}:{eventId}";
 
             var imageContent = File.ReadAllBytes(imagePath);
-            var imageId = await _imageService.InsertOrUpdateImageAsync(imageTag, imageContent);
+            var image = await _imageService.InsertOrUpdateImageAsync(imageTag, imageContent);
 
             switch (imagePurpose)
             {
                     case PurposeEnum.Banner:
-                        @event.BannerImageId = imageId;
+                        @event.BannerImageId = image.Id;
                         break;
                     case PurposeEnum.Poster:
-                        @event.PosterImageId = imageId;
+                        @event.PosterImageId = image.Id;
                         break;
             }
             @event.Touch();

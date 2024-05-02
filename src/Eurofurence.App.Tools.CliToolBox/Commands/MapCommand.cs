@@ -140,14 +140,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
                 Console.WriteLine($"Updating map image {map.Id} ({map.Description}) from {imagePathOption.Value()}...");
 
-                var imageId = _imageService.InsertOrUpdateImageAsync($"map:{map.Id}", buffer).Result;
-                var imageInfo = _imageService.FindOneAsync(imageId).Result;
+                var imageRecord = _imageService.InsertOrUpdateImageAsync($"map:{map.Id}", buffer).Result;
                 Console.WriteLine(
-                    $"Image record {imageId} has hash={imageInfo.ContentHashSha1}, last changed at {imageInfo.LastChangeDateTimeUtc} UTC");
+                    $"Image record {imageRecord.Id} has hash={imageRecord.ContentHashSha1}, last changed at {imageRecord.LastChangeDateTimeUtc} UTC");
 
-                if (map.ImageId != imageId)
+                if (map.ImageId != imageRecord.Id)
                 {
-                    map.ImageId = imageId;
+                    map.ImageId = imageRecord.Id;
                     map.Touch();
                     _mapService.ReplaceOneAsync(map);
                     Console.WriteLine("Map record has been updated.");

@@ -58,7 +58,7 @@ namespace Eurofurence.App.Server.Services.Images
             await base.DeleteAllAsync();
         }
 
-        public async Task<Guid> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes)
+        public async Task<ImageRecord> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes)
         {
             var hash = Hashing.ComputeHashSha1(imageBytes);
 
@@ -84,7 +84,7 @@ namespace Eurofurence.App.Server.Services.Images
                     await _appDbContext.SaveChangesAsync();
                 }
 
-                return existingRecord.Id;
+                return existingRecord;
             }
 
             var image = Image.Load(imageBytes);
@@ -125,7 +125,7 @@ namespace Eurofurence.App.Server.Services.Images
 
             await _appDbContext.SaveChangesAsync();
 
-            return record.Id;
+            return record;
         }
 
         public async Task<byte[]> GetImageContentByIdAsync(Guid id)

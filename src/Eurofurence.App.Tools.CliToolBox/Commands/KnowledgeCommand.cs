@@ -92,7 +92,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var knowledgeGroups = _knowledgeGroupService.FindAll();
                 var knowledgeEntries = _knowledgeEntryService.FindAll();
 
-                var imageIds = knowledgeEntries.SelectMany(_ => _.ImageIds).ToList();
+                var imageIds = knowledgeEntries.SelectMany(_ => _.Images).Select(image => image.Id).ToList();
                 var images = _imageService.FindAll(image => imageIds.Contains(image.Id));
 
                 archive.AddAsJson("knowledgeGroups", knowledgeGroups);

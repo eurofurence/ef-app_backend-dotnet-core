@@ -55,7 +55,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 ( _dealerService.FindAll()).SelectMany(a => new Guid?[] { a.ArtistImageId, a.ArtistThumbnailImageId, a.ArtPreviewImageId }),
                 ( _eventService.FindAll()).SelectMany(a => new Guid?[] { a.BannerImageId, a.PosterImageId }),
                 ( _announcementService.FindAll()).Select(a => a.ImageId),
-                ( _knowledgeEntryService.FindAll()).SelectMany(a => a.ImageIds.Select(b => b as Guid?)),
+                ( _knowledgeEntryService.FindAll()).SelectMany(a => a.Images.Select(b => b.Id as Guid?)),
                 ( _mapService.FindAll()).Select(a => a.ImageId as Guid?)
             };
 

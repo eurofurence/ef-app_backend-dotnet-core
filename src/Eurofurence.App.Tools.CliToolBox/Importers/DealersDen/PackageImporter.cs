@@ -188,7 +188,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                 {
                     var imageByteArray = br.ReadBytes((int) imageEntry.Length);
                     var result = await _imageService.InsertOrUpdateImageAsync(internalReference, imageByteArray);
-                    return result;
+                    return result.Id;
                 }
 
             return null;

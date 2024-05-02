@@ -54,8 +54,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     return -1;
                 }
 
-                var id = _imageService.InsertOrUpdateImageAsync(internalReference.Value, _imageService.GeneratePlaceholderImage()).Result;
-                command.Out.WriteLine($"Created placeholder image {id} for reference {internalReference.Value}");
+                var image = _imageService.InsertOrUpdateImageAsync(internalReference.Value, _imageService.GeneratePlaceholderImage()).Result;
+                command.Out.WriteLine($"Created placeholder image {image.Id} for reference {internalReference.Value}");
 
                 return 0;
             });

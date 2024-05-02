@@ -19,9 +19,9 @@
 
 <hr />
 
-@if (Model.ImageIds?.Length > 0) {
+@if (Model.Images?.Count > 0) {
     <section class="center">
-        <img src="@apiBaseUrl/Images/@Model.ImageIds[0].ToString()/Content" style="max-width: 100%;" />
+        <img src="@apiBaseUrl/Images/@Model.Images[0].Id.ToString()/Content" style="max-width: 100%;" />
     </section>
 }
 
