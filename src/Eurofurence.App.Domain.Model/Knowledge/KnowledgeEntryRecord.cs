@@ -25,8 +25,8 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [DataMember]
         public int Order { get; set; }
 
-        [DataMember]
-        public LinkFragment[] Links { get; set; }
+        [DataMember] 
+        public List<LinkFragment> Links { get; set; } = new();
 
         [DataMember]
         public Guid[] ImageIds { get; set; }

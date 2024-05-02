@@ -161,7 +161,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                 }
             }
 
-            knowledgeEntry.Links = linkFragments.ToArray();
+            knowledgeEntry.Links = linkFragments;
             knowledgeEntry.ImageIds = imageIds.ToArray();
         }
 

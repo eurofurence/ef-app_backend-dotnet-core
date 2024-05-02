@@ -172,7 +172,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                     });
             }
 
-            dealerRecord.Links = linkFragments.ToArray();
+            dealerRecord.Links = linkFragments;
         }
 
         private async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
