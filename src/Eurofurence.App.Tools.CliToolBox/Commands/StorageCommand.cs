@@ -52,8 +52,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             var images = _imageService.FindAll();
 
             var usedImageIdSources = new IEnumerable<Guid?>[] {
-                ( _dealerService.FindAll()).SelectMany(a => new Guid?[] { a.ArtistImageId, a.ArtistThumbnailImageId, a.ArtPreviewImageId }),
-                ( _eventService.FindAll()).SelectMany(a => new Guid?[] { a.BannerImageId, a.PosterImageId }),
+                ( _dealerService.FindAll()).ToList().SelectMany(a => new Guid?[] { a.ArtistImageId, a.ArtistThumbnailImageId, a.ArtPreviewImageId }),
+                ( _eventService.FindAll()).ToList().SelectMany(a => new Guid?[] { a.BannerImageId, a.PosterImageId }),
                 ( _announcementService.FindAll()).Select(a => a.ImageId),
                 ( _knowledgeEntryService.FindAll()).SelectMany(a => a.Images.Select(b => b.Id as Guid?)),
                 ( _mapService.FindAll()).Select(a => a.ImageId as Guid?)

@@ -3,12 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Autofac;
-using Eurofurence.App.Domain.Model.MongoDb;
-using Eurofurence.App.Domain.Model.MongoDb.DependencyResolution;
 using Eurofurence.App.Tools.CliToolBox.Commands;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
-using MongoDB.Driver;
 using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Tools.CliToolBox
@@ -26,13 +23,8 @@ namespace Eurofurence.App.Tools.CliToolBox
             Configuration = configurationBuilder.Build();
 
             var self = typeof(Program).GetTypeInfo().Assembly;
-            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
-            var database = client.GetDatabase(Configuration["mongoDb:database"]);
-
-            BsonClassMapping.Register();
-
+            
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new AutofacModule());
             builder.RegisterModule(new Server.Services.DependencyResolution.AutofacModule(Configuration));
             builder.Register<ILoggerFactory>(_ => new LoggerFactory());
 
@@ -43,7 +35,6 @@ namespace Eurofurence.App.Tools.CliToolBox
                 builder.RegisterType(type).AsSelf();
 
             var container = builder.Build();
-            container.Resolve<IMongoDatabaseBroker>().Setup(database);
 
             var app = new CommandLineApplication();
 
