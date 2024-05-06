@@ -186,7 +186,10 @@ namespace Eurofurence.App.Server.Web
             services.AddDbContextPool<AppDbContext>(options =>
             {
                 var connectionString = Configuration.GetConnectionString("Eurofurence");
-                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+                options.UseMySql(
+                    connectionString, 
+                    ServerVersion.AutoDetect(connectionString),
+                    mySqlOptions => mySqlOptions.UseMicrosoftJson());
             });
             
             builder.Build();

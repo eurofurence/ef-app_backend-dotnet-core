@@ -70,13 +70,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<RegSysAlternativePinRecord>().Property(x => x.PinConsumptionDatesUtc)
-                .HasConversion(new ValueConverter<List<DateTime>, string>(
-                    v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<DateTime>>(v)),
-                    new ValueComparer<List<DateTime>>(
-                        (c1, c2) => c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToList()));
+                .HasColumnType("json");
         }
     }
 }

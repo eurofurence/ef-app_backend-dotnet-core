@@ -73,7 +73,10 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
         {
             var connectionString = _configuration.GetConnectionString("Eurofurence");
             var dbContextOptionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            dbContextOptionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            dbContextOptionsBuilder.UseMySql(
+                connectionString!,
+                ServerVersion.AutoDetect(connectionString),
+                mySqlOptions => mySqlOptions.UseMicrosoftJson());
 
             builder
                 .RegisterType<AppDbContext>()
@@ -108,7 +111,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<IPrivateMessageService>()
                 .SingleInstance();
             builder.RegisterType<PushEventMediator>().As<IPushEventMediator>();
-            builder.RegisterType<PushNotificationChannelStatisticsService>().As<IPushNotificationChannelStatisticsService>();
+            builder.RegisterType<PushNotificationChannelStatisticsService>()
+                .As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
             builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
                 .As<IRegSysAlternativePinAuthenticationProvider>();
