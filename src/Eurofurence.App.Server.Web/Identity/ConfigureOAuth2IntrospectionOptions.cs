@@ -49,14 +49,8 @@ public class ConfigureOAuth2IntrospectionOptions(
             Address = current.UserInfoEndpoint,
             Token = context.SecurityToken
         }, context.HttpContext.RequestAborted);
-
-        foreach (var claim in response.Claims)
-        {
-            if (!identity.HasClaim(x => x.Type == claim.Type))
-            {
-                identity.AddClaim(claim);
-            }
-        }
+        
+        identity.AddClaims(response.Claims);
 
         var exp = identity.FindFirst(x => x.Type == "exp");
         if (exp is not null && long.TryParse(exp.Value, out var seconds))
