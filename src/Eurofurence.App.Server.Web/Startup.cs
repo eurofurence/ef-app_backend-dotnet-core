@@ -13,8 +13,6 @@ using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
 using FluentScheduler;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +20,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -33,7 +30,9 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
-using System.Text;
+using Eurofurence.App.Server.Web.Identity;
+using IdentityModel.AspNetCore.OAuth2Introspection;
+using Microsoft.AspNetCore.Authorization;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -150,30 +149,18 @@ namespace Eurofurence.App.Server.Web
 
             });
 
-            var oAuthBearerAuthenticationPolicy =
-                new AuthorizationPolicyBuilder().AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+            services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
+            services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
+
+            services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
+                .AddOAuth2Introspection();
+
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .Build();
-
-            services.AddAuthorization(auth =>
-            {
-                auth.AddPolicy("OAuth-AllAuthenticated", oAuthBearerAuthenticationPolicy);
             });
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(configure =>
-                {
-                    var tokenFactorySettings = TokenFactorySettings.FromConfiguration(Configuration);
-
-                    configure.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenFactorySettings.SecretKey)),
-                        ValidAudience = tokenFactorySettings.Audience,
-                        ValidIssuer = tokenFactorySettings.Issuer,
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.FromSeconds(0)
-                    };
-                });
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();

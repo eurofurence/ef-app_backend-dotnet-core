@@ -33,7 +33,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("WhoAmI")]
-        [Authorize("OAuth-AllAuthenticated")]
         [ProducesResponseType(typeof(AuthenticationResponse), 200)]
         [ProducesResponseType(403)]
         public AuthenticationResponse GetWhoAmIInfo()
