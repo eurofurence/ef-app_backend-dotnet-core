@@ -42,7 +42,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             ref int modifiedRecords
         )
         {
-            var eventConferenceDayRecords = _eventConferenceDayService.FindAllAsync().Result;
+            var eventConferenceDayRecords = _eventConferenceDayService.FindAll();
 
             var patch = new PatchDefinition<Tuple<DateTime, string>, EventConferenceDayRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Date == source.Item1)
@@ -65,7 +65,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             ref int modifiedRecords
         )
         {
-            var eventConferenceTrackRecords = _eventConferenceTrackService.FindAllAsync().Result;
+            var eventConferenceTrackRecords = _eventConferenceTrackService.FindAll();
 
             var patch = new PatchDefinition<string, EventConferenceTrackRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
@@ -85,7 +85,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             ref int modifiedRecords
         )
         {
-            var eventConferenceRoomRecords = _eventConferenceRoomService.FindAllAsync().Result;
+            var eventConferenceRoomRecords = _eventConferenceRoomService.FindAll();
 
             var patch = new PatchDefinition<string, EventConferenceRoomRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
@@ -122,7 +122,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             ref int modifiedRecords
         )
         {
-            var eventRecords = _eventService.FindAllAsync().Result;
+            var eventRecords = _eventService.FindAll();
 
             var patch = new PatchDefinition<EventImportRow, EventRecord>(
                 (source, list) => list.SingleOrDefault(a => a.SourceEventId == source.EventId)

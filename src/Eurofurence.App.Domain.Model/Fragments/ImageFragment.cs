@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Fragments
 {
     [DataContract]
-    public class ImageFragment
+    public class ImageFragment : EntityBase
     {
         [Required]
         [DataMember]

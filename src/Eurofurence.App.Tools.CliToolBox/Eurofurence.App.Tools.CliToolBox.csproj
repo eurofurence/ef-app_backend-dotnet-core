@@ -14,7 +14,6 @@
     <PackageReference Include="CsvHelper" Version="30.1.0" />
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.3.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />
@@ -22,7 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
-    <ProjectReference Include="..\Eurofurence.App.Domain.Model.MongoDb\Eurofurence.App.Domain.Model.MongoDb.csproj" />
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
     <ProjectReference Include="..\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
   </ItemGroup>

@@ -1,5 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.Abstractions;
-using Eurofurence.App.Domain.Model.Dealers;
+﻿using Eurofurence.App.Domain.Model.Dealers;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 
@@ -9,10 +9,10 @@ namespace Eurofurence.App.Server.Services.Dealers
         IDealerService
     {
         public DealerService(
-            IEntityRepository<DealerRecord> entityRepository,
+            AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory
         )
-            : base(entityRepository, storageServiceFactory)
+            : base(appDbContext, storageServiceFactory)
         {
         }
     }

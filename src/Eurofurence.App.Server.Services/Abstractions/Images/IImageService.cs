@@ -8,8 +8,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
     public interface IImageService : IEntityServiceOperations<ImageRecord>
     {
         Task InsertImageAsync(ImageRecord image, byte[] imageBytes);
-        Task<Guid> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes);
-        Task<byte[]> GetImageContentByIdAsync(Guid id);
+        Task<ImageRecord> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes);
+        Task<byte[]> GetImageContentByImageIdAsync(Guid id);
         byte[] GeneratePlaceholderImage();
         ImageFragment GenerateFragmentFromBytes(byte[] imageBytes);
         ImageFragment EnforceMaximumDimensions(ImageFragment image, int width, int height);

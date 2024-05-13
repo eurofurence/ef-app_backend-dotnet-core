@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -104,7 +105,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (dealer == null) return NotFound();
 
 
-            var maps = await _mapService.FindAllAsync();
+            var maps = _mapService.FindAll();
             var mapEntries = new List<MapEntryRecord>();
 
             foreach (var map in maps)
@@ -147,8 +148,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("KnowledgeGroups")]
         public async Task<ActionResult> GetKnowledgeGroups()
         {
-            var knowledgeGroups = await _knowledgeGroupService.FindAllAsync();
-            var knowledgeEntries = await _knowledgeEntryService.FindAllAsync();
+            var knowledgeGroups = _knowledgeGroupService.FindAll();
+            var knowledgeEntries = _knowledgeEntryService.FindAll();
 
             PopulateViewData();
 
@@ -157,7 +158,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithDescription("Helpful information across all areas & departments");
 
             ViewData["knowledgeEntries"] = knowledgeEntries;
-            return View("KnowledgeGroupsPreview", knowledgeGroups);
+            return View("KnowledgeGroupsPreview", await knowledgeGroups.ToListAsync());
         }
 
         [HttpGet("KnowledgeEntries/{id}")]
@@ -171,7 +172,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(knowledgeEntry.Title)
                 .WithDescription(knowledgeGroup.Name)
-                .WithImage(knowledgeEntry.ImageIds?.Length > 0 ? $"{_conventionSettings.ApiBaseUrl}/Images/{knowledgeEntry.ImageIds[0]}/Content" : string.Empty);
+                .WithImage(knowledgeEntry.Images?.Count > 0 ? $"{_conventionSettings.ApiBaseUrl}/Images/{knowledgeEntry.Images[0].Id}/Content" : string.Empty);
 
             ViewData["knowledgeGroup"] = knowledgeGroup;
             return View("KnowledgeEntryPreview", knowledgeEntry);

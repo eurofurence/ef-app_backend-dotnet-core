@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
@@ -56,9 +57,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Badges")]
         [ProducesResponseType(typeof(FursuitBadgeRecord[]), 200)]
         [ProducesResponseType(401)]
-        public Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync(FursuitBadgeFilter filter)
+        public IQueryable<FursuitBadgeRecord> GetFursuitBadgesAsync(FursuitBadgeFilter filter)
         {
-            return _fursuitBadgeService.GetFursuitBadgesAsync(filter);
+            return _fursuitBadgeService.GetFursuitBadges(filter);
         }
 
         /// <summary>
@@ -105,7 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Attendee")]
         [HttpGet("CollectingGame/FursuitParticipation")]
         [ProducesResponseType(typeof(FursuitParticipationInfo[]), 200)]
-        public Task<FursuitParticipationInfo[]> GetFursuitParticipationInfoForOwnerAsync()
+        public Task<IEnumerable<FursuitParticipationInfo>> GetFursuitParticipationInfoForOwnerAsync()
         {
             return _collectingGameService.GetFursuitParticipationInfoForOwnerAsync(_apiPrincipal.Uid);
         }

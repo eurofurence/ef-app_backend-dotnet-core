@@ -1,5 +1,5 @@
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
@@ -10,10 +10,10 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
     {
         public PushNotificiationChannelService(
-            IEntityRepository<PushNotificationChannelRecord> entityRepository,
+            AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory
         )
-            : base(entityRepository, storageServiceFactory, false)
+            : base(appDbContext, storageServiceFactory, false)
         {
         }
     }

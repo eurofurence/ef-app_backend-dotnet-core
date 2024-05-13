@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -25,9 +26,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
-        public Task<IEnumerable<EventRecord>> GetEventsAsync()
+        public IQueryable<EventRecord> GetEventsAsync()
         {
-            return _eventService.FindAllAsync();
+            return _eventService.FindAll();
         }
 
         /// <summary>
@@ -39,13 +40,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet(":conflicts")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
-        public Task<IEnumerable<EventRecord>> GetConflictingEventsAsync(
+        public IQueryable<EventRecord> GetConflictingEventsAsync(
             DateTime conflictStartTime,
             DateTime conflictEndTime,
             int toleranceInMinutes
             )
         {
-            return _eventService.FindConflictsAsync(conflictStartTime, conflictEndTime, TimeSpan.FromMinutes(toleranceInMinutes));
+            return _eventService.FindConflicts(conflictStartTime, conflictEndTime, TimeSpan.FromMinutes(toleranceInMinutes));
         }
 
         /// <summary>

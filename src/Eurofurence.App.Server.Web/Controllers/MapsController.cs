@@ -31,9 +31,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MapRecord>), 200)]
-        public Task<IEnumerable<MapRecord>> GetMapsAsync()
+        public IQueryable<MapRecord> GetMapsAsync()
         {
-            return _mapService.FindAllAsync();
+            return _mapService.FindAll();
         }
 
         /// <summary>

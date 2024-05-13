@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Fursuits;
 
@@ -11,6 +11,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 
         Task<byte[]> GetFursuitBadgeImageAsync(Guid id);
 
-        Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync(FursuitBadgeFilter filter = null);
+        IQueryable<FursuitBadgeRecord> GetFursuitBadges(FursuitBadgeFilter filter = null);
     }
 }

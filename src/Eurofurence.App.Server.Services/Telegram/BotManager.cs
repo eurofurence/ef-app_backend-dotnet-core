@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.Abstractions;
-using Eurofurence.App.Domain.Model.Fursuits;
+﻿using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -10,7 +9,6 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
-//using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -21,12 +19,13 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-//using Telegram.Bot.Types.InputFiles;
 
 // ReSharper disable CoVariantArrayConversion
 
@@ -34,15 +33,12 @@ namespace Eurofurence.App.Server.Services.Telegram
 {
     public class BotManager
     {
+        private readonly AppDbContext _appDbContext;
         private readonly IUserManager _userManager;
         private readonly IDealerService _dealerService;
         private readonly IEventService _eventService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
-        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationChannelRepository;
-        private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
-        private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
-        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly ICollectingGameService _collectingGameService;
@@ -77,34 +73,28 @@ namespace Eurofurence.App.Server.Services.Telegram
         }
 
         public BotManager(
+            AppDbContext appDbContext,
             TelegramConfiguration telegramConfiguration,
             IUserManager userManager,
             IDealerService dealerService,
             IEventService eventService,
             IEventConferenceRoomService eventConferenceRoomService,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationChannelRepository,
-            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
-            IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository,
-            IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
             ITableRegistrationService tableRegistrationService,
             IPrivateMessageService privateMessageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory,
             ITelegramMessageBroker telegramMessageBroker
-            )
+        )
         {
+            _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
             _userManager = userManager;
             _dealerService = dealerService;
             _eventService = eventService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
-            _pushNotificationChannelRepository = pushNotificationChannelRepository;
-            _fursuitBadgeRepository = fursuitBadgeRepository;
-            _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
-            _regSysIdentityRepository = regSysIdentityRepository;
             _privateMessageService = privateMessageService;
             _tableRegistrationService = tableRegistrationService;
             _collectingGameService = collectingGameService;
@@ -122,7 +112,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                     ? new TelegramBotClient(telegramConfiguration.AccessToken)
                     : new TelegramBotClient(telegramConfiguration.AccessToken,
                         new HttpClient(
-                            new HttpClientHandler {
+                            new HttpClientHandler
+                            {
                                 Proxy = new MiniProxy(telegramConfiguration.Proxy),
                                 UseProxy = true
                             }));
@@ -131,91 +122,93 @@ namespace Eurofurence.App.Server.Services.Telegram
                 loggerFactory,
                 _botClient,
                 (chatId) => new AdminConversation(
+                    _appDbContext,
                     _userManager,
                     _regSysAlternativePinAuthenticationProvider,
-                    _pushNotificationChannelRepository,
-                    _fursuitBadgeRepository,
-                    _fursuitBadgeImageRepository,
-                    _regSysIdentityRepository,
                     privateMessageService,
                     _tableRegistrationService,
                     _collectingGameService,
                     _conventionSettings,
                     loggerFactory
-                    )
-                );
+                )
+            );
 
-            _telegramMessageBroker.OnSendMarkdownMessageToChatAsync += _telegramMessageBroker_OnSendMarkdownMessageToChatAsync;
+            _telegramMessageBroker.OnSendMarkdownMessageToChatAsync +=
+                _telegramMessageBroker_OnSendMarkdownMessageToChatAsync;
             _telegramMessageBroker.OnSendImageToChatAsync += _telegramMessageBroker_OnSendImageToChatAsync;
+
+            Start();
         }
 
-        private async Task<InlineQueryResult[]> QueryEvents(string query)
+        private async Task<InlineQueryResult[]> QueryEventsAsync(string query)
         {
             if (query.Length < 3) return new InlineQueryResult[0];
 
-            var events =
-                (await _eventService.FindAllAsync(a => a.IsDeleted == 0 && a.Title.ToLower().Contains(query.ToLower())))
+            var events = await
+                (_eventService.FindAll(a => a.IsDeleted == 0 && a.Title.ToLower().Contains(query.ToLower())))
                 .OrderBy(a => a.StartDateTimeUtc)
                 .Take(10)
-                .ToList();
+                .ToListAsync();
 
-            if (events.Count == 0) return new InlineQueryResult[0];
-
-            var eventConferenceRooms = await _eventConferenceRoomService.FindAllAsync();
+            if (events.Count == 0) return Array.Empty<InlineQueryResult>();
 
             return events.Select(e =>
-            {
-                e.ConferenceRoom = eventConferenceRooms.Single(r => r.Id == e.ConferenceRoomId);
+                {
+                    e.ConferenceRoom = _eventConferenceRoomService.FindAll()
+                        .FirstOrDefault(ecr => ecr.Id == e.ConferenceRoomId);
 
-                return new InlineQueryResultArticle(
-                    e.Id.ToString(),
-                    $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime.ToString("hh\\:mm")}-{e.EndTime.ToString("hh\\:mm")}: {e.Title} " + (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
-                    new InputTextMessageContent($"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
-                    {
-                        ParseMode = ParseMode.Markdown
-                    });
-            })
-            .ToArray();
+                    return new InlineQueryResultArticle(
+                        e.Id.ToString(),
+                        $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime.ToString("hh\\:mm")}-{e.EndTime.ToString("hh\\:mm")}: {e.Title} " +
+                        (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
+                        new InputTextMessageContent(
+                            $"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
+                        {
+                            ParseMode = ParseMode.Markdown
+                        });
+                })
+                .ToArray();
         }
 
-        private async Task<InlineQueryResult[]> QueryDealers(string query)
+        private async Task<InlineQueryResult[]> QueryDealersAsync(string query)
         {
-            if (query.Length < 3) return new InlineQueryResult[0];
+            if (query.Length < 3) return Array.Empty<InlineQueryResult>();
 
             var dealers =
-                (await _dealerService.FindAllAsync(a => a.IsDeleted == 0 && (
-                    a.DisplayName.ToLower().Contains(query.ToLower()) || a.AttendeeNickname.ToLower().Contains(query.ToLower())
-                )))
-                .OrderBy(a => a.DisplayNameOrAttendeeNickname)
-                .Take(10)
-                .ToList();
+                await _dealerService.FindAll(a => a.IsDeleted == 0 && (
+                        a.DisplayName.ToLower().Contains(query.ToLower()) ||
+                        a.AttendeeNickname.ToLower().Contains(query.ToLower())
+                    ))
+                    .OrderBy(a => a.DisplayNameOrAttendeeNickname)
+                    .Take(10)
+                    .ToListAsync();
 
-            if (dealers.Count == 0) return new InlineQueryResult[0];
+            if (dealers.Count == 0) return Array.Empty<InlineQueryResult>();
 
-            return dealers.Select(e =>
-            {
-                return new InlineQueryResultArticle(
+            return dealers.Select(e => new InlineQueryResultArticle(
                     e.Id.ToString(),
                     $"DEALER: {e.DisplayNameOrAttendeeNickname}",
-                    new InputTextMessageContent($"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
+                    new InputTextMessageContent(
+                        $"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
                     {
                         ParseMode = ParseMode.Markdown
-                    });
-            })
-            .ToArray();
+                    }))
+                .ToArray();
         }
 
         private async Task<InlineQueryResult[]> QueryFursuitBadges(string query)
         {
-            if (query.Length < 3) return new InlineQueryResult[0];
+            if (query.Length < 3) return Array.Empty<InlineQueryResult>();
 
-            var badges =
-                (await _fursuitBadgeRepository.FindAllAsync(
-                    a => a.IsDeleted == 0 && a.IsPublic && a.Name.ToLower().Contains(query.ToLower())))
+            var badges = await
+                (_appDbContext.FursuitBadges
+                    .AsNoTracking()
+                    .Where(
+                        a => a.IsDeleted == 0 && a.IsPublic && a.Name.ToLower().Contains(query.ToLower())))
                 .Take(5)
-                .ToList();
+                .ToListAsync();
 
-            if (badges.Count == 0) return new InlineQueryResult[0];
+            if (badges.Count == 0) return Array.Empty<InlineQueryResult>();
 
             return badges.Select(e =>
                 {
@@ -224,7 +217,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                         $"https://app.eurofurence.org/api/v2/Fursuits/Badges/{e.Id}/Image")
                     {
                         Title = e.Name,
-                        Caption = $"{e.Name}\n{e.Species} ({e.Gender})\n\nWorn by:{e.WornBy}\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
+                        Caption =
+                            $"{e.Name}\n{e.Species} ({e.Gender})\n\nWorn by:{e.WornBy}\n\nhttps://fursuit.eurofurence.org/showSuit.php?id={e.ExternalReference}"
                     };
                 })
                 .ToArray();
@@ -258,8 +252,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                 var queryString = inlineQuery.Query;
                 var queries = new[]
                 {
-                    QueryEvents(queryString),
-                    QueryDealers(queryString)
+                    QueryEventsAsync(queryString),
+                    QueryDealersAsync(queryString)
                 };
 
                 Task.WaitAll(queries);
@@ -270,7 +264,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                 await _botClient.AnswerInlineQueryAsync(
                     inlineQuery.Id,
                     results,
-                    cacheTime: 0);
+                    cacheTime: 0,
+                    cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
@@ -348,10 +343,11 @@ namespace Eurofurence.App.Server.Services.Telegram
             await _botClient.SendTextMessageAsync(chatId: chatId, text: message, parseMode: ParseMode.Markdown);
         }
 
-        private async Task _telegramMessageBroker_OnSendImageToChatAsync(string chatId, byte[] imageBytes, string message)
+        private async Task _telegramMessageBroker_OnSendImageToChatAsync(string chatId, byte[] imageBytes,
+            string message)
         {
             await _botClient.SendPhotoAsync(
-                chatId: chatId, 
+                chatId: chatId,
                 photo: new InputFileStream(new MemoryStream(imageBytes)),
                 caption: message,
                 parseMode: ParseMode.Markdown);

@@ -7,7 +7,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     public class TableRegistrationRecord : EntityBase
     {
-        public class StateChangeRecord
+        public class StateChangeRecord : EntityBase
         {
             public DateTime ChangedDateTimeUtc{ get; set; }
             public string ChangedByUid { get; set; }

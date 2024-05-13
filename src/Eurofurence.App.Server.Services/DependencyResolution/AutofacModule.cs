@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -33,6 +34,7 @@ using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace Eurofurence.App.Server.Services.DependencyResolution
@@ -69,6 +71,18 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
         private void RegisterServices(ContainerBuilder builder)
         {
+            var connectionString = _configuration.GetConnectionString("Eurofurence");
+            var dbContextOptionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            dbContextOptionsBuilder.UseMySql(
+                connectionString!,
+                ServerVersion.AutoDetect(connectionString),
+                mySqlOptions => mySqlOptions.UseMicrosoftJson());
+
+            builder
+                .RegisterType<AppDbContext>()
+                .WithParameter("options", dbContextOptionsBuilder.Options)
+                .InstancePerLifetimeScope();
+
             builder.RegisterType<AgentClosingResultService>().As<IAgentClosingResultService>();
             builder.RegisterType<AnnouncementService>().As<IAnnouncementService>();
             builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();
@@ -97,7 +111,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<IPrivateMessageService>()
                 .SingleInstance();
             builder.RegisterType<PushEventMediator>().As<IPushEventMediator>();
-            builder.RegisterType<PushNotificationChannelStatisticsService>().As<IPushNotificationChannelStatisticsService>();
+            builder.RegisterType<PushNotificationChannelStatisticsService>()
+                .As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
             builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
                 .As<IRegSysAlternativePinAuthenticationProvider>();

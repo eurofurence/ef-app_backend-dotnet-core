@@ -5,9 +5,10 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services
 {
@@ -16,70 +17,119 @@ namespace Eurofurence.App.Server.Services
         IPatchOperationProcessor<T>
         where T : EntityBase
     {
-        private readonly IEntityRepository<T> _entityRepository;
+        private readonly AppDbContext _appDbContext;
         private readonly IStorageService _storageService;
         private readonly bool _useSoftDelete;
 
         public EntityServiceBase(
-            IEntityRepository<T> entityRepository,
+            AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
             bool useSoftDelete = true)
         {
-            _entityRepository = entityRepository;
+            _appDbContext = appDbContext;
             _storageService = storageServiceFactory.CreateStorageService<T>();
             _useSoftDelete = useSoftDelete;
         }
 
-        public virtual Task<T> FindOneAsync(Guid id)
+        public virtual async Task<T> FindOneAsync(Guid id)
         {
-            return _entityRepository.FindOneAsync(id);
+            return await _appDbContext.Set<T>().AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == id);
         }
 
-        public virtual Task<IEnumerable<T>> FindAllAsync()
+        public virtual IQueryable<T> FindAll()
         {
-            return _entityRepository.FindAllAsync();
+            return _appDbContext.Set<T>().AsNoTracking();
         }
 
-        public Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> filter)
+        public IQueryable<T> FindAll(Expression<Func<T, bool>> filter)
         {
-            return _entityRepository.FindAllAsync(filter);
+            return _appDbContext.Set<T>().Where(filter).AsNoTracking();
         }
 
         public virtual async Task ReplaceOneAsync(T entity)
         {
             entity.Touch();
-            await _entityRepository.ReplaceOneAsync(entity);
+            _appDbContext.Set<T>().Update(entity);
             await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
+        }
+
+        public virtual async Task ReplaceMultipleAsync(IQueryable<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                entity.Touch();
+            }
+
+            _appDbContext.Update(entities);
+            await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public virtual async Task InsertOneAsync(T entity)
         {
             entity.Touch();
-            await _entityRepository.InsertOneAsync(entity);
+            await _appDbContext.AddAsync(entity);
             await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
+        }
+
+        public virtual async Task InsertMultipleAsync(IQueryable<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                entity.Touch();
+            }
+
+            await _appDbContext.AddAsync(entities);
+            await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public virtual async Task DeleteOneAsync(Guid id)
         {
+            var entity = await _appDbContext.Set<T>().FirstOrDefaultAsync(entity => entity.Id == id);
+
             if (_useSoftDelete)
             {
-                var entity = await _entityRepository.FindOneAsync(id);
                 entity.IsDeleted = 1;
                 entity.Touch();
-
-                await _entityRepository.ReplaceOneAsync(entity);
             }
             else
             {
-                await _entityRepository.DeleteOneAsync(id);
+                _appDbContext.Remove(entity);
             }
+
             await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
+        }
+
+        public virtual async Task DeleteMultipleAsync(IEnumerable<Guid> ids)
+        {
+            var entities = _appDbContext.Set<T>().Where(entity => ids.Contains(entity.Id));
+
+            if (_useSoftDelete)
+            {
+                foreach (var entity in entities)
+                {
+                    entity.IsDeleted = 1;
+                    entity.Touch();
+                }
+            }
+            else
+            {
+                _appDbContext.Remove(entities);
+            }
+
+            await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public virtual async Task DeleteAllAsync()
         {
-            await _entityRepository.DeleteAllAsync();
+            _appDbContext.RemoveRange(_appDbContext.Set<T>());
             await _storageService.ResetDeltaStartAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public virtual Task<EntityStorageInfoRecord> GetStorageInfoAsync()
@@ -99,19 +149,18 @@ namespace Eurofurence.App.Server.Services
             if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
             {
                 response.RemoveAllBeforeInsert = true;
-                response.DeletedEntities = new Guid[0];
-                response.ChangedEntities =
-                    (await _entityRepository.FindAllAsync(false)).ToArray();
+                response.DeletedEntities = Array.Empty<Guid>();
+                response.ChangedEntities = await
+                    _appDbContext.Set<T>().Where(entity => entity.IsDeleted == 0).ToArrayAsync();
             }
             else
             {
                 response.RemoveAllBeforeInsert = false;
 
-                var entities = (await _entityRepository.FindAllAsync(true,
-                    minLastDateTimeChangedUtc)).ToList();
+                var entities = _appDbContext.Set<T>().Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
-                response.ChangedEntities = entities.Where(a => a.IsDeleted == 0).ToArray();
-                response.DeletedEntities = entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArray();
+                response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
+                response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();
             }
 
             return response;
@@ -136,33 +185,35 @@ namespace Eurofurence.App.Server.Services
 
         public virtual async Task ResetStorageDeltaAsync()
         {
-            var items = await _entityRepository.FindAllAsync(includeDeletedRecords: true, minLastDateTimeChangedUtc: DateTime.MinValue);
+            var items = _appDbContext.Set<T>().Where(entity => entity.LastChangeDateTimeUtc > DateTime.MinValue);
             await _storageService.ResetDeltaStartAsync();
 
             foreach(var item in items)
             {
                 if (item.IsDeleted == 1)
                 {
-                    await _entityRepository.DeleteOneAsync(item.Id);
+                    _appDbContext.Remove(item);
                 } else
                 {
                     item.Touch();
-                    await _entityRepository.ReplaceOneAsync(item);
+                    _appDbContext.Update(item);
                 }
             }
+
+            await _appDbContext.SaveChangesAsync();
         }
 
-        public Task<bool> HasOneAsync(Guid id)
+        public async Task<bool> HasOneAsync(Guid id)
         {
-            return _entityRepository.HasAsync(id);
+            return await _appDbContext.Set<T>().AnyAsync(entity => entity.Id == id);
         }
 
-        public Task<bool> HasManyAsync(params Guid?[] ids)
+        public async Task<bool> HasManyAsync(params Guid?[] ids)
         {
             var idsWithValue = ids.Where(id => id.HasValue).Select(id => id.Value).ToArray();
-            if (idsWithValue.Length == 0) return Task.FromResult(true);
+            if (idsWithValue.Length == 0) return true;
 
-            return _entityRepository.HasManyAsync(idsWithValue);
+            return await _appDbContext.Set<T>().CountAsync(entity => idsWithValue.Contains(entity.Id)) > 0;
         }
     }
 }

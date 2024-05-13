@@ -1,7 +1,6 @@
 using Eurofurence.App.Domain.Model.Events;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
@@ -9,7 +8,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         IEntityServiceOperations<EventRecord>,
         IPatchOperationProcessor<EventRecord>
     {
-        Task<IEnumerable<EventRecord>> FindConflictsAsync(
+        IQueryable<EventRecord> FindConflicts(
             DateTime conflictStartTime,
             DateTime conflictEndTime,
             TimeSpan tolerance);

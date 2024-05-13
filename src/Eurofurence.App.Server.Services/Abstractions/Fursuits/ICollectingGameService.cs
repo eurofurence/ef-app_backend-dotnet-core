@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Results;
 
@@ -6,7 +7,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 {
     public interface ICollectingGameService
     {
-        Task<FursuitParticipationInfo[]> GetFursuitParticipationInfoForOwnerAsync(string ownerUid);
+        Task<IEnumerable<FursuitParticipationInfo>> GetFursuitParticipationInfoForOwnerAsync(string ownerUid);
         Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync(string playerUid, string playerName);
         Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync(string playerUid);
 

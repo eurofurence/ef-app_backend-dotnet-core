@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Security
 {
@@ -6,6 +7,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Security
     {
         Task<AuthenticationResponse> AuthorizeViaRegSys(RegSysAuthenticationRequest request);
         AuthenticationResponse AuthorizeViaPrincipal(IApiPrincipal principal);
-        Task<string> CreateRegSysAccessTokenAsync(string[] rolesToGrant);
+        Task<string> CreateRegSysAccessTokenAsync(List<string> rolesToGrant);
     }
 }
