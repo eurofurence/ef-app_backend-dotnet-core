@@ -226,7 +226,7 @@ namespace Eurofurence.App.Server.Web
             {
                 loggerConfiguration
                     .MinimumLevel.Debug()
-                    .WriteTo.ColoredConsole();
+                    .WriteTo.Console();
             }
             else
             {
