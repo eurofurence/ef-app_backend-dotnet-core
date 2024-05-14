@@ -6,7 +6,6 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Common.Compression;
 using Microsoft.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
 using Eurofurence.App.Domain.Model.Knowledge;
 using System.Collections.Generic;
 using Eurofurence.App.Domain.Model.Images;

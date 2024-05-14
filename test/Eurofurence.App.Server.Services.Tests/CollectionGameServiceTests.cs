@@ -1,4 +1,3 @@
-using Autofac;
 using Eurofurence.App.Common.Results;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;

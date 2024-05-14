@@ -21,7 +21,6 @@ using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Newtonsoft.Json;
 
 namespace Eurofurence.App.Infrastructure.EntityFramework
 {
