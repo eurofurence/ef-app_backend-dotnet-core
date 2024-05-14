@@ -4,7 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands

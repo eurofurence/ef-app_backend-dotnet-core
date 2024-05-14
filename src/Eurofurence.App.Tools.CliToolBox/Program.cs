@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Eurofurence.App.Tools.CliToolBox.Commands;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

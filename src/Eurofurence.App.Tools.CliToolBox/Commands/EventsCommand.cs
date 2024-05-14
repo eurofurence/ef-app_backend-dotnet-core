@@ -4,7 +4,7 @@ using System.Linq;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
