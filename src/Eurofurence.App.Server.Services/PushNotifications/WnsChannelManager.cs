@@ -7,8 +7,9 @@ using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
@@ -42,7 +43,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var recipients = GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
 
-            await SendRawAsync(recipients, JsonConvert.SerializeObject(message));
+            await SendRawAsync(recipients, JsonSerializer.Serialize(message));
         }
 
         public async Task SendToastAsync(string topic, string message)
@@ -165,7 +166,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private Task SendRawAsync(IEnumerable<PushNotificationChannelRecord> recipients, object rawContent)
         {
-            return SendRawAsync(recipients, JsonConvert.SerializeObject(rawContent));
+            return SendRawAsync(recipients, JsonSerializer.Serialize(rawContent));
         }
 
         private async Task SendRawAsync(IEnumerable<PushNotificationChannelRecord> recipients, string rawContent)
@@ -208,25 +209,23 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private async Task<string> GetWnsAccessTokenAsync()
         {
-            using (var client = new HttpClient())
+            using var client = new HttpClient();
+            var payload = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
             {
-                var payload = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("grant_type", "client_credentials"),
-                    new KeyValuePair<string, string>("client_id", _configuration.ClientId),
-                    new KeyValuePair<string, string>("client_secret", _configuration.ClientSecret),
-                    new KeyValuePair<string, string>("scope", "notify.windows.com")
-                });
+                new KeyValuePair<string, string>("grant_type", "client_credentials"),
+                new KeyValuePair<string, string>("client_id", _configuration.ClientId),
+                new KeyValuePair<string, string>("client_secret", _configuration.ClientSecret),
+                new KeyValuePair<string, string>("scope", "notify.windows.com")
+            });
 
-                var response = await client.PostAsync("https://login.live.com/accesstoken.srf", payload);
-                response.EnsureSuccessStatusCode();
+            var response = await client.PostAsync("https://login.live.com/accesstoken.srf", payload);
+            response.EnsureSuccessStatusCode();
 
-                var content = await response.Content.ReadAsStringAsync();
-                var schema = new {token_type = "", access_token = "", expires_in = 0};
-                var node = JsonConvert.DeserializeAnonymousType(content, schema);
+            var content = await response.Content.ReadAsStringAsync();
 
-                return node.access_token;
-            }
+            var accessTokenNode = JsonNode.Parse(content)!;
+
+            return (string)accessTokenNode["access_token"] ?? "";
         }
     }
 }
