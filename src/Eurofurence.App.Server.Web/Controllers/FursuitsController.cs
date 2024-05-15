@@ -16,17 +16,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IFursuitBadgeService _fursuitBadgeService;
         private readonly ICollectingGameService _collectingGameService;
-        private readonly IApiPrincipal _apiPrincipal;
 
         public FursuitsController(
             IFursuitBadgeService fursuitBadgeService,
-            ICollectingGameService collectingGameService,
-            IApiPrincipal apiPrincipal
-            )
+            ICollectingGameService collectingGameService)
         {
             _fursuitBadgeService = fursuitBadgeService;
             _collectingGameService = collectingGameService;
-            _apiPrincipal = apiPrincipal;
         }
         /// <summary>
         ///     Upsert Fursuit Badge information
@@ -90,7 +86,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
         public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerAsync([FromRoute] Guid fursuitBadgeId, [FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, fursuitBadgeId, TokenValue.ToUpper());
+            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(User.GetSubject(), fursuitBadgeId, TokenValue.ToUpper());
             return result.AsActionResult();
         }
 
@@ -99,7 +95,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiSafeResult), 200)]
         public async Task<ActionResult> RegisterTokenForFursuitBadgeForOwnerSafeAsync([FromRoute] Guid fursuitBadgeId, [FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(_apiPrincipal.Uid, fursuitBadgeId, TokenValue.ToUpper());
+            var result = await _collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(User.GetSubject(), fursuitBadgeId, TokenValue.ToUpper());
             return result.AsActionResultSafeVariant();
         }
 
@@ -108,7 +104,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(FursuitParticipationInfo[]), 200)]
         public Task<IEnumerable<FursuitParticipationInfo>> GetFursuitParticipationInfoForOwnerAsync()
         {
-            return _collectingGameService.GetFursuitParticipationInfoForOwnerAsync(_apiPrincipal.Uid);
+            return _collectingGameService.GetFursuitParticipationInfoForOwnerAsync(User.GetSubject());
         }
 
         [Authorize(Roles = "Attendee")]
@@ -116,7 +112,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(PlayerParticipationInfo), 200)]
         public Task<PlayerParticipationInfo> GetPlayerParticipationInfoForPlayerAsync()
         {
-            return _collectingGameService.GetPlayerParticipationInfoForPlayerAsync(_apiPrincipal.Uid, _apiPrincipal.GivenName);
+            return _collectingGameService.GetPlayerParticipationInfoForPlayerAsync(User.GetSubject(), User.GetName());
         }
 
         [Authorize(Roles = "Attendee")]
@@ -124,7 +120,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(PlayerCollectionEntry[]), 200)]
         public Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync()
         {
-            return _collectingGameService.GetPlayerCollectionEntriesForPlayerAsync(_apiPrincipal.Uid);
+            return _collectingGameService.GetPlayerCollectionEntriesForPlayerAsync(User.GetSubject());
         }
 
         [Authorize(Roles = "Attendee")]
@@ -133,7 +129,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
         public async Task<ActionResult> CollectTokenForPlayerAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.Trim().ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(User.GetSubject(), TokenValue.Trim().ToUpper());
             return result.AsActionResult();
         }
 
@@ -143,7 +139,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiSafeResult<CollectTokenResponse>), 200)]
         public async Task<ActionResult> CollectTokenForPlayerSafeAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(_apiPrincipal.Uid, TokenValue.Trim().ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(User.GetSubject(), TokenValue.Trim().ToUpper());
             return result.AsActionResultSafeVariant();
         }
 

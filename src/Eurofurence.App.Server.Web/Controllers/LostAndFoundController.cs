@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,15 +10,10 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class LostAndFoundController : BaseController
     {
         private readonly ILostAndFoundService _lostAndFoundService;
-        private readonly IApiPrincipal _apiPrincipal;
 
-        public LostAndFoundController(
-            ILostAndFoundService lostAndFoundService,
-            IApiPrincipal apiPrincipal
-            )
+        public LostAndFoundController(ILostAndFoundService lostAndFoundService)
         {
             _lostAndFoundService = lostAndFoundService;
-            _apiPrincipal = apiPrincipal;
         }
 
         [Authorize(Roles = "Attendee")]

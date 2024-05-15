@@ -12,7 +12,6 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class PushNotificationsController : BaseController
     {
         private readonly IPushEventMediator _pushEventMediator;
-        private readonly IApiPrincipal _apiPrincipal;
         private readonly IWnsChannelManager _wnsChannelManager;
         private readonly IFirebaseChannelManager _firebaseChannelManager;
         private readonly IPushNotificationChannelStatisticsService _pushNotificationChannelStatisticsService;
@@ -21,12 +20,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             IPushEventMediator pushEventMediator,
             IWnsChannelManager wnsChannelManager,
             IFirebaseChannelManager firebaseChannelManager,
-            IPushNotificationChannelStatisticsService pushNotificationChannelStatisticsService,
-            IApiPrincipal apiPrincipal)
+            IPushNotificationChannelStatisticsService pushNotificationChannelStatisticsService)
         {
             _firebaseChannelManager = firebaseChannelManager;
             _pushEventMediator = pushEventMediator;
-            _apiPrincipal = apiPrincipal;
             _wnsChannelManager = wnsChannelManager;
             _pushNotificationChannelStatisticsService = pushNotificationChannelStatisticsService;
         }
@@ -55,7 +52,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (request == null) return BadRequest();
 
-            await _wnsChannelManager.RegisterChannelAsync(request.DeviceId, request.ChannelUri, _apiPrincipal.Uid,
+            await _wnsChannelManager.RegisterChannelAsync(request.DeviceId, request.ChannelUri, User.GetSubject(),
                 request.Topics);
             return NoContent();
         }
@@ -67,7 +64,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (request == null) return BadRequest();
 
-            await _firebaseChannelManager.RegisterDeviceAsync(request.DeviceId, _apiPrincipal.Uid, request.Topics);
+            await _firebaseChannelManager.RegisterDeviceAsync(request.DeviceId, User.GetSubject(), request.Topics);
             return NoContent();
         }
 

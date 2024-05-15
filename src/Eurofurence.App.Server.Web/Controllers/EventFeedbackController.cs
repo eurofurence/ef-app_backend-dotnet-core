@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -9,17 +8,14 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/[controller]")]
     public class EventFeedbackController : BaseController
     {
-        private readonly IApiPrincipal _apiPrincipal;
         private readonly IEventFeedbackService _eventFeedbackService;
         private readonly IEventService _eventService;
 
         public EventFeedbackController(
             IEventFeedbackService eventFeedbackService,
-            IEventService eventService,
-            IApiPrincipal apiPrincipal)
+            IEventService eventService)
         {
             _eventService = eventService;
-            _apiPrincipal = apiPrincipal;
             _eventFeedbackService = eventFeedbackService;
         }
 

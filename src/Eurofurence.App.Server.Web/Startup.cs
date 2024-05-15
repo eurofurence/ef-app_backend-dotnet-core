@@ -2,12 +2,9 @@
 using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
@@ -20,7 +17,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
@@ -30,7 +26,6 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
-using System.Text;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
@@ -189,9 +184,6 @@ namespace Eurofurence.App.Server.Web
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
-
-            builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
-                .As<IApiPrincipal>();
 
             builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
             builder.RegisterType<UpdateLostAndFoundJob>().WithAttributeFiltering().AsSelf();

@@ -14,12 +14,10 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/[controller]")]
     public class CommunicationController : BaseController
     {
-        private readonly IApiPrincipal _apiPrincipal;
         private readonly IPrivateMessageService _privateMessageService;
 
-        public CommunicationController(IPrivateMessageService privateMessageService, IApiPrincipal apiPrincipal)
+        public CommunicationController(IPrivateMessageService privateMessageService)
         {
-            _apiPrincipal = apiPrincipal;
             _privateMessageService = privateMessageService;
         }
 
@@ -36,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
         public Task<IQueryable<PrivateMessageRecord>> GetMyPrivateMessagesAsync()
         {
-            return _privateMessageService.GetPrivateMessagesForRecipientAsync(_apiPrincipal.Uid);
+            return _privateMessageService.GetPrivateMessagesForRecipientAsync(User.GetSubject());
         }
 
         /// <summary>
@@ -61,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (!isRead) return BadRequest("Message can only be marked as read; not as unread.");
 
-            var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(messageId, _apiPrincipal.Uid);
+            var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(messageId, User.GetSubject());
             return result.HasValue ? (ActionResult) Json(result) : BadRequest();
         }
 
@@ -83,12 +81,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (Request == null) return BadRequest();
 
-            if (_apiPrincipal.IsAttendee)
-            {
-                Request.AuthorName = _apiPrincipal.GivenName;
-            }
+            // if (_apiPrincipal.IsAttendee)
+            // {
+                Request.AuthorName = User.GetName();
+            // }
 
-            return Json(await _privateMessageService.SendPrivateMessageAsync(Request, _apiPrincipal.Uid));
+            return Json(await _privateMessageService.SendPrivateMessageAsync(Request, User.GetSubject()));
         }
 
 
@@ -108,7 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
         public IQueryable<PrivateMessageRecord> GetMySentPrivateMessagesAsync()
         {
-            return _privateMessageService.GetPrivateMessagesForSender(_apiPrincipal.Uid);
+            return _privateMessageService.GetPrivateMessagesForSender(User.GetSubject());
         }
 
         [HttpGet("NotificationQueue/Count")]

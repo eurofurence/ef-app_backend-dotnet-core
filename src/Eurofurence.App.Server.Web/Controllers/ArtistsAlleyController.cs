@@ -12,22 +12,17 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ArtistsAlleyController : BaseController
     {
         private readonly ITableRegistrationService _tableRegistrationService;
-        private readonly IApiPrincipal _apiPrincipal;
 
-        public ArtistsAlleyController(
-            ITableRegistrationService tableRegistrationService,
-            IApiPrincipal apiPrincipal
-            )
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService)
         {
             _tableRegistrationService = tableRegistrationService;
-            _apiPrincipal = apiPrincipal;
         }
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([FromBody]TableRegistrationRequest Request)
         {
-            await _tableRegistrationService.RegisterTableAsync(_apiPrincipal.Uid, Request);
+            await _tableRegistrationService.RegisterTableAsync(User.GetSubject(), Request);
             return NoContent();
         }
 
@@ -35,7 +30,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("TableRegistration/:my-latest")]
         public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
         {
-            var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(_apiPrincipal.Uid);
+            var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
             return record.Transient404(HttpContext);
         }
     }
