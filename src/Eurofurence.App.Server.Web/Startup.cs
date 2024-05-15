@@ -4,7 +4,6 @@ using Amazon.Runtime;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
-using Eurofurence.App.Domain.Model.MongoDb;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Security;
@@ -16,11 +15,12 @@ using FluentScheduler;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
@@ -30,6 +30,8 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
+using System.Text;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.AspNetCore.Authorization;
@@ -42,7 +44,7 @@ namespace Eurofurence.App.Server.Web
         private readonly IWebHostEnvironment _hostingEnvironment;
         private ILogger _logger;
 
-        public Startup(IWebHostEnvironment hostingEnvironment, IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
             Configuration = configuration;
@@ -50,10 +52,8 @@ namespace Eurofurence.App.Server.Web
 
         public IConfiguration Configuration { get; set; }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
-            BsonClassMapping.Register();
-
             var conventionSettings = ConventionSettings.FromConfiguration(Configuration);
 
             services.AddLogging(options =>
@@ -171,9 +171,23 @@ namespace Eurofurence.App.Server.Web
             });
 
             var builder = new ContainerBuilder();
-            builder.Populate(services);
 
-            builder.RegisterModule(new Domain.Model.MongoDb.DependencyResolution.AutofacModule());
+            services.AddDbContextPool<AppDbContext>(options =>
+            {
+                var connectionString = Configuration.GetConnectionString("Eurofurence");
+                options.UseMySql(
+                    connectionString, 
+                    ServerVersion.AutoDetect(connectionString),
+                    mySqlOptions => mySqlOptions.UseMicrosoftJson());
+            });
+            
+            builder.Build();
+
+            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
+        }
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
             builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
 
             builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
@@ -186,18 +200,6 @@ namespace Eurofurence.App.Server.Web
             builder.Register(c => Configuration.GetSection("jobs:updateNews"))
                 .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
 
-            var container = builder.Build();
-
-            var client = new MongoClient(new MongoUrl(Configuration["mongoDb:url"]));
-            var database = client.GetDatabase(Configuration["mongoDb:database"]);
-
-            container
-                .Resolve<Domain.Model.MongoDb.DependencyResolution.IMongoDatabaseBroker>()
-                .Setup(database);
-
-            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
-
-            return container.Resolve<IServiceProvider>();
         }
 
         public void Configure(
@@ -247,7 +249,9 @@ namespace Eurofurence.App.Server.Web
                         )
                 );
 
-            var cgc = app.ApplicationServices.GetService<CollectionGameConfiguration>();
+            var cgc = new CollectionGameConfiguration();
+            Configuration.GetSection(CollectionGameConfiguration.CollectionGame).Bind(cgc);
+            
             loggerConfiguration
                 .WriteTo
                 .Logger(lc =>

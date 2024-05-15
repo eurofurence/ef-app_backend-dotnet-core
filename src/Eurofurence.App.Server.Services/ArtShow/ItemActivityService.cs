@@ -7,29 +7,30 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.ArtShow;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.ArtShow
 {
     public class ItemActivityService : IItemActivityService
     {
+        private readonly AppDbContext _appDbContext;
         private readonly ConventionSettings _conventionSettings;
-        private readonly IEntityRepository<ItemActivityRecord> _itemActivityRepository;
         private readonly IPrivateMessageService _privateMessageService;
         private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public ItemActivityService(
+            AppDbContext appDbContext,
             ConventionSettings conventionSettings, 
-            IEntityRepository<ItemActivityRecord> itemActivityRepository,
             IPrivateMessageService privateMessageService
             )
         {
+            _appDbContext = appDbContext;
             _conventionSettings = conventionSettings;
-            _itemActivityRepository = itemActivityRepository;
             _privateMessageService = privateMessageService;
         }
 
@@ -46,7 +47,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             
             foreach (var csvRecord in csvRecords)
             {
-                var existingRecord = await _itemActivityRepository.FindOneAsync(a => a.ImportHash == csvRecord.Hash.Value);
+                var existingRecord = await _appDbContext.ItemActivitys.AsNoTracking().FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
                 if (existingRecord != null)
                 {
                     importResult.RowsSkippedAsDuplicate++;
@@ -67,15 +68,16 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 };
                 newRecord.Touch();
 
-                await _itemActivityRepository.InsertOneAsync(newRecord);
+                _appDbContext.ItemActivitys.Add(newRecord);
                 importResult.RowsImported++;
             }
 
+            await _appDbContext.SaveChangesAsync();
             return importResult;
         }
 
-        private Task<IEnumerable<ItemActivityRecord>> GetUnprocessedImportRows()
-            => _itemActivityRepository.FindAllAsync(a => a.NotificationDateTimeUtc == null);
+        private IQueryable<ItemActivityRecord> GetUnprocessedImportRows()
+            => _appDbContext.ItemActivitys.Where(a => a.NotificationDateTimeUtc == null);
 
         private class NotificationBundle
         {
@@ -84,9 +86,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
             public IList<ItemActivityRecord> ItemsToAuction { get; set; }
         }
 
-        private async Task<IList<NotificationBundle>> BuildNotificationBundlesAsync()
+        private IList<NotificationBundle> BuildNotificationBundles()
         {
-            var newActivities = await GetUnprocessedImportRows();
+            var newActivities = GetUnprocessedImportRows();
 
             return newActivities
                 .GroupBy(a => a.OwnerUid)
@@ -105,7 +107,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 await _semaphore.WaitAsync();
 
-                var notificationBundles = await BuildNotificationBundlesAsync();
+                var notificationBundles = BuildNotificationBundles();
 
                 var tasks = notificationBundles.Select(async bundle =>
                 {
@@ -151,8 +153,10 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 item.PrivateMessageId = privateMessageId;
                 item.NotificationDateTimeUtc = now;
-                await _itemActivityRepository.ReplaceOneAsync(item);
+                _appDbContext.Update(item);
             }
+
+            await _appDbContext.SaveChangesAsync();
         }
 
         private async Task SendItemsSoldNotificationAsync(string recipientUid, IList<ItemActivityRecord> items)
@@ -185,13 +189,15 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 item.PrivateMessageId = privateMessageId;
                 item.NotificationDateTimeUtc = now;
-                await _itemActivityRepository.ReplaceOneAsync(item);
+                _appDbContext.Update(item);
             }
+
+            await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task<IList<ItemActivityNotificationResult>> SimulateNotificationRunAsync()
+        public IList<ItemActivityNotificationResult> SimulateNotificationRun()
         {
-            var notificationBundles = await BuildNotificationBundlesAsync();
+            var notificationBundles = BuildNotificationBundles();
 
             return notificationBundles
                 .Select(bundle => new ItemActivityNotificationResult()
@@ -205,10 +211,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
         public async Task DeleteUnprocessedImportRowsAsync()
         {
-            var recordsToDelete = await GetUnprocessedImportRows();
+            var recordsToDelete = GetUnprocessedImportRows();
 
             foreach (var record in recordsToDelete)
-                await _itemActivityRepository.DeleteOneAsync(record.Id);
+                _appDbContext.Remove(record);
+
+            await _appDbContext.SaveChangesAsync();
         }
     }
 }

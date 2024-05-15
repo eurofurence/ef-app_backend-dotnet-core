@@ -8,7 +8,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
     {
         Task<ImportResult> ImportActivityLogAsync(TextReader logReader);
 
-        Task<IList<ItemActivityNotificationResult>> SimulateNotificationRunAsync();
+        IList<ItemActivityNotificationResult> SimulateNotificationRun();
         Task ExecuteNotificationRunAsync();
         Task DeleteUnprocessedImportRowsAsync();
     }

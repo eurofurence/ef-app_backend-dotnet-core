@@ -65,9 +65,8 @@ namespace Eurofurence.App.Domain.Model.Dealers
         /// <summary>
         /// **(pba)** Link fragments to external website(s) of the dealer.
         /// </summary>
-        [Required]
         [DataMember]
-        public LinkFragment[] Links { get; set; }
+        public List<LinkFragment> Links { get; set; } = new();
 
         /// <summary>
         /// **(pba)** Twitter handle of the dealer.

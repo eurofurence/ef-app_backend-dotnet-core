@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -25,9 +26,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventConferenceTrackRecord>), 200)]
-        public Task<IEnumerable<EventConferenceTrackRecord>> GetEventsAsync()
+        public IQueryable<EventConferenceTrackRecord> GetEventsAsync()
         {
-            return _eventConferenceTrackService.FindAllAsync();
+            return _eventConferenceTrackService.FindAll();
         }
 
         /// <summary>

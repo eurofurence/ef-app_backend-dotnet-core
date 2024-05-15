@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Common.Utility;
 using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
@@ -94,11 +95,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
         private async Task<int> CleanUpImagesAsync(List<KnowledgeEntryRecord> knowledgeEntries)
         {
             int modifiedRecords = 0;
-            var usedImageIds = knowledgeEntries.SelectMany(a => a.ImageIds).Distinct().ToList();
+            var usedImageIds = knowledgeEntries.SelectMany(a => a.Images).Select(image => image.Id).Distinct().ToList();
 
 #pragma warning disable RECS0063 // Warns when a culture-aware 'StartsWith' call is used by default.
             var knowledgeImages =
-                await _imageService.FindAllAsync(a => a.IsDeleted == 0 &&
+                _imageService.FindAll(a => a.IsDeleted == 0 &&
                                                       a.InternalReference.StartsWith("knowledge:"));
 #pragma warning restore RECS0063 // Warns when a culture-aware 'StartsWith' call is used by default.
 
@@ -118,7 +119,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
         {
             MatchCollection m = Regex.Matches(url, @"  \* \[\[([^\|]+)\|([^\]]+)\]\]", RegexOptions.Singleline);
 
-            var imageIds = new List<Guid>();
+            var images = new List<ImageRecord>();
             var linkFragments = new List<LinkFragment>();
 
             foreach (Match linkMatch in m)
@@ -133,10 +134,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                     try
                     {
                         var imageBytes = await GetImageAsync(target);
-                        var imageId =
+                        var image =
                             await _imageService.InsertOrUpdateImageAsync($"knowledge:{url.AsHashToGuid()}", imageBytes);
 
-                        imageIds.Add(imageId);
+                        images.Add(image);
                     }
                     catch (HttpRequestException)
                     {
@@ -151,16 +152,18 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
 
                     if (Uri.IsWellFormedUriString(target, UriKind.Absolute))
                     {
-                        linkFragments.Add(new LinkFragment(
-                            LinkFragment.FragmentTypeEnum.WebExternal,
-                            name,
-                            target));
+                        linkFragments.Add(new LinkFragment()
+                        {
+                            FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
+                            Name = name,
+                            Target = target
+                        });
                     }
                 }
             }
 
-            knowledgeEntry.Links = linkFragments.ToArray();
-            knowledgeEntry.ImageIds = imageIds.ToArray();
+            knowledgeEntry.Links = linkFragments;
+            knowledgeEntry.Images = images;
         }
 
         private async Task<byte[]> GetImageAsync(string url)
@@ -178,7 +181,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             ref int modifiedRecords
         )
         {
-            var knowledgeGroupRecords = service.FindAllAsync().Result;
+            var knowledgeGroupRecords = service.FindAll();
 
             var patch = new PatchDefinition<KnowledgeGroupRecord, KnowledgeGroupRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Id == source.Id)
@@ -205,7 +208,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
             ref int modifiedRecords
         )
         {
-            var knowledgeEntryRecords = service.FindAllAsync().Result;
+            var knowledgeEntryRecords = service.FindAll();
 
             var patch = new PatchDefinition<KnowledgeEntryRecord, KnowledgeEntryRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Id == source.Id)
@@ -218,7 +221,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                 .Map(s => s.Text, t => t.Text)
                 .Map(s => s.Order, t => t.Order)
                 .Map(s => s.Links, t => t.Links)
-                .Map(s => s.ImageIds, t => t.ImageIds);
+                .Map(s => s.Images, t => t.Images);
 
             var diff = patch.Patch(importKnowledgeEntries, knowledgeEntryRecords);
 

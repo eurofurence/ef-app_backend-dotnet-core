@@ -1,56 +1,51 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
-using Eurofurence.App.Domain.Model;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
-using Eurofurence.App.Domain.Model.Security;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
     public class TableRegistrationService : ITableRegistrationService
     {
+        private readonly AppDbContext _appDbContext;
         private readonly ArtistAlleyConfiguration _configuration;
-        private readonly IEntityRepository<TableRegistrationRecord> _tableRegistrationRepository;
         private readonly ITelegramMessageSender _telegramMessageSender;
         private readonly IImageService _imageService;
-        private readonly IEntityRepository<RegSysIdentityRecord> _regSysIdentityRepository;
         private readonly IPrivateMessageService _privateMessageService;
 
         public TableRegistrationService(
+            AppDbContext context,
             ArtistAlleyConfiguration configuration,
-            IEntityRepository<TableRegistrationRecord> tableRegistrationRepository,
             ITelegramMessageSender telegramMessageSender,
-            IEntityRepository<RegSysIdentityRecord> regSysIdentityRepository,
             IPrivateMessageService privateMessageService,
             IImageService imageService)
         {
+            _appDbContext = context;
             _configuration = configuration;
-            _tableRegistrationRepository = tableRegistrationRepository;
             _telegramMessageSender = telegramMessageSender;
-            _regSysIdentityRepository = regSysIdentityRepository;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
         }
 
-        public async Task<IEnumerable<TableRegistrationRecord>> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
+        public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
         {
-            var records = await _tableRegistrationRepository.FindAllAsync(a => !state.HasValue || a.State == state.Value);
+            var records = _appDbContext.TableRegistrations.Where(a => !state.HasValue || a.State == state.Value).AsNoTracking();
             return records;
         }
 
         public async Task RegisterTableAsync(string uid, TableRegistrationRequest request)
         {
-            var identity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == uid);
+            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == uid);
 
-            byte[] imageBytes = Convert.FromBase64String(request.ImageContent);
+            var imageBytes = Convert.FromBase64String(request.ImageContent);
             var imageFragment = _imageService.GenerateFragmentFromBytes(imageBytes);
 
             imageFragment = _imageService.EnforceMaximumDimensions(imageFragment, 1500, 1500);
@@ -71,22 +66,21 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.NewId();
             record.Touch();
 
-            await _tableRegistrationRepository.InsertOneAsync(record);
+            _appDbContext.TableRegistrations.Add(record);
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
                 $"*New Request:* {identity.Username.EscapeMarkdown()} ({uid.EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Location:* {record.Location.RemoveMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
+            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
         {
-            var record = await _tableRegistrationRepository.FindOneAsync(a => a.Id == id
-                && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var identity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == record.OwnerUid);
+            var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
+                                                                           && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
+            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
 
             record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             record.Touch();
-
-            await _tableRegistrationRepository.ReplaceOneAsync(record);
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
@@ -107,6 +101,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             };
 
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
+
+            await _appDbContext.SaveChangesAsync();
         }
 
         private async Task BroadcastAsync(TableRegistrationRecord record)
@@ -145,14 +141,12 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public async Task RejectByIdAsync(Guid id, string operatorUid)
         {
-            var record = await _tableRegistrationRepository.FindOneAsync(a => a.Id == id
+            var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                 && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var identity = await _regSysIdentityRepository.FindOneAsync(a => a.Uid == record.OwnerUid);
+            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
 
             record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
             record.Touch();
-
-            await _tableRegistrationRepository.ReplaceOneAsync(record);
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
                 $"*Rejected:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
@@ -170,16 +164,17 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             };
 
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
+
+            await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task<TableRegistrationRecord> GetLatestRegistrationByUid(string uid)
+        public async Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid)
         {
-            var request = (await _tableRegistrationRepository.FindAllAsync(
-                a => a.OwnerUid == uid,
-                new FilterOptions<TableRegistrationRecord>()
-                    .SortDescending(a => a.CreatedDateTimeUtc)
-                    .Take(1)
-                )).SingleOrDefault();
+            var request = await _appDbContext.TableRegistrations
+                .AsNoTracking()
+                .Where(a => a.OwnerUid == uid)
+                .OrderByDescending(a => a.CreatedDateTimeUtc)
+                .FirstOrDefaultAsync();
 
             return request;
         }

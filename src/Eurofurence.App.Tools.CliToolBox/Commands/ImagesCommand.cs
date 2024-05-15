@@ -47,15 +47,15 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     return -1;
                 }
 
-                var existingImage = _imageService.FindAllAsync(image => image.InternalReference == internalReference.Value).Result.SingleOrDefault();
+                var existingImage = _imageService.FindAll(image => image.InternalReference == internalReference.Value).SingleOrDefault();
                 if (existingImage != null)
                 {
                     command.Out.WriteLine($"An image with reference {internalReference.Value} already exists.");
                     return -1;
                 }
 
-                var id = _imageService.InsertOrUpdateImageAsync(internalReference.Value, _imageService.GeneratePlaceholderImage()).Result;
-                command.Out.WriteLine($"Created placeholder image {id} for reference {internalReference.Value}");
+                var image = _imageService.InsertOrUpdateImageAsync(internalReference.Value, _imageService.GeneratePlaceholderImage()).Result;
+                command.Out.WriteLine($"Created placeholder image {image.Id} for reference {internalReference.Value}");
 
                 return 0;
             });
@@ -73,7 +73,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     return -1;
                 }
 
-                var existingImage = _imageService.FindAllAsync(image => image.InternalReference == internalReference.Value).Result.SingleOrDefault();
+                var existingImage = _imageService.FindAll(image => image.InternalReference == internalReference.Value).SingleOrDefault();
                 if (existingImage == null)
                 {
                     command.Out.WriteLine($"An image with reference {internalReference.Value} could not be found.");

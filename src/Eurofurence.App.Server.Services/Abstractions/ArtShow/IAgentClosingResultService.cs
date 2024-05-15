@@ -10,7 +10,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
 
         Task ExecuteNotificationRunAsync();
 
-        Task<IList<AgentClosingNotificationResult>> SimulateNotificationRunAsync();
+        IList<AgentClosingNotificationResult> SimulateNotificationRun();
 
         Task DeleteUnprocessedImportRowsAsync();
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -27,9 +28,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
-        public Task<IEnumerable<ImageRecord>> GetImagesAsync()
+        public IQueryable<ImageRecord> GetImagesAsync()
         {
-            return _imageService.FindAllAsync();
+            return _imageService.FindAll();
         }
 
         /// <summary>
@@ -56,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var record = await _imageService.FindOneAsync(id);
             if (record == null) return NotFound();
 
-            var content = await _imageService.GetImageContentByIdAsync(id);
+            var content = await _imageService.GetImageContentByImageIdAsync(id);
             return File(content, record.MimeType);
         }
         
@@ -84,7 +85,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return Redirect($"./with-hash:{Convert.ToBase64String(Encoding.Default.GetBytes(record.ContentHashSha1))}");
             }
 
-            var content = await _imageService.GetImageContentByIdAsync(id);
+            var content = await _imageService.GetImageContentByImageIdAsync(id);
             return File(content, record.MimeType);
         }
 

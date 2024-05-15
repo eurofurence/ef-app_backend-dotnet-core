@@ -29,9 +29,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<AnnouncementRecord>), 200)]
-        public Task<IEnumerable<AnnouncementRecord>> GetAnnouncementEntriesAsync()
+        public IEnumerable<AnnouncementRecord> GetAnnouncementEntries()
         {
-            return _announcementService.FindAllAsync();
+            return _announcementService.FindAll();
         }
 
         /// <summary>

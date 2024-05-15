@@ -56,7 +56,7 @@ namespace Eurofurence.App.Server.Services.Validation
                     if (!Guid.TryParse(fragment.Target, out Guid mapEntryId))
                         return ValidationResult.Error("Target must be of typ Guid");
 
-                    var mapEntry = (await _mapService.FindAllAsync())
+                    var mapEntry = _mapService.FindAll()
                         .SelectMany(a => a.Entries)
                         .SingleOrDefault(a => a.Id == mapEntryId);
 

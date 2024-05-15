@@ -56,9 +56,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "System,Developer,ArtShow")]
         [HttpGet("ItemActivites/NotificationBundles/Simulation")]
         [ProducesResponseType(200)]
-        public Task<IList<ItemActivityNotificationResult>> SimulateItemActivitiesNotificationRunAsync()
+        public IList<ItemActivityNotificationResult> SimulateItemActivitiesNotificationRunAsync()
         {
-            return _itemActivityService.SimulateNotificationRunAsync();
+            return _itemActivityService.SimulateNotificationRun();
         }
 
 
@@ -125,9 +125,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "System,Developer,ArtShow")]
         [HttpGet("AgentClosingResults/NotificationBundles/Simulation")]
         [ProducesResponseType(200)]
-        public Task<IList<AgentClosingNotificationResult>> SimulateAgentClosingResultsNotificationRunAsync()
+        public IList<AgentClosingNotificationResult> SimulateAgentClosingResultsNotificationRunAsync()
         {
-            return _agentClosingResultService.SimulateNotificationRunAsync();
+            return _agentClosingResultService.SimulateNotificationRun();
         }
 
 

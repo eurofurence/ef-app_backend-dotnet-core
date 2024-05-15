@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
@@ -30,8 +31,8 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember]
         public int TapRadius { get; set; }
 
-        [DataMember]
-        public LinkFragment[] Links { get; set; }
+        [DataMember] 
+        public List<LinkFragment> Links { get; set; } = new();
 
         [IgnoreDataMember]
         public virtual MapRecord Map { get; set; }
