@@ -25,7 +25,7 @@ namespace Eurofurence.App.Server.Services.LostAndFound
 
         public async Task RunImportAsync()
         {
-            var existingRecords = await _lostAndFoundService.FindAllAsync();
+            var existingRecords = _lostAndFoundService.FindAll();
             var newRecords = await _lassieApiClient.QueryLostAndFoundDbAsync();
 
             var patch = new PatchDefinition<LostAndFoundResponse, LostAndFoundRecord>((source, list) =>

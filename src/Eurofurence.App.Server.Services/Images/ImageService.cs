@@ -1,38 +1,36 @@
 ﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Utility;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using SixLabors.ImageSharp;
 using System.IO;
+using System.Linq;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using Eurofurence.App.Server.Services.Storage;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Images
 {
     public class ImageService : EntityServiceBase<ImageRecord>, IImageService
     {
-        private readonly IEntityRepository<ImageContentRecord> _imageContentRepository;
-        private readonly IEntityRepository<ImageRecord> _imageRepository;
+        private readonly AppDbContext _appDbContext;
         private readonly IStorageServiceFactory _storageServiceFactory;
 
         public ImageService(
-            IEntityRepository<ImageRecord> imageRepository,
-            IEntityRepository<ImageContentRecord> imageContentRepository,
+            AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory)
-            : base(imageRepository, storageServiceFactory)
+            : base(appDbContext, storageServiceFactory)
         {
+            _appDbContext = appDbContext;
             _storageServiceFactory = storageServiceFactory;
-            _imageContentRepository = imageContentRepository;
-            _imageRepository = imageRepository;
         }
 
         public override Task ReplaceOneAsync(ImageRecord entity)
@@ -47,39 +45,46 @@ namespace Eurofurence.App.Server.Services.Images
 
         public override async Task DeleteOneAsync(Guid id)
         {
-            await _imageContentRepository.DeleteOneAsync(id);
+            var entity = await _appDbContext.Images.FirstOrDefaultAsync(entity => entity.Id == id);
+            _appDbContext.Remove(entity);
+            await _appDbContext.SaveChangesAsync();
             await base.DeleteOneAsync(id);
         }
 
         public override async Task DeleteAllAsync()
         {
-            await _imageContentRepository.DeleteAllAsync();
+            _appDbContext.RemoveRange(_appDbContext.Images);
+            await _appDbContext.SaveChangesAsync();
             await base.DeleteAllAsync();
         }
 
-        public async Task<Guid> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes)
+        public async Task<ImageRecord> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes)
         {
             var hash = Hashing.ComputeHashSha1(imageBytes);
 
-            var existingRecord = (await _imageRepository.FindAllAsync(a => a.InternalReference == internalReference))
-                .ToList()
-                .SingleOrDefault();
+            var existingRecord = await
+                _appDbContext.Images
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.InternalReference == internalReference);
 
             if (existingRecord != null && existingRecord.ContentHashSha1 == hash)
             {
                 // Ensure we still have the image!
-                var existingContentRecord = await _imageContentRepository.FindOneAsync(existingRecord.Id);
+                var existingContentRecord = await _appDbContext.ImageContents
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.ImageId == existingRecord.Id);
                 if (existingContentRecord == null)
                 {
-                    await _imageContentRepository.InsertOneAsync(new ImageContentRecord
+                    _appDbContext.ImageContents.Add(new ImageContentRecord
                     {
-                        Id = existingRecord.Id,
+                        ImageId = existingRecord.Id,
                         IsDeleted = 0,
                         Content = imageBytes
                     });
+                    await _appDbContext.SaveChangesAsync();
                 }
 
-                return existingRecord.Id;
+                return existingRecord;
             }
 
             var image = Image.Load(imageBytes);
@@ -99,7 +104,7 @@ namespace Eurofurence.App.Server.Services.Images
 
             var contentRecord = new ImageContentRecord
             {
-                Id = record.Id,
+                ImageId = record.Id,
                 IsDeleted = 0,
                 Content = imageBytes
             };
@@ -110,20 +115,22 @@ namespace Eurofurence.App.Server.Services.Images
             if (existingRecord != null)
             {
                 await base.ReplaceOneAsync(record);
-                await _imageContentRepository.ReplaceOneAsync(contentRecord);
+                _appDbContext.ImageContents.Update(contentRecord);
             }
             else
             {
                 await base.InsertOneAsync(record);
-                await _imageContentRepository.InsertOneAsync(contentRecord);
+                _appDbContext.ImageContents.Add(contentRecord);
             }
 
-            return record.Id;
+            await _appDbContext.SaveChangesAsync();
+
+            return record;
         }
 
-        public async Task<byte[]> GetImageContentByIdAsync(Guid id)
+        public async Task<byte[]> GetImageContentByImageIdAsync(Guid id)
         {
-            var record = await _imageContentRepository.FindOneAsync(id);
+            var record = await _appDbContext.ImageContents.AsNoTracking().FirstOrDefaultAsync(entity => entity.ImageId == id);
             return record.Content;
         }
 
@@ -133,12 +140,13 @@ namespace Eurofurence.App.Server.Services.Images
             var output = new MemoryStream();
             image.SaveAsPng(output);
 
-            return output.ToArray();           
+            return output.ToArray();
         }
 
         public async Task InsertImageAsync(ImageRecord image, byte[] imageBytes)
         {
-            await _imageRepository.InsertOneAsync(image);
+            _appDbContext.Images.Add(image);
+            await _appDbContext.SaveChangesAsync();
             await InsertOrUpdateImageAsync(image.InternalReference, imageBytes);
         }
 
@@ -184,7 +192,7 @@ namespace Eurofurence.App.Server.Services.Images
             );
 
             var ms = new MemoryStream();
-            rawImage.SaveAsJpeg(ms, new JpegEncoder() {  Quality = 85 });
+            rawImage.SaveAsJpeg(ms, new JpegEncoder() { Quality = 85 });
             var newFragment = GenerateFragmentFromBytes(ms.ToArray());
             ms.Dispose();
 

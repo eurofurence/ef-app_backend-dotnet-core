@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Utility;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System.Threading;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.ImageSharp.Formats.Jpeg;
 
@@ -18,19 +19,16 @@ namespace Eurofurence.App.Server.Services.Fursuits
     public class FursuitBadgeService : IFursuitBadgeService
     {
         private readonly ConventionSettings _conventionSettings;
-        private readonly IEntityRepository<FursuitBadgeRecord> _fursuitBadgeRepository;
-        private readonly IEntityRepository<FursuitBadgeImageRecord> _fursuitBadgeImageRepository;
-        private readonly SemaphoreSlim _sync = new SemaphoreSlim(1, 1);
+        private readonly AppDbContext _appDbContext;
+        private readonly SemaphoreSlim _sync = new(1, 1);
 
         public FursuitBadgeService(
-            ConventionSettings conventionSettings, 
-            IEntityRepository<FursuitBadgeRecord> fursuitBadgeRepository,
-            IEntityRepository<FursuitBadgeImageRecord> fursuitBadgeImageRepository
+            AppDbContext appDbContext,
+            ConventionSettings conventionSettings
             )
         {
+            _appDbContext = appDbContext;
             _conventionSettings = conventionSettings;
-            _fursuitBadgeRepository = fursuitBadgeRepository;
-            _fursuitBadgeImageRepository = fursuitBadgeImageRepository;
         }
 
         public async Task<Guid> UpsertFursuitBadgeAsync(FursuitBadgeRegistration registration)
@@ -44,14 +42,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
             try
             {
-                var record = await _fursuitBadgeRepository.FindOneAsync(a => a.ExternalReference == registration.BadgeNo.ToString());
+                var record = await _appDbContext.FursuitBadges.FirstOrDefaultAsync(a => a.ExternalReference == registration.BadgeNo.ToString());
 
                 if (record == null)
                 {
                     record = new FursuitBadgeRecord();
                     record.NewId();
 
-                    await _fursuitBadgeRepository.InsertOneAsync(record);
+                    _appDbContext.FursuitBadges.Add(record);
                 }
 
                 id = record.Id;
@@ -66,7 +64,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 record.CollectionCode = registration.CollectionCode;
                 record.Touch();
 
-                var imageRecord = await _fursuitBadgeImageRepository.FindOneAsync(record.Id);
+                var imageRecord = await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == record.Id);
 
                 if (imageRecord == null)
                 {
@@ -79,7 +77,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     };
                     imageRecord.Touch();
 
-                    await _fursuitBadgeImageRepository.InsertOneAsync(imageRecord);
+                    _appDbContext.FursuitBadgeImages.Add(imageRecord);
                 }
 
                 if (imageRecord.SourceContentHashSha1 != hash)
@@ -104,17 +102,36 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     ms.Dispose();
 
                     imageRecord.Touch();
-                    await _fursuitBadgeImageRepository.ReplaceOneAsync(imageRecord);
+                    _appDbContext.FursuitBadgeImages.Update(imageRecord);
                 }
 
-                await _fursuitBadgeRepository.ReplaceOneAsync(record);
+                _appDbContext.FursuitBadges.Update(record);
+
+                await _appDbContext.SaveChangesAsync();
 
                 return record.Id;
             }
             catch (Exception)
             {
-                await _fursuitBadgeRepository.DeleteOneAsync(id);
-                await _fursuitBadgeImageRepository.DeleteOneAsync(id);
+                if (id == Guid.Empty)
+                {
+                    return id;
+                }
+
+                var fursuitBadgeToDelete = await _appDbContext.FursuitBadges.SingleOrDefaultAsync(entity => entity.Id == id);
+                var fursuitBadgeImageToDelete = await _appDbContext.FursuitBadgeImages.SingleOrDefaultAsync(entity => entity.Id == id);
+
+                if (fursuitBadgeToDelete != null)
+                {
+                    _appDbContext.Remove(fursuitBadgeToDelete);
+                }
+
+                if (fursuitBadgeImageToDelete != null)
+                {
+                    _appDbContext.Remove(fursuitBadgeImageToDelete);
+                }
+
+                await _appDbContext.SaveChangesAsync();
 
                 return Guid.Empty;
             }
@@ -126,21 +143,26 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<byte[]> GetFursuitBadgeImageAsync(Guid id)
         {
-            var content = await _fursuitBadgeImageRepository.FindOneAsync(id);
-            return content?.ImageBytes ?? null;
+            var content = await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == id);
+            return content?.ImageBytes;
         }
 
-        public Task<IEnumerable<FursuitBadgeRecord>> GetFursuitBadgesAsync(FursuitBadgeFilter filter = null)
+        public IQueryable<FursuitBadgeRecord> GetFursuitBadges(FursuitBadgeFilter filter = null)
         {
             return filter == null ?
-                _fursuitBadgeRepository.FindAllAsync() :
+                _appDbContext.FursuitBadges
+                    .AsNoTracking() :
 
                 string.IsNullOrWhiteSpace(filter.Name) ?
-                    _fursuitBadgeRepository.FindAllAsync(record =>
+                    _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .Where(record =>
                         (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
                         && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid)))
                     :
-                    _fursuitBadgeRepository.FindAllAsync(record =>
+                    _appDbContext.FursuitBadges
+                        .AsNoTracking()
+                        .Where(record =>
                         (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
                         && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid))
                         && record.Name.ToLowerInvariant().Contains(filter.Name.ToLowerInvariant()));

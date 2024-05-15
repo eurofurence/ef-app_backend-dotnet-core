@@ -5,7 +5,7 @@ using System.Linq;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Common.Compression;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using Eurofurence.App.Domain.Model.Knowledge;
 using System.Collections.Generic;
 using Eurofurence.App.Domain.Model.Images;
@@ -88,11 +88,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             {
                 var archive = ZipFile.Open(outputPathArgument.Value, ZipArchiveMode.Create);
 
-                var knowledgeGroups = _knowledgeGroupService.FindAllAsync().Result;
-                var knowledgeEntries = _knowledgeEntryService.FindAllAsync().Result;
+                var knowledgeGroups = _knowledgeGroupService.FindAll();
+                var knowledgeEntries = _knowledgeEntryService.FindAll();
 
-                var imageIds = knowledgeEntries.SelectMany(_ => _.ImageIds).ToList();
-                var images = _imageService.FindAllAsync(image => imageIds.Contains(image.Id)).Result;
+                var imageIds = knowledgeEntries.SelectMany(_ => _.Images).Select(image => image.Id).ToList();
+                var images = _imageService.FindAll(image => imageIds.Contains(image.Id));
 
                 archive.AddAsJson("knowledgeGroups", knowledgeGroups);
                 archive.AddAsJson("knowledgeEntries", knowledgeEntries);
@@ -100,7 +100,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
                 foreach(var image in images)
                 {
-                    archive.AddAsBinary($"imageContent-{image.Id}", _imageService.GetImageContentByIdAsync(image.Id).Result);
+                    archive.AddAsBinary($"imageContent-{image.Id}", _imageService.GetImageContentByImageIdAsync(image.Id).Result);
                 }
 
                 archive.Dispose();

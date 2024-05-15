@@ -5,14 +5,15 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Common.Results;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
@@ -23,23 +24,22 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private const string ASN_InterruptionLevel_TimeSensitive = "time-sensitive";
         private const string ASN_InterruptionLevel_Critical = "critical";
 
+        private readonly AppDbContext _appDbContext;
         private readonly FirebaseConfiguration _configuration;
-        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationRepository;
         private readonly ConventionSettings _conventionSettings;
         private readonly FirebaseApp _firebaseApp;
         private readonly FirebaseMessaging _firebaseMessaging;
 
         public FirebaseChannelManager(
+            AppDbContext appDbContext,
             FirebaseConfiguration configuration,
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationRepository,
             ConventionSettings conventionSettings
             )
 
         {
+            _appDbContext = appDbContext;
             _configuration = configuration;
-            _pushNotificationRepository = pushNotificationRepository;
             _conventionSettings = conventionSettings;
-
 
             var googleCredential = GoogleCredential.FromFile(_configuration.GoogleServiceCredentialKeyFile);
 
@@ -47,9 +47,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _firebaseMessaging = FirebaseMessaging.GetMessaging(_firebaseApp);
         }
 
-        private Task<IEnumerable<PushNotificationChannelRecord>> GetRecipientChannelAsync(string recipientUid)
+        private IQueryable<PushNotificationChannelRecord> GetRecipientChannel(string recipientUid)
         {
-            return _pushNotificationRepository.FindAllAsync(
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(
                 a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Firebase && a.Uid == recipientUid);
         }
 
@@ -119,13 +121,13 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         {
             if (!_configuration.IsConfigured) return;
 
-            var recipients = await GetRecipientChannelAsync(recipientUid);
+            var recipients = GetRecipientChannel(recipientUid);
 
             var messages = new List<Message>();
 
             foreach (var recipient in recipients)
             {
-                if (recipient.Topics.Contains("ios", StringComparer.CurrentCultureIgnoreCase))
+                if (recipient.Topics.Any(topic => topic.Name.ToLower() == "ios"))
                 {
                     messages.Add(new Message()
                     {
@@ -240,7 +242,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task RegisterDeviceAsync(string deviceId, string uid, string[] topics)
         {
-            var record = (await _pushNotificationRepository.FindAllAsync(a => a.DeviceId == deviceId)).FirstOrDefault();
+            var record = (await _appDbContext.PushNotificationChannels.FirstOrDefaultAsync(a => a.DeviceId == deviceId));
 
             var isNewRecord = record == null;
 
@@ -256,12 +258,29 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             record.Touch();
             record.Uid = uid;
-            record.Topics = topics.ToList();
+
+            foreach (var topic in topics)
+            {
+                var topicRecord = await _appDbContext.Topics.FirstOrDefaultAsync(t => t.Name == topic);
+
+                if (topicRecord == null)
+                {
+                    topicRecord = new TopicRecord
+                    {
+                        Name = topic
+                    };
+                    _appDbContext.Topics.Add(topicRecord);
+                }
+
+                record.Topics.Add(topicRecord);
+            }
 
             if (isNewRecord)
-                await _pushNotificationRepository.InsertOneAsync(record);
+                _appDbContext.PushNotificationChannels.Add(record);
             else
-                await _pushNotificationRepository.ReplaceOneAsync(record);
+                _appDbContext.PushNotificationChannels.Update(record);
+
+            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task<IResult> SubscribeToTopicAsync(string deviceId, string topic)

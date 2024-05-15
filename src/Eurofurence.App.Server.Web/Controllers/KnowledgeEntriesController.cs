@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
@@ -26,9 +27,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<KnowledgeEntryRecord>), 200)]
-        public Task<IEnumerable<KnowledgeEntryRecord>> GetKnowledgeEntriesAsync()
+        public IQueryable<KnowledgeEntryRecord> GetKnowledgeEntriesAsync()
         {
-            return _knowledgeEntryService.FindAllAsync();
+            return _knowledgeEntryService.FindAll();
         }
 
         /// <summary>

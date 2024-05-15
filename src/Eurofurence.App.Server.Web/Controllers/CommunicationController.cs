@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -33,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Attendee")]
         [HttpGet("PrivateMessages")]
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
-        public Task<IEnumerable<PrivateMessageRecord>> GetMyPrivateMessagesAsync()
+        public Task<IQueryable<PrivateMessageRecord>> GetMyPrivateMessagesAsync()
         {
             return _privateMessageService.GetPrivateMessagesForRecipientAsync(_apiPrincipal.Uid);
         }
@@ -105,9 +106,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("PrivateMessages/:sent-by-me")]
         [Authorize]
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
-        public Task<IEnumerable<PrivateMessageRecord>> GetMySentPrivateMessagesAsync()
+        public IQueryable<PrivateMessageRecord> GetMySentPrivateMessagesAsync()
         {
-            return _privateMessageService.GetPrivateMessagesForSenderAsync(_apiPrincipal.Uid);
+            return _privateMessageService.GetPrivateMessagesForSender(_apiPrincipal.Uid);
         }
 
         [HttpGet("NotificationQueue/Count")]

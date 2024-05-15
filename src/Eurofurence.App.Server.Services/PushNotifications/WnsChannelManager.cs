@@ -3,32 +3,33 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
     public class WnsChannelManager : IWnsChannelManager
     {
+        private readonly AppDbContext _appDbContext;
         private readonly WnsConfiguration _configuration;
-        private readonly IEntityRepository<PushNotificationChannelRecord> _pushNotificationRepository;
 
         public WnsChannelManager(
-            IEntityRepository<PushNotificationChannelRecord> pushNotificationRepository,
-            WnsConfiguration configuraton
+            AppDbContext appDbContext,
+            WnsConfiguration configuration
         )
         {
-            _configuration = configuraton;
-            _pushNotificationRepository = pushNotificationRepository;
+            _appDbContext = appDbContext;
+            _configuration = configuration;
         }
 
         public async Task PushSyncRequestAsync()
         {
-            var recipients = await GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
+            var recipients = GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
             await SendRawAsync(recipients, "update");
         }
 
@@ -40,14 +41,14 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 Content = announcement
             };
 
-            var recipients = await GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
+            var recipients = GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
 
             await SendRawAsync(recipients, JsonSerializer.Serialize(message));
         }
 
         public async Task SendToastAsync(string topic, string message)
         {
-            var recipients = await GetAllRecipientsAsyncByTopic(topic);
+            var recipients = GetAllRecipientsAsyncByTopic(topic);
             var accessToken = await GetWnsAccessTokenAsync();
 
             foreach (var recipient in recipients)
@@ -67,7 +68,16 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         var result = await client.PostAsync(recipient.ChannelUri, payload);
 
                         if (!result.IsSuccessStatusCode)
-                            _pushNotificationRepository.DeleteOneAsync(recipient.Id);
+                        {
+                            var pushNotificationToDelete =
+                                await _appDbContext.PushNotificationChannels.FirstOrDefaultAsync(entity =>
+                                    entity.Id == recipient.Id);
+                            if (pushNotificationToDelete != null)
+                            {
+                                _appDbContext.Remove(pushNotificationToDelete);
+                                _appDbContext.SaveChangesAsync();
+                            }
+                        }
                     }
                 });
 #pragma warning restore CS4014
@@ -76,8 +86,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task RegisterChannelAsync(string deviceId, string channelUri, string uid, string[] topics)
         {
-            var record = (await _pushNotificationRepository.FindAllAsync(a => a.DeviceId == deviceId))
-                .FirstOrDefault();
+            var record = await _appDbContext.PushNotificationChannels.FirstOrDefaultAsync(a => a.DeviceId == deviceId);
 
             var isNewRecord = record == null;
 
@@ -94,17 +103,34 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             record.Touch();
             record.ChannelUri = channelUri;
             record.Uid = uid;
-            record.Topics = topics.ToList();
+
+            foreach (var topic in topics)
+            {
+                var topicRecord = await _appDbContext.Topics.FirstOrDefaultAsync(t => t.Name == topic);
+
+                if (topicRecord == null)
+                {
+                    topicRecord = new TopicRecord
+                    {
+                        Name = topic
+                    };
+                    _appDbContext.Topics.Add(topicRecord);
+                }
+                
+                record.Topics.Add(topicRecord);
+            }
 
             if (isNewRecord)
-                await _pushNotificationRepository.InsertOneAsync(record);
+                _appDbContext.PushNotificationChannels.Add(record);
             else
-                await _pushNotificationRepository.ReplaceOneAsync(record);
+                _appDbContext.PushNotificationChannels.Update(record);
+
+            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task PushPrivateMessageNotificationAsync(string recipientUid, string toastTitle, string toastMessage)
         {
-            var recipients = await GetAllRecipientsAsyncByUid(recipientUid);
+            var recipients = GetAllRecipientsAsyncByUid(recipientUid);
             await SendRawAsync(recipients, new
             {
                 Event = "PrivateMessage_Received",
@@ -116,19 +142,25 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             });
         }
 
-        private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsync()
+        private IQueryable<PushNotificationChannelRecord> GetAllRecipients()
         {
-            return _pushNotificationRepository.FindAllAsync(a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(a => a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
-        private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsyncByTopic(string topic)
+        private IQueryable<PushNotificationChannelRecord> GetAllRecipientsAsyncByTopic(string topic)
         {
-            return _pushNotificationRepository.FindAllAsync(a => a.Topics.Contains(topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(a => a.Topics.Any(t => t.Name == topic) && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
-        private Task<IEnumerable<PushNotificationChannelRecord>> GetAllRecipientsAsyncByUid(string uid)
+        private IQueryable<PushNotificationChannelRecord> GetAllRecipientsAsyncByUid(string uid)
         {
-            return _pushNotificationRepository.FindAllAsync(a => a.Uid == uid && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
+            return _appDbContext.PushNotificationChannels
+                .AsNoTracking()
+                .Where(a => a.Uid == uid && a.Platform == PushNotificationChannelRecord.PlatformEnum.Wns);
         }
 
 
@@ -159,7 +191,16 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         var result = await client.PostAsync(recipient.ChannelUri, payload);
 
                         if (!result.IsSuccessStatusCode)
-                            _pushNotificationRepository.DeleteOneAsync(recipient.Id);
+                        {
+                            var pushNotificationToDelete =
+                                await _appDbContext.PushNotificationChannels.FirstOrDefaultAsync(entity =>
+                                    entity.Id == recipient.Id);
+                            if (pushNotificationToDelete != null)
+                            {
+                                _appDbContext.Remove(pushNotificationToDelete);
+                                _appDbContext.SaveChangesAsync();
+                            }
+                        }
                     }
                 });
 #pragma warning restore CS4014

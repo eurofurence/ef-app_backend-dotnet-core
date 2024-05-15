@@ -5,6 +5,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 {
     public class CollectionGameConfiguration
     {
+        public const string CollectionGame = "collectionGame";
+
         public int LogLevel { get; set; }
         public string LogFile { get; set; }
         public string TelegramManagementChatId { get; set; }

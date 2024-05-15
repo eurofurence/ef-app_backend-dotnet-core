@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Validation;
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Security;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Security
 {
     public class RegSysAlternativePinAuthenticationProvider : IAuthenticationProvider, IRegSysAlternativePinAuthenticationProvider
     {
-        private readonly IEntityRepository<RegSysAlternativePinRecord> _regSysAlternativePinRepository;
+        private readonly AppDbContext _appDbContext;
 
-        public RegSysAlternativePinAuthenticationProvider(IEntityRepository<RegSysAlternativePinRecord> regSysAlternativePinRepository)
+        public RegSysAlternativePinAuthenticationProvider(AppDbContext appDbContext)
         {
-            _regSysAlternativePinRepository = regSysAlternativePinRepository;
+            _appDbContext = appDbContext;
         }
 
         private string GeneratePin()
@@ -29,9 +29,7 @@ namespace Eurofurence.App.Server.Services.Security
 
             if (!BadgeChecksum.TryParse(request.RegNoOnBadge, out regNo)) return null;
 
-            var alternativePin =
-                (await _regSysAlternativePinRepository.FindAllAsync(a => a.RegNo == regNo))
-                .SingleOrDefault();
+            var alternativePin = await _appDbContext.RegSysAlternativePins.FirstOrDefaultAsync(a => a.RegNo == regNo);
 
             bool existingRecord = true;
 
@@ -49,19 +47,22 @@ namespace Eurofurence.App.Server.Services.Security
             alternativePin.IssuedDateTimeUtc = DateTime.UtcNow;
             alternativePin.Pin = GeneratePin();
             alternativePin.NameOnBadge = request.NameOnBadge;
-            alternativePin.IssueLog.Add(new RegSysAlternativePinRecord.IssueRecord()
+            var issueRecord = _appDbContext.IssueRecords.Add(new IssueRecord()
             {
                 RequestDateTimeUtc = DateTime.UtcNow,
                 NameOnBadge = request.NameOnBadge,
                 RequesterUid = requesterUid
             });
+            alternativePin.IssueLog.Add(issueRecord.Entity);
 
             alternativePin.Touch();
 
             if (existingRecord)
-                await _regSysAlternativePinRepository.ReplaceOneAsync(alternativePin);
+                _appDbContext.RegSysAlternativePins.Update(alternativePin);
             else
-                await _regSysAlternativePinRepository.InsertOneAsync(alternativePin);
+                _appDbContext.RegSysAlternativePins.Add(alternativePin);
+
+            await _appDbContext.SaveChangesAsync();
 
             return new RegSysAlternativePinResponse()
             {
@@ -73,9 +74,8 @@ namespace Eurofurence.App.Server.Services.Security
 
         public async Task<RegSysAlternativePinRecord> GetAlternativePinAsync(int regNo)
         {
-            return (await _regSysAlternativePinRepository.FindAllAsync(a => a.RegNo == regNo)).SingleOrDefault();
+            return await _appDbContext.RegSysAlternativePins.FirstOrDefaultAsync(a => a.RegNo == regNo);
         }
-
 
         public async Task<AuthenticationResult> ValidateRegSysAuthenticationRequestAsync(RegSysAuthenticationRequest request)
         {
@@ -86,8 +86,7 @@ namespace Eurofurence.App.Server.Services.Security
             };
 
             var alternativePin =
-                (await _regSysAlternativePinRepository.FindAllAsync(a => a.RegNo == request.RegNo))
-                .SingleOrDefault();
+                await _appDbContext.RegSysAlternativePins.FirstOrDefaultAsync(a => a.RegNo == request.RegNo);
 
             if (alternativePin != null && request.Password == alternativePin.Pin)
             {
@@ -96,7 +95,8 @@ namespace Eurofurence.App.Server.Services.Security
                 result.Username = alternativePin.NameOnBadge;
 
                 alternativePin.PinConsumptionDatesUtc.Add(DateTime.UtcNow);
-                await _regSysAlternativePinRepository.ReplaceOneAsync(alternativePin);
+                _appDbContext.RegSysAlternativePins.Update(alternativePin);
+                await _appDbContext.SaveChangesAsync();
             }
 
             return result;

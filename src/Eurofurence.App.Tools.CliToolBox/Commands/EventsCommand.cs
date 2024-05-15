@@ -4,7 +4,7 @@ using System.Linq;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
@@ -66,8 +66,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.OnExecute(() =>
             {
-                var events = _eventService.FindAllAsync().Result;
-                var eventConferenceRooms = _eventConferenceRoomService.FindAllAsync().Result;
+                var events = _eventService.FindAll();
+                var eventConferenceRooms = _eventConferenceRoomService.FindAll();
 
 
                 Action<string[], IList<string>, string>  ensureTagExists = 
@@ -321,9 +321,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         {
             command.OnExecute(() =>
             {
-                var eventFeedbackRecords = _eventFeedbackService.FindAllAsync().Result;
+                var eventFeedbackRecords = _eventFeedbackService.FindAll();
                 var distinctEventIds = eventFeedbackRecords.Select(a => a.EventId).Distinct().ToList();
-                var distinctEvents = _eventService.FindAllAsync(a => distinctEventIds.Contains(a.Id)).Result;
+                var distinctEvents = _eventService.FindAll(a => distinctEventIds.Contains(a.Id));
 
                 var records = new List<CsvFeedbackExporter.Record>();
 

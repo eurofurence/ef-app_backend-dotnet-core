@@ -1,6 +1,4 @@
-﻿using System;
-using Eurofurence.App.Tools.CliToolBox.Importers.DealersDen;
-using Microsoft.Extensions.CommandLineUtils;
+﻿using McMaster.Extensions.CommandLineUtils;
 using System.Linq;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 
@@ -32,7 +30,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
             {
                 command.Out.WriteLine($"Roles: {string.Join(",", rolesArgument.Values)}");
 
-                var token = _authenticationHandler.CreateRegSysAccessTokenAsync(rolesArgument.Values.ToArray()).Result;
+                var token = _authenticationHandler.CreateRegSysAccessTokenAsync(rolesArgument.Values.ToList()).Result;
 
                 command.Out.WriteLine($"Access Token: {token}");
 

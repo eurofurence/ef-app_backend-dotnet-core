@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/[controller]")]
+    [AllowAnonymous]
     public class DealersController : BaseController
     {
         private readonly IDealerService _dealerService;
@@ -31,9 +33,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<DealerRecord>), 200)]
-        public Task<IEnumerable<DealerRecord>> GetDealerEntriesAsync()
+        public IQueryable<DealerRecord> GetDealerEntriesAsync()
         {
-            return _dealerService.FindAllAsync();
+            return _dealerService.FindAll();
         }
 
         /// <summary>

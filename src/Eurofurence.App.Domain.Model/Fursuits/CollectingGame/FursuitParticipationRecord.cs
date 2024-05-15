@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.CollectionGame;
 
 namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
 {
     public class FursuitParticipationRecord : EntityBase
     {
-        public class CollectionEntry
-        {
-            public string PlayerParticipationUid { get; set; }
-            public DateTime EventDateTimeUtc { get; set; }
-        }
-
         [DataMember]
         public string OwnerUid { get; set; }
 
@@ -34,11 +29,6 @@ namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
         public int CollectionCount { get; set; }
 
         [IgnoreDataMember]
-        public IList<CollectionEntry> CollectionEntries { get; set; }
-
-        public FursuitParticipationRecord()
-        {
-            CollectionEntries = new List<CollectionEntry>();
-        }
+        public IList<CollectionEntryRecord> CollectionEntries { get; set; } = new List<CollectionEntryRecord>();
     }
 }

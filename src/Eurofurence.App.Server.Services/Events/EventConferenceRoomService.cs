@@ -1,5 +1,5 @@
-using Eurofurence.App.Domain.Model.Abstractions;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 
@@ -9,10 +9,10 @@ namespace Eurofurence.App.Server.Services.Events
         IEventConferenceRoomService
     {
         public EventConferenceRoomService(
-            IEntityRepository<EventConferenceRoomRecord> entityRepository,
+            AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory
         )
-            : base(entityRepository, storageServiceFactory)
+            : base(appDbContext, storageServiceFactory)
         {
         }
     }

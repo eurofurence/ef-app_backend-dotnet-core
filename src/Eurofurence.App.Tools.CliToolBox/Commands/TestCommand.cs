@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands
 {
