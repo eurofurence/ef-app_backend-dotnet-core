@@ -17,8 +17,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Serilog;
 using Serilog.Context;
 using Serilog.Events;
@@ -26,6 +24,9 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
@@ -70,22 +71,29 @@ namespace Eurofurence.App.Server.Web
             });
 
             services.AddMvc(options =>
-            {
-                options.EnableEndpointRouting = false;
-                options.MaxModelValidationErrors = 0;
-                options.Filters.Add(new CustomValidationAttributesFilter());
-            })
-            .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null)
-            .AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.ContractResolver = new BaseFirstContractResolver();
-                options.SerializerSettings.Formatting = Formatting.Indented;
-                options.SerializerSettings.Converters.Add(new StringEnumConverter());
-                options.SerializerSettings.Converters.Add(new IsoDateTimeConverter
                 {
-                    DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffK"
+                    options.EnableEndpointRouting = false;
+                    options.MaxModelValidationErrors = 0;
+                    options.Filters.Add(new CustomValidationAttributesFilter());
+                })
+                .AddJsonOptions(opt =>
+                {
+                    opt.JsonSerializerOptions.PropertyNamingPolicy = null;
+                    opt.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                    opt.JsonSerializerOptions.WriteIndented = true;
+                    opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    opt.JsonSerializerOptions.Converters.Add(new JsonDateTimeConverter());
                 });
-            });
+
+            JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = null,
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true,
+                Converters = { new JsonStringEnumConverter(), new JsonDateTimeConverter() }
+            };
+
+            services.AddSingleton(s => serializerOptions);
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -207,7 +215,7 @@ namespace Eurofurence.App.Server.Web
             {
                 loggerConfiguration
                     .MinimumLevel.Debug()
-                    .WriteTo.ColoredConsole();
+                    .WriteTo.Console();
             }
             else
             {
@@ -255,11 +263,6 @@ namespace Eurofurence.App.Server.Web
             Log.Logger = loggerConfiguration.CreateLogger();
 
             loggerFactory
-                .WithFilter(new FilterLoggerSettings
-                {
-                    {"Microsoft", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning},
-                    {"System", env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning}
-                })
                 .AddSerilog();
 
             _logger = loggerFactory.CreateLogger(GetType());

@@ -1,8 +1,5 @@
-﻿using System;
-using Eurofurence.App.Server.Services.Abstractions.Dealers;
-using Eurofurence.App.Server.Services.Abstractions.Images;
-using Eurofurence.App.Tools.CliToolBox.Importers.DealersDen;
-using Microsoft.Extensions.CommandLineUtils;
+﻿using Eurofurence.App.Server.Services.Abstractions.Images;
+using McMaster.Extensions.CommandLineUtils;
 using System.Linq;
 
 namespace Eurofurence.App.Tools.CliToolBox.Commands

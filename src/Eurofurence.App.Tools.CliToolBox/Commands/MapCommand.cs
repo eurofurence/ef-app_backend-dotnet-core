@@ -2,7 +2,7 @@
 using System.IO;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using Eurofurence.App.Domain.Model.Maps;
 using System.Collections.Generic;
 
