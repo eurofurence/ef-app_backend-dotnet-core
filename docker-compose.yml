@@ -1,17 +1,27 @@
-version: '2'
+version: '3.1'
 services:
-  api:
+  backend:
     build: .
+    restart: always
     ports:
-      - "30001:30001"
+      - '30001:30001'
     volumes:
       - './appsettings.json:/app/appsettings.json'
       - './firebase.json:/app/firebase.json'
     depends_on:
-      - "database"
-  database:
-    image: mongo
-    volumes:
-      - './docker/mongo:/data/db'
-    ports:
-      - '27017:27017'
+      db:
+        condition: service_healthy
+  db:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MARIADB_DATABASE: 'backend'
+      MARIADB_USER: 'db-user'
+      MARIADB_PASSWORD: 'this-is-not-secret'
+      MARIADB_ROOT_PASSWORD: 'and-neither-is-this'
+    healthcheck:
+      test: mariadb-admin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 30
