@@ -1,0 +1,16 @@
+.DS_Store
+.git
+.github
+.gitignore
+.private
+.vs
+.vscode
+*.csv
+*.json
+**/obj
+**/bin
+artifacts
+docker
+docker-compose.yml
+justfile
+Dockerfile

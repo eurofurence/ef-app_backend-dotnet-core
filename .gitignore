@@ -257,3 +257,6 @@ paket-files/
 *.sln.iml
 
 docker/
+
+# Local user files
+.private
