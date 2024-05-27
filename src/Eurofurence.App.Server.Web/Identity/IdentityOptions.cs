@@ -1,3 +1,8 @@
 namespace Eurofurence.App.Server.Web.Identity;
 
-public record IdentityOptions(string ClientId, string IntrospectionEndpoint, string UserInfoEndpoint);
+public class IdentityOptions
+{
+    public string ClientId { get; set; }
+    public string IntrospectionEndpoint { get; set; }
+    public string UserInfoEndpoint { get; set; }
+}
