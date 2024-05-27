@@ -25,6 +25,7 @@ public class ConfigureOAuth2IntrospectionOptions(
         options.IntrospectionEndpoint = current.IntrospectionEndpoint;
         options.ClientId = current.ClientId;
         options.Events.OnTokenValidated = OnTokenValidated;
+        options.EnableCaching = true;
     }
 
     public void Configure(string name, OAuth2IntrospectionOptions options)

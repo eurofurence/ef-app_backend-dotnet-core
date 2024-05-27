@@ -24,13 +24,12 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Models;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -104,12 +103,12 @@ namespace Eurofurence.App.Server.Web
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("api", new Microsoft.OpenApi.Models.OpenApiInfo
+                options.SwaggerDoc("api", new OpenApiInfo
                 {
                     Version = conventionSettings.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
-                    Contact = new Microsoft.OpenApi.Models.OpenApiContact
+                    Contact = new OpenApiContact
                     {
                         Name = "Eurofurence IT Department",
                         Email = "it@eurofurence.org",
@@ -117,12 +116,13 @@ namespace Eurofurence.App.Server.Web
                     }
                 });
 
-                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
-                    Name = "Authorization",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+                    Name = "Eurofurence Identity",
+                    Description = "Authenticate with Eurofurence Identity Provider",
+                    In = ParameterLocation.Header,
+                    Scheme = "Bearer",
+                    Type = SecuritySchemeType.Http
                 });
 
                 //options.DescribeAllEnumsAsStrings();
@@ -135,7 +135,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1")
                 {
-                    options.AddServer(new Microsoft.OpenApi.Models.OpenApiServer()
+                    options.AddServer(new OpenApiServer()
                     {
                         Description = "nginx (CID in path)",
                         Url = $"/{conventionSettings.ConventionIdentifier}"
@@ -143,7 +143,7 @@ namespace Eurofurence.App.Server.Web
                 }
                 else
                 {
-                    options.AddServer(new Microsoft.OpenApi.Models.OpenApiServer()
+                    options.AddServer(new OpenApiServer()
                     {
                         Description = "local",
                         Url = "/"
@@ -157,13 +157,6 @@ namespace Eurofurence.App.Server.Web
 
             services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
                 .AddOAuth2Introspection();
-
-            services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-            });
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
