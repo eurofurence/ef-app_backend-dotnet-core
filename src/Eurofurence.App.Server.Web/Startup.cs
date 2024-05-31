@@ -2,7 +2,6 @@
 using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
@@ -34,6 +33,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.MinIO;
+using Minio;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -179,6 +180,12 @@ namespace Eurofurence.App.Server.Web
                         ClockSkew = TimeSpan.FromSeconds(0)
                     };
                 });
+
+            var minIoConfiguration = MinIoConfiguration.FromConfiguration(Configuration);
+            services.AddMinio(configureClient => configureClient
+                .WithEndpoint(minIoConfiguration.Endpoint)
+                .WithCredentials(minIoConfiguration.AccessKey, minIoConfiguration.SecretKey)
+                .WithSSL(minIoConfiguration.Secure));
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
