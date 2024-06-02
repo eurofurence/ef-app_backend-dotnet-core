@@ -1,17 +1,30 @@
-version: '2'
+version: '3.1'
 services:
-  api:
-    build: .
+  backend:
+    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "30001:30001"
+      - '30001:30001'
     volumes:
       - './appsettings.json:/app/appsettings.json'
       - './firebase.json:/app/firebase.json'
     depends_on:
-      - "database"
-  database:
-    image: mongo
+      db:
+        condition: service_healthy
+  db:
+    image: docker.io/mariadb:latest
+    environment:
+      MARIADB_DATABASE: 'ef_backend'
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
     volumes:
-      - './docker/mongo:/data/db'
-    ports:
-      - '27017:27017'
+      - db:/var/lib/mysql
+    healthcheck:
+      test: mariadb-admin ping -h 127.0.0.1 -u root
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 30
+volumes:
+  db:

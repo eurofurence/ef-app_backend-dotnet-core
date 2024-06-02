@@ -1,0 +1,41 @@
+# Configuration options see: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "Fenrikur"
+      - "Metawolve"
+      - "Rain336"
+  - package-ecosystem: "nuget"
+    directories:
+      - "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "Fenrikur"
+      - "Metawolve"
+      - "Rain336"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "16:00"
+    groups:
+      all-actions:
+        patterns: [ "*" ]
+    labels:
+      - "dependencies"
+    reviewers:
+      - "Fenrikur"
+      - "Metawolve"
+      - "Rain336"
