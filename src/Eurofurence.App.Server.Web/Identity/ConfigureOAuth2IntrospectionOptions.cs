@@ -26,6 +26,7 @@ public class ConfigureOAuth2IntrospectionOptions(
         options.ClientId = current.ClientId;
         options.Events.OnTokenValidated = OnTokenValidated;
         options.EnableCaching = true;
+        options.RoleClaimType = "groups";
     }
 
     public void Configure(string name, OAuth2IntrospectionOptions options)
@@ -50,7 +51,7 @@ public class ConfigureOAuth2IntrospectionOptions(
             Address = current.UserInfoEndpoint,
             Token = context.SecurityToken
         }, context.HttpContext.RequestAborted);
-        
+
         identity.AddClaims(response.Claims);
 
         var exp = identity.FindFirst(x => x.Type == "exp");
