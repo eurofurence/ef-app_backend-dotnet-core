@@ -34,7 +34,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 
             var imageTag = $"event:{imagePurpose}:{eventId}";
 
-            var imageContent = File.ReadAllBytes(imagePath);
+            var imageContent = await File.ReadAllBytesAsync(imagePath);
             var image = await _imageService.InsertOrUpdateImageAsync(imageTag, imageContent);
 
             switch (imagePurpose)

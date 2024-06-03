@@ -181,12 +181,6 @@ namespace Eurofurence.App.Server.Web
                     };
                 });
 
-            var minIoConfiguration = MinIoConfiguration.FromConfiguration(Configuration);
-            services.AddMinio(configureClient => configureClient
-                .WithEndpoint(minIoConfiguration.Endpoint)
-                .WithCredentials(minIoConfiguration.AccessKey, minIoConfiguration.SecretKey)
-                .WithSSL(minIoConfiguration.Secure));
-
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
 
