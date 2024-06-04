@@ -217,9 +217,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
-                    var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
+                    byte[] imageBytes = [];
+
+                    if (badge.ImageId != null)
+                    {
+                        imageBytes = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                    }
+
+                    var imageContent = new MemoryStream(imageBytes);
                     await BotClient.SendPhotoAsync(chatId: ChatId, photo: new InputFileStream(imageContent));
                 }, "Cancel=/cancel");
             await c1();
@@ -808,11 +813,15 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     await ReplyAsync(
                                         $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
 
-                                    var imageContent = new MemoryStream(
-                                        (await _appDbContext.FursuitBadgeImages
-                                            .AsNoTracking()
-                                            .FirstOrDefaultAsync(entity =>
-                                            entity.Id == badge.Id)).ImageBytes);
+                                    byte[] imageBytes = [];
+
+                                    if (badge.ImageId != null)
+                                    {
+                                        imageBytes = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                                    }
+
+                                    var imageContent = new MemoryStream(imageBytes);
+
                                     await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
 
                                     askTokenValue = () => AskAsync(
