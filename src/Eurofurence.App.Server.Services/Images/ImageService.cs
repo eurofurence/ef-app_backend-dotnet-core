@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
-using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using SixLabors.ImageSharp.Processing;
@@ -159,37 +158,16 @@ namespace Eurofurence.App.Server.Services.Images
             await InsertOrUpdateImageAsync(image.InternalReference, imageBytes);
         }
 
-        public ImageFragment GenerateFragmentFromBytes(byte[] imageBytes)
-        {
-            if (imageBytes == null || imageBytes.Length == 0) return null;
-
-            try
-            {
-                var image = Image.Load(imageBytes);
-                IImageFormat imageFormat = image.Metadata.DecodedImageFormat;
-                return new ImageFragment()
-                {
-                    SizeInBytes = imageBytes.LongLength,
-                    Height = image.Height,
-                    Width = image.Width,
-                    MimeType = imageFormat?.DefaultMimeType,
-                    ImageBytes = imageBytes
-                };
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        public ImageFragment EnforceMaximumDimensions(ImageFragment image, int width, int height)
+        public async Task<ImageRecord> EnforceMaximumDimensionsAsync(ImageRecord image, int width, int height)
         {
             if (image == null) return null;
 
             double scaling = Math.Min((double)width / image.Width, (double)height / image.Height);
             if (scaling >= 1) return image;
 
-            var rawImage = Image.Load(image.ImageBytes);
+            var imageBytes = await GetImageContentByImageIdAsync(image.Id);
+
+            var rawImage = Image.Load(imageBytes);
 
             rawImage.Mutate(ctx =>
                 ctx.Resize(new ResizeOptions()
@@ -201,11 +179,11 @@ namespace Eurofurence.App.Server.Services.Images
             );
 
             var ms = new MemoryStream();
-            rawImage.SaveAsJpeg(ms, new JpegEncoder() { Quality = 85 });
-            var newFragment = GenerateFragmentFromBytes(ms.ToArray());
-            ms.Dispose();
+            await rawImage.SaveAsJpegAsync(ms, new JpegEncoder() { Quality = 85 });
+            var newImage = await InsertOrUpdateImageAsync(image.InternalReference, ms.ToArray());
+            await ms.DisposeAsync();
 
-            return newFragment;
+            return newImage;
         }
 
         private async Task UploadFileToMinIoAsync(string bucketName, string objectName, string contentType, byte[] content)

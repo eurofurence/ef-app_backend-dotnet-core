@@ -47,7 +47,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<TokenRecord> Tokens { get; set; }
         public virtual DbSet<FursuitBadgeImageRecord> FursuitBadgeImages { get; set; }
         public virtual DbSet<FursuitBadgeRecord> FursuitBadges { get; set; }
-        public virtual DbSet<ImageContentRecord> ImageContents { get; set; }
         public virtual DbSet<ImageRecord> Images { get; set; }
         public virtual DbSet<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
         public virtual DbSet<KnowledgeGroupRecord> KnowledgeGroups { get; set; }

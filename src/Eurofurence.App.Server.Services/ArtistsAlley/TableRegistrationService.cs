@@ -46,9 +46,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == uid);
 
             var imageBytes = Convert.FromBase64String(request.ImageContent);
-            var imageFragment = _imageService.GenerateFragmentFromBytes(imageBytes);
+            var image = await _imageService.InsertOrUpdateImageAsync(Guid.NewGuid().ToString(), imageBytes);
 
-            imageFragment = _imageService.EnforceMaximumDimensions(imageFragment, 1500, 1500);
+            image = await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 ShortDescription = request.ShortDescription,
                 TelegramHandle = request.TelegramHandle,
                 Location = request.Location,
-                Image = imageFragment,
+                Image = image,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
             };
 
@@ -126,9 +126,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             if (record.Image != null)
             {
+                var imageBytes = await _imageService.GetImageContentByImageIdAsync(record.Image.Id);
                 await _telegramMessageSender.SendImageToChatAsync(
                     _configuration.TelegramAnnouncementChannelId,
-                    record.Image.ImageBytes,
+                    imageBytes,
                     telegramMessage);
             }
             else
@@ -171,6 +172,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public async Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid)
         {
             var request = await _appDbContext.TableRegistrations
+                .Include(a => a.Image)
                 .AsNoTracking()
                 .Where(a => a.OwnerUid == uid)
                 .OrderByDescending(a => a.CreatedDateTimeUtc)
