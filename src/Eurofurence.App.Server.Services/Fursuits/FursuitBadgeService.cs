@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Utility;
 using Eurofurence.App.Domain.Model.Fursuits;
@@ -9,7 +10,9 @@ using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System.Threading;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -20,15 +23,18 @@ namespace Eurofurence.App.Server.Services.Fursuits
     {
         private readonly ConventionSettings _conventionSettings;
         private readonly AppDbContext _appDbContext;
+        private readonly IImageService _imageService;
         private readonly SemaphoreSlim _sync = new(1, 1);
 
         public FursuitBadgeService(
             AppDbContext appDbContext,
-            ConventionSettings conventionSettings
+            ConventionSettings conventionSettings,
+            IImageService imageService
             )
         {
             _appDbContext = appDbContext;
             _conventionSettings = conventionSettings;
+            _imageService = imageService;
         }
 
         public async Task<Guid> UpsertFursuitBadgeAsync(FursuitBadgeRegistration registration)
@@ -38,7 +44,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
             await _sync.WaitAsync();
 
-            Guid id = Guid.Empty;
+            FursuitBadgeRecord? fursuitBadge = null;
 
             try
             {
@@ -52,7 +58,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     _appDbContext.FursuitBadges.Add(record);
                 }
 
-                id = record.Id;
+                fursuitBadge = record;
 
                 record.ExternalReference = registration.BadgeNo.ToString();
                 record.OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{registration.RegNo}";
@@ -64,25 +70,23 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 record.CollectionCode = registration.CollectionCode;
                 record.Touch();
 
-                var imageRecord = await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == record.Id);
+                var imageRecord = await _appDbContext.Images.FirstOrDefaultAsync(entity => entity.Id == record.ImageId);
 
                 if (imageRecord == null)
                 {
-                    imageRecord = new FursuitBadgeImageRecord
+                    imageRecord = new ImageRecord
                     {
-                        Id = record.Id,
+                        InternalReference = record.Id.ToString(),
                         Width = 240,
                         Height = 320,
                         MimeType = "image/jpeg"
                     };
                     imageRecord.Touch();
-
-                    _appDbContext.FursuitBadgeImages.Add(imageRecord);
                 }
 
-                if (imageRecord.SourceContentHashSha1 != hash)
+                if (imageRecord.ContentHashSha1 != hash)
                 {
-                    imageRecord.SourceContentHashSha1 = hash;
+                    imageRecord.ContentHashSha1 = hash;
 
                     var image = Image.Load(imageBytes);
 
@@ -90,19 +94,18 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         ctx.Resize(new ResizeOptions()
                         {
                             Mode = ResizeMode.Max,
-                            Size = new SixLabors.ImageSharp.Size(240, 320),
+                            Size = new Size(240, 320),
                             Sampler = new BicubicResampler()
                         })
                     );
 
                     var ms = new MemoryStream();
-                    image.SaveAsJpeg(ms, new JpegEncoder() { Quality = 85 });
+                    await image.SaveAsJpegAsync(ms, new JpegEncoder() { Quality = 85 });
                     imageRecord.SizeInBytes = ms.Length;
-                    imageRecord.ImageBytes = ms.ToArray();
-                    ms.Dispose();
-
                     imageRecord.Touch();
-                    _appDbContext.FursuitBadgeImages.Update(imageRecord);
+                    var createdImage = await _imageService.InsertOrUpdateImageAsync(record.Id.ToString(), ms.ToArray());
+                    record.ImageId = createdImage.Id;
+                    await ms.DisposeAsync();
                 }
 
                 _appDbContext.FursuitBadges.Update(record);
@@ -111,15 +114,15 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 return record.Id;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                if (id == Guid.Empty)
+                if (fursuitBadge == null)
                 {
-                    return id;
+                    return Guid.Empty;
                 }
 
-                var fursuitBadgeToDelete = await _appDbContext.FursuitBadges.SingleOrDefaultAsync(entity => entity.Id == id);
-                var fursuitBadgeImageToDelete = await _appDbContext.FursuitBadgeImages.SingleOrDefaultAsync(entity => entity.Id == id);
+                var fursuitBadgeToDelete = await _appDbContext.FursuitBadges.SingleOrDefaultAsync(entity => entity.Id == fursuitBadge.Id);
+                var fursuitBadgeImageToDelete = await _appDbContext.Images.SingleOrDefaultAsync(entity => entity.Id == fursuitBadge.ImageId);
 
                 if (fursuitBadgeToDelete != null)
                 {
@@ -128,7 +131,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 if (fursuitBadgeImageToDelete != null)
                 {
-                    _appDbContext.Remove(fursuitBadgeImageToDelete);
+                    await _imageService.DeleteOneAsync(fursuitBadgeImageToDelete.Id);
                 }
 
                 await _appDbContext.SaveChangesAsync();
@@ -143,8 +146,16 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task<byte[]> GetFursuitBadgeImageAsync(Guid id)
         {
-            var content = await _appDbContext.FursuitBadgeImages.FirstOrDefaultAsync(entity => entity.Id == id);
-            return content?.ImageBytes;
+            var content = await _appDbContext.FursuitBadges
+                .FirstOrDefaultAsync(entity => entity.Id == id);
+            byte[] result = null;
+
+            if (content.ImageId != null)
+            {
+                result = await _imageService.GetImageContentByImageIdAsync((Guid)content.ImageId);
+            }
+            
+            return result;
         }
 
         public IQueryable<FursuitBadgeRecord> GetFursuitBadges(FursuitBadgeFilter filter = null)
@@ -165,7 +176,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                         .Where(record =>
                         (string.IsNullOrWhiteSpace(filter.ExternalReference) || record.ExternalReference.Equals(filter.ExternalReference))
                         && (string.IsNullOrWhiteSpace(filter.OwnerUid) || record.OwnerUid.Equals(filter.OwnerUid))
-                        && record.Name.ToLowerInvariant().Contains(filter.Name.ToLowerInvariant()));
+                        && EF.Functions.Like(record.Name, $"%{filter.Name}%"));
         }
     }
 }

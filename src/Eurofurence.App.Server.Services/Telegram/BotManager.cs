@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -41,6 +42,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ITableRegistrationService _tableRegistrationService;
+        private readonly IImageService _imageService;
         private readonly ICollectingGameService _collectingGameService;
         private readonly ConventionSettings _conventionSettings;
         private readonly ITelegramMessageBroker _telegramMessageBroker;
@@ -81,6 +83,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IEventConferenceRoomService eventConferenceRoomService,
             IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             ITableRegistrationService tableRegistrationService,
+            IImageService imageService,
             IPrivateMessageService privateMessageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
@@ -97,6 +100,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _privateMessageService = privateMessageService;
             _tableRegistrationService = tableRegistrationService;
+            _imageService = imageService;
             _collectingGameService = collectingGameService;
             _conventionSettings = conventionSettings;
             _telegramMessageBroker = telegramMessageBroker;
@@ -127,6 +131,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     _regSysAlternativePinAuthenticationProvider,
                     privateMessageService,
                     _tableRegistrationService,
+                    _imageService,
                     _collectingGameService,
                     _conventionSettings,
                     loggerFactory
