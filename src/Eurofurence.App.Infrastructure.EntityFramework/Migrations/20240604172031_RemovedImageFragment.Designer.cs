@@ -4,6 +4,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240604172031_RemovedImageFragment")]
+    partial class RemovedImageFragment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -712,6 +715,44 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("Tokens");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.FursuitBadgeImageRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("ImageBytes")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("SizeInBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SourceContentHashSha1")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FursuitBadgeImages");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.FursuitBadgeRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -727,9 +768,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<string>("Gender")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<Guid?>("ImageId")
-                        .HasColumnType("char(36)");
 
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
@@ -757,8 +795,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ImageId");
 
                     b.ToTable("FursuitBadges");
                 });
@@ -1281,15 +1317,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasOne("Eurofurence.App.Domain.Model.Maps.MapEntryRecord", null)
                         .WithMany("Links")
                         .HasForeignKey("MapEntryRecordId");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.FursuitBadgeRecord", b =>
-                {
-                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
-                        .WithMany()
-                        .HasForeignKey("ImageId");
-
-                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>

@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
@@ -13,6 +14,7 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
+using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
@@ -67,6 +69,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(LassieConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(MinIoConfiguration.FromConfiguration(_configuration));
         }
 
         private void RegisterServices(ContainerBuilder builder)

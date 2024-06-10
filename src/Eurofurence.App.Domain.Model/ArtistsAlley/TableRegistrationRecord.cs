@@ -1,7 +1,7 @@
-﻿using Eurofurence.App.Domain.Model.Fragments;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
@@ -45,14 +45,10 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         public string Location { get; set; }
 
         [DataMember]
-        public ImageFragment Image { get; set; }
+        public ImageRecord Image { get; set; }
 
         [DataMember]
         public RegistrationStateEnum State { get; set; }
-
-        [DataMember]
-        public string ImageContent =>
-            Image?.ImageBytes?.Length > 0 ? Convert.ToBase64String(Image.ImageBytes) : null;
 
         [IgnoreDataMember]
         public IList<StateChangeRecord> StateChangeLog { get; set; }
