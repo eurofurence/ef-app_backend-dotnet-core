@@ -8,9 +8,4 @@ public static class PrincipalExtensions
     {
         return principal.FindFirst("sub")?.Value;
     }
-
-    public static string GetName(this ClaimsPrincipal principal)
-    {
-        return principal.FindFirst("name")?.Value;
-    }
 }

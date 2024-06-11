@@ -25,8 +25,6 @@ public class ConfigureOAuth2IntrospectionOptions(
         options.IntrospectionEndpoint = current.IntrospectionEndpoint;
         options.ClientId = current.ClientId;
         options.Events.OnTokenValidated = OnTokenValidated;
-        options.EnableCaching = true;
-        options.RoleClaimType = "groups";
     }
 
     public void Configure(string name, OAuth2IntrospectionOptions options)

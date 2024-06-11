@@ -156,7 +156,11 @@ namespace Eurofurence.App.Server.Web
             services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
 
             services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
-                .AddOAuth2Introspection();
+                .AddOAuth2Introspection(options =>
+                {
+                    options.EnableCaching = true;
+                    options.RoleClaimType = "groups";
+                });
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();

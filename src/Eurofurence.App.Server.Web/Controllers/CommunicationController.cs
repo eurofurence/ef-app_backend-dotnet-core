@@ -83,7 +83,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             // if (_apiPrincipal.IsAttendee)
             // {
-                Request.AuthorName = User.GetName();
+                Request.AuthorName = User.Identity!.Name;
             // }
 
             return Json(await _privateMessageService.SendPrivateMessageAsync(Request, User.GetSubject()));
