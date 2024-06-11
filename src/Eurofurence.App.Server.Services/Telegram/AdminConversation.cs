@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Telegram
@@ -28,6 +29,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IUserManager _userManager;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ITableRegistrationService _tableRegistrationService;
+        private readonly IImageService _imageService;
         private readonly ICollectingGameService _collectingGameService;
         private readonly ConventionSettings _conventionSettings;
 
@@ -82,6 +84,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             IUserManager userManager,
             IPrivateMessageService privateMessageService,
             ITableRegistrationService tableRegistrationService,
+            IImageService imageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory)
@@ -91,6 +94,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _userManager = userManager;
             _privateMessageService = privateMessageService;
             _tableRegistrationService = tableRegistrationService;
+            _imageService = imageService;
             _collectingGameService = collectingGameService;
             _conventionSettings = conventionSettings;
 
@@ -194,9 +198,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
-                    var imageContent = new MemoryStream((await _appDbContext.FursuitBadgeImages
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(entity => entity.Id == badge.Id)).ImageBytes);
+                    byte[] imageBytes = [];
+
+                    if (badge.ImageId != null)
+                    {
+                        imageBytes = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                    }
+
+                    var imageContent = new MemoryStream(imageBytes);
                     await BotClient.SendPhotoAsync(chatId: ChatId, photo: new InputFileStream(imageContent));
                 }, "Cancel=/cancel");
             await c1();
@@ -645,7 +654,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     await ReplyAsync(message.ToString());
                                     if (nextRecord.Image != null)
                                     {
-                                        var imageContent = new MemoryStream(nextRecord.Image.ImageBytes);
+                                        var imageBytes = await _imageService.GetImageContentByImageIdAsync(nextRecord.Image.Id);
+                                        var imageContent = new MemoryStream(imageBytes);
                                         await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
                                     }
 
@@ -734,11 +744,15 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     await ReplyAsync(
                                         $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
 
-                                    var imageContent = new MemoryStream(
-                                        (await _appDbContext.FursuitBadgeImages
-                                            .AsNoTracking()
-                                            .FirstOrDefaultAsync(entity =>
-                                            entity.Id == badge.Id)).ImageBytes);
+                                    byte[] imageBytes = [];
+
+                                    if (badge.ImageId != null)
+                                    {
+                                        imageBytes = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                                    }
+
+                                    var imageContent = new MemoryStream(imageBytes);
+
                                     await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
 
                                     askTokenValue = () => AskAsync(
