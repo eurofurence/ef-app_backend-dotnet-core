@@ -16,7 +16,6 @@ using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
@@ -32,7 +31,6 @@ using Eurofurence.App.Server.Services.Lassie;
 using Eurofurence.App.Server.Services.LostAndFound;
 using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
-using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Validation;
@@ -61,8 +59,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             if (_configuration == null) return;
 
             builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
-            builder.RegisterInstance(TokenFactorySettings.FromConfiguration(_configuration));
-            builder.RegisterInstance(AuthenticationSettings.FromConfiguration(_configuration));
             builder.RegisterInstance(WnsConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(TelegramConfiguration.FromConfiguration(_configuration));
@@ -88,7 +84,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
             builder.RegisterType<AgentClosingResultService>().As<IAgentClosingResultService>();
             builder.RegisterType<AnnouncementService>().As<IAnnouncementService>();
-            builder.RegisterType<AuthenticationHandler>().As<IAuthenticationHandler>();
             builder.RegisterType<BotManager>().As<BotManager>();
             builder.RegisterType<CollectingGameService>().As<ICollectingGameService>();
             builder.RegisterType<DealerService>().As<IDealerService>();
@@ -117,15 +112,12 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<PushNotificationChannelStatisticsService>()
                 .As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
-            builder.RegisterType<RegSysAlternativePinAuthenticationProvider>()
-                .As<IRegSysAlternativePinAuthenticationProvider>();
             builder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
             builder.RegisterType<TableRegistrationService>().As<ITableRegistrationService>();
             builder.RegisterType<TelegramMessageBroker>()
                 .As<ITelegramMessageBroker>()
                 .As<ITelegramMessageSender>()
                 .SingleInstance();
-            builder.RegisterType<TokenFactory>().As<ITokenFactory>();
             builder.RegisterType<UserManager>().As<IUserManager>();
             builder.RegisterType<WnsChannelManager>().As<IWnsChannelManager>();
         }

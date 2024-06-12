@@ -5,14 +5,10 @@ using Autofac;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Services.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
 using FluentScheduler;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -21,7 +17,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Context;
 using Serilog.Events;
@@ -29,10 +24,12 @@ using Serilog.Formatting.Json;
 using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Web.Identity;
+using IdentityModel.AspNetCore.OAuth2Introspection;
+using Microsoft.OpenApi.Models;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Minio;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -108,12 +105,12 @@ namespace Eurofurence.App.Server.Web
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("api", new Microsoft.OpenApi.Models.OpenApiInfo
+                options.SwaggerDoc("api", new OpenApiInfo
                 {
                     Version = conventionSettings.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
-                    Contact = new Microsoft.OpenApi.Models.OpenApiContact
+                    Contact = new OpenApiContact
                     {
                         Name = "Eurofurence IT Department",
                         Email = "it@eurofurence.org",
@@ -121,12 +118,13 @@ namespace Eurofurence.App.Server.Web
                     }
                 });
 
-                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
-                    Name = "Authorization",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+                    Name = "Eurofurence Identity",
+                    Description = "Authenticate with Eurofurence Identity Provider",
+                    In = ParameterLocation.Header,
+                    Scheme = "Bearer",
+                    Type = SecuritySchemeType.Http
                 });
 
                 //options.DescribeAllEnumsAsStrings();
@@ -139,7 +137,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1")
                 {
-                    options.AddServer(new Microsoft.OpenApi.Models.OpenApiServer()
+                    options.AddServer(new OpenApiServer()
                     {
                         Description = "nginx (CID in path)",
                         Url = $"/{conventionSettings.ConventionIdentifier}"
@@ -147,7 +145,7 @@ namespace Eurofurence.App.Server.Web
                 }
                 else
                 {
-                    options.AddServer(new Microsoft.OpenApi.Models.OpenApiServer()
+                    options.AddServer(new OpenApiServer()
                     {
                         Description = "local",
                         Url = "/"
@@ -156,29 +154,14 @@ namespace Eurofurence.App.Server.Web
 
             });
 
-            var oAuthBearerAuthenticationPolicy =
-                new AuthorizationPolicyBuilder().AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-                    .RequireAuthenticatedUser()
-                    .Build();
+            services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
+            services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
 
-            services.AddAuthorization(auth =>
-            {
-                auth.AddPolicy("OAuth-AllAuthenticated", oAuthBearerAuthenticationPolicy);
-            });
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(configure =>
+            services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
+                .AddOAuth2Introspection(options =>
                 {
-                    var tokenFactorySettings = TokenFactorySettings.FromConfiguration(Configuration);
-
-                    configure.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenFactorySettings.SecretKey)),
-                        ValidAudience = tokenFactorySettings.Audience,
-                        ValidIssuer = tokenFactorySettings.Issuer,
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.FromSeconds(0)
-                    };
+                    options.EnableCaching = true;
+                    options.RoleClaimType = "groups";
                 });
 
             services.AddControllersWithViews()
@@ -208,9 +191,6 @@ namespace Eurofurence.App.Server.Web
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
-
-            builder.Register(c => new ApiPrincipal(c.Resolve<IHttpContextAccessor>().HttpContext.User))
-                .As<IApiPrincipal>();
 
             builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
             builder.RegisterType<UpdateLostAndFoundJob>().WithAttributeFiltering().AsSelf();

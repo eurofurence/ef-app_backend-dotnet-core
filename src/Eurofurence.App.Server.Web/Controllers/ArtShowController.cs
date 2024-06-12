@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Swagger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,17 +13,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IItemActivityService _itemActivityService;
         private readonly IAgentClosingResultService _agentClosingResultService;
-        private readonly IApiPrincipal _apiPrincipal;
 
         public ArtShowController(
             IItemActivityService itemActivityService,
-            IAgentClosingResultService agentClosingResultService,
-            IApiPrincipal apiPrincipal
-            )
+            IAgentClosingResultService agentClosingResultService)
         {
             _itemActivityService = itemActivityService;
             _agentClosingResultService = agentClosingResultService;
-            _apiPrincipal = apiPrincipal;
         }
 
         /// <summary>
@@ -164,4 +159,4 @@ namespace Eurofurence.App.Server.Web.Controllers
             return NoContent();
         }
     }
-} 
+}

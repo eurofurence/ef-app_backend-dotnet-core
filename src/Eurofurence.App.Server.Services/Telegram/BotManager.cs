@@ -1,13 +1,9 @@
-﻿using Eurofurence.App.Domain.Model.Fursuits;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Security;
-using Eurofurence.App.Server.Services.Abstractions;
+﻿using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,14 +12,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
-using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
@@ -39,7 +33,6 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly IDealerService _dealerService;
         private readonly IEventService _eventService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
-        private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
@@ -81,15 +74,13 @@ namespace Eurofurence.App.Server.Services.Telegram
             IDealerService dealerService,
             IEventService eventService,
             IEventConferenceRoomService eventConferenceRoomService,
-            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             ITableRegistrationService tableRegistrationService,
             IImageService imageService,
             IPrivateMessageService privateMessageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
             ILoggerFactory loggerFactory,
-            ITelegramMessageBroker telegramMessageBroker
-        )
+            ITelegramMessageBroker telegramMessageBroker)
         {
             _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -97,7 +88,6 @@ namespace Eurofurence.App.Server.Services.Telegram
             _dealerService = dealerService;
             _eventService = eventService;
             _eventConferenceRoomService = eventConferenceRoomService;
-            _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _privateMessageService = privateMessageService;
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
@@ -128,7 +118,6 @@ namespace Eurofurence.App.Server.Services.Telegram
                 (chatId) => new AdminConversation(
                     _appDbContext,
                     _userManager,
-                    _regSysAlternativePinAuthenticationProvider,
                     privateMessageService,
                     _tableRegistrationService,
                     _imageService,

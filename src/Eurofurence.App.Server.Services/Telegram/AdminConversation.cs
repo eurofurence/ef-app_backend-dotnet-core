@@ -9,7 +9,6 @@ using Eurofurence.App.Common.Validation;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -28,7 +27,6 @@ namespace Eurofurence.App.Server.Services.Telegram
     {
         private readonly AppDbContext _appDbContext;
         private readonly IUserManager _userManager;
-        private readonly IRegSysAlternativePinAuthenticationProvider _regSysAlternativePinAuthenticationProvider;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
@@ -84,19 +82,16 @@ namespace Eurofurence.App.Server.Services.Telegram
         public AdminConversation(
             AppDbContext appDbContext,
             IUserManager userManager,
-            IRegSysAlternativePinAuthenticationProvider regSysAlternativePinAuthenticationProvider,
             IPrivateMessageService privateMessageService,
             ITableRegistrationService tableRegistrationService,
             IImageService imageService,
             ICollectingGameService collectingGameService,
             ConventionSettings conventionSettings,
-            ILoggerFactory loggerFactory
-        )
+            ILoggerFactory loggerFactory)
         {
             _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
             _userManager = userManager;
-            _regSysAlternativePinAuthenticationProvider = regSysAlternativePinAuthenticationProvider;
             _privateMessageService = privateMessageService;
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
@@ -105,20 +100,6 @@ namespace Eurofurence.App.Server.Services.Telegram
 
             _commands = new List<CommandInfo>()
             {
-                new CommandInfo()
-                {
-                    Command = "/pin",
-                    Description = "Create an alternative password for an attendee to login",
-                    RequiredPermission = PermissionFlags.PinCreate,
-                    CommandHandler = CommandPinRequest
-                },
-                new CommandInfo()
-                {
-                    Command = "/pinInfo",
-                    Description = "Show the pin & issue log for a given registration number",
-                    RequiredPermission = PermissionFlags.PinQuery,
-                    CommandHandler = CommandPinInfo
-                },
                 new CommandInfo()
                 {
                     Command = "/users",
@@ -707,56 +688,6 @@ namespace Eurofurence.App.Server.Services.Telegram
             await c1();
         }
 
-        private async Task CommandPinInfo()
-        {
-            Func<Task> c1 = null;
-            var title = "PIN Info";
-
-            c1 = () => AskAsync(
-                $"*{title} - Step 1 of 1*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
-                async c1a =>
-                {
-                    await ClearLastAskResponseOptions();
-
-                    int regNo = 0;
-                    var regNoWithLetter = c1a.Trim().ToUpper();
-                    if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
-                    {
-                        await ReplyAsync(
-                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
-                        await c1();
-                        return;
-                    }
-
-                    var record = await _regSysAlternativePinAuthenticationProvider.GetAlternativePinAsync(regNo);
-
-                    if (record == null)
-                    {
-                        await ReplyAsync($"Sorry, there is no pin record for RegNo {regNo}.");
-                        return;
-                    }
-
-                    var response = new StringBuilder();
-                    response.AppendLine($"RegNo: *{record.RegNo}*");
-                    response.AppendLine($"NameOnBadge: *{record.NameOnBadge.EscapeMarkdown()}*");
-                    response.AppendLine($"Pin: *{record.Pin}*");
-                    response.AppendLine("\n```\nAll times are UTC.\n");
-                    response.AppendLine($"Issued on {record.IssuedDateTimeUtc} by {record.IssuedByUid}");
-                    response.AppendLine("");
-                    response.AppendLine("Issue Log:");
-                    response.AppendLine(string.Join("\n",
-                        record.IssueLog.Select(a => $"- {a.RequestDateTimeUtc} {a.RequesterUid}")));
-
-                    response.AppendLine("\nUsed for login at:");
-                    response.AppendLine(string.Join("\n", record.PinConsumptionDatesUtc.Select(a => $"- {a}")));
-
-                    response.AppendLine("```");
-
-                    await ReplyAsync(response.ToString());
-                }, "Cancel=/cancel");
-            await c1();
-        }
-
         private async Task CommandCollectionGameRegisterFursuit()
         {
             Func<Task> askForRegNo = null, askForFursuitBadgeNo = null, askTokenValue = null;
@@ -850,87 +781,6 @@ namespace Eurofurence.App.Server.Services.Telegram
                         await askForFursuitBadgeNo();
                     }, "Cancel=/cancel");
             await askForRegNo();
-        }
-
-        private async Task CommandPinRequest()
-        {
-            Func<Task> c1 = null, c2 = null, c3 = null;
-
-            var title = "PIN Creation";
-            var requesterUid = $"Telegram:@{_user.Username}";
-
-            c1 = () => AskAsync(
-                $"*{title} - Step 1 of 3*\nWhat's the attendees _registration number (including the letter at the end)_ on the badge?",
-                async c1a =>
-                {
-                    await ClearLastAskResponseOptions();
-
-                    int regNo = 0;
-                    var regNoWithLetter = c1a.Trim().ToUpper();
-                    if (!BadgeChecksum.TryParse(regNoWithLetter, out regNo))
-                    {
-                        await ReplyAsync(
-                            $"_{regNoWithLetter} is not a valid badge number - checksum letter is missing or wrong._");
-                        await c1();
-                        return;
-                    }
-
-                    c2 = () => AskAsync(
-                        $"*{title} - Step 2 of 3*\nOn badge no {regNo}, what is the _nickname_ printed on the badge (not the real name)?",
-                        async c2a =>
-                        {
-                            await ClearLastAskResponseOptions();
-
-                            var nameOnBadge = c2a.Trim();
-
-                            c3 = () => AskAsync(
-                                $"*{title} - Step 3 of 3*\nPlease confirm:\n\nThe badge no. is *{regNoWithLetter}*\n\nThe nickname on the badge is *{nameOnBadge.EscapeMarkdown()}*" +
-                                "\n\n*You have verified the identity of the attendee by matching their real name against a legal form of identification.*",
-                                async c3a =>
-                                {
-                                    if (c3a.Equals("*restart", StringComparison.CurrentCultureIgnoreCase))
-                                    {
-                                        await c1();
-                                        return;
-                                    }
-
-                                    if (!c3a.Equals("*confirm", StringComparison.CurrentCultureIgnoreCase))
-                                    {
-                                        await c3();
-                                        return;
-                                    }
-
-                                    var result = await _regSysAlternativePinAuthenticationProvider
-                                        .RequestAlternativePinAsync(
-                                            new RegSysAlternativePinRequest()
-                                            {
-                                                NameOnBadge = nameOnBadge,
-                                                RegNoOnBadge = regNoWithLetter,
-                                            }, requesterUid: requesterUid);
-
-                                    var response = new StringBuilder();
-
-                                    response.AppendLine($"*{title} - Completed*");
-                                    response.AppendLine($"Registration Number: *{result.RegNo}*");
-                                    response.AppendLine($"Name on Badge: *{result.NameOnBadge.EscapeMarkdown()}*");
-                                    response.AppendLine($"PIN: *{result.Pin}*");
-                                    response.AppendLine();
-                                    response.AppendLine(
-                                        $"User can login to the Eurofurence Apps (mobile devices and web) with their registration number (*{result.RegNo}*) and PIN (*{result.Pin}*) as their password. They can type in any username, it does not matter.");
-                                    response.AppendLine(
-                                        $"\n_Generation/Access of this PIN by {requesterUid.EscapeMarkdown()} has been recorded._");
-
-                                    _logger.LogInformation(LogEvents.Audit,
-                                        "{requesterUid} created PIN for {regNo} {nameOnBadge}", requesterUid,
-                                        result.RegNo, result.NameOnBadge);
-
-                                    await ReplyAsync(response.ToString());
-                                }, "Confirm=*confirm", "Restart=*restart", "Cancel=/cancel");
-                            await c3();
-                        }, "Cancel=/cancel");
-                    await c2();
-                }, "Cancel=/cancel");
-            await c1();
         }
 
         private async Task ProcessMessageAsync(string message, Message rawMessage = null)
