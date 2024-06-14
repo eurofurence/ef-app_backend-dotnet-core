@@ -100,7 +100,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
                 foreach(var image in images)
                 {
-                    archive.AddAsBinary($"imageContent-{image.Id}", _imageService.GetImageContentByImageIdAsync(image.Id).Result);
+                    using (MemoryStream ms = new())
+                    {
+                        var stream = _imageService.GetImageContentByImageIdAsync(image.Id).Result;
+                        stream.CopyTo(ms);
+                        stream.Dispose();
+                        archive.AddAsBinary($"imageContent-{image.Id}", ms.ToArray());
+                    }
                 }
 
                 archive.Dispose();
@@ -126,7 +132,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 foreach (var entity in images)
                 {
                     var imageData = archive.ReadAsBinary($"imageContent-{entity.Id}");
-                    _imageService.InsertImageAsync(entity, imageData).Wait();
+                    using MemoryStream ms = new(imageData);
+                    _imageService.InsertImageAsync(entity.InternalReference, ms).Wait();
                 }
 
                 archive.Dispose();

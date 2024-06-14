@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using SixLabors.ImageSharp.Drawing;
 
 namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 {
@@ -34,18 +35,21 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 
             var imageTag = $"event:{imagePurpose}:{eventId}";
 
-            var imageContent = await File.ReadAllBytesAsync(imagePath);
-            var image = await _imageService.InsertOrUpdateImageAsync(imageTag, imageContent);
-
-            switch (imagePurpose)
+            using (FileStream fileStream = File.Create(imagePath))
             {
-                    case PurposeEnum.Banner:
-                        @event.BannerImageId = image.Id;
-                        break;
-                    case PurposeEnum.Poster:
-                        @event.PosterImageId = image.Id;
-                        break;
+                var image = await _imageService.InsertImageAsync(imageTag, fileStream);
+            
+                switch (imagePurpose)
+                {
+                        case PurposeEnum.Banner:
+                            @event.BannerImageId = image.Id;
+                            break;
+                        case PurposeEnum.Poster:
+                            @event.PosterImageId = image.Id;
+                            break;
+                }
             }
+
             @event.Touch();
 
             await _eventService.ReplaceOneAsync(@event);

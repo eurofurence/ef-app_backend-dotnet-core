@@ -1,4 +1,6 @@
-﻿namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
+﻿using System;
+
+namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
 {
     public class FursuitBadgeRegistration
     {
@@ -8,7 +10,7 @@
         public string WornBy { get; set; }
         public string Species { get; set; }
         public string Gender { get; set; }
-        public string ImageContent { get; set; }
+        public Guid ImageId { get; set; }
         public int DontPublish { get; set; }
         public string CollectionCode { get; set; }
     }

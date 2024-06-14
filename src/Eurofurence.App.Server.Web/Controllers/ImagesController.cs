@@ -8,6 +8,8 @@ using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Text;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -90,17 +92,35 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
-        [HttpPut("{id}/Content")]
-        public async Task<ActionResult> PutImageContentAsync([FromRoute] Guid id, [FromBody] string ImageContent)
+        [HttpPut("{id}")]
+        public async Task<ActionResult> PutImageAsync([FromRoute] Guid id, IFormFile file)
         {
             var record = await _imageService.FindOneAsync(id);
             if (record == null) return NotFound();
 
-            byte[] imageBytes = Convert.FromBase64String(ImageContent);
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+                var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
+                return Ok(result);
+            }
+        }
 
-            await _imageService.InsertOrUpdateImageAsync(record.InternalReference, imageBytes);
+        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [HttpPost]
+        public async Task<ActionResult> PostImageAsync(IFormFile file)
+        {
+            if (file == null)
+            {
+                return BadRequest();
+            }
 
-            return NoContent();            
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+                var result = await _imageService.InsertImageAsync(file.FileName, ms);
+                return Ok(result);
+            }
         }
 
     }

@@ -64,98 +64,102 @@ namespace Eurofurence.App.Server.Services.Images
             await base.DeleteAllAsync();
         }
 
-        public async Task<ImageRecord> InsertOrUpdateImageAsync(string internalReference, byte[] imageBytes)
+        public async Task<ImageRecord> InsertImageAsync(string internalReference, Stream stream)
         {
-            var hash = Hashing.ComputeHashSha1(imageBytes);
-
-            var image = Image.Load(imageBytes);
-            IImageFormat imageFormat = image.Metadata.DecodedImageFormat;
-
-            var existingRecord = await
-                _appDbContext.Images
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(entity => entity.InternalReference == internalReference);
-
-            if (existingRecord != null && existingRecord.ContentHashSha1 == hash)
+            string hash;
+            Image image;
+            using (MemoryStream ms = new())
             {
-                // Ensure we still have the image!
-                var objectExists = await _minIoClient.StatObjectAsync(new StatObjectArgs()
-                    .WithBucket(_minIoConfiguration.Bucket)
-                    .WithObject(existingRecord.Id.ToString()));
-
-                if (objectExists == null)
-                {
-                    await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, existingRecord.Id.ToString(),
-                        imageFormat?.DefaultMimeType, imageBytes);
-                }
-
-                return existingRecord;
+                stream.Position = 0;
+                await stream.CopyToAsync(ms);
+                var byteArray = ms.ToArray();
+                hash = Hashing.ComputeHashSha1(byteArray);
+                image = Image.Load(byteArray);
             }
+
+            var imageFormat = image.Metadata.DecodedImageFormat;
 
             var record = new ImageRecord
             {
-                Id = existingRecord?.Id ?? Guid.NewGuid(),
-                IsDeleted = 0,
                 InternalReference = internalReference,
+                IsDeleted = 0,
                 MimeType = imageFormat?.DefaultMimeType,
                 Width = image.Width,
                 Height = image.Height,
-                SizeInBytes = imageBytes.Length,
+                SizeInBytes = stream.Length,
                 ContentHashSha1 = hash
             };
 
             record.Touch();
 
-            if (existingRecord != null)
-            {
-                await base.ReplaceOneAsync(record);
-            }
-            else
-            {
-                await base.InsertOneAsync(record);
-            }
+            await base.InsertOneAsync(record);
 
             await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, record.Id.ToString(),
-                imageFormat?.DefaultMimeType, imageBytes);
+                imageFormat?.DefaultMimeType, stream);
 
             await _appDbContext.SaveChangesAsync();
 
             return record;
         }
 
-        public async Task<byte[]> GetImageContentByImageIdAsync(Guid id)
+        public async Task<ImageRecord> ReplaceImageAsync(Guid id, string internalReference, Stream stream)
+        {
+            Image image;
+            using (MemoryStream ms = new())
+            {
+                stream.Position = 0;
+                await stream.CopyToAsync(ms);
+                var byteArray = ms.ToArray();
+                image = Image.Load(byteArray);
+            }
+
+            IImageFormat imageFormat = image.Metadata.DecodedImageFormat;
+
+            var existingRecord = await
+                _appDbContext.Images
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.Id == id);
+
+            await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, existingRecord.Id.ToString(),
+                imageFormat?.DefaultMimeType, stream);
+
+            existingRecord.InternalReference = internalReference;
+            existingRecord.MimeType = imageFormat?.DefaultMimeType;
+            existingRecord.Width = image.Width;
+            existingRecord.Height = image.Height;
+            existingRecord.SizeInBytes = stream.Length;
+
+            await base.ReplaceOneAsync(existingRecord);
+            return existingRecord;
+        }
+
+        public async Task<Stream> GetImageContentByImageIdAsync(Guid id)
         {
             // Checks if the object exists
             await _minIoClient.StatObjectAsync(new StatObjectArgs()
                 .WithBucket(_minIoConfiguration.Bucket)
                 .WithObject(id.ToString()));
 
-            using var ms = new MemoryStream();
-
+            var ms = new MemoryStream();
             await _minIoClient.GetObjectAsync(new GetObjectArgs()
                 .WithBucket(_minIoConfiguration.Bucket)
                 .WithObject(id.ToString())
                 .WithCallbackStream(stream =>
                 {
-                    stream.CopyTo(ms);
+                    stream.CopyToAsync(ms);
                 }));
-            return ms.ToArray();
+
+            ms.Position = 0;
+            return ms;
         }
 
-        public byte[] GeneratePlaceholderImage()
+        public Stream GeneratePlaceholderImage()
         {
             var image = new Image<Rgba32>(1, 1);
             var output = new MemoryStream();
             image.SaveAsPng(output);
 
-            return output.ToArray();
-        }
-
-        public async Task InsertImageAsync(ImageRecord image, byte[] imageBytes)
-        {
-            _appDbContext.Images.Add(image);
-            await _appDbContext.SaveChangesAsync();
-            await InsertOrUpdateImageAsync(image.InternalReference, imageBytes);
+            return output;
         }
 
         public async Task<ImageRecord> EnforceMaximumDimensionsAsync(ImageRecord image, int width, int height)
@@ -165,10 +169,18 @@ namespace Eurofurence.App.Server.Services.Images
             double scaling = Math.Min((double)width / image.Width, (double)height / image.Height);
             if (scaling >= 1) return image;
 
-            var imageBytes = await GetImageContentByImageIdAsync(image.Id);
+            var stream = await GetImageContentByImageIdAsync(image.Id);
 
-            var rawImage = Image.Load(imageBytes);
+            Image rawImage;
+            using (MemoryStream ms = new())
+            {
+                stream.Position = 0;
+                await stream.CopyToAsync(ms);
+                var byteArray = ms.ToArray();
+                rawImage = Image.Load(byteArray);
+            }
 
+            await stream.DisposeAsync();
             rawImage.Mutate(ctx =>
                 ctx.Resize(new ResizeOptions()
                 {
@@ -178,15 +190,16 @@ namespace Eurofurence.App.Server.Services.Images
                 })
             );
 
-            var ms = new MemoryStream();
-            await rawImage.SaveAsJpegAsync(ms, new JpegEncoder() { Quality = 85 });
-            var newImage = await InsertOrUpdateImageAsync(image.InternalReference, ms.ToArray());
-            await ms.DisposeAsync();
-
-            return newImage;
+            using (MemoryStream resizedImageStream = new())
+            {
+                await rawImage.SaveAsJpegAsync(resizedImageStream, new JpegEncoder { Quality = 85 });
+                var newImage = await ReplaceImageAsync(image.Id, image.InternalReference, resizedImageStream);
+                return newImage;
+            }
         }
 
-        private async Task UploadFileToMinIoAsync(string bucketName, string objectName, string contentType, byte[] content)
+        private async Task UploadFileToMinIoAsync(string bucketName, string objectName, string contentType,
+            Stream stream)
         {
             // Make a bucket on the server, if not already present
             var found = await _minIoClient
@@ -200,13 +213,13 @@ namespace Eurofurence.App.Server.Services.Images
                 await _minIoClient.MakeBucketAsync(mbArgs).ConfigureAwait(false);
             }
 
-            using var ms = new MemoryStream(content);
+            stream.Position = 0;
             // Upload a file to bucket
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(bucketName)
                 .WithObject(objectName)
-                .WithObjectSize(ms.Length)
-                .WithStreamData(ms)
+                .WithObjectSize(stream.Length)
+                .WithStreamData(stream)
                 .WithContentType(contentType);
             await _minIoClient.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
         }
@@ -230,7 +243,7 @@ namespace Eurofurence.App.Server.Services.Images
             await _minIoClient.RemoveObjectAsync(removeObjectArgs).ConfigureAwait(false);
         }
 
-        private async Task DeleteFilesFromMinIoAsync(string bucketName, List<string> objectNames)
+        private async Task DeleteFilesFromMinIoAsync(string bucketName, IList<string> objectNames)
         {
             // If the bucket does not exist, return
             var found = await _minIoClient
