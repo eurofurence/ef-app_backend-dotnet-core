@@ -124,11 +124,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var archive = ZipFile.Open(inputPathArgument.Value, ZipArchiveMode.Read);
 
                 var knowledgeGroups = archive.ReadAsJson<IEnumerable<KnowledgeGroupRecord>>("knowledgeGroups");
-                var knowledgeEntries = archive.ReadAsJson<IEnumerable<KnowledgeEntryRecord>>("knowledgeEntries");
+                var knowledgeEntries = archive.ReadAsJson<IEnumerable<KnowledgeEntryRequest>>("knowledgeEntries");
                 var images = archive.ReadAsJson<IEnumerable<ImageRecord>>("images");
 
                 foreach (var entity in knowledgeGroups) _knowledgeGroupService.InsertOneAsync(entity).Wait();
-                foreach (var entity in knowledgeEntries) _knowledgeEntryService.InsertOneAsync(entity).Wait();
+                foreach (var entity in knowledgeEntries) _knowledgeEntryService.InsertKnowledgeEntryAsync(entity).Wait();
                 foreach (var entity in images)
                 {
                     var imageData = archive.ReadAsBinary($"imageContent-{entity.Id}");
