@@ -29,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eurofurence.App.Infrastruct
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backoffice", "Backoffice", "{521BC67A-4A77-4D4F-8B6F-A3146ED548AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eurofurence.App.Server.Backoffice", "src\Eurofurence.App.Server.Backoffice\Eurofurence.App.Server.Backoffice.csproj", "{A23CDBF5-8239-4849-A43C-397F2D986038}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eurofurence.App.Server.Backoffice", "src\Eurofurence.App.Server.Backoffice\Eurofurence.App.Server.Backoffice.csproj", "{A23CDBF5-8239-4849-A43C-397F2D986038}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

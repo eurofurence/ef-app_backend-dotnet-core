@@ -1,10 +1,19 @@
 using Eurofurence.App.Server.Backoffice.Components;
+using Eurofurence.App.Server.Backoffice.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IKnowledgeService, KnowledgeService>(); 
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped(sp =>
+    new HttpClient
+    {
+        BaseAddress = new Uri(builder.Configuration["ApiUrl"] ?? "http://localhost:7371/api/")
+    });
 
 var app = builder.Build();
 
