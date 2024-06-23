@@ -1,4 +1,5 @@
-version: '3.8'
+name: ef-mobile-app-backend
+
 services:
   backend:
     image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly
@@ -13,10 +14,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      backend-init:
+        condition: service_completed_successfully
       minio:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+
+  backend-init:
+    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly
+    volumes:
+      - './appsettings.json:/app/appsettings.json'
+      - './firebase.json:/app/firebase.json'
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: /app/db-migration-bundle
 
   db:
     image: docker.io/mariadb:latest
