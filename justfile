@@ -8,15 +8,15 @@ _create_from_sample PROJECT NAME EXTENSION:
 
 # Start the docker compose stack
 up *ARGS: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json") 
-	docker-compose up {{ARGS}}
+	docker compose up {{ARGS}}
 
 # Bring the docker compose stack down and remove volumes
 down:
-	docker-compose down -v --remove-orphans
+	docker compose down -v --remove-orphans
 
 # Stop the docker compose stack
 stop:
-	docker-compose stop
+	docker compose stop
 
 # Clean build, stack, container images and artifacts
 clean:
@@ -24,7 +24,7 @@ clean:
 	rm -rf artifacts build
 	find . -type d -name "bin" -print0 | xargs -0 rm -rf
 	find . -type d -name "obj" -print0 | xargs -0 rm -rf
-	docker-compose down || true
+	docker compose down || true
 	docker rmi ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev-sdk || true
 	docker rmi ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly || true
 
