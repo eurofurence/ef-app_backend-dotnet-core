@@ -1,4 +1,4 @@
-﻿using Amazon;
+using Amazon;
 using Amazon.CloudWatchLogs;
 using Amazon.Runtime;
 using Autofac;
@@ -177,12 +177,20 @@ namespace Eurofurence.App.Server.Web
             services.AddDbContextPool<AppDbContext>(options =>
             {
                 var connectionString = Configuration.GetConnectionString("Eurofurence");
+
+                var serverVersionString = Environment.GetEnvironmentVariable("MYSQL_VERSION");
+                ServerVersion serverVersion;
+                if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out serverVersion))
+                {
+                    serverVersion = ServerVersion.AutoDetect(connectionString);
+                }
+
                 options.UseMySql(
-                    connectionString, 
-                    ServerVersion.AutoDetect(connectionString),
+                    connectionString,
+                    serverVersion,
                     mySqlOptions => mySqlOptions.UseMicrosoftJson());
             });
-            
+
             builder.Build();
 
             CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
