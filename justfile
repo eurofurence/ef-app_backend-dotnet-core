@@ -26,7 +26,7 @@ clean:
 	find . -type d -name "obj" -print0 | xargs -0 rm -rf
 	docker-compose down || true
 	docker rmi ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev-sdk || true
-	docker rmi ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev || true
+	docker rmi ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly || true
 
 # Perform restore, build & publish with dotnet
 build:
