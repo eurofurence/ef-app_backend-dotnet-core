@@ -41,7 +41,7 @@ build-cli:
 
 # Build release container using spec from docker-compose.yml
 containerize:
-	docker-compose build
+	docker compose build
 
 # Build sdk container without executing second stage
 containerize-dev:
