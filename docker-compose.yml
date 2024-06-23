@@ -2,7 +2,7 @@ name: ef-mobile-app-backend
 
 services:
   backend:
-    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly
+    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
         condition: service_completed_successfully
 
   backend-init:
-    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly
+    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
     volumes:
       - './appsettings.json:/app/appsettings.json'
       - './firebase.json:/app/firebase.json'
