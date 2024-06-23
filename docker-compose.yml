@@ -1,7 +1,7 @@
-version: '3.1'
+version: '3.8'
 services:
   backend:
-    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
+    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,6 +13,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
   db:
     image: docker.io/mariadb:latest
     environment:
@@ -26,5 +31,41 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio:/data
+    environment:
+      - "MINIO_ACCESS_KEY=minioAccessKey"
+      - "MINIO_SECRET_KEY=minioVerySecretKey"
+    command: server /data
+    healthcheck:
+      test: >
+        /bin/sh -c "
+        /usr/bin/mc config host add ef-minio http://minio:9000 minioAccessKey minioVerySecretKey;
+        /usr/bin/mc ready ef-minio;
+        "
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add ef-minio http://minio:9000 minioAccessKey minioVerySecretKey;
+      /usr/bin/mc ready ef-minio;
+      /usr/bin/mc mb -p ef-minio/ef-mobile-app-local;
+      /usr/bin/mc anonymous set download ef-minio/ef-mobile-app-local;
+      exit 0;
+      "
 volumes:
   db:
+  minio:

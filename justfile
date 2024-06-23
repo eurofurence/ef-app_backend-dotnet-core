@@ -7,7 +7,7 @@ _create_from_sample PROJECT NAME EXTENSION:
 	if [ ! -f "{{NAME}}.{{EXTENSION}}" ]; then cp "src/{{PROJECT}}/{{NAME}}.sample.{{EXTENSION}}" "{{NAME}}.{{EXTENSION}}"; fi
 
 # Start the docker compose stack
-up *ARGS: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json")
+up *ARGS: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json") 
 	docker-compose up {{ARGS}}
 
 # Bring the docker compose stack down and remove volumes
