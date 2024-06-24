@@ -1,6 +1,7 @@
 ﻿@page "/knowledgebase"
-@using Eurofurence.App.Server.Backoffice.Models
-@using Eurofurence.App.Server.Backoffice.Services
+@using Eurofurence.App.Backoffice.Client.Models
+@using Eurofurence.App.Backoffice.Client.Services
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject IKnowledgeService KnowledgeService
 
 <h3>Knowledge Base</h3>

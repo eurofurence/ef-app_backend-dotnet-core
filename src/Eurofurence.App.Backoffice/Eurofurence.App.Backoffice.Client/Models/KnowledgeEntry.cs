@@ -1,4 +1,4 @@
-﻿namespace Eurofurence.App.Server.Backoffice.Models
+﻿namespace Eurofurence.App.Backoffice.Client.Models
 {
     public class KnowledgeEntry
     {

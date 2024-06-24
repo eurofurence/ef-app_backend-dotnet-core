@@ -1,11 +1,13 @@
-﻿using Eurofurence.App.Server.Backoffice.Models;
+﻿using System.Net.Http.Json;
+using Eurofurence.App.Backoffice.Client.Models;
 
-namespace Eurofurence.App.Server.Backoffice.Services
+namespace Eurofurence.App.Backoffice.Client.Services
 {
     public class KnowledgeService(HttpClient http) : IKnowledgeService
     {
         public async Task<KnowledgeEntry[]> GetKnowledgeEntriesAsync()
         {
+            // Make the API call
             return await http.GetFromJsonAsync<KnowledgeEntry[]>("knowledgeEntries") ?? [];
         }
     }

@@ -1,6 +1,6 @@
-﻿using Eurofurence.App.Server.Backoffice.Models;
+﻿using Eurofurence.App.Backoffice.Client.Models;
 
-namespace Eurofurence.App.Server.Backoffice.Services
+namespace Eurofurence.App.Backoffice.Client.Services
 {
     public interface IKnowledgeService
     {

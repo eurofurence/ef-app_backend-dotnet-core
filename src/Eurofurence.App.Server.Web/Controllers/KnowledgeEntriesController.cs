@@ -7,6 +7,8 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -14,10 +16,11 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class KnowledgeEntriesController : BaseController
     {
         private readonly IKnowledgeEntryService _knowledgeEntryService;
-
-        public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService, IHttpContextAccessor httpContextAccessor)
         {
             _knowledgeEntryService = knowledgeEntryService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -25,10 +28,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns>All knowledge Entries.</returns>
         [HttpGet]
+        [Authorize]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<KnowledgeEntryRecord>), 200)]
         public IQueryable<KnowledgeEntryRecord> GetKnowledgeEntriesAsync()
         {
+            List<Claim> roleClaims = _httpContextAccessor.HttpContext.User.FindAll(ClaimTypes.Role).ToList();
+
             return _knowledgeEntryService.FindAll();
         }
 
