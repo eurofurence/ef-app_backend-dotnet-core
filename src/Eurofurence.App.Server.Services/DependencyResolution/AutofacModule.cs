@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using Autofac.Core;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -72,9 +73,17 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
         {
             var connectionString = _configuration.GetConnectionString("Eurofurence");
             var dbContextOptionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+
+            var serverVersionString = Environment.GetEnvironmentVariable("MYSQL_VERSION");
+            ServerVersion serverVersion;
+            if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out serverVersion))
+            {
+                serverVersion = ServerVersion.AutoDetect(connectionString);
+            }
+
             dbContextOptionsBuilder.UseMySql(
                 connectionString!,
-                ServerVersion.AutoDetect(connectionString),
+                serverVersion,
                 mySqlOptions => mySqlOptions.UseMicrosoftJson());
 
             builder

@@ -1,7 +1,4 @@
-﻿using Amazon;
-using Amazon.CloudWatchLogs;
-using Amazon.Runtime;
-using Autofac;
+﻿using Autofac;
 using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
@@ -21,7 +18,6 @@ using Serilog;
 using Serilog.Context;
 using Serilog.Events;
 using Serilog.Formatting.Json;
-using Serilog.Sinks.AwsCloudWatch;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Text.Json;
@@ -177,12 +173,20 @@ namespace Eurofurence.App.Server.Web
             services.AddDbContextPool<AppDbContext>(options =>
             {
                 var connectionString = Configuration.GetConnectionString("Eurofurence");
+
+                var serverVersionString = Environment.GetEnvironmentVariable("MYSQL_VERSION");
+                ServerVersion serverVersion;
+                if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out serverVersion))
+                {
+                    serverVersion = ServerVersion.AutoDetect(connectionString);
+                }
+
                 options.UseMySql(
-                    connectionString, 
-                    ServerVersion.AutoDetect(connectionString),
+                    connectionString,
+                    serverVersion,
                     mySqlOptions => mySqlOptions.UseMicrosoftJson());
             });
-            
+
             builder.Build();
 
             CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
@@ -210,32 +214,12 @@ namespace Eurofurence.App.Server.Web
         {
             var loggerConfiguration = new LoggerConfiguration().Enrich.FromLogContext();
 
-            if (env.IsDevelopment())
-            {
-                loggerConfiguration
-                    .MinimumLevel.Debug()
-                    .WriteTo.Console();
-            }
-            else
-            {
-                loggerConfiguration.MinimumLevel.Is(LogEventLevel.Verbose);
+            var consoleLogLevel = env.IsDevelopment() ? LogEventLevel.Debug : LogEventLevel.Information;
 
-                var logGroupName = Configuration["aws:cloudwatch:logGroupName"] + "/" + Configuration["global:conventionIdentifier"];
-
-                AWSCredentials credentials =
-                    new BasicAWSCredentials(Configuration["aws:accessKey"], Configuration["aws:secret"]);
-
-                IAmazonCloudWatchLogs client = new AmazonCloudWatchLogsClient(credentials, RegionEndpoint.EUCentral1);
-                var options = new CloudWatchSinkOptions
-                {
-                    LogGroupName = logGroupName,
-                    TextFormatter = new JsonFormatter(),
-                    MinimumLogEventLevel = (LogEventLevel)Convert.ToInt32(Configuration["logLevel"]),
-                    LogStreamNameProvider = new ConstantLogStreamNameProvider(Environment.MachineName)
-                };
-
-                loggerConfiguration.WriteTo.AmazonCloudWatch(options, client);
-            }
+            loggerConfiguration
+                .WriteTo.Console(
+                    restrictedToMinimumLevel: consoleLogLevel,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}");
 
             loggerConfiguration
                 .WriteTo
@@ -250,7 +234,7 @@ namespace Eurofurence.App.Server.Web
 
             var cgc = new CollectionGameConfiguration();
             Configuration.GetSection(CollectionGameConfiguration.CollectionGame).Bind(cgc);
-            
+
             loggerConfiguration
                 .WriteTo
                 .Logger(lc =>
