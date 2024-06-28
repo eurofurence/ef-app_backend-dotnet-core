@@ -57,7 +57,7 @@ public class ConfigureOAuth2IntrospectionOptions(
         {
             await cache.SetStringAsync(
                 $"{context.SecurityToken}_userinfo",
-                JsonSerializer.Serialize(response.Claims.Select(x => (x.Type, x.Value)).ToList()),
+                JsonSerializer.Serialize(response.Claims.Select(x => new CachedClaim(x.Type, x.Value)).ToList()),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(seconds)
@@ -77,11 +77,28 @@ public class ConfigureOAuth2IntrospectionOptions(
             return false;
         }
 
-        foreach (var (type, value) in JsonSerializer.Deserialize<List<(string, string)>>(cached))
+        foreach (var claim in JsonSerializer.Deserialize<List<CachedClaim>>(cached))
         {
-            identity.AddClaim(new Claim(type, value));
+            identity.AddClaim(new Claim(claim.Type, claim.Value));
         }
 
         return true;
+    }
+
+    private class CachedClaim
+    {
+        public string Type { get; set; }
+
+        public string Value { get; set; }
+
+        public CachedClaim()
+        {
+        }
+
+        public CachedClaim(string type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
     }
 }
