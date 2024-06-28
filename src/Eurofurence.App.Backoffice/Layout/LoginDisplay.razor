@@ -4,10 +4,10 @@
 <AuthorizeView>
     <Authorized>
         Hello, @context.User.Identity?.Name!
-        <button class="nav-link btn btn-link" @onclick="BeginLogOut">Log out</button>
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut">Log out</MudButton>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login">Log in</a>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="authentication/login">Log in</MudButton>
     </NotAuthorized>
 </AuthorizeView>
 

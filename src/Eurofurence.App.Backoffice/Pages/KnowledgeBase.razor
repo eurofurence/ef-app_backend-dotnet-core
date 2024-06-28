@@ -1,42 +1,49 @@
 ﻿@page "/knowledgebase"
 @using Eurofurence.App.Backoffice.Services
-@using Eurofurence.App.Backoffice.Models
+@using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inject IKnowledgeService KnowledgeService
 
-@* @rendermode @(new InteractiveWebAssemblyRenderMode(false)) *@
-
-<h3>Knowledge Base</h3>
-
-@if (KnowledgeEntries == null)
-{
-    <p>No knowledge base entries found.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Titel</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var knowledgeEntry in KnowledgeEntries)
-            {
-                <tr>
-                    <td>@knowledgeEntry.Title</td>
-                    <td class="text-center">
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<MudTable Items="@Elements" Loading="@loading" Filter="new Func<KnowledgeEntryRecord,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Knowledge Base Entries</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Title</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
 
 @code {
-    public KnowledgeEntry[]? KnowledgeEntries;
+    private bool loading = true;
+    private string searchString1 = "";
+    private KnowledgeEntryRecord selectedItem1 = null;
+    private HashSet<KnowledgeEntryRecord> selectedItems = new HashSet<KnowledgeEntryRecord>();
+
+    private IEnumerable<KnowledgeEntryRecord> Elements = new List<KnowledgeEntryRecord>();
+
+    private bool FilterFunc1(KnowledgeEntryRecord element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(KnowledgeEntryRecord element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Text.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{element.Order}".Contains(searchString))
+            return true;
+        return false;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,6 +52,7 @@ else
 
     private async Task GetKnowledgeEntries()
     {
-        KnowledgeEntries = await KnowledgeService.GetKnowledgeEntriesAsync();
+        Elements = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
+        loading = false;
     }
 }

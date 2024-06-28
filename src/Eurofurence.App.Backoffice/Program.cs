@@ -1,13 +1,15 @@
 using Eurofurence.App.Backoffice;
 using Eurofurence.App.Backoffice.Authentication;
 using Eurofurence.App.Backoffice.Services;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+builder.Services.AddMudServices();
 
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 
@@ -25,6 +27,5 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.ResponseType = "code";
     options.ProviderOptions.DefaultScopes.Add("profile");
 });
-
 
 await builder.Build().RunAsync();

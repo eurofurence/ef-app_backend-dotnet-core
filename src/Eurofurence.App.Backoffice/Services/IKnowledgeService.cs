@@ -1,9 +1,9 @@
-﻿using Eurofurence.App.Backoffice.Models;
+﻿using Eurofurence.App.Domain.Model.Knowledge;
 
 namespace Eurofurence.App.Backoffice.Services
 {
     public interface IKnowledgeService
     {
-        public Task<KnowledgeEntry[]> GetKnowledgeEntriesAsync();
+        public Task<KnowledgeEntryRecord[]> GetKnowledgeEntriesAsync();
     }
 }
