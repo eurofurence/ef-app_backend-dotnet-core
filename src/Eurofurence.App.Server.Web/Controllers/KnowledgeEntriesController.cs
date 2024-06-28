@@ -7,7 +7,6 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -16,7 +15,7 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IKnowledgeEntryService _knowledgeEntryService;
 
-        public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService, IHttpContextAccessor httpContextAccessor)
+        public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService)
         {
             _knowledgeEntryService = knowledgeEntryService;
         }
