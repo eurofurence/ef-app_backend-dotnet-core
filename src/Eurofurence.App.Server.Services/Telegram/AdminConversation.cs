@@ -198,15 +198,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                     await ReplyAsync(
                         $"*{title} - Result*\nNo: *{badgeNo}*\nOwner: *{badge.OwnerUid}*\nName: *{badge.Name.RemoveMarkdown()}*\nSpecies: *{badge.Species.RemoveMarkdown()}*\nGender: *{badge.Gender.RemoveMarkdown()}*\nWorn By: *{badge.WornBy.RemoveMarkdown()}*\n\nLast Change (UTC): {badge.LastChangeDateTimeUtc}");
 
-                    byte[] imageBytes = [];
-
                     if (badge.ImageId != null)
-                    {
-                        imageBytes = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
-                    }
-
-                    var imageContent = new MemoryStream(imageBytes);
-                    await BotClient.SendPhotoAsync(chatId: ChatId, photo: new InputFileStream(imageContent));
+                        await BotClient.SendPhotoAsync(chatId: ChatId,
+                            photo: new InputFileStream(
+                                await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId)));
                 }, "Cancel=/cancel");
             await c1();
         }
@@ -654,9 +649,9 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     await ReplyAsync(message.ToString());
                                     if (nextRecord.Image != null)
                                     {
-                                        var imageBytes = await _imageService.GetImageContentByImageIdAsync(nextRecord.Image.Id);
-                                        var imageContent = new MemoryStream(imageBytes);
-                                        await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
+                                        var stream = await _imageService.GetImageContentByImageIdAsync(nextRecord.Image.Id);
+                                        await BotClient.SendPhotoAsync(ChatId, new InputFileStream(stream));
+                                        await stream.DisposeAsync();
                                     }
 
                                     c3 = () => AskAsync(
@@ -744,16 +739,12 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     await ReplyAsync(
                                         $"*{badge.Name.EscapeMarkdown()}* ({badge.Species.EscapeMarkdown()}, {badge.Gender.EscapeMarkdown()})");
 
-                                    byte[] imageBytes = [];
-
                                     if (badge.ImageId != null)
                                     {
-                                        imageBytes = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                                        var imageContent = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                                        await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
+                                        await imageContent.DisposeAsync();
                                     }
-
-                                    var imageContent = new MemoryStream(imageBytes);
-
-                                    await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
 
                                     askTokenValue = () => AskAsync(
                                         $"*{title} - Step 3 of 3*\nPlease enter the `code/token` on the sticker that was applied to the badge.",

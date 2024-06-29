@@ -77,7 +77,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var unusedImages = GetUnusedImagesAsync().Result;
 
                 unusedImages.ToList().ForEach(a =>
-                    command.Out.WriteLine($"{a.Id} ({a.InternalReference}), {a.Width}x{a.Height} px, {a.SizeInBytes} bytes"));
+                    command.Out.WriteLine($"{a.Id}, {a.Width}x{a.Height} px, {a.SizeInBytes} bytes"));
 
                 return 0;
             });

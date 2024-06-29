@@ -134,8 +134,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                     try
                     {
                         var imageBytes = await GetImageAsync(target);
+                        using var ms = new MemoryStream(imageBytes);
                         var image =
-                            await _imageService.InsertOrUpdateImageAsync($"knowledge:{url.AsHashToGuid()}", imageBytes);
+                            await _imageService.InsertImageAsync($"knowledge:{url.AsHashToGuid()}", ms);
 
                         images.Add(image);
                     }

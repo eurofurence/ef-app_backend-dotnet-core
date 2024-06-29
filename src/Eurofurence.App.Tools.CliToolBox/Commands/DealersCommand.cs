@@ -95,7 +95,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
                 foreach(var image in unusedImages)
                 {
-                    Console.WriteLine($"  Removing {image.Id} ({image.InternalReference})");
+                    Console.WriteLine($"  Removing {image.Id}");
                     _imageService.DeleteOneAsync(image.Id).Wait();
                 }
 
