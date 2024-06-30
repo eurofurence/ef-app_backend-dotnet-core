@@ -1,4 +1,6 @@
-﻿namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
+﻿using System;
+
+namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
 {
     public class TableRegistrationRequest
     {
@@ -8,7 +10,7 @@
 
         public string ShortDescription { get; set; }
 
-        public string ImageContent { get; set; }
+        public Guid ImageId { get; set; }
 
         public string Location { get; set; }
 

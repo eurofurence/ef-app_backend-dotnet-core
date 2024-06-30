@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,8 +46,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == uid);
 
-            var imageBytes = Convert.FromBase64String(request.ImageContent);
-            var image = await _imageService.InsertOrUpdateImageAsync(Guid.NewGuid().ToString(), imageBytes);
+            var image = await _imageService.FindOneAsync(request.ImageId);
 
             image = await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
 
@@ -126,11 +126,16 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             if (record.Image != null)
             {
-                var imageBytes = await _imageService.GetImageContentByImageIdAsync(record.Image.Id);
-                await _telegramMessageSender.SendImageToChatAsync(
-                    _configuration.TelegramAnnouncementChannelId,
-                    imageBytes,
-                    telegramMessage);
+                using (MemoryStream ms = new())
+                {
+                    var stream = await _imageService.GetImageContentByImageIdAsync(record.Image.Id);
+                    await stream.CopyToAsync(ms);
+                    await stream.DisposeAsync();
+                    await _telegramMessageSender.SendImageToChatAsync(
+                        _configuration.TelegramAnnouncementChannelId,
+                        ms.ToArray(),
+                        telegramMessage);
+                }
             }
             else
             {

@@ -135,12 +135,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var map = _mapService.FindOneAsync(Guid.Parse(idOption.Value())).Result;
                 var image = File.Open(imagePathOption.Value(), FileMode.Open, FileAccess.Read);
 
-                var buffer = new byte[image.Length];
-                image.Read(buffer, 0, (int) image.Length);
-
                 Console.WriteLine($"Updating map image {map.Id} ({map.Description}) from {imagePathOption.Value()}...");
 
-                var imageRecord = _imageService.InsertOrUpdateImageAsync($"map:{map.Id}", buffer).Result;
+                var imageRecord = _imageService.InsertImageAsync($"map:{map.Id}", image).Result;
                 Console.WriteLine(
                     $"Image record {imageRecord.Id} has hash={imageRecord.ContentHashSha1}, last changed at {imageRecord.LastChangeDateTimeUtc} UTC");
 

@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Server.Services.Abstractions.Images;
+﻿using System;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using McMaster.Extensions.CommandLineUtils;
 using System.Linq;
 
@@ -35,7 +36,6 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
         private void createReferenceCommand(CommandLineApplication command)
         {
             var internalReference = command.Argument("Internal Reference", "", false);
-
             command.OnExecute(() =>
             {
                 if (string.IsNullOrWhiteSpace(internalReference.Value))
@@ -51,8 +51,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                     return -1;
                 }
 
-                var image = _imageService.InsertOrUpdateImageAsync(internalReference.Value, _imageService.GeneratePlaceholderImage()).Result;
+                var stream = _imageService.GeneratePlaceholderImage();
+                var image = _imageService.InsertImageAsync(internalReference.Value, stream).Result;
                 command.Out.WriteLine($"Created placeholder image {image.Id} for reference {internalReference.Value}");
+                stream.Dispose();
 
                 return 0;
             });
@@ -60,26 +62,26 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
         private void deleteReferenceCommand(CommandLineApplication command)
         {
-            var internalReference = command.Argument("Internal Reference", "", false);
+            var imageId = command.Argument("ID", "", false);
 
             command.OnExecute(() =>
             {
-                if (string.IsNullOrWhiteSpace(internalReference.Value))
+                if (string.IsNullOrWhiteSpace(imageId.Value))
                 {
-                    command.Out.WriteLine("Internal reference not specified");
+                    command.Out.WriteLine("ID not specified");
                     return -1;
                 }
 
-                var existingImage = _imageService.FindAll(image => image.InternalReference == internalReference.Value).SingleOrDefault();
+                var existingImage = _imageService.FindAll(image => image.Id.ToString() == imageId.Value).SingleOrDefault();
                 if (existingImage == null)
                 {
-                    command.Out.WriteLine($"An image with reference {internalReference.Value} could not be found.");
+                    command.Out.WriteLine($"An image with ID {imageId.Value} could not be found.");
                     return -1;
                 }
 
                 _imageService.DeleteOneAsync(existingImage.Id).Wait();
                 
-                command.Out.WriteLine($"Deleted image {existingImage.Id} for reference {internalReference.Value}");
+                command.Out.WriteLine($"Deleted image {existingImage.Id}");
 
                 return 0;
             });

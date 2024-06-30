@@ -100,7 +100,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
 
                 foreach(var image in images)
                 {
-                    archive.AddAsBinary($"imageContent-{image.Id}", _imageService.GetImageContentByImageIdAsync(image.Id).Result);
+                    using (MemoryStream ms = new())
+                    {
+                        var stream = _imageService.GetImageContentByImageIdAsync(image.Id).Result;
+                        stream.CopyTo(ms);
+                        stream.Dispose();
+                        archive.AddAsBinary($"imageContent-{image.Id}", ms.ToArray());
+                    }
                 }
 
                 archive.Dispose();
@@ -118,15 +124,16 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 var archive = ZipFile.Open(inputPathArgument.Value, ZipArchiveMode.Read);
 
                 var knowledgeGroups = archive.ReadAsJson<IEnumerable<KnowledgeGroupRecord>>("knowledgeGroups");
-                var knowledgeEntries = archive.ReadAsJson<IEnumerable<KnowledgeEntryRecord>>("knowledgeEntries");
+                var knowledgeEntries = archive.ReadAsJson<IEnumerable<KnowledgeEntryRequest>>("knowledgeEntries");
                 var images = archive.ReadAsJson<IEnumerable<ImageRecord>>("images");
 
                 foreach (var entity in knowledgeGroups) _knowledgeGroupService.InsertOneAsync(entity).Wait();
-                foreach (var entity in knowledgeEntries) _knowledgeEntryService.InsertOneAsync(entity).Wait();
+                foreach (var entity in knowledgeEntries) _knowledgeEntryService.InsertKnowledgeEntryAsync(entity).Wait();
                 foreach (var entity in images)
                 {
                     var imageData = archive.ReadAsBinary($"imageContent-{entity.Id}");
-                    _imageService.InsertImageAsync(entity, imageData).Wait();
+                    using MemoryStream ms = new(imageData);
+                    _imageService.InsertImageAsync(entity.InternalReference, ms).Wait();
                 }
 
                 archive.Dispose();

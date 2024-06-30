@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -144,7 +145,8 @@ namespace Eurofurence.App.Server.Web.Jobs
             if (string.IsNullOrWhiteSpace(imageDataBase64)) return null;
             var imageBytes = Convert.FromBase64String(imageDataBase64);
 
-            var image = await _imageService.InsertOrUpdateImageAsync(reference, imageBytes);
+            using MemoryStream ms = new(imageBytes);
+            var image = await _imageService.InsertImageAsync(reference, ms);
             return image.Id;
         }
     }

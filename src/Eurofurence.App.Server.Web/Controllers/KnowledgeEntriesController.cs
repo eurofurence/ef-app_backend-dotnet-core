@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -29,7 +30,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<KnowledgeEntryRecord>), 200)]
         public IQueryable<KnowledgeEntryRecord> GetKnowledgeEntriesAsync()
         {
-            return _knowledgeEntryService.FindAll();
+            return _knowledgeEntryService.FindAll()
+                .Include(ke => ke.Images)
+                .Include(ke => ke.Links);
         }
 
         /// <summary>
@@ -41,28 +44,30 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(KnowledgeEntryRecord), 200)]
         public async Task<KnowledgeEntryRecord> GetKnowledgeEntryAsync([FromRoute] Guid id)
         {
-            return (await _knowledgeEntryService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _knowledgeEntryService.FindAll()
+                .Include(ke => ke.Images)
+                .Include(ke => ke.Links)
+                .FirstOrDefaultAsync(entity => entity.Id == id)).Transient404(HttpContext);
         }
 
 
         /// <summary>
         ///     Update an existing knowledge entry.
         /// </summary>
-        /// <param name="record"></param>
+        /// <param name="request"></param>
         /// <param name="id"></param>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull][HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeEntryAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("Id")] KnowledgeEntryRecord record,
+            [EnsureNotNull][FromBody] KnowledgeEntryRequest request,
             [EnsureNotNull][FromRoute] Guid id)
         {
             var existingRecord = await _knowledgeEntryService.FindOneAsync(id);
             if (existingRecord == null) return NotFound($"No record found with it {id}");
 
-            record.Touch();
-            await _knowledgeEntryService.ReplaceOneAsync(record);
+            await _knowledgeEntryService.ReplaceKnowledgeEntryAsync(id, request);
 
             return NoContent();
         }
@@ -70,20 +75,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Create a new knowledge entry.
         /// </summary>
-        /// <param name="Record"></param>
+        /// <param name="request"></param>
         /// <returns>Id of the newly created knowledge entry</returns>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(typeof(Guid), 200)]
         [HttpPost("")]
         public async Task<ActionResult> PostKnowledgeEntryAsync(
-            [EnsureNotNull][FromBody] KnowledgeEntryRecord Record
+            [EnsureNotNull][FromBody] KnowledgeEntryRequest request
         )
         {
-            Record.NewId();
-            Record.Touch();
-            await _knowledgeEntryService.InsertOneAsync(Record);
+            var result = await _knowledgeEntryService.InsertKnowledgeEntryAsync(request);
 
-            return Ok(Record.Id);
+            return Ok(result);
         }
 
         /// <summary>

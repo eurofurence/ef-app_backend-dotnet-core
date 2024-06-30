@@ -55,7 +55,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                     Id = titleParts[0].AsHashToGuid(),
                     Name = titleParts[0],
                     Description = titleParts[1],
-                    FontAwesomeIconCharacterUnicodeAddress = titleParts[2],
+                    FontAwesomeIconName = titleParts[2],
                     Order = i++
                 };
                 importedKnowledgeGroups.Add(knowledgeGroup);
@@ -134,8 +134,9 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                     try
                     {
                         var imageBytes = await GetImageAsync(target);
+                        using var ms = new MemoryStream(imageBytes);
                         var image =
-                            await _imageService.InsertOrUpdateImageAsync($"knowledge:{url.AsHashToGuid()}", imageBytes);
+                            await _imageService.InsertImageAsync($"knowledge:{url.AsHashToGuid()}", ms);
 
                         images.Add(image);
                     }
@@ -191,7 +192,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.Knowledge
                 .Map(s => s.Id, t => t.Id)
                 .Map(s => s.Name, t => t.Name)
                 .Map(s => s.Description, t => t.Description)
-                .Map(s => s.FontAwesomeIconCharacterUnicodeAddress, t => t.FontAwesomeIconCharacterUnicodeAddress)
+                .Map(s => s.FontAwesomeIconName, t => t.FontAwesomeIconName)
                 .Map(s => s.Order, t => t.Order);
 
             var diff = patch.Patch(importKnowledgeGroups, knowledgeGroupRecords);

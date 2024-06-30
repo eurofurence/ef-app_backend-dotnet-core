@@ -182,16 +182,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                 archive.Entries.SingleOrDefault(
                     a => a.Name.StartsWith(fileNameStartsWith, StringComparison.CurrentCultureIgnoreCase));
 
-            if (imageEntry != null)
-                using (var s = imageEntry.Open())
-                using (var br = new BinaryReader(s))
-                {
-                    var imageByteArray = br.ReadBytes((int) imageEntry.Length);
-                    var result = await _imageService.InsertOrUpdateImageAsync(internalReference, imageByteArray);
-                    return result.Id;
-                }
+            if (imageEntry == null) return null;
 
-            return null;
+            await using var s = imageEntry.Open();
+            var result = await _imageService.InsertImageAsync(internalReference, s);
+            return result?.Id;
         }
     }
 

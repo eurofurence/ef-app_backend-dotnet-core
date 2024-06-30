@@ -27,9 +27,9 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         public int Order { get; set; }
 
         [DataMember] 
-        public List<LinkFragment> Links { get; set; } = new();
+        public virtual List<LinkFragment> Links { get; set; } = new();
 
         [DataMember]
-        public List<ImageRecord> Images { get; set; }
+        public virtual List<ImageRecord> Images { get; set; } = new();
     }
 }
