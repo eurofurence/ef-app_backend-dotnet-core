@@ -27,7 +27,7 @@
 
     <section class="row desktopOnly">
         <div class="one columns">
-            <h4><i class="fa">&#x@(knowledgeGroup.FontAwesomeIconCharacterUnicodeAddress);</i></h4>
+            <h4><i class="fa fa-@(knowledgeGroup.FontAwesomeIconName)"></i></h4>
         </div>
         <div class="eleven columns">
             <h4>@knowledgeGroup.Name</h4>
@@ -37,22 +37,25 @@
 
 
     <section class="mobileOnly center nomargin">
-        <h2><i class="fa">&#x@(knowledgeGroup.FontAwesomeIconCharacterUnicodeAddress);</i></h2>
+        <h2><i class="fa fa-@(knowledgeGroup.FontAwesomeIconName)"></i></h2>
         <h4>@knowledgeGroup.Name</h4>
         <small>@knowledgeGroup.Description</small>
         <br /><br />
     </section>
 
 
-    @foreach (var knowledgeEntry in knowledgeEntries.Where(a => a.KnowledgeGroupId == knowledgeGroup.Id).OrderBy(a => a.Order)) {
-        <section class="row">
-            <div class="one columns desktopOnly">&nbsp;</div>
-            <div class="eleven columns">
-                <a class="button" href="@webBaseUrl/KnowledgeEntries/@knowledgeEntry.Id">
-                    @knowledgeEntry.Title
-                </a>
-            </div>
-        </section>
+    @if (knowledgeEntries != null)
+    {
+        foreach (var knowledgeEntry in knowledgeEntries.Where(a => a.KnowledgeGroupId == knowledgeGroup.Id).OrderBy(a => a.Order))
+        {
+            <section class="row">
+                <div class="one columns desktopOnly">&nbsp;</div>
+                <div class="eleven columns">
+                    <a class="button" href="@webBaseUrl/KnowledgeEntries/@knowledgeEntry.Id">
+                        @knowledgeEntry.Title
+                    </a>
+                </div>
+            </section>
+        }
     }
-
 }
