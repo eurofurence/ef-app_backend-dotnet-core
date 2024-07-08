@@ -26,8 +26,6 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.OpenApi.Models;
-using Eurofurence.App.Server.Services.Abstractions.MinIO;
-using Minio;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web

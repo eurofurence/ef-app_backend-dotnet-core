@@ -37,6 +37,7 @@ namespace Eurofurence.App.Server.Services.Images
             _minIoConfiguration = minIoConfiguration;
             _minIoClient = new MinioClient().WithEndpoint(minIoConfiguration.Endpoint)
                 .WithCredentials(minIoConfiguration.AccessKey, minIoConfiguration.SecretKey)
+                .WithRegion(minIoConfiguration.Region)
                 .WithSSL(minIoConfiguration.Secure)
                 .Build();
         }
