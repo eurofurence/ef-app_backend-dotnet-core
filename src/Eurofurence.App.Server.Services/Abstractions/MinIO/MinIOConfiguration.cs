@@ -15,7 +15,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.MinIO
             => new()
             {
                 Endpoint = configuration["minIo:endpoint"],
-                Region = configuration["minIo:region"] ?? "eu-west-1",
+                Region = configuration["minIo:region"] ?? "us-east-1",
                 AccessKey = configuration["minIo:accessKey"],
                 SecretKey = configuration["minIo:secretKey"],
                 Secure = configuration.GetSection("minIo:secure").Get<bool>(),

@@ -147,7 +147,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .WithObject(id.ToString())
                 .WithCallbackStream(stream =>
                 {
-                    stream.CopyToAsync(ms);
+                    stream.CopyTo(ms);
                 }));
 
             ms.Position = 0;
