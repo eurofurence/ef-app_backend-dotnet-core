@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         )
         {
             var existingRecord = await _knowledgeEntryService.FindOneAsync(id);
-            if (existingRecord == null) return NotFound($"No record found with it {id}");
+            if (existingRecord == null) return NotFound($"No record found with id {id}");
 
             await _knowledgeEntryService.DeleteOneAsync(id);
 
