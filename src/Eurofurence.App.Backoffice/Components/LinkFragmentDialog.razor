@@ -1,0 +1,60 @@
+﻿@using Eurofurence.App.Domain.Model.Knowledge
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Fragments
+@inject ISnackbar Snackbar
+@inject IKnowledgeService KnowledgeService
+
+<MudDialog>
+    <DialogContent>
+        @if (Record != null)
+        {
+            <MudTextField T="string" @bind-Value="Record.Name" Label="Name" />
+            <MudSelect @bind-Value="Record.FragmentType" Label="Type">
+                @foreach (LinkFragment.FragmentTypeEnum item in Enum.GetValues(typeof(LinkFragment.FragmentTypeEnum)))
+                {
+                    <MudSelectItem Value="@item">@item</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="Record.Target" Label="Target" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public LinkFragment? Record { get; set; }
+
+    private bool Update { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Record == null)
+        {
+            Record = new LinkFragment()
+                {
+                    Id = Guid.NewGuid()
+                };
+        }
+        else
+        {
+            Update = true;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async void Save()
+    {
+        if (Record == null)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(Record));
+    }
+}

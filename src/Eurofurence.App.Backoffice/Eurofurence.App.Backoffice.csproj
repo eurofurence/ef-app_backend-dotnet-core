@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Server.Services\Eurofurence.App.Server.Services.csproj" />
   </ItemGroup>
 
 </Project>

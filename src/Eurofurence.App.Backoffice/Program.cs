@@ -12,6 +12,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddMudServices();
 
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 
 builder.Services.AddScoped<TokenAuthorizationMessageHandler>();
 builder.Services.AddHttpClient("api", options =>

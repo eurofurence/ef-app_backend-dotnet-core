@@ -1,0 +1,70 @@
+﻿@using Eurofurence.App.Domain.Model.Knowledge
+@using Eurofurence.App.Backoffice.Services
+@inject ISnackbar Snackbar
+@inject IKnowledgeService KnowledgeService
+
+<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+
+<MudDialog>
+    <DialogContent>
+        @if (Record != null)
+        {
+            <MudTextField T="string" @bind-Value="Record.Name" Label="Name" />
+            <MudNumericField @bind-Value="Record.Order" Label="Order Number" />
+            <MudCheckBox Color="Color.Primary" @bind-Value="Record.ShowInHamburgerMenu" Label="Show in hamburger menu"/>
+            <MudTextField Adornment="Adornment.Start" AdornmentIcon="@("fas fa-" + Record.FontAwesomeIconName)" T="string" @bind-Value="Record.FontAwesomeIconName" Label="FontAwesome Icon Name" />
+            <MudLink Href="https://fontawesome.com/search?m=free&o=r">Icon Reference</MudLink>
+            <MudTextField T="string" Lines="8" @bind-Value="Record.Description" Label="Description" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public KnowledgeGroupRecord? Record { get; set; }
+
+    private bool Update { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Record == null)
+        {
+            Record = new KnowledgeGroupRecord
+                {
+                    Id = Guid.NewGuid()
+                };
+        }
+        else
+        {
+            Update = true;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async void Save()
+    {
+        if (Record == null)
+        {
+            return;
+        }
+
+        if (Update)
+        {
+            await KnowledgeService.PutKnowledgeGroupAsync(Record);
+            Snackbar.Add("Knowledge base group updated.", Severity.Success);
+        }
+        else
+        {
+            await KnowledgeService.PostKnowledgeGroupAsync(Record);
+            Snackbar.Add("Knowledge base group added.", Severity.Success);
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}
