@@ -60,6 +60,7 @@ namespace Eurofurence.App.Server.Services.Images
 
             var entity = await _appDbContext.Images
                 .Include(i => i.FursuitBadges)
+                .Include(i => i.TableRegistrations)
                 .FirstOrDefaultAsync(entity => entity.Id == id);
 
             _appDbContext.Remove(entity);

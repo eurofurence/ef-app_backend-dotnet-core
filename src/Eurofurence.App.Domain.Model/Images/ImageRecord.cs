@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Fursuits;
 
 namespace Eurofurence.App.Domain.Model.Images
@@ -33,5 +34,6 @@ namespace Eurofurence.App.Domain.Model.Images
         public string ContentHashSha1 { get; set; }
 
         public List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
+        public List<TableRegistrationRecord> TableRegistrations { get; set; } = new();
     }
 }
