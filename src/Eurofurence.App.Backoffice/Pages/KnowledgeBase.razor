@@ -98,10 +98,19 @@
                     </MudCardHeader>
                     <MudCardContent>
                         <MudText Class="mb-4">@((MarkupString)Markdown.ToHtml(knowledgeEntry.Text))</MudText>
-                        @foreach (var image in _imageContents.First(kvp => kvp.Key == knowledgeEntry.Id).Value)
+
+                        @if (_imageContents.Any(kvp => kvp.Key == knowledgeEntry.Id))
                         {
-                            <MudImage Class="ml-2" Width="300" Src="@image"/>
+                            @foreach (var image in _imageContents.FirstOrDefault(kvp => kvp.Key == knowledgeEntry.Id).Value)
+                            {
+                                <MudImage Class="ml-2" Height="100" Src="@image"/>
+                            }
                         }
+                        else if (knowledgeEntry.Images.Count > 0)
+                        {
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        }
+                        
                     </MudCardContent>
                     <MudCardActions>
                         @foreach (var link in knowledgeEntry.Links)
@@ -148,8 +157,10 @@
     {
         Loading = true;
         _imageContents = [];
+        
         foreach (var knowledgeEntry in _knowledgeEntries)
         {
+            StateHasChanged();
             var keyValuePair = new KeyValuePair<Guid, List<string>>(knowledgeEntry.Id, new List<string>());
 
             foreach (var image in knowledgeEntry.Images)
