@@ -2,99 +2,101 @@
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Server.Services.Abstractions.Knowledge
-@using System.Text.Json
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
 @inject IDialogService DialogService
 
-<MudDialog Style="height: 1000px">
+<MudDialog>
     <DialogContent>
         @if (Record != null)
         {
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="General">
-                    <MudSelect T="KnowledgeGroupRecord" Label="Group" ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
-                        @foreach (var knowledgeGroup in _knowledgeGroups)
+                <MudPaper Height="70vh" Class="overflow-scroll pr-4">
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="General">
+                        <MudSelect T="KnowledgeGroupRecord" Label="Group" ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
+                            @foreach (var knowledgeGroup in _knowledgeGroups)
+                            {
+                                <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField @bind-Value="Record.Title" Label="Title" />
+                        <MudNumericField @bind-Value="Record.Order" Label="Order Number" />
+                        <MudGrid>
+                            <MudItem xs="6">
+                                <MarkdownEditor @bind-Value="@Record.Text"
+                                                ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudCard>
+                                    <MudCardHeader>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.h6">Preview</MudText>
+                                        </CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        <MudText>@((MarkupString)_markdownHtml)</MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadImage">
+                                <ButtonTemplate>
+                                    <MudButton HtmlTag="label"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               for="@fileInput">
+                                        Upload Image
+                                    </MudButton>
+                                </ButtonTemplate>
+                            </MudFileUpload>
+                        </MudToolBar>
+                        @if (Record.Images != null)
                         {
-                            <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
+                            <MudDataGrid Items="@Record.Images" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                                <Columns>
+                                    <PropertyColumn Title="ID" Property="image => image.Id" />
+                                    <PropertyColumn Title="Name" Property="image => image.InternalReference" />
+                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
+                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))" />
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                            </MudDataGrid>
                         }
-                    </MudSelect>
-                    <MudTextField @bind-Value="Record.Title" Label="Title"/>
-                    <MudNumericField @bind-Value="Record.Order" Label="Order Number"/>
-                    <MudGrid>
-                        <MudItem xs="6">
-                            <MarkdownEditor @bind-Value="@Record.Text"
-                                            ValueHTMLChanged="@OnMarkdownValueHTMLChanged"/>
-                        </MudItem>
-                        <MudItem xs="6">
-                            <MudCard>
-                                <MudCardHeader>
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.h6">Preview</MudText>
-                                    </CardHeaderContent>
-                                </MudCardHeader>
-                                <MudCardContent>
-                                    <MudText>@((MarkupString)_markdownHtml)</MudText>
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudTabPanel>
-                <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
-                    <MudToolBar>
-                        <MudSpacer />
-                        <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadImage">
-                            <ButtonTemplate>
-                                <MudButton HtmlTag="label"
-                                           Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.CloudUpload"
-                                           for="@fileInput">
-                                    Upload Image
-                                </MudButton>
-                            </ButtonTemplate>
-                        </MudFileUpload>                    </MudToolBar>
-                    @if (Record.Images != null)
-                    {
-                        <MudDataGrid Items="@Record.Images" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                            <Columns>
-                                <PropertyColumn Title="ID" Property="image => image.Id" />
-                                <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
-                                <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
-                                <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
-                                <TemplateColumn CellClass="d-flex justify-end">
-                                    <CellTemplate>
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))"/>
-                                    </CellTemplate>
-                                </TemplateColumn>
-                            </Columns>
-                        </MudDataGrid>
-                    }
 
-                </MudTabPanel>
-                <MudTabPanel Icon="@Icons.Material.Outlined.Link" Text="Links">
-                    <MudToolBar>
-                        <MudSpacer/>
-                        <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">New Link</MudButton>
-                    </MudToolBar>
-                    @if (Record.Links != null)
-                    {
-                        <MudDataGrid Items="@Record.Links" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                            <Columns>
-                                <PropertyColumn Title="ID" Property="link => link.Id" />
-                                <PropertyColumn Title="Name" Property="link => link.Name"/>
-                                <PropertyColumn Title="Type" Property="link => link.FragmentType"/>
-                                <PropertyColumn Title="Target" Property="link => link.Target"/>
-                                <TemplateColumn CellClass="d-flex justify-end">
-                                    <CellTemplate>
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteLink(@context.Item.Id))"/>
-                                    </CellTemplate>
-                                </TemplateColumn>
-                            </Columns>
-                        </MudDataGrid>
-                    }
-                </MudTabPanel>
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Link" Text="Links">
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">New Link</MudButton>
+                        </MudToolBar>
+                        @if (Record.Links != null)
+                        {
+                            <MudDataGrid Items="@Record.Links" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                                <Columns>
+                                    <PropertyColumn Title="ID" Property="link => link.Id" />
+                                    <PropertyColumn Title="Name" Property="link => link.Name" />
+                                    <PropertyColumn Title="Type" Property="link => link.FragmentType" />
+                                    <PropertyColumn Title="Target" Property="link => link.Target" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteLink(@context.Item.Id))" />
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                            </MudDataGrid>
+                        }
+                    </MudTabPanel>
+                </MudPaper>
             </MudTabs>
         }
     </DialogContent>
@@ -207,5 +209,5 @@
         return Task.CompletedTask;
     }
 
-    Func<KnowledgeGroupRecord, string> _knowledgeGroupToNameConverter = kg => kg.Name;
+    readonly Func<KnowledgeGroupRecord, string> _knowledgeGroupToNameConverter = kg => kg.Name;
 }
