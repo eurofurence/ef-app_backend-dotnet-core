@@ -26,6 +26,9 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.OpenApi.Models;
+using Eurofurence.App.Server.Services.Abstractions.MinIO;
+using Microsoft.AspNetCore.Authentication;
+using Minio;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Eurofurence.App.Server.Web
@@ -149,13 +152,14 @@ namespace Eurofurence.App.Server.Web
             });
 
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
+            services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
 
+            services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();
             services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
                 .AddOAuth2Introspection(options =>
                 {
                     options.EnableCaching = true;
-                    options.RoleClaimType = "groups";
                 });
 
             services.AddControllersWithViews()
