@@ -28,6 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<KnowledgeEntryRecord>), 200)]
+        [Authorize]
         public IQueryable<KnowledgeEntryRecord> GetKnowledgeEntriesAsync()
         {
             return _knowledgeEntryService.FindAll()
