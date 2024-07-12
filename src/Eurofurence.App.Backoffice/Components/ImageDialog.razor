@@ -1,0 +1,164 @@
+﻿@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Images
+@using Eurofurence.App.Domain.Model.Knowledge
+@inject ISnackbar Snackbar
+@inject IImageService ImageService
+@inject IKnowledgeService KnowledgeService
+
+<MudDialog>
+    <DialogContent>
+        @if (Record != null)
+        {
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                <MudContainer Style="height: 60vh" Class="overflow-scroll pr-4">
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="General">
+                        <MudGrid>
+                            <MudItem xs="6">
+                                <MudImage ObjectFit="ObjectFit.Contain" Height="400" Width="500" Class="ml-2" Src="@_imageSource">
+                                    @if (string.IsNullOrEmpty(_imageSource))
+                                    {
+                                        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                                    }
+                                </MudImage>
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadImage">
+                                    <ButtonTemplate>
+                                        <MudButton HtmlTag="label"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                   Class="mb-2"
+                                                   for="@fileInput">
+                                            Upload Image
+                                        </MudButton>
+                                    </ButtonTemplate>
+                                </MudFileUpload>
+                                <MudTextField Value="Record.Id" Label="ID" ReadOnly="true"/>
+                                <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true"/>
+                                <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true"/>
+                                <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true"/>
+                                <MudItem xs="3">
+                                    <MudTextField Value="Record.Width" Label="Width" ReadOnly="true"/>
+                                </MudItem>
+                                <MudItem xs="3">
+                                    <MudTextField Value="Record.Height" Label="Height" ReadOnly="true"/>
+                                </MudItem>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Badge" Text="Fursuit Badges">
+                        <MudDataGrid Items="@Record.FursuitBadges" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                            <Columns>
+                                <PropertyColumn Title="ID" Property="fursuitBadge => fursuitBadge.Id"/>
+                                <PropertyColumn Title="Name" Property="fursuitBadge => fursuitBadge.Name"/>
+                                <PropertyColumn Title="Worn By" Property="fursuitBadge => fursuitBadge.WornBy"/>
+                            </Columns>
+                        </MudDataGrid>
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.TableRestaurant" Text="Artist Alley Table Registrations">
+                        <MudDataGrid Items="@Record.TableRegistrations" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                            <Columns>
+                                <PropertyColumn Title="ID" Property="tableRegistration => tableRegistration.Id" />
+                                <PropertyColumn Title="Name" Property="tableRegistration => tableRegistration.DisplayName" />
+                                <PropertyColumn Title="Location" Property="tableRegistration => tableRegistration.Location" />
+                                <PropertyColumn Title="Description" Property="tableRegistration => tableRegistration.ShortDescription" />
+                            </Columns>
+                        </MudDataGrid>
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="Knowledge Base Entries">
+                        <MudDataGrid Items="@_knowledgeEntries" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                            <Columns>
+                                <PropertyColumn Title="ID" Property="knowledgeEntry => knowledgeEntry.Id" />
+                                <PropertyColumn Title="Title" Property="knowledgeEntry => knowledgeEntry.Title" />
+                                <PropertyColumn Title="Group ID" Property="knowledgeEntry => knowledgeEntry.KnowledgeGroupId" />
+                            </Columns>
+                        </MudDataGrid>
+                    </MudTabPanel>
+                </MudContainer>
+            </MudTabs>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public ImageRecord? Record { get; set; }
+
+    private bool Update { get; set; }
+
+    private IEnumerable<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
+    private string _imageSource = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Record == null)
+        {
+            Record = new ImageRecord
+            {
+                Id = Guid.NewGuid()
+            };
+        }
+        else
+        {
+            Update = true;
+            await LoadKnowledgeEntries();
+            await LoadImageSourceAsync();
+        }
+    }
+
+    private async Task LoadKnowledgeEntries()
+    {
+        if (Record == null)
+        {
+            return;
+        }
+        _knowledgeEntries = (await KnowledgeService.GetKnowledgeEntriesAsync()).Where(knowledgeEntry => knowledgeEntry.Images.Any(image => image.Id == Record.Id)).OrderBy(ke => ke.Order);
+    }
+
+    private async Task LoadImageSourceAsync()
+    {
+        if (Record == null)
+        {
+            return;
+        }
+
+        var imageContent = await ImageService.GetImageContentAsync(Record.Id);
+        if (!string.IsNullOrEmpty(imageContent))
+        {
+            _imageSource = $"data:image/jpeg;base64,{imageContent}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task UploadImage(IBrowserFile? file)
+    {
+        if (file == null || Record == null)
+        {
+            return;
+        }
+
+        if (Update)
+        {
+            await ImageService.PutImageAsync(Record.Id, file);
+            Snackbar.Add("Image updated.", Severity.Success);
+        }
+        else
+        {
+            await ImageService.PostImageAsync(file);
+            Snackbar.Add("Image added.", Severity.Success);
+        }
+
+        await LoadImageSourceAsync();
+    }
+
+    private async void Close()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+}

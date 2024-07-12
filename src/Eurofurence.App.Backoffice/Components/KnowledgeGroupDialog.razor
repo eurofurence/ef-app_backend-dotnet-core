@@ -9,6 +9,7 @@
     <DialogContent>
         @if (Record != null)
         {
+            <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
             <MudTextField T="string" @bind-Value="Record.Name" Label="Name" />
             <MudNumericField @bind-Value="Record.Order" Label="Order Number" />
             <MudCheckBox Color="Color.Primary" @bind-Value="Record.ShowInHamburgerMenu" Label="Show in hamburger menu"/>

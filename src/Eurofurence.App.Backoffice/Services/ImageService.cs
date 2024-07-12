@@ -4,6 +4,7 @@ using System.Text.Json;
 using Eurofurence.App.Domain.Model.Images;
 using Microsoft.AspNetCore.Components.Forms;
 using System.Net.Http.Headers;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace Eurofurence.App.Backoffice.Services
 {
@@ -16,7 +17,14 @@ namespace Eurofurence.App.Backoffice.Services
 
         public async Task<string> GetImageContentAsync(Guid id)
         {
-            return Convert.ToBase64String(await http.GetByteArrayAsync($"images/{id}/Content"));
+            try
+            {
+                return Convert.ToBase64String(await http.GetByteArrayAsync($"images/{id}/Content"));
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         public async Task<ImageRecord?> PutImageAsync(Guid id, IBrowserFile file)
