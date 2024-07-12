@@ -20,6 +20,16 @@ public class RolesClaimsTransformation(IOptionsSnapshot<AuthorizationOptions> op
 
         foreach (var claim in identity.Claims.Where(x => x.Type == "groups"))
         {
+            if (options.Value.Attendee.Contains(claim.Value))
+            {
+                roles.Add("Attendee");
+            }
+            
+            if (options.Value.Admin.Contains(claim.Value))
+            {
+                roles.Add("Admin");
+            }
+            
             if (options.Value.System.Contains(claim.Value))
             {
                 roles.Add("System");
@@ -38,6 +48,21 @@ public class RolesClaimsTransformation(IOptionsSnapshot<AuthorizationOptions> op
             if (options.Value.ArtShow.Contains(claim.Value))
             {
                 roles.Add("ArtShow");
+            }
+            
+            if (options.Value.FursuitBadgeSystem.Contains(claim.Value))
+            {
+                roles.Add("FursuitBadgeSystem");
+            }
+            
+            if (options.Value.PrivateMessagesSend.Contains(claim.Value))
+            {
+                roles.Add("Action-PrivateMessages-Send");
+            }
+            
+            if (options.Value.PrivateMessagesQuery.Contains(claim.Value))
+            {
+                roles.Add("Action-PrivateMessages-Query");
             }
         }
 
