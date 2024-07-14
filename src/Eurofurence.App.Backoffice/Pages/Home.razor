@@ -1,0 +1,23 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Eurofurence App Backoffice</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudText>
+            Welcome to the "Backoffice" of our Eurofurence mobile app. Here, you can manage data like knowledge base articles and images.
+        </MudText>
+        <AuthorizeView>
+            <NotAuthorized>
+                <MudText>
+                    Please log in to get access to other pages.
+                </MudText>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudCardContent>
+</MudCard>

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using Eurofurence.App.Domain.Model.ArtShow;
+using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;

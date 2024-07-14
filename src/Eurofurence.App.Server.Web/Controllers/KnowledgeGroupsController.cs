@@ -101,7 +101,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         )
         {
             var existingRecord = await _knowledgeGroupService.FindOneAsync(id);
-            if (existingRecord == null) return NotFound($"No record found with it {id}");
+            if (existingRecord == null) return NotFound($"No record found with id {id}");
 
             await _knowledgeGroupService.DeleteOneAsync(id);
 

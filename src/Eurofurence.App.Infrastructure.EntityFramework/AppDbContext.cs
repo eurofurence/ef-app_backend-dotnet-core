@@ -8,6 +8,7 @@ using Eurofurence.App.Domain.Model.CollectionGame;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Images;
@@ -61,6 +62,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<UserRecord> Users { get; set; }
         public virtual DbSet<RoleRecord> Roles { get; set; }
         public virtual DbSet<TopicRecord> Topics { get; set; }
+        public virtual DbSet<LinkFragment> LinkFragments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

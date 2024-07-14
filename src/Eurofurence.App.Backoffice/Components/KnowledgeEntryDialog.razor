@@ -1,0 +1,260 @@
+﻿@using Eurofurence.App.Domain.Model.Knowledge
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Fragments
+@inject ISnackbar Snackbar
+@inject IKnowledgeService KnowledgeService
+@inject IImageService ImageService
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        @if (Record != null)
+        {
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                <MudContainer Style="height: 60vh" Class="overflow-scroll pr-4">
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="General">
+                        <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
+                            <MudSelect Required="true" T="KnowledgeGroupRecord" Label="Group" ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
+                                @foreach (var knowledgeGroup in _knowledgeGroups)
+                                {
+                                    <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
+                            <MudTextField @bind-Value="Record.Title" Required="true" RequiredError="Title is required." Label="Title" />
+                            <MudNumericField @bind-Value="Record.Order" Required="true" RequiredError="Order number is required." Label="Order Number" />
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MarkdownEditor @bind-Value="@Record.Text"
+                                                    ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudCard>
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6">Preview</MudText>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudText>@((MarkupString)_markdownHtml)</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadImage">
+                                <ButtonTemplate>
+                                    <MudButton HtmlTag="label"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               for="@fileInput">
+                                        Upload Image
+                                    </MudButton>
+                                </ButtonTemplate>
+                            </MudFileUpload>
+                        </MudToolBar>
+                        @if (Record.Images != null)
+                        {
+                            <MudDataGrid Items="@Record.Images" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                                <Columns>
+                                    <PropertyColumn Title="ID" Property="image => image.Id" />
+                                    <PropertyColumn Title="Name" Property="image => image.InternalReference" />
+                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
+                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))" />
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                            </MudDataGrid>
+                        }
+
+                    </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Link" Text="Links">
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">New Link</MudButton>
+                        </MudToolBar>
+                        @if (Record.Links != null)
+                        {
+                            <MudDataGrid Items="@Record.Links" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                                <Columns>
+                                    <PropertyColumn Title="ID" Property="link => link.Id" />
+                                    <PropertyColumn Title="Name" Property="link => link.Name" />
+                                    <PropertyColumn Title="Type" Property="link => link.FragmentType" />
+                                    <PropertyColumn Title="Target" Property="link => link.Target" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteLink(@context.Item.Id))" />
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                            </MudDataGrid>
+                        }
+                    </MudTabPanel>
+                </MudContainer>
+            </MudTabs>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public KnowledgeEntryRecord? Record { get; set; }
+
+    private IEnumerable<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
+    private KnowledgeGroupRecord? SelectedGroupRecord { get; set; } = null;
+
+    private bool Update { get; set; }
+
+    private bool _formIsValid;
+    private MudForm? _form;
+
+    string _markdownHtml = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order);
+
+        if (Record == null)
+        {
+            Record = new KnowledgeEntryRecord
+            {
+                Id = Guid.NewGuid()
+            };
+        }
+        else
+        {
+            Update = true;
+            SelectedGroupRecord = _knowledgeGroups.FirstOrDefault(knowledgeGroup => knowledgeGroup.Id == Record?.KnowledgeGroupId);
+        }
+    }
+
+    private async Task UploadImage(IBrowserFile? file)
+    {
+        if (file == null)
+        {
+            return;
+        }
+        var image = await ImageService.PostImageAsync(file);
+        if (image != null)
+        {
+            Record?.Images.Add(image);
+            Snackbar.Add("Image uploaded.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error uploading image.", Severity.Error);
+        }
+    }
+
+    private async Task DeleteImage(Guid id)
+    {
+        var result = await ImageService.DeleteImageAsync(id);
+        if (result)
+        {
+            Record?.Images.Remove(Record.Images.FirstOrDefault(image => image.Id == id));
+            Snackbar.Add("Image deleted.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error deleting image.", Severity.Error);
+        }
+    }
+
+    private async Task AddLink()
+    {
+        var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, null } };
+
+        var dialog = await DialogService.ShowAsync<LinkFragmentDialog>("New link", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data != null)
+        {
+            var link = result.Data as LinkFragment;
+
+            Record?.Links.Add(link);
+        }
+    }
+
+    private void DeleteLink(Guid id)
+    {
+        Record?.Links.Remove(Record.Links.FirstOrDefault(link => link.Id == id));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async void Save()
+    {
+        if (_form != null) await _form.Validate();
+
+        if (_formIsValid != true)
+        {
+            Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            return;
+        }
+
+        if (Record == null)
+        {
+            return;
+        }
+
+        if (SelectedGroupRecord != null) Record.KnowledgeGroupId = SelectedGroupRecord.Id;
+
+        var request = new KnowledgeEntryRequest()
+        {
+            Title = Record.Title,
+            Text = Record.Text,
+            KnowledgeGroupId = Record.KnowledgeGroupId,
+            Order = Record.Order,
+            Links = Record.Links,
+            ImageIds = Record.Images.Select(image => image.Id).ToList()
+        };
+
+        if (Update)
+        {
+            var result = await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
+            if (result)
+            {
+                Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error updating knowledge base entry.", Severity.Error);
+            }
+        }
+        else
+        {
+            var result = await KnowledgeService.PostKnowledgeEntryAsync(request);
+            if (result)
+            {
+                Snackbar.Add("Knowledge base entry added.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error adding knowledge base entry.", Severity.Error);
+            }
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    Task OnMarkdownValueHTMLChanged(string value)
+    {
+        _markdownHtml = value;
+        return Task.CompletedTask;
+    }
+
+    readonly Func<KnowledgeGroupRecord, string> _knowledgeGroupToNameConverter = kg => kg.Name;
+}

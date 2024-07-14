@@ -1,0 +1,136 @@
+﻿@page "/images"
+@using Eurofurence.App.Backoffice.Services
+@using Microsoft.AspNetCore.Authorization
+@using Eurofurence.App.Domain.Model.Images
+@using Eurofurence.App.Backoffice.Components
+@attribute [Authorize]
+@inject IImageService ImageService
+@inject IDialogService DialogService
+
+<MudToolBar>
+    <MudText Typo="Typo.h6">Images</MudText>
+    <MudSpacer/>
+    <MudSpacer/>
+    <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
+    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddImage">New image</MudButton>
+</MudToolBar>
+<MudDataGrid T="ImageRecord" @ref="_dataGrid" LoadingProgressColor="Color.Primary" ServerData="@GetImages" SortMode="@SortMode.None" Groupable="false">
+    <Columns>
+        <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value))
+                {
+                    <MudImage Class="ml-2" Width="100" Src="@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value" />
+                }
+                else
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Title="ID" Property="image => image.Id"/>
+        <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
+        <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
+        <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
+        <PropertyColumn Title="Fursuit Badges" Property="image => image.FursuitBadges.Count" />
+        <PropertyColumn Title="Artist Alley Table Registrations" Property="image => image.TableRegistrations.Count" />
+        <TemplateColumn>
+            <CellTemplate>
+                @if (context.Item != null)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateImage(context.Item)"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))"/>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="ImageRecord"/>
+    </PagerContent>
+</MudDataGrid>
+
+
+@code {
+    private string? _imageSearch;
+    private int _selectedPage = 1;
+    private IEnumerable<ImageRecord> _images = new List<ImageRecord>();
+    private List<KeyValuePair<Guid, string>> _imageContents = [];
+    private MudDataGrid<ImageRecord>? _dataGrid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadImagesAsync();
+    }
+
+    private async Task<GridData<ImageRecord?>> GetImages(GridState<ImageRecord?> gridState)
+    {
+        if (!_images.Any())
+        {
+            await LoadImagesAsync();
+        }
+        var result = new GridData<ImageRecord?>();
+        var filteredItems = FilterImages(_images, _imageSearch).ToList();
+        result.Items = filteredItems.Skip(gridState.Page * gridState.PageSize).Take(gridState.PageSize);
+        result.TotalItems = filteredItems.Count;
+        _ = Task.Run(() => LoadImageSourcesAsync(result.Items.Select(item => item!.Id)));
+        return result;
+    }
+
+    private async Task LoadImagesAsync()
+    {
+        _images = await ImageService.GetImagesAsync();
+    }
+
+    private async Task LoadImageSourcesAsync(IEnumerable<Guid> imageIds)
+    {
+        _imageContents = [];
+        foreach (var imageId in imageIds)
+        {
+            var imageContent = await ImageService.GetImageContentAsync(imageId);
+            if (!string.IsNullOrEmpty(imageContent))
+            {
+                _imageContents.Add(new KeyValuePair<Guid, string>(imageId, $"data:image/jpeg;base64,{imageContent}"));
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void Search(string searchString)
+    {
+        _imageSearch = searchString;
+        _dataGrid?.ReloadServerData();
+    }
+
+    private IEnumerable<ImageRecord> FilterImages(IEnumerable<ImageRecord> entries, string? searchString)
+    {
+        return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry => 
+        entry.InternalReference.ToLower().Contains(searchString.ToLower()));
+    }
+
+    private async Task AddImage()
+    {
+        var parameters = new DialogParameters<ImageDialog> { { x => x.Record, null } };
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        await DialogService.ShowAsync<ImageDialog>("New image", parameters, options);
+
+        _dataGrid?.ReloadServerData();
+    }
+
+    private async Task UpdateImage(ImageRecord record)
+    {
+        var parameters = new DialogParameters<ImageDialog> { { x => x.Record, record } };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        await DialogService.ShowAsync<ImageDialog>("Update image", parameters, options);
+
+        _dataGrid?.ReloadServerData();
+    }
+
+    private async Task DeleteImage(Guid id)
+    {
+        await ImageService.DeleteImageAsync(id);
+        await LoadImagesAsync();
+        _dataGrid?.ReloadServerData();
+    }
+}

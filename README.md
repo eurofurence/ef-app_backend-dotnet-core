@@ -2,14 +2,17 @@
 
 ## Run locally using Docker Compose (or Podman)
 
-1. Copy [`appsettings.sample.json`](src/Eurofurence.App.Server.Web/appsettings.sample.json) to `/appsettings.json` (defaults should suffice for local development).
-2. Retrieve a JSON with Google Application Credentials for Firebase (see [Initialize the SDK in non-Google environments](https://firebase.google.com/docs/admin/setup#initialize_the_sdk_in_non-google_environments)).
-3. Store credential file as `/firebase.json`.
-4. Run `docker compose up`.
-5. Wait until you see a message starting with `Startup complete` from the `backend` container.
-6. Go [home](http://localhost:30001/swagger/ui).
-7. …
-8. Profit.
+1. Initialise configuration files for development via `just init` and then customising them with your secrets etc. or by doing the following, manual steps:
+   1. Copy the [backend `appsettings.sample.json`](src/Eurofurence.App.Server.Web/appsettings.sample.json) to `/appsettings.json` (defaults should suffice for local development).
+   2. Copy the [backoffice `appsettings.sample.json`](src/Eurofurence.App.Backoffice/wwwroot/appsettings.sample.json) to `/appsettings-backoffice.json` (modify `Oidc.ClientId`).
+   3. Retrieve a JSON with Google Application Credentials for Firebase (see [Initialize the SDK in non-Google environments](https://firebase.google.com/docs/admin/setup#initialize_the_sdk_in_non-google_environments)) and store credentials in `/firebase.json`.  
+   (see [`firebase.sample.json`](src/Eurofurence.App.Server.Web/firebase.sample.json) for expected format)
+2. Build container images using `just containerize` (or `docker compose build`).
+3. Run `just up` (or `docker compose up`) to start the application stack.
+4. Wait until you see a message starting with `Startup complete` from the `backend` container.
+5. Open Swagger UI (see `just swagger`) or backoffice (see `just backoffice`).
+6. …
+7. Profit.
 
 ## Run locally using Docker Compose and [`just`](https://github.com/casey/just)
 
@@ -18,16 +21,19 @@ If you have [`just`](https://github.com/casey/just) available on your system, yo
 ```plain
 just --list
 Available recipes:
-    build            # Perform restore, build & publish with dotnet
-    build-cli        # Build just CLI tools as single, self-contained executable
-    clean            # Clean build, stack, container images and artifacts
-    containerize     # Build release container using spec from docker-compose.yml
-    containerize-dev # Build sdk container without executing second stage
-    default          # List available recipes
-    down             # Bring the docker compose stack down and remove volumes
-    stop             # Stop the docker compose stack
-    swagger          # Open swagger UI in default browser
-    up *ARGS         # Start the docker compose stack
+    backoffice                  # Open Backoffice UI in default browser
+    build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION') # Perform restore, build & publish with dotnet
+    build-cli                   # Build just CLI tools as single, self-contained executable
+    clean                       # Clean build, stack, container images, volumes and artifacts
+    containerize *ARGS          # Build release container using spec from docker-compose.yml
+    containerize-backoffice-dev # Build sdk container for backoffice without executing second stage
+    containerize-dev            # Build sdk container for backend without executing second stage
+    default                     # List available recipes
+    down                        # Bring the docker compose stack down and remove volumes
+    init                        # Initialize configuration files in root folder
+    stop                        # Stop the docker compose stack
+    swagger                     # Open Swagger UI in default browser
+    up *ARGS                    # Start the docker compose stack
 ```
 
 ## Potentially outdated information below (Here be dragons!)

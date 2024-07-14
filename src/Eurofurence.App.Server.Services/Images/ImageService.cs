@@ -24,6 +24,7 @@ namespace Eurofurence.App.Server.Services.Images
     public class ImageService : EntityServiceBase<ImageRecord>, IImageService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly IStorageService _storageService;
         private readonly IMinioClient _minIoClient;
         private readonly MinIoConfiguration _minIoConfiguration;
 
@@ -31,12 +32,14 @@ namespace Eurofurence.App.Server.Services.Images
             AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
             MinIoConfiguration minIoConfiguration)
-            : base(appDbContext, storageServiceFactory, false)
+            : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
+            _storageService = storageServiceFactory.CreateStorageService<ImageRecord>();
             _minIoConfiguration = minIoConfiguration;
             _minIoClient = new MinioClient().WithEndpoint(minIoConfiguration.Endpoint)
                 .WithCredentials(minIoConfiguration.AccessKey, minIoConfiguration.SecretKey)
+                .WithRegion(minIoConfiguration.Region)
                 .WithSSL(minIoConfiguration.Secure)
                 .Build();
         }
@@ -54,7 +57,16 @@ namespace Eurofurence.App.Server.Services.Images
         public override async Task DeleteOneAsync(Guid id)
         {
             await DeleteFileFromMinIoAsync(_minIoConfiguration.Bucket, id.ToString());
-            await base.DeleteOneAsync(id);
+
+            var entity = await _appDbContext.Images
+                .Include(i => i.FursuitBadges)
+                .Include(i => i.TableRegistrations)
+                .FirstOrDefaultAsync(entity => entity.Id == id);
+
+            _appDbContext.Remove(entity);
+
+            await _storageService.TouchAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public override async Task DeleteAllAsync()
@@ -146,7 +158,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .WithObject(id.ToString())
                 .WithCallbackStream(stream =>
                 {
-                    stream.CopyToAsync(ms);
+                    stream.CopyTo(ms);
                 }));
 
             ms.Position = 0;

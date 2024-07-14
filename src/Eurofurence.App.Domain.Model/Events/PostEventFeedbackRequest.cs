@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Eurofurence.App.Server.Services.Abstractions.Events
+namespace Eurofurence.App.Domain.Model.Events
 {
     public class PostEventFeedbackRequest
     {

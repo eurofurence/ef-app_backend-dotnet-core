@@ -123,5 +123,24 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
         }
 
+        /// <summary>
+        ///     Delete an image.
+        /// </summary>
+        /// <param name="id"></param>
+        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(string), 404)]
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteImageAsync(
+            [EnsureNotNull][FromRoute] Guid id
+        )
+        {
+            var existingRecord = await _imageService.FindOneAsync(id);
+            if (existingRecord == null) return NotFound($"No record found with id {id}");
+
+            await _imageService.DeleteOneAsync(id);
+
+            return NoContent();
+        }
     }
 }

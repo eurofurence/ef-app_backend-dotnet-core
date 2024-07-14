@@ -1,0 +1,272 @@
+﻿@page "/knowledgebase"
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Knowledge
+@using Microsoft.AspNetCore.Authorization
+@using Eurofurence.App.Backoffice.Components
+@using Markdig
+@attribute [Authorize]
+@inject IKnowledgeService KnowledgeService
+@inject IImageService ImageService
+@inject IDialogService DialogService
+
+<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+
+<MudGrid>
+    <MudItem xs="3">
+        <MudToolBar>
+            <MudText Typo="Typo.h6">Groups</MudText>
+            <MudSpacer/>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeGroup">New Group</MudButton>
+        </MudToolBar>
+        <MudList Clickable="true">
+            <MudListItem @onclick="() => _selectedGroup = null">
+                <MudCard Style="background-color: transparent">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Show All</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardActions>
+                    </MudCardActions>
+                    <MudCardContent>
+                        <MudText>Show all entries</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudListItem>
+            @if (Loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+            }
+            @foreach (var knowledgeGroup in _knowledgeGroups)
+            {
+                <MudListItem @onclick="() => _selectedGroup = knowledgeGroup">
+                    <MudCard Style="background-color: transparent">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudIcon Icon="@("fas fa-" + knowledgeGroup.FontAwesomeIconName)"></MudIcon>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardActions>
+                        </MudCardActions>
+                        <MudCardContent>
+                            <MudText>@knowledgeGroup.Description</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudListItem>
+            }
+        </MudList>
+    </MudItem>
+
+    <MudItem xs="9">
+        <MudToolBar>
+            @if (_selectedGroup != null)
+            {
+                <MudText Typo="Typo.h6">Entries: @_selectedGroup.Name</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">All Entries</MudText>
+            }
+            <MudSpacer/>
+            <MudSpacer/>
+            <MudTextField @bind-Value="_knowledgeEntrySearch" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
+            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeEntry">New entry</MudButton>
+        </MudToolBar>
+        @if (Loading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+        }
+        <MudContainer>
+            @foreach (var knowledgeEntry in GetKnowledgeEntities())
+            {
+                <MudCard Class="mt-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)"/>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Class="mb-4">@((MarkupString)Markdown.ToHtml(knowledgeEntry.Text))</MudText>
+
+                        @if (_imageContents.Any(kvp => kvp.Key == knowledgeEntry.Id))
+                        {
+                            @foreach (var image in _imageContents.FirstOrDefault(kvp => kvp.Key == knowledgeEntry.Id).Value)
+                            {
+                                <MudImage Class="ml-2" Height="100" Src="@image"/>
+                            }
+                        }
+                        else if (knowledgeEntry.Images.Count > 0)
+                        {
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        }
+                        
+                    </MudCardContent>
+                    <MudCardActions>
+                        @foreach (var link in knowledgeEntry.Links)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            }
+        </MudContainer>
+    </MudItem>
+</MudGrid>
+
+@code {
+    public bool Loading = true;
+    private string? _knowledgeEntrySearch;
+    private KnowledgeGroupRecord? _selectedGroup;
+    private IEnumerable<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
+    private IEnumerable<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
+    private List<KeyValuePair<Guid, List<string>>> _imageContents = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadKnowledgeEntries();
+        await LoadKnowledgeGroups();
+        await LoadImageSourcesAsync();
+    }
+
+    private async Task LoadKnowledgeEntries()
+    {
+        Loading = true;
+        _knowledgeEntries = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
+        Loading = false;
+    }
+
+    private async Task LoadKnowledgeGroups()
+    {
+        Loading = true;
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order);
+        Loading = false;
+    }
+
+    private async Task LoadImageSourcesAsync()
+    {
+        Loading = true;
+        _imageContents = [];
+        
+        foreach (var knowledgeEntry in _knowledgeEntries)
+        {
+            StateHasChanged();
+            var keyValuePair = new KeyValuePair<Guid, List<string>>(knowledgeEntry.Id, new List<string>());
+
+            foreach (var image in knowledgeEntry.Images)
+            {
+                var imageContent = await ImageService.GetImageContentAsync(image.Id);
+                if (!string.IsNullOrEmpty(imageContent))
+                {
+                    keyValuePair.Value.Add($"data:image/jpeg;base64,{imageContent}");
+                }
+            }
+
+            _imageContents.Add(keyValuePair);
+        }
+
+        Loading = false;
+    }
+
+    private IEnumerable<KnowledgeEntryRecord> GetKnowledgeEntities()
+    {
+        if (_selectedGroup == null)
+        {
+            return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch);
+        }
+
+        return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch).Where(ke => ke.KnowledgeGroupId == _selectedGroup.Id);
+    }
+
+    private IEnumerable<KnowledgeEntryRecord> FilterKnowledgeEntries(IEnumerable<KnowledgeEntryRecord> entries, string? searchString)
+    {
+        return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry => entry.Title.ToLower().Contains(searchString.ToLower()) || entry.Text.ToLower().Contains(searchString.ToLower()));
+    }
+
+
+    private async Task AddKnowledgeEntry()
+    {
+        var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, null } };
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("New knowledge base entry", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Loading = true;
+            await LoadKnowledgeEntries();
+            await LoadImageSourcesAsync();
+        }
+    }
+
+    private async Task UpdateKnowledgeEntry(KnowledgeEntryRecord record)
+    {
+        var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, record } };
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("Update knowledge base entry", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Loading = true;
+            await LoadKnowledgeEntries();
+            await LoadImageSourcesAsync();
+        }
+    }
+
+    private async Task DeleteKnowledgeEntry(Guid id)
+    {
+        await KnowledgeService.DeleteKnowledgeEntryAsync(id);
+        await LoadKnowledgeEntries();
+    }
+
+    private async Task AddKnowledgeGroup()
+    {
+        var parameters = new DialogParameters<KnowledgeGroupDialog> { { x => x.Record, null } };
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<KnowledgeGroupDialog>("New knowledge base group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Loading = true;
+            await LoadKnowledgeGroups();
+        }
+    }
+
+    private async Task UpdateKnowledgeGroup(KnowledgeGroupRecord record)
+    {
+        var parameters = new DialogParameters<KnowledgeGroupDialog> { { x => x.Record, record } };
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<KnowledgeGroupDialog>("Update knowledge base group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Loading = true;
+            await LoadKnowledgeGroups();
+        }
+    }
+
+    private async Task DeleteKnowledgeGroup(Guid id)
+    {
+        await KnowledgeService.DeleteKnowledgeGroupAsync(id);
+        await LoadKnowledgeGroups();
+        await LoadKnowledgeEntries();
+    }
+
+}

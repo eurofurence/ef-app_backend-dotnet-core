@@ -610,7 +610,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("MapEntryRecordId");
 
-                    b.ToTable("LinkFragment");
+                    b.ToTable("LinkFragments");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.FursuitParticipationRecord", b =>

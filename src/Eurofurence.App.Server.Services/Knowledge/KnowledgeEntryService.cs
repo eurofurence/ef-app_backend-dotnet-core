@@ -5,6 +5,7 @@ using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Knowledge
 {
@@ -36,7 +37,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
         public async Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(KnowledgeEntryRequest request)
         {
             var images = _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id));
-
+            
             var entity = new KnowledgeEntryRecord
             {
                 KnowledgeGroupId = request.KnowledgeGroupId,
@@ -60,6 +61,11 @@ namespace Eurofurence.App.Server.Services.Knowledge
         {
             var images = _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id));
 
+            var existingEntity = await _appDbContext.KnowledgeEntries
+                .Include(knowledgeEntryRecord => knowledgeEntryRecord.Links)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ke => ke.Id == id);
+
             var entity = new KnowledgeEntryRecord
             {
                 Id = id,
@@ -70,6 +76,23 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 Links = request.Links,
                 IsDeleted = 0
             };
+
+            foreach (var existingLink in existingEntity.Links)
+            {
+                if (entity.Links.All(link => link.Id != existingLink.Id))
+                {
+                    _appDbContext.LinkFragments.Remove(existingLink);
+                }
+            }
+
+            foreach (var link in entity.Links)
+            {
+                var linkExists = await _appDbContext.LinkFragments.AnyAsync(existingLink => existingLink.Id == link.Id);
+                if (!linkExists)
+                {
+                    _appDbContext.LinkFragments.Add(link);
+                }
+            }
 
             entity.Images = [.. images];
 
