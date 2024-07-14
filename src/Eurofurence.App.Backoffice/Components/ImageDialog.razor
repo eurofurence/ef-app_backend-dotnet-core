@@ -144,13 +144,27 @@
 
         if (Update)
         {
-            await ImageService.PutImageAsync(Record.Id, file);
-            Snackbar.Add("Image updated.", Severity.Success);
+            var image = await ImageService.PutImageAsync(Record.Id, file);
+            if (image != null)
+            {
+                Snackbar.Add("Image updated.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error updating image.", Severity.Error);
+            }
         }
         else
         {
-            await ImageService.PostImageAsync(file);
-            Snackbar.Add("Image added.", Severity.Success);
+            var image = await ImageService.PostImageAsync(file);
+            if (image != null)
+            {
+                Snackbar.Add("Image added.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error adding image.", Severity.Error);
+            }
         }
 
         await LoadImageSourceAsync();

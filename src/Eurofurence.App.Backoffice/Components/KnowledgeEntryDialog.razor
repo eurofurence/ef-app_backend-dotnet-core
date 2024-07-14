@@ -13,33 +13,35 @@
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
                 <MudContainer Style="height: 60vh" Class="overflow-scroll pr-4">
                     <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="General">
-                        <MudSelect T="KnowledgeGroupRecord" Label="Group" ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
-                            @foreach (var knowledgeGroup in _knowledgeGroups)
-                            {
-                                <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
-                        <MudTextField @bind-Value="Record.Title" Label="Title" />
-                        <MudNumericField @bind-Value="Record.Order" Label="Order Number" />
-                        <MudGrid>
-                            <MudItem xs="6">
-                                <MarkdownEditor @bind-Value="@Record.Text"
-                                                ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.h6">Preview</MudText>
-                                        </CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <MudText>@((MarkupString)_markdownHtml)</MudText>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
+                        <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
+                            <MudSelect Required="true" T="KnowledgeGroupRecord" Label="Group" ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
+                                @foreach (var knowledgeGroup in _knowledgeGroups)
+                                {
+                                    <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
+                            <MudTextField @bind-Value="Record.Title" Required="true" RequiredError="Title is required." Label="Title" />
+                            <MudNumericField @bind-Value="Record.Order" Required="true" RequiredError="Order number is required." Label="Order Number" />
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MarkdownEditor @bind-Value="@Record.Text"
+                                                    ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudCard>
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6">Preview</MudText>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudText>@((MarkupString)_markdownHtml)</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
                     </MudTabPanel>
                     <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
                         <MudToolBar>
@@ -116,6 +118,9 @@
 
     private bool Update { get; set; }
 
+    private bool _formIsValid;
+    private MudForm? _form;
+
     string _markdownHtml = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -143,13 +148,29 @@
             return;
         }
         var image = await ImageService.PostImageAsync(file);
-        Record?.Images.Add(image);
+        if (image != null)
+        {
+            Record?.Images.Add(image);
+            Snackbar.Add("Image uploaded.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error uploading image.", Severity.Error);
+        }
     }
 
     private async Task DeleteImage(Guid id)
     {
-        await ImageService.DeleteImageAsync(id);
-        Record?.Images.Remove(Record.Images.FirstOrDefault(image => image.Id == id));
+        var result = await ImageService.DeleteImageAsync(id);
+        if (result)
+        {
+            Record?.Images.Remove(Record.Images.FirstOrDefault(image => image.Id == id));
+            Snackbar.Add("Image deleted.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error deleting image.", Severity.Error);
+        }
     }
 
     private async Task AddLink()
@@ -176,6 +197,14 @@
 
     private async void Save()
     {
+        if (_form != null) await _form.Validate();
+
+        if (_formIsValid != true)
+        {
+            Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            return;
+        }
+
         if (Record == null)
         {
             return;
@@ -195,13 +224,27 @@
 
         if (Update)
         {
-            await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
-            Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+            var result = await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
+            if (result)
+            {
+                Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error updating knowledge base entry.", Severity.Error);
+            }
         }
         else
         {
-            await KnowledgeService.PostKnowledgeEntryAsync(request);
-            Snackbar.Add("Knowledge base entry added.", Severity.Success);
+            var result = await KnowledgeService.PostKnowledgeEntryAsync(request);
+            if (result)
+            {
+                Snackbar.Add("Knowledge base entry added.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error adding knowledge base entry.", Severity.Error);
+            }
         }
 
         MudDialog.Close(DialogResult.Ok(true));

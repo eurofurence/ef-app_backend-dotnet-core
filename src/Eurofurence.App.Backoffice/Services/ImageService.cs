@@ -50,7 +50,7 @@ namespace Eurofurence.App.Backoffice.Services
                 fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
                 content.Add(content: fileContent, name: "file", fileName: file.Name);
                 var response = await http.PostAsync($"images", content);
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (!response.IsSuccessStatusCode)
                 {
                     return null;
                 }
@@ -58,9 +58,10 @@ namespace Eurofurence.App.Backoffice.Services
             }
         }
 
-        public async Task DeleteImageAsync(Guid id)
+        public async Task<bool> DeleteImageAsync(Guid id)
         {
-            await http.DeleteAsync($"images/{id}");
+            var response = await http.DeleteAsync($"images/{id}");
+            return response.IsSuccessStatusCode;
         }
     }
 }

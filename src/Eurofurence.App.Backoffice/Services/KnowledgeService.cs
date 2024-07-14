@@ -14,42 +14,48 @@ namespace Eurofurence.App.Backoffice.Services
             return (await http.GetFromJsonAsync<KnowledgeEntryRecord[]>("knowledgeEntries", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
 
-        public async Task PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record)
+        public async Task<bool> PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record)
         {
             JsonContent content = JsonContent.Create(record);
-            await http.PutAsync($"knowledgeEntries/{id}", content);
+            var response = await http.PutAsync($"knowledgeEntries/{id}", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task PostKnowledgeEntryAsync(KnowledgeEntryRequest record)
+        public async Task<bool> PostKnowledgeEntryAsync(KnowledgeEntryRequest record)
         {
             JsonContent content = JsonContent.Create(record);
-            await http.PostAsync($"knowledgeEntries", content);
+            var response = await http.PostAsync($"knowledgeEntries", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task DeleteKnowledgeEntryAsync(Guid id)
+        public async Task<bool> DeleteKnowledgeEntryAsync(Guid id)
         {
-            await http.DeleteAsync($"knowledgeEntries/{id}");
+            var response = await http.DeleteAsync($"knowledgeEntries/{id}");
+            return response.IsSuccessStatusCode;
         }
 
         public async Task<KnowledgeGroupRecord[]> GetKnowledgeGroupsAsync()
         {
             return (await http.GetFromJsonAsync<KnowledgeGroupRecord[]>("knowledgeGroups"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
-        public async Task PutKnowledgeGroupAsync(KnowledgeGroupRecord record)
+        public async Task<bool> PutKnowledgeGroupAsync(KnowledgeGroupRecord record)
         {
             JsonContent content = JsonContent.Create(record);
-            await http.PutAsync($"knowledgeGroups/{record.Id}", content);
+            var response = await http.PutAsync($"knowledgeGroups/{record.Id}", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task PostKnowledgeGroupAsync(KnowledgeGroupRecord record)
+        public async Task<bool> PostKnowledgeGroupAsync(KnowledgeGroupRecord record)
         {
             JsonContent content = JsonContent.Create(record);
-            await http.PostAsync($"knowledgeGroups", content);
+            var response = await http.PostAsync($"knowledgeGroups", content);
+            return response.IsSuccessStatusCode;
         }
 
-        public async Task DeleteKnowledgeGroupAsync(Guid id)
+        public async Task<bool> DeleteKnowledgeGroupAsync(Guid id)
         {
-            await http.DeleteAsync($"knowledgeGroups/{id}");
+            var response = await http.DeleteAsync($"knowledgeGroups/{id}");
+            return response.IsSuccessStatusCode;
         }
     }
 }

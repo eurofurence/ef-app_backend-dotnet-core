@@ -5,12 +5,12 @@ namespace Eurofurence.App.Backoffice.Services
     public interface IKnowledgeService
     {
         public Task<KnowledgeEntryRecord[]> GetKnowledgeEntriesAsync();
-        public Task PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record);
-        public Task PostKnowledgeEntryAsync(KnowledgeEntryRequest record);
-        public Task DeleteKnowledgeEntryAsync(Guid id);
+        public Task<bool> PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record);
+        public Task<bool> PostKnowledgeEntryAsync(KnowledgeEntryRequest record);
+        public Task<bool> DeleteKnowledgeEntryAsync(Guid id);
         public Task<KnowledgeGroupRecord[]> GetKnowledgeGroupsAsync();
-        public Task PutKnowledgeGroupAsync(KnowledgeGroupRecord record);
-        public Task PostKnowledgeGroupAsync(KnowledgeGroupRecord record);
-        public Task DeleteKnowledgeGroupAsync(Guid id);
+        public Task<bool> PutKnowledgeGroupAsync(KnowledgeGroupRecord record);
+        public Task<bool> PostKnowledgeGroupAsync(KnowledgeGroupRecord record);
+        public Task<bool> DeleteKnowledgeGroupAsync(Guid id);
     }
 }
