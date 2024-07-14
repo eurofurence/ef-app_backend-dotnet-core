@@ -34,6 +34,8 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember] 
         public List<LinkFragment> Links { get; set; } = new();
 
+        public Guid MapId { get; set; }
+
         [IgnoreDataMember]
         public virtual MapRecord Map { get; set; }
     }
