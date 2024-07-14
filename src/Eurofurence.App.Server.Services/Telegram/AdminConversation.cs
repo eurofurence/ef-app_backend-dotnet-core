@@ -16,6 +16,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Images;

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
+namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     public class TableRegistrationRequest
     {

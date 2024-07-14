@@ -1,8 +1,8 @@
-﻿using Eurofurence.App.Domain.Model.Fragments;
+﻿using System;
 using System.Collections.Generic;
-using System;
+using Eurofurence.App.Domain.Model.Fragments;
 
-namespace Eurofurence.App.Server.Services.Abstractions.Knowledge
+namespace Eurofurence.App.Domain.Model.Knowledge
 {
     public class KnowledgeEntryRequest
     {

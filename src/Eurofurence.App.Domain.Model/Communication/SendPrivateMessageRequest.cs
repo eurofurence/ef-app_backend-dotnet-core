@@ -1,4 +1,4 @@
-﻿namespace Eurofurence.App.Server.Services.Abstractions.Communication
+﻿namespace Eurofurence.App.Domain.Model.Communication
 {
     public class SendPrivateMessageRequest
     {

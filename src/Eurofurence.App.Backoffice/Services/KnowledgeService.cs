@@ -2,7 +2,6 @@
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Eurofurence.App.Domain.Model.Knowledge;
-using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 
 namespace Eurofurence.App.Backoffice.Services
 {

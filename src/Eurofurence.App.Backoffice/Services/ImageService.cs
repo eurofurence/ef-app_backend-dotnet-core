@@ -4,7 +4,6 @@ using System.Text.Json;
 using Eurofurence.App.Domain.Model.Images;
 using Microsoft.AspNetCore.Components.Forms;
 using System.Net.Http.Headers;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace Eurofurence.App.Backoffice.Services
 {
