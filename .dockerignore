@@ -9,6 +9,7 @@
 *.json
 **/obj
 **/bin
+app
 artifacts
 docker
 docker-compose.yml
