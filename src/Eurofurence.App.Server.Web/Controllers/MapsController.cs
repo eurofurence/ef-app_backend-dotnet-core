@@ -131,9 +131,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
 
-            map.Entries.Clear();
-            await _mapService.ReplaceOneAsync(map);
-
+            await _mapService.DeleteAllEntriesAsync(id);
             return NoContent();
         }
 
@@ -159,9 +157,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var entry = map.Entries.SingleOrDefault(a => a.Id == entryId);
             if (entry == null) return NotFound();
 
-            map.Entries.Remove(entry);
-
-            await _mapService.ReplaceOneAsync(map);
+            await _mapService.DeleteOneEntryAsync(entryId);
 
             return NoContent();
         }
@@ -185,7 +181,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
 
             record.Id = Guid.NewGuid();
-            return await PutSingleMapEntryAsync(record, id, record.Id);
+            record.MapId = id;
+            await _mapService.InsertOneEntryAsync(record);
+            return Ok(record.Id);
         }
 
         /// <summary>
@@ -203,7 +201,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * `record.Id` does not match `entryId` from uri.
         ///     * No map found with for the specified id.
         /// </response>
-        [HttpPut("{id}/Entries/{EntryId}")]
+        [HttpPut("{id}/Entries/{entryId}")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id,
@@ -224,10 +222,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                 if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
             }
 
-            map.Entries.Remove(map.Entries.SingleOrDefault(a => a.Id == entryId));
-            map.Entries.Add(record);
-
-            await _mapService.ReplaceOneAsync(map);
+            record.MapId = id;
+            await _mapService.ReplaceOneEntryAsync(record);
             return Ok(record.Id);
         }
     }
