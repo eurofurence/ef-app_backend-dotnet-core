@@ -1,6 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
-COPY . /app/
+COPY ./src/ /app/src/
+COPY ./test/ /app/test/
+COPY ./ef-app_backend-dotnet-core.sln /app/
+COPY ./NuGet.config /app/
 WORKDIR /app
 RUN dotnet restore \
 	&& dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release \
