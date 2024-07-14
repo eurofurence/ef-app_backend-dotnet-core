@@ -81,6 +81,7 @@ namespace Eurofurence.App.Server.Web
                     opt.JsonSerializerOptions.WriteIndented = true;
                     opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     opt.JsonSerializerOptions.Converters.Add(new JsonDateTimeConverter());
+                    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
             JsonSerializerOptions serializerOptions = new JsonSerializerOptions
