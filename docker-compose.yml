@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '30001:30001'
+      - '${EF_MOBILE_APP_BACKEND_PORT}:30001'
     volumes:
       - './appsettings.json:/app/appsettings.json'
       - './firebase.json:/app/firebase.json'

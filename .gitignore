@@ -1,5 +1,6 @@
 ## Application Specific Settings
 appsettings.json
+appsettings-backoffice.json
 firebase.json
 
 
