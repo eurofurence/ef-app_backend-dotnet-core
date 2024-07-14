@@ -79,6 +79,42 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
+        ///     Create a new map.
+        /// </summary>
+        /// <param name="Record"></param>
+        /// <returns>Id of the newly created map</returns>
+        [Authorize(Roles = "Admin,Developer")]
+        [ProducesResponseType(typeof(Guid), 200)]
+        [HttpPost("")]
+        public async Task<ActionResult> PostMapAsync(
+            [EnsureNotNull][FromBody] MapRecord Record
+        )
+        {
+            await _mapService.InsertOneAsync(Record);
+            return Ok(Record.Id);
+        }
+
+        /// <summary>
+        ///     Delete a map.
+        /// </summary>
+        /// <param name="id"></param>
+        [Authorize(Roles = "Admin,Developer")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(string), 404)]
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteMapAsync(
+            [EnsureNotNull][FromRoute] Guid id
+        )
+        {
+            var existingRecord = await _mapService.FindOneAsync(id);
+            if (existingRecord == null) return NotFound($"No record found with it {id}");
+
+            await _mapService.DeleteOneAsync(id);
+
+            return NoContent();
+        }
+
+        /// <summary>
         ///     Delete all map entries for a specific map
         /// </summary>
         /// <response code="400">
