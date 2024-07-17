@@ -18,7 +18,7 @@
             <MudSpacer/>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeGroup">New Group</MudButton>
         </MudToolBar>
-        <MudList Clickable="true">
+        <MudList T="string" Clickable="true">
             <MudListItem @onclick="() => _selectedGroup = null">
                 <MudCard Style="background-color: transparent">
                     <MudCardHeader>

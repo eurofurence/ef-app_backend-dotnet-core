@@ -22,17 +22,15 @@
                                 </MudImage>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadImage">
-                                    <ButtonTemplate>
-                                        <MudButton HtmlTag="label"
-                                                   Variant="Variant.Filled"
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled"
                                                    Color="Color.Primary"
                                                    StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                   Class="mb-2"
-                                                   for="@fileInput">
+                                                   Class="mb-2">
                                             Upload Image
                                         </MudButton>
-                                    </ButtonTemplate>
+                                    </ActivatorContent>
                                 </MudFileUpload>
                                 <MudTextField Value="Record.Id" Label="ID" ReadOnly="true"/>
                                 <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true"/>
@@ -170,7 +168,7 @@
         await LoadImageSourceAsync();
     }
 
-    private async void Close()
+    private void Close()
     {
         MudDialog.Close(DialogResult.Ok(true));
     }
