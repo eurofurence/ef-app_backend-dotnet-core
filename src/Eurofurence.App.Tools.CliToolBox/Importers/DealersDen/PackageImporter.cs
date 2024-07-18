@@ -178,7 +178,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             dealerRecord.Links = linkFragments;
         }
 
-        private async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
+        private async Task<Guid?>GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
             string internalReference)
         {
             var imageEntry =
@@ -187,8 +187,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 
             if (imageEntry == null) return null;
 
-            await using var s = imageEntry.Open();
-            var result = await _imageService.InsertImageAsync(internalReference, s);
+            var stream = imageEntry.Open();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var result = await _imageService.InsertImageAsync(internalReference, ms);
             return result?.Id;
         }
     }
@@ -238,7 +240,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
         public string[] GetCategories()
         {
             if (string.IsNullOrEmpty(Keywords))
-        {
+            {
                 return [];
             }
 
