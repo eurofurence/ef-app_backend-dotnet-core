@@ -70,6 +70,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
 
             modelBuilder.Entity<RegSysAlternativePinRecord>().Property(x => x.PinConsumptionDatesUtc)
                 .HasColumnType("json");
+
+            modelBuilder.Entity<DealerRecord>().Property(x => x.Keywords)
+                .HasColumnType("json");
         }
     }
 }
