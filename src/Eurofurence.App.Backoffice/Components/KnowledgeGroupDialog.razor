@@ -36,7 +36,7 @@
     private bool _formIsValid;
     private MudForm? _form;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         if (Record == null)
         {

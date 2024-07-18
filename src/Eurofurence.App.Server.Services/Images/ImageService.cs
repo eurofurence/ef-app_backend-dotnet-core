@@ -61,6 +61,8 @@ namespace Eurofurence.App.Server.Services.Images
             var entity = await _appDbContext.Images
                 .Include(i => i.FursuitBadges)
                 .Include(i => i.TableRegistrations)
+                .Include(i => i.Maps)
+                .ThenInclude(m => m.Entries)
                 .FirstOrDefaultAsync(entity => entity.Id == id);
 
             _appDbContext.Remove(entity);
@@ -71,9 +73,16 @@ namespace Eurofurence.App.Server.Services.Images
 
         public override async Task DeleteAllAsync()
         {
-            var imageIds = await _appDbContext.Images.Select(image => image.Id.ToString()).ToListAsync();
+            var images = _appDbContext.Images
+                .Include(i => i.FursuitBadges)
+                .Include(i => i.TableRegistrations)
+                .Include(i => i.Maps)
+                .ThenInclude(m => m.Entries);
+            var imageIds = await images.Select(image => image.Id.ToString()).ToListAsync();
             await DeleteFilesFromMinIoAsync(_minIoConfiguration.Bucket, imageIds);
-            await base.DeleteAllAsync();
+            _appDbContext.Images.RemoveRange(images);
+            await _storageService.ResetDeltaStartAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task<ImageRecord> InsertImageAsync(string internalReference, Stream stream)

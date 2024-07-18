@@ -3,6 +3,7 @@
 <MudThemeProvider Theme="@EFMudTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1">
@@ -27,14 +28,12 @@
 
     MudTheme EFMudTheme = new()
         {
-            Palette = new Palette()
+            PaletteLight = new PaletteLight
             {
                 Primary = "#69a3a2",
                 Secondary = "#a2c5c4",
                 AppbarBackground = "#005953",
-                //Define other properties here.
-            },
-
+            }
         };
 
     void DrawerToggle()

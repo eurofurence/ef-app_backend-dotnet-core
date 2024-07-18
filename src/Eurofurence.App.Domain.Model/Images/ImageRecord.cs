@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Fursuits;
+using Eurofurence.App.Domain.Model.Maps;
 
 namespace Eurofurence.App.Domain.Model.Images
 {
@@ -35,5 +36,6 @@ namespace Eurofurence.App.Domain.Model.Images
 
         public List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
         public List<TableRegistrationRecord> TableRegistrations { get; set; } = new();
+        public List<MapRecord> Maps { get; set; } = new();
     }
 }
