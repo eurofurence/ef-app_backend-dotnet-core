@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -19,6 +21,21 @@ namespace Eurofurence.App.Server.Services.Dealers
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
+        }
+
+        public override async Task<DealerRecord> FindOneAsync(Guid id)
+        {
+            return await _appDbContext.Dealers
+                .Include(d => d.Links)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(entity => entity.Id == id);
+        }
+
+        public override IQueryable<DealerRecord> FindAll()
+        {
+            return _appDbContext.Dealers
+                .Include(d => d.Links)
+                .AsNoTracking();
         }
 
         public override async Task ReplaceOneAsync(DealerRecord entity)

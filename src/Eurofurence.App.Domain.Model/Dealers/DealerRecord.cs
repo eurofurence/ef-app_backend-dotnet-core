@@ -136,6 +136,12 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public string[] Categories { get; set; }
 
+        /// <summary>
+        /// **(pba)** JSON string of keywords grouped by categories, that apply to the goods/services sold/offered by the dealer.
+        /// </summary>
+        [DataMember]
+        public Dictionary<string, string[]> Keywords { get; set; }
+
         public string DisplayNameOrAttendeeNickname =>
             !string.IsNullOrWhiteSpace(DisplayName) ? DisplayName : AttendeeNickname;
 

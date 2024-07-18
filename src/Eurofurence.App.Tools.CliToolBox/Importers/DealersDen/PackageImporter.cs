@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -65,7 +66,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                         TelegramHandle = record.Telegram.Trim(),
                         TwitterHandle = record.Twitter.Trim(),
                         IsAfterDark = !string.IsNullOrWhiteSpace(record.AfterDark),
-                        Categories = record.GetCategories().ToArray()
+                        Keywords = record.GetKeywords(),
+                        Categories = record.GetCategories()
                     };
 
                     dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{record.RegNo}.",
@@ -106,7 +108,8 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
                 .Map(s => s.AttendsOnSaturday, t => t.AttendsOnSaturday)
                 .Map(s => s.Categories, t => t.Categories)
                 .Map(s => s.IsAfterDark, t => t.IsAfterDark)
-                .Map(s => s.Links, t => t.Links);
+                .Map(s => s.Links, t => t.Links)
+                .Map(s => s.Keywords, t => t.Keywords);
 
             var diff = patch.Patch(importRecords, existingRecords);
             await _dealerService.ApplyPatchOperationAsync(diff);
@@ -175,7 +178,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             dealerRecord.Links = linkFragments;
         }
 
-        private async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
+        private async Task<Guid?>GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
             string internalReference)
         {
             var imageEntry =
@@ -184,8 +187,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
 
             if (imageEntry == null) return null;
 
-            await using var s = imageEntry.Open();
-            var result = await _imageService.InsertImageAsync(internalReference, s);
+            var stream = imageEntry.Open();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var result = await _imageService.InsertImageAsync(internalReference, ms);
             return result?.Id;
         }
     }
@@ -209,11 +214,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
             Map(m => m.AttendsFri).Name("Attends Fri");
             Map(m => m.AttendsSat).Name("Attends Sat");
             Map(m => m.AfterDark).Name("After Dark");
-            Map(m => m.CategoryPrints).Name("Cat. Prints");
-            Map(m => m.CategoryArtwork).Name("Cat. Artwork");
-            Map(m => m.CategoryFursuits).Name("Cat. Fursuit");
-            Map(m => m.CategoryCommissions).Name("Cat. Commissions");
-            Map(m => m.CategoryMiscellaneous).Name("Cat. Misc");
+            Map(m => m.Keywords).Name("Keywords");
         }
     }
 
@@ -234,23 +235,28 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.DealersDen
         public string Telegram { get; set; }
         public string Twitter { get; set; }
         public string AfterDark { get; set; }
-        public string CategoryPrints { get; set; }
-        public string CategoryArtwork { get; set; }
-        public string CategoryFursuits { get; set; }
-        public string CategoryCommissions { get; set; }
-        public string CategoryMiscellaneous { get; set; }
+        public string Keywords { get; set; }
 
-        public IList<string> GetCategories()
+        public string[] GetCategories()
         {
-            var categories = new List<string>();
+            if (string.IsNullOrEmpty(Keywords))
+            {
+                return [];
+            }
 
-            if (!string.IsNullOrWhiteSpace(CategoryPrints)) categories.Add("Prints");
-            if (!string.IsNullOrWhiteSpace(CategoryArtwork)) categories.Add("Artwork");
-            if (!string.IsNullOrWhiteSpace(CategoryFursuits)) categories.Add("Fursuits");
-            if (!string.IsNullOrWhiteSpace(CategoryCommissions)) categories.Add("Commissions");
-            if (!string.IsNullOrWhiteSpace(CategoryMiscellaneous) || categories.Count == 0) categories.Add("Miscellaneous");
+            var keywords = GetKeywords();
 
-            return categories;
+            return [..keywords.Keys];
+        }
+
+        public Dictionary<string, string[]> GetKeywords()
+        {
+            if (string.IsNullOrEmpty(Keywords))
+            {
+                return new Dictionary<string, string[]>();
+            }
+
+            return JsonSerializer.Deserialize<Dictionary<string, string[]>>(Keywords);
         }
     }
 }
