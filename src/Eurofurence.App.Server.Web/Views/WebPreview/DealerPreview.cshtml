@@ -4,6 +4,7 @@
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
 
+    var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
     var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
 
     var displayName  = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname) ? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
@@ -23,12 +24,8 @@
 }
 
 @section head {
-     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-   integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
-   crossorigin=""/>
-   <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
-   integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
-   crossorigin=""></script>
+    <link rel="stylesheet" href="@contentBaseUrl/css/leaflet.css" />
+    <script src="@contentBaseUrl/scripts/leaflet.js" ></script>
 }
 
 <header>
@@ -41,6 +38,7 @@
     <h1>
         @displayName
         <span>@categories</span>
+        <!-- TODO: Add Keywords? -->
     </h1>
     <p>
         @Model.ShortDescription
@@ -50,19 +48,20 @@
 <section class="summary">
     @if (!string.IsNullOrEmpty(Model.TwitterHandle))
     {
-        <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@Model.TwitterHandle" class="button button-primary"><i class="fab fa-twitter"></i> @Model.TwitterHandle</a>
+        <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@Model.TwitterHandle" class="button button-primary"><i class="fa-twitter"></i> @Model.TwitterHandle</a>
     }
     @if (!string.IsNullOrEmpty(Model.TelegramHandle))
     {
-        <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fab fa-telegram"></i> @Model.TelegramHandle</a>
+        <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fa-telegram"></i> @Model.TelegramHandle</a>
     }
+    <!-- TODO: Add Discord, Mastodon etc. -->
     @if (days.Length > 0)
     {
-        <div class="infobox"><label><i class="fas fa-calendar"></i> Available:</label> @string.Join(", ", days)</div>
+        <div class="infobox"><label><i class="fa-calendar"></i> Available:</label> @string.Join(", ", days)</div>
     }
     @if (Model.IsAfterDark)
     {
-        <div class="infobox"><label><i class="fas fa-moon"></i> After Dark</label></div>
+        <div class="infobox"><label><i class="fa-moon-o"></i> After Dark</label></div>
     }
 </section>
 
