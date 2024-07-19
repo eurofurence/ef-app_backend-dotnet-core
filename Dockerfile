@@ -15,8 +15,9 @@ RUN dotnet tool install --global dotnet-ef \
 ENTRYPOINT dotnet artifacts/Eurofurence.App.Server.Web.dll http://*:30001
 EXPOSE 30001
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled AS prod
 COPY --from=build /app/artifacts/* /app/
+COPY /src/Eurofurence.App.Server.Web/wwwroot /app/wwwroot
 WORKDIR /app
 ENTRYPOINT ["dotnet", "Eurofurence.App.Server.Web.dll", "http://*:30001"]
 EXPOSE 30001
