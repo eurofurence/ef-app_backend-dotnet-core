@@ -29,6 +29,8 @@ jobs:
             image-name: ${{ github.repository }}-backoffice
     uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@feature/custom-dockerfile-context
     with:
+      dockerfile: ${{ matrix.dockerfile }}
+      image-name: ${{ matrix.image-name }}
       image-tags: ${{ inputs.image-tags }}
       full-repo-url: https://github.com/${{ github.repository }}
       branch-or-tag-name: ${{ github.ref_name }}
