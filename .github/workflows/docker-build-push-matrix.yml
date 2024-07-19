@@ -1,0 +1,38 @@
+
+name: Create and publish Docker images for backend and backoffice
+
+# Note: DOLLAR in the field descriptions should of course be replaced with a dollar sign.
+#       GitHub parses the description, so we can't write it correctly :)
+
+on:
+  workflow_call:
+    inputs:
+      image-tags:
+        required: false
+        default: 'latest'
+        type: string
+        description: The tag(s) to push. Space separated, for example 'v1 v1.3 v1.3.7 latest'.
+    secrets:
+      registry-pass:
+        required: true
+        description: Token to use for docker registry login. If GHCR, should usually be set to DOLLAR{{ secrets.GITHUB_TOKEN }}, and do remember to limit the token permissions to package write and content read and nothing else.
+
+jobs:
+  docker-build-push-matrix:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - dockerfile: Dockerfile
+            image-name: ${{ github.repository }}
+          - dockerfile: Dockerfile-backoffice
+            image-name: ${{ github.repository }}-backoffice
+    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@feature/custom-dockerfile-context
+    with:
+      image-tags: ${{ inputs.image-tags }}
+      full-repo-url: https://github.com/${{ github.repository }}
+      branch-or-tag-name: ${{ github.ref_name }}
+      commit-hash: ${{ github.sha }}
+      registry-user: ${{ github.actor }}
+    secrets:
+      registry-pass: ${{ secrets.registry-pass }}

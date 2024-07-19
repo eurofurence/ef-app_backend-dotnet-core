@@ -14,14 +14,9 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@main
+    uses: ./.github/workflows/docker-build-push-matrix.yml
     with:
-      image-name: ${{ github.repository }}
       image-tags: nightly
-      full-repo-url: https://github.com/${{ github.repository }}
-      branch-or-tag-name: ${{ github.ref_name }}
-      commit-hash: ${{ github.sha }}
-      registry-user: ${{ github.actor }}
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
 
@@ -30,14 +25,9 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@main
+    uses: ./.github/workflows/docker-build-push-matrix.yml
     with:
-      image-name: ${{ github.repository }}
       image-tags: ${{ github.ref_name }}
-      full-repo-url: https://github.com/${{ github.repository }}
-      branch-or-tag-name: ${{ github.ref_name }}
-      commit-hash: ${{ github.sha }}
-      registry-user: ${{ github.actor }}
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
 
@@ -46,13 +36,8 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@main
+    uses: ./.github/workflows/docker-build-push-matrix.yml
     with:
-      image-name: ${{ github.repository }}
       image-tags: ${{ github.ref_name }} latest
-      full-repo-url: https://github.com/${{ github.repository }}
-      branch-or-tag-name: ${{ github.ref_name }}
-      commit-hash: ${{ github.sha }}
-      registry-user: ${{ github.actor }}
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
