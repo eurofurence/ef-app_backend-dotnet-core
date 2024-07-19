@@ -8,9 +8,14 @@ default:
 @_create_from_sample PROJECT NAME EXTENSION TARGET:
 	if [ ! -f "{{TARGET}}.{{EXTENSION}}" ]; then echo "Creating {{TARGET}}.{{EXTENSION}} from sample…"; cp "src/{{PROJECT}}/{{NAME}}.sample.{{EXTENSION}}" "{{TARGET}}.{{EXTENSION}}"; else echo "Skipping {{TARGET}}.{{EXTENSION}} because it already exists."; fi
 
+# Open a url (or file) and print it to stdout
 @_open_url TITLE TARGET_URL:
 	echo "Opening {{TITLE}} at {{TARGET_URL}} …"
 	open {{TARGET_URL}}
+
+# create an empty file if it doesn't exist
+@_create_if_not_exists FILE:
+	if [[ ! -e {{FILE}} ]]; then touch {{FILE}}; fi
 
 # Initialize configuration files in root folder
 init: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json" "appsettings") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json" "firebase") (_create_from_sample "Eurofurence.App.Backoffice/wwwroot" "appsettings" "json" "appsettings-backoffice")
@@ -39,7 +44,7 @@ clean:
 	docker rmi ghcr.io/eurofurence/ef-app_backend-dotnet-core:nightly || true
 
 # Perform restore, build & publish with dotnet
-build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'):
+build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'): (_create_if_not_exists 'src/Eurofurence.App.Backoffice/wwwroot/appsettings.json')
 	dotnet tool install --global dotnet-ef
 	dotnet restore
 	dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release

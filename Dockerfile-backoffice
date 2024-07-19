@@ -4,7 +4,8 @@ COPY ./test/ /app/test/
 COPY ./ef-app_backend-dotnet-core.sln /app/
 COPY ./NuGet.config /app/
 WORKDIR /app
-RUN dotnet restore \
+RUN touch src/Eurofurence.App.Backoffice/wwwroot/appsettings.json \
+	&& dotnet restore \
 	&& dotnet build src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --configuration Release \
 	&& dotnet publish src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --output "/app/backoffice" --configuration Release
 ENTRYPOINT dotnet artifacts/Eurofurence.App.Backoffice.dll http://*:30002
