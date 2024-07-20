@@ -17,6 +17,7 @@ using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
@@ -121,6 +122,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<PushNotificationChannelStatisticsService>()
                 .As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
+            builder.RegisterType<QrCodeService>().As<IQrCodeService>();
             builder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
             builder.RegisterType<TableRegistrationService>().As<ITableRegistrationService>();
             builder.RegisterType<TelegramMessageBroker>()
