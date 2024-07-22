@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.Dealers;
+﻿using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Dealers;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Dealers
 {
@@ -6,5 +7,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Dealers
         IEntityServiceOperations<DealerRecord>,
         IPatchOperationProcessor<DealerRecord>
     {
+        public Task RunImportAsync();
     }
 }

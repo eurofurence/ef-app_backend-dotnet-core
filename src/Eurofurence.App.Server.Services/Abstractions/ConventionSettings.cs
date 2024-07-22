@@ -14,6 +14,7 @@ namespace Eurofurence.App.Server.Services.Abstractions
         public string ApiBaseUrl => $"{BaseUrl}/Api";
         public string ContentBaseUrl => $"{BaseUrl}";
         public string WebBaseUrl => $"{BaseUrl}/Web";
+        public string WorkingDirectory { get; set; }
 
         public static ConventionSettings FromConfiguration(IConfiguration configuration) 
             => new ConventionSettings()
@@ -23,7 +24,8 @@ namespace Eurofurence.App.Server.Services.Abstractions
                 IsRegSysAuthenticationEnabled = Convert.ToInt32(configuration["global:regSysAuthenticationEnabled"]) == 1,
                 BaseUrl = configuration["global:baseUrl"],
                 AppIdITunes = configuration["global:appIdITunes"],
-                AppIdPlay = configuration["global:appIdPlay"]
+                AppIdPlay = configuration["global:appIdPlay"],
+                WorkingDirectory = configuration["global:workingDirectory"]
             };
     }
 }
