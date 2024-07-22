@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using Quartz;
+using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
@@ -21,7 +22,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _logger.LogInformation($"Starting job {context.JobDetail.Key.Name}");
+            _logger.LogInformation(LogEvents.Import, $"Starting job {context.JobDetail.Key.Name}");
 
             try
             {
@@ -29,7 +30,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
+                _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
             }
         }
     }

@@ -317,6 +317,16 @@ namespace Eurofurence.App.Server.Web
                         .WriteTo.File(cgc.LogFile, (LogEventLevel)cgc.LogLevel)
                 );
 
+            loggerConfiguration
+                .WriteTo
+                .Logger(lc =>
+                    lc.Filter
+                        .ByIncludingOnly($"EventId.Id = {LogEvents.Import.Id}")
+                        .WriteTo.File(Configuration["importLog"],
+                            restrictedToMinimumLevel: LogEventLevel.Verbose
+                        )
+                );
+
             Log.Logger = loggerConfiguration.CreateLogger();
 
             loggerFactory
