@@ -184,6 +184,8 @@ namespace Eurofurence.App.Server.Web
                     .GetSection("jobs:flushPrivateMessageNotifications").Get<JobConfiguration>();
                 var updateAnnouncementsConfiguration = Configuration
                     .GetSection("jobs:updateAnnouncements").Get<JobConfiguration>();
+                var updateDealersConfiguration = Configuration
+                    .GetSection("jobs:updateDealers").Get<JobConfiguration>();
                 var updateFursuitCollectionGameParticipationConfiguration = Configuration
                     .GetSection("jobs:updateFursuitCollectionGameParticipation").Get<JobConfiguration>();
                 var updateLostAndFoundConfiguration = Configuration
@@ -213,6 +215,20 @@ namespace Eurofurence.App.Server.Web
                             .WithSimpleSchedule(s =>
                             {
                                 s.WithIntervalInSeconds(updateAnnouncementsConfiguration
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+
+                if (updateDealersConfiguration.Enabled)
+                {
+                    var updateDealersKey = new JobKey(nameof(UpdateDealersJob));
+                    q.AddJob<UpdateDealersJob>(opts => opts.WithIdentity(updateDealersKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateDealersKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(updateDealersConfiguration
                                     .SecondsInterval);
                                 s.RepeatForever();
                             }));
@@ -332,7 +348,7 @@ namespace Eurofurence.App.Server.Web
                 using (LogContext.PushProperty("IPAddress",
                            context.Request.Headers.ContainsKey("X-Forwarded-For")
                                ? context.Request.Headers["X-Forwarded-For"].ToString()
-                        : context.Connection.RemoteIpAddress.ToString()))
+                               : context.Connection.RemoteIpAddress.ToString()))
                 {
                     await next();
                 }

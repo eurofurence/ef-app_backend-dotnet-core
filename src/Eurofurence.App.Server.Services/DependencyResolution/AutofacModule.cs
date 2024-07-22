@@ -67,6 +67,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(LassieConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(MinIoConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(DealerConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(AnnouncementConfiguration.FromConfiguration(_configuration));
         }
 
@@ -130,6 +131,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .SingleInstance();
             builder.RegisterType<UserManager>().As<IUserManager>();
             builder.RegisterType<WnsChannelManager>().As<IWnsChannelManager>();
+            builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
         }
     }
 }
