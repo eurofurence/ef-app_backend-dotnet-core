@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Web.Jobs
                     var url = _configuration.Url;
                     if (String.IsNullOrWhiteSpace(url))
                     {
-                        _logger.LogDebug(LogEvents.Import, "Empty soruce url; cancelling job", url);
+                        _logger.LogError(LogEvents.Import, "Empty source url; cancelling job", url);
                         return;
                     }
 
@@ -123,6 +123,8 @@ namespace Eurofurence.App.Server.Web.Jobs
                     _logger.LogInformation(LogEvents.Import, "Sending push notification for announcement {id} ({title})", record.Entity.Id, record.Entity.Title);
                     await _pushEventMediator.PushAnnouncementNotificationAsync(record.Entity);
                 }
+
+                _logger.LogInformation(LogEvents.Import, "Announcements import finished successfully.");
             }
             catch (Exception e)
             {
