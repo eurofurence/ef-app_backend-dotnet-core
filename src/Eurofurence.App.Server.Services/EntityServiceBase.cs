@@ -69,7 +69,7 @@ namespace Eurofurence.App.Server.Services
         public virtual async Task InsertOneAsync(T entity)
         {
             entity.Touch();
-            await _appDbContext.AddAsync(entity);
+            _appDbContext.Add(entity);
             await _storageService.TouchAsync();
             await _appDbContext.SaveChangesAsync();
         }
