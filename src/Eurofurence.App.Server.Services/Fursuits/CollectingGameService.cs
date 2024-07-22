@@ -649,6 +649,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task UpdateFursuitParticipationAsync()
         {
+            _logger.LogInformation(LogEvents.Import, "Starting fursuit collection game participation import.");
+
             try
             {
                 await _semaphore.WaitAsync();
@@ -704,6 +706,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 }
 
                 await _appDbContext.SaveChangesAsync();
+
+                _logger.LogInformation(LogEvents.Import, "fursuit collection game participation import finished successfully.");
             }
             finally
             {

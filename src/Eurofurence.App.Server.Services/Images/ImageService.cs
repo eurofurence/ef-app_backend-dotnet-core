@@ -111,8 +111,6 @@ namespace Eurofurence.App.Server.Services.Images
                 ContentHashSha1 = hash
             };
 
-            record.Touch();
-
             await base.InsertOneAsync(record);
 
             await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, record.Id.ToString(),

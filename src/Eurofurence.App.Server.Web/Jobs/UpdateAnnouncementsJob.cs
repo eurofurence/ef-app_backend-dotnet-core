@@ -4,14 +4,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
@@ -41,7 +40,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _logger.LogInformation($"Starting job {context.JobDetail.Key.Name}");
+            _logger.LogInformation(LogEvents.Import, $"Starting job {context.JobDetail.Key.Name}");
 
             try
             {
@@ -51,17 +50,17 @@ namespace Eurofurence.App.Server.Web.Jobs
                     var url = _configuration.Url;
                     if (String.IsNullOrWhiteSpace(url))
                     {
-                        _logger.LogDebug("Empty soruce url; cancelling job", url);
+                        _logger.LogDebug(LogEvents.Import, "Empty soruce url; cancelling job", url);
                         return;
                     }
 
-                    _logger.LogDebug("Fetching data from {url}", url);
+                    _logger.LogDebug(LogEvents.Import, "Fetching data from {url}", url);
                     response = await client.GetStringAsync(url);
                 }
 
                 if (response == "null")
                 {
-                    _logger.LogDebug("Received null response");
+                    _logger.LogDebug(LogEvents.Import, "Received null response");
                     return;
                 }
 
@@ -110,24 +109,24 @@ namespace Eurofurence.App.Server.Web.Jobs
                     .Where(a => !string.IsNullOrEmpty(a.Entity.ExternalReference) && a.Action != ActionEnum.NotModified)
                     .ToList();
 
-                _logger.LogDebug("Diff results in {count} new/modified records", diff.Count);
+                _logger.LogDebug(LogEvents.Import, "Diff results in {count} new/modified records", diff.Count);
 
                 if (diff.Count == 0) return;
 
-                _logger.LogInformation("Processing {count} new/modified records", diff.Count);
+                _logger.LogInformation(LogEvents.Import, "Processing {count} new/modified records", diff.Count);
 
                 await _announcementService.ApplyPatchOperationAsync(diff);
                 await _pushEventMediator.PushSyncRequestAsync();
 
                 foreach (var record in diff.Where(a => a.Action == ActionEnum.Add))
                 {
-                    _logger.LogInformation("Sending push notification for announcement {id} ({title})", record.Entity.Id, record.Entity.Title);
+                    _logger.LogInformation(LogEvents.Import, "Sending push notification for announcement {id} ({title})", record.Entity.Id, record.Entity.Title);
                     await _pushEventMediator.PushAnnouncementNotificationAsync(record.Entity);
                 }
             }
             catch (Exception e)
             {
-                _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
+                _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
             }
 
         }
