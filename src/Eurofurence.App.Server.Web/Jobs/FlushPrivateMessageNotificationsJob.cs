@@ -1,6 +1,8 @@
-﻿using Eurofurence.App.Server.Services.Abstractions.Communication;
-using FluentScheduler;
+﻿using System;
+using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Microsoft.Extensions.Logging;
+using Quartz;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
@@ -18,12 +20,24 @@ namespace Eurofurence.App.Server.Web.Jobs
             _privateMessageService = privateMessageService;
         }
 
-        public void Execute()
+        public Task Execute(IJobExecutionContext context)
         {
-            var count = _privateMessageService.FlushPrivateMessageQueueNotifications().Result;
-            if (count == 0) return;
+            _logger.LogInformation($"Starting job {context.JobDetail.Key.Name}");
 
-            _logger.LogInformation($"Flushed {count} messages");
+            try
+            {
+                var count = _privateMessageService.FlushPrivateMessageQueueNotifications().Result;
+                if (count > 0)
+                {
+                    _logger.LogInformation($"Flushed {count} messages");
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

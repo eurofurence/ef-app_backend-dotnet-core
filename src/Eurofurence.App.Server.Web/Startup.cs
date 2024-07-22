@@ -1,11 +1,9 @@
 ﻿using Autofac;
-using Autofac.Features.AttributeFilters;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
-using FluentScheduler;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +25,7 @@ using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
+using Quartz;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Mapster;
@@ -150,7 +149,6 @@ namespace Eurofurence.App.Server.Web
                         Url = "/"
                     });
                 }
-
             });
 
             services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
@@ -169,12 +167,7 @@ namespace Eurofurence.App.Server.Web
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
 
-            services.Configure<LoggerFilterOptions>(options =>
-            {
-                options.MinLevel = LogLevel.Trace;
-            });
-
-            var builder = new ContainerBuilder();
+            services.Configure<LoggerFilterOptions>(options => { options.MinLevel = LogLevel.Trace; });
 
             services.AddDbContextPool<AppDbContext>(options =>
             {
@@ -193,6 +186,80 @@ namespace Eurofurence.App.Server.Web
                     mySqlOptions => mySqlOptions.UseMicrosoftJson());
             });
 
+            services.AddQuartz(q =>
+            {
+                var flushPrivateMessageNotificationsConfiguration = Configuration
+                    .GetSection("jobs:flushPrivateMessageNotifications").Get<JobConfiguration>();
+                var updateAnnouncementsConfiguration = Configuration
+                    .GetSection("jobs:updateAnnouncements").Get<JobConfiguration>();
+                var updateFursuitCollectionGameParticipationConfiguration = Configuration
+                    .GetSection("jobs:updateFursuitCollectionGameParticipation").Get<JobConfiguration>();
+                var updateLostAndFoundConfiguration = Configuration
+                    .GetSection("jobs:updateLostAndFound").Get<JobConfiguration>();
+
+                if (flushPrivateMessageNotificationsConfiguration.Enabled)
+                {
+                    var flushPrivateMessageNotificationsKey = new JobKey(nameof(FlushPrivateMessageNotificationsJob));
+                    q.AddJob<FlushPrivateMessageNotificationsJob>(opts =>
+                        opts.WithIdentity(flushPrivateMessageNotificationsKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(flushPrivateMessageNotificationsKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(flushPrivateMessageNotificationsConfiguration
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+
+                if (updateAnnouncementsConfiguration.Enabled)
+                {
+                    var updateAnnouncementsKey = new JobKey(nameof(UpdateAnnouncementsJob));
+                    q.AddJob<UpdateAnnouncementsJob>(opts => opts.WithIdentity(updateAnnouncementsKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateAnnouncementsKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(updateAnnouncementsConfiguration
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+
+                if (updateFursuitCollectionGameParticipationConfiguration.Enabled)
+                {
+                    var updateFursuitCollectionGameParticipationKey =
+                        new JobKey(nameof(UpdateFursuitCollectionGameParticipationJob));
+                    q.AddJob<UpdateFursuitCollectionGameParticipationJob>(opts =>
+                        opts.WithIdentity(updateFursuitCollectionGameParticipationKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateFursuitCollectionGameParticipationKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(updateFursuitCollectionGameParticipationConfiguration
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+
+                if (updateLostAndFoundConfiguration.Enabled)
+                {
+                    var updateLostAndFoundKey = new JobKey(nameof(UpdateLostAndFoundJob));
+                    q.AddJob<UpdateLostAndFoundJob>(opts => opts.WithIdentity(updateLostAndFoundKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateLostAndFoundKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(updateLostAndFoundConfiguration
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+            });
+
+            services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+            var builder = new ContainerBuilder();
             // Add Mapster for mapping DTOs
             var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
             typeAdapterConfig.Default.PreserveReference(true);
@@ -208,14 +275,6 @@ namespace Eurofurence.App.Server.Web
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
-
-            builder.RegisterType<UpdateNewsJob>().WithAttributeFiltering().AsSelf();
-            builder.RegisterType<UpdateLostAndFoundJob>().WithAttributeFiltering().AsSelf();
-            builder.RegisterType<UpdateFursuitCollectionGameParticipationJob>().WithAttributeFiltering().AsSelf();
-            builder.RegisterType<FlushPrivateMessageNotificationsJob>().AsSelf();
-            builder.Register(c => Configuration.GetSection("jobs:updateNews"))
-                .Keyed<IConfiguration>("updateNews").As<IConfiguration>();
-
         }
 
         public void Configure(
@@ -232,7 +291,8 @@ namespace Eurofurence.App.Server.Web
             loggerConfiguration
                 .WriteTo.Console(
                     restrictedToMinimumLevel: consoleLogLevel,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}");
+                    outputTemplate:
+                    "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}");
 
             loggerConfiguration
                 .WriteTo
@@ -241,7 +301,8 @@ namespace Eurofurence.App.Server.Web
                         .ByIncludingOnly($"EventId.Id = {LogEvents.Audit.Id}")
                         .WriteTo.File(Configuration["auditLog"],
                             restrictedToMinimumLevel: LogEventLevel.Verbose,
-                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}"
+                            outputTemplate:
+                            "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}"
                         )
                 );
 
@@ -279,8 +340,8 @@ namespace Eurofurence.App.Server.Web
             app.Use(async (context, next) =>
             {
                 using (LogContext.PushProperty("IPAddress",
-                    context.Request.Headers.ContainsKey("X-Forwarded-For") ?
-                        context.Request.Headers["X-Forwarded-For"].ToString()
+                           context.Request.Headers.ContainsKey("X-Forwarded-For")
+                               ? context.Request.Headers["X-Forwarded-For"].ToString()
                         : context.Connection.RemoteIpAddress.ToString()))
                 {
                     await next();
@@ -298,13 +359,6 @@ namespace Eurofurence.App.Server.Web
                 c.InjectStylesheet("/css/swagger.css");
                 c.EnableDeepLinking();
             });
-
-            if (env.IsProduction())
-            {
-                _logger.LogDebug("Starting JobManager to run jobs");
-                JobManager.JobFactory = new ServiceProviderJobFactory(app.ApplicationServices);
-                JobManager.Initialize(new JobRegistry(Configuration.GetSection("jobs")));
-            }
 
             _logger.LogInformation($"Startup complete ({env.EnvironmentName})");
         }
