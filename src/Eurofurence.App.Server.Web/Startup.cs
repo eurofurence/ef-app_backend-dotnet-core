@@ -310,39 +310,48 @@ namespace Eurofurence.App.Server.Web
                     outputTemplate:
                     "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}");
 
-            loggerConfiguration
-                .WriteTo
-                .Logger(lc =>
-                    lc.Filter
-                        .ByIncludingOnly($"EventId.Id = {LogEvents.Audit.Id}")
-                        .WriteTo.File(Configuration["auditLog"],
-                            restrictedToMinimumLevel: LogEventLevel.Verbose,
-                            outputTemplate:
-                            "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}"
-                        )
-                );
+            if (!string.IsNullOrEmpty(Configuration["auditLog"]))
+            {
+                loggerConfiguration
+                    .WriteTo
+                    .Logger(lc =>
+                        lc.Filter
+                            .ByIncludingOnly($"EventId.Id = {LogEvents.Audit.Id}")
+                            .WriteTo.File(Configuration["auditLog"],
+                                restrictedToMinimumLevel: LogEventLevel.Verbose,
+                                outputTemplate:
+                                "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{IPAddress}] [{Level}] {Message}{NewLine}{Exception}"
+                            )
+                    );
+            }
 
             var cgc = new CollectionGameConfiguration();
             Configuration.GetSection(CollectionGameConfiguration.CollectionGame).Bind(cgc);
 
-            loggerConfiguration
-                .WriteTo
-                .Logger(lc =>
-                    lc.Filter
-                        .ByIncludingOnly($"EventId.Id = {LogEvents.CollectionGame.Id}")
-                        .WriteTo.File(cgc.LogFile, (LogEventLevel)cgc.LogLevel)
-                );
-
-            loggerConfiguration
-                .WriteTo
-                .Logger(lc =>
-                    lc.Filter
-                        .ByIncludingOnly($"EventId.Id = {LogEvents.Import.Id}")
-                        .WriteTo.File(Configuration["importLog"],
-                            restrictedToMinimumLevel: LogEventLevel.Verbose
-                        )
-                );
-
+            if (!string.IsNullOrEmpty(cgc.LogFile))
+            {
+                loggerConfiguration
+                    .WriteTo
+                    .Logger(lc =>
+                        lc.Filter
+                            .ByIncludingOnly($"EventId.Id = {LogEvents.CollectionGame.Id}")
+                            .WriteTo.File(cgc.LogFile, (LogEventLevel)cgc.LogLevel)
+                    );
+            }
+            
+            if (!string.IsNullOrEmpty(Configuration["importLog"]))
+            {
+                loggerConfiguration
+                    .WriteTo
+                    .Logger(lc =>
+                        lc.Filter
+                            .ByIncludingOnly($"EventId.Id = {LogEvents.Import.Id}")
+                            .WriteTo.File(Configuration["importLog"],
+                                restrictedToMinimumLevel: LogEventLevel.Verbose
+                            )
+                    );
+            }
+            
             Log.Logger = loggerConfiguration.CreateLogger();
 
             loggerFactory
