@@ -38,9 +38,9 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync([FromBody]TableRegistrationRequest Request)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromBody]TableRegistrationRequest Request)
         {
-            await _tableRegistrationService.RegisterTableAsync(User.GetSubject(), Request);
+            await _tableRegistrationService.RegisterTableAsync(User, Request);
             return NoContent();
         }
 
