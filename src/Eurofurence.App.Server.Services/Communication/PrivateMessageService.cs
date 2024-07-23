@@ -33,6 +33,11 @@ namespace Eurofurence.App.Server.Services.Communication
         {
             var messages = _appDbContext.PrivateMessages.AsNoTracking().Where(msg => msg.RecipientUid == recipientUid && msg.IsDeleted == 0);
 
+            if (!messages.Any())
+            {
+                return messages;
+            }
+
             foreach (var message in messages.Where(a => !a.ReceivedDateTimeUtc.HasValue))
             {
                 message.ReceivedDateTimeUtc = DateTime.UtcNow;

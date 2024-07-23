@@ -56,6 +56,11 @@ namespace Eurofurence.App.Server.Services
 
         public virtual async Task ReplaceMultipleAsync(IQueryable<T> entities)
         {
+            if (entities == null || !entities.Any())
+            {
+                return;
+            }
+
             foreach (var entity in entities)
             {
                 entity.Touch();
