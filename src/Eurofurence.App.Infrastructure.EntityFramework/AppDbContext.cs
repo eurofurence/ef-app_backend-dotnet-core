@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Eurofurence.App.Domain.Model.Announcements;
+﻿using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
 using Eurofurence.App.Domain.Model.CollectionGame;
@@ -20,8 +17,6 @@ using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Eurofurence.App.Infrastructure.EntityFramework
 {
@@ -39,6 +34,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<PrivateMessageRecord> PrivateMessages { get; set; }
         public virtual DbSet<DealerRecord> Dealers { get; set; }
         public virtual DbSet<EventConferenceDayRecord> EventConferenceDays { get; set; }
+        public virtual DbSet<EventConferenceRoomRecord> EventConferenceRooms { get; set; }
         public virtual DbSet<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
         public virtual DbSet<EventFeedbackRecord> EventFeedbacks { get; set; }
         public virtual DbSet<EventRecord> Events { get; set; }
