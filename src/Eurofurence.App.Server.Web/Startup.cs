@@ -186,6 +186,8 @@ namespace Eurofurence.App.Server.Web
                     .GetSection("jobs:updateAnnouncements").Get<JobConfiguration>();
                 var updateDealersConfiguration = Configuration
                     .GetSection("jobs:updateDealers").Get<JobConfiguration>();
+                var updateEventsConfiguration = Configuration
+                    .GetSection("jobs:updateEvents").Get<JobConfiguration>();
                 var updateFursuitCollectionGameParticipationConfiguration = Configuration
                     .GetSection("jobs:updateFursuitCollectionGameParticipation").Get<JobConfiguration>();
                 var updateLostAndFoundConfiguration = Configuration
@@ -229,6 +231,20 @@ namespace Eurofurence.App.Server.Web
                             .WithSimpleSchedule(s =>
                             {
                                 s.WithIntervalInSeconds(updateDealersConfiguration
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+
+                if (updateEventsConfiguration.Enabled)
+                {
+                    var updateEventsKey = new JobKey(nameof(UpdateEventsJob));
+                    q.AddJob<UpdateEventsJob>(opts => opts.WithIdentity(updateEventsKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateEventsKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(updateEventsConfiguration
                                     .SecondsInterval);
                                 s.RepeatForever();
                             }));
