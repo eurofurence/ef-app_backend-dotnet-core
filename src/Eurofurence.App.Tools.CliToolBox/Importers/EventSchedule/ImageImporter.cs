@@ -35,9 +35,11 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
 
             var imageTag = $"event:{imagePurpose}:{eventId}";
 
-            using (FileStream fileStream = File.Create(imagePath))
+            await using (FileStream fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
             {
-                var image = await _imageService.InsertImageAsync(imageTag, fileStream);
+                using var ms = new MemoryStream();
+                await fileStream.CopyToAsync(ms);
+                var image = await _imageService.InsertImageAsync(imageTag, ms);
             
                 switch (imagePurpose)
                 {
