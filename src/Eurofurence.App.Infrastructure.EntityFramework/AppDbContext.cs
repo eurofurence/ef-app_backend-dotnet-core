@@ -34,6 +34,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<PrivateMessageRecord> PrivateMessages { get; set; }
         public virtual DbSet<DealerRecord> Dealers { get; set; }
         public virtual DbSet<EventConferenceDayRecord> EventConferenceDays { get; set; }
+        public virtual DbSet<EventConferenceRoomRecord> EventConferenceRooms { get; set; }
         public virtual DbSet<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
         public virtual DbSet<EventFeedbackRecord> EventFeedbacks { get; set; }
         public virtual DbSet<EventRecord> Events { get; set; }
