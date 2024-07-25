@@ -11,7 +11,6 @@
 **/bin
 app
 artifacts
-docker
 docker-compose.yml
 justfile
 Dockerfile

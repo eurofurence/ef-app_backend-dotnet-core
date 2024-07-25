@@ -257,7 +257,5 @@ paket-files/
 .idea/
 *.sln.iml
 
-docker/
-
 # Local user files
 .private
