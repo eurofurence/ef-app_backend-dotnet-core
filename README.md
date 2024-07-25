@@ -36,6 +36,19 @@ Available recipes:
     up *ARGS                    # Start the docker compose stack
 ```
 
+## Local Configuration
+
+When running the Docker Compose stack locally, the following files in the root of the repository can be used to configure the application:
+
+* [.env](/.env) - ports for backend and backoffice, base path of backoffice and version of MySQL for database migration
+* [appsettings.json](/appsettings.json) - configuration of backend (copied from [src](/src/Eurofurence.App.Server.Web/appsettings.sample.json) by `just init`)
+* [appsettings-backoffice.json](/appsettings-backoffice.json) - configuration of backoffice (copied from [src](/src/Eurofurence.App.Backoffice/wwwroot/appsettings.sample.json) by `just init`)
+* [firebase.json](/firebase.json) - firebase connection details for backend (copied from [src](/src/Eurofurence.App.Server.Web/firebase.sample.json) by `just init`)
+
+_________________
+_________________
+_________________
+
 ## Potentially outdated information below (Here be dragons!)
 
 - Backend is written in .NET Core an requires at least the Microsoft.NETCore.App 1.0.3 runtime.

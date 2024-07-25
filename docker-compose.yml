@@ -37,10 +37,11 @@ services:
       context: .
       dockerfile: Dockerfile-backoffice
     ports:
-      - '${EF_MOBILE_APP_BACKOFFICE_PORT}:443'
+      - '${EF_MOBILE_APP_BACKOFFICE_PORT}:8443'
     volumes:
       - './appsettings-backoffice.json:/usr/share/nginx/html/appsettings.json'
-      - './nginx.conf:/etc/nginx/nginx.conf'
+    environment:
+      - 'BACKOFFICE_BASE_PATH=${EF_MOBILE_APP_BACKOFFICE_BASE_PATH}'
     depends_on:
       backend:
         condition: service_started
