@@ -30,6 +30,7 @@ using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Microsoft.AspNetCore.Authentication;
 using Minio;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using Eurofurence.App.Server.Services.Abstractions.QrCode;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -152,6 +153,8 @@ namespace Eurofurence.App.Server.Web
 
             });
 
+            services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
+
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
@@ -259,7 +262,8 @@ namespace Eurofurence.App.Server.Web
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
 
-            app.UseStaticFiles("/Web/Static");
+            app.UseDefaultFiles();  
+            app.UseStaticFiles();
 
             app.Use(async (context, next) =>
             {
