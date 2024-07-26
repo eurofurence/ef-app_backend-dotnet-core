@@ -105,7 +105,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (dealer == null) return NotFound();
 
 
-            var maps = _mapService.FindAll();
+            var maps = await _mapService.FindAll().Include(m => m.Entries).ThenInclude(e => e.Links).ToListAsync();
             var mapEntries = new List<MapEntryRecord>();
 
             foreach (var map in maps)
@@ -122,14 +122,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 }
             }
 
-
             ViewData["MapEntries"] = mapEntries;
-
-            
-            
-
-            
-
 
             PopulateViewData();
 
@@ -140,16 +133,14 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
 
-            
-
             return View("DealerPreview", dealer);
         }
 
         [HttpGet("KnowledgeGroups")]
         public async Task<ActionResult> GetKnowledgeGroups()
         {
-            var knowledgeGroups = _knowledgeGroupService.FindAll();
-            var knowledgeEntries = _knowledgeEntryService.FindAll();
+            var knowledgeGroups = await _knowledgeGroupService.FindAll().ToListAsync();
+            var knowledgeEntries = await _knowledgeEntryService.FindAll().ToListAsync();
 
             PopulateViewData();
 
@@ -158,13 +149,16 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithDescription("Helpful information across all areas & departments");
 
             ViewData["knowledgeEntries"] = knowledgeEntries;
-            return View("KnowledgeGroupsPreview", await knowledgeGroups.ToListAsync());
+            return View("KnowledgeGroupsPreview", knowledgeGroups);
         }
 
         [HttpGet("KnowledgeEntries/{id}")]
         public async Task<ActionResult> GetKnowledgeEntryById(Guid id)
         {
-            var knowledgeEntry = await _knowledgeEntryService.FindOneAsync(id);
+            var knowledgeEntry = await _knowledgeEntryService.FindAll()
+                .Include(ke => ke.Images)
+                .Include(ke => ke.Links)
+                .FirstOrDefaultAsync(entity => entity.Id == id);
             var knowledgeGroup = await _knowledgeGroupService.FindOneAsync(knowledgeEntry.KnowledgeGroupId);
             
             PopulateViewData();
