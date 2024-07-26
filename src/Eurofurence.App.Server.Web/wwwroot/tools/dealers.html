@@ -134,7 +134,7 @@
 		console.log("Fetching data from API…");
 
 		let baseUrl = document.location.href.match(/^(.+)\/tools\/.*/)[1];
-		let conventionIdentifier = baseUrl.match(/^https?:\/\/[^\/]+\/([^\/]+)\/$/)?.[1] || 'Unknown Con';
+		let conventionIdentifier = baseUrl.match(/^https?:\/\/[^\/]+\/([^\/]+)$/)?.[1] || 'Current Con';
 		let filterizr = null;
 
 		let filterSettings = {
