@@ -133,7 +133,7 @@
 	<script>
 		console.log("Fetching data from API…");
 
-		let baseUrl = document.location.href.match(/^(.+)\/Web\/Static\/.*/)[1];
+		let baseUrl = document.location.href.match(/^(.+)\/tools\/.*/)[1];
 		let conventionIdentifier = baseUrl.match(/^https?:\/\/[^\/]+\/([^\/]+)\/$/)?.[1] || 'Unknown Con';
 		let filterizr = null;
 

@@ -73,5 +73,8 @@ containerize-backoffice-dev:
 # Open Swagger UI in default browser
 swagger: (_open_url "Swagger UI" ("http://localhost:"+env_var('EF_MOBILE_APP_BACKEND_PORT')+"/swagger/ui/index.html"))
 
+# Open homepage in default browser
+homepage: (_open_url "Homepage" ("http://localhost:"+env_var('EF_MOBILE_APP_BACKEND_PORT')+"/"))
+
 # Open Backoffice UI in default browser
 backoffice: (_open_url "Backoffice UI" ("https://localhost:"+env_var('EF_MOBILE_APP_BACKOFFICE_PORT')+"/"))

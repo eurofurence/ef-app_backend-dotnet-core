@@ -259,7 +259,8 @@ namespace Eurofurence.App.Server.Web
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
 
-            app.UseStaticFiles("/Web/Static");
+            app.UseDefaultFiles();  
+            app.UseStaticFiles();
 
             app.Use(async (context, next) =>
             {
