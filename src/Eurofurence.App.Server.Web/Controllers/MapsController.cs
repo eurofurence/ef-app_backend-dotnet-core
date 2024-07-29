@@ -85,17 +85,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Create a new map.
         /// </summary>
-        /// <param name="Record"></param>
+        /// <param name="request"></param>
         /// <returns>Id of the newly created map</returns>
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
         [HttpPost("")]
         public async Task<ActionResult> PostMapAsync(
-            [EnsureNotNull][FromBody] MapRecord Record
+            [EnsureNotNull][FromBody] MapRequest request
         )
         {
-            await _mapService.InsertOneAsync(Record);
-            return Ok(Record.Id);
+            var record = _mapper.Map<MapRecord>(request);
+            await _mapService.InsertOneAsync(record);
+            return Ok(record.Id);
         }
 
         /// <summary>
@@ -170,7 +171,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create a new map entry in a specific map
         /// </summary>
         /// <remarks>If you can generate guids client-side, you can also use the PUT variant for both create and update.</remarks>
-        /// <param name="record">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
+        /// <param name="request"></param>
         /// <param name="id">"Id" of the map</param>
         /// <returns>The id of the new map entry (guid)</returns>
         /// <response code="400">
@@ -179,12 +180,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("{id}/Entries")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id)
+        public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRequest request, [FromRoute] Guid id)
         {
-            if (record == null) return BadRequest("Error parsing Record");
+            if (request == null) return BadRequest("Error parsing request");
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
 
-            record.Id = Guid.NewGuid();
+            var record = _mapper.Map<MapEntryRecord>(request);
             record.MapId = id;
             await _mapService.InsertOneEntryAsync(record);
             return Ok(record.Id);
@@ -194,38 +195,36 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create or Update an existing map entry in a specific map
         /// </summary>
         /// <remarks>
-        ///     This both works for updating an existing entry and creating a new entry. The id property of the
-        ///     model (request body) must match the {entryId} part of the uri.
+        ///     This both works for updating an existing entry and creating a new entry.
         /// </remarks>
-        /// <param name="record">"Id" property must match the {EntryId} part of the uri</param>
+        /// <param name="request"></param>
         /// <param name="id">"Id" of the map.</param>
         /// <param name="entryId">"Id" of the entry that gets inserted.</param>
         /// <response code="400">
         ///     * Unable to parse `record`, `id` or `entryId`
-        ///     * `record.Id` does not match `entryId` from uri.
         ///     * No map found with for the specified id.
         /// </response>
         [HttpPut("{id}/Entries/{entryId}")]
         [Authorize(Roles = "Admin,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id,
+        public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRequest request, [FromRoute] Guid id,
             [FromRoute] Guid entryId)
         {
-            if (record == null) return BadRequest("Error parsing Record");
+            if (request == null) return BadRequest("Error parsing Record");
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
             if (entryId == Guid.Empty) return BadRequest("Error parsing EntryId");
-            if (record.Id != entryId) return BadRequest("EntityId must match Record.Id");
 
             var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
-
-
-            foreach (var link in record.Links)
+            
+            foreach (var link in request.Links)
             {
                 var linkValidation = await _linkFragmentValidator.ValidateAsync(link);
                 if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
             }
 
+            var record = _mapper.Map<MapEntryRecord>(request);
+            record.Id = entryId;
             record.MapId = id;
             await _mapService.ReplaceOneEntryAsync(record);
             return Ok(record.Id);

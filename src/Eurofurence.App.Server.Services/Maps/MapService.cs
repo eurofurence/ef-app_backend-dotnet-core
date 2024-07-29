@@ -95,7 +95,7 @@ namespace Eurofurence.App.Server.Services.Maps
 
         public async Task InsertOneEntryAsync(MapEntryRecord entity)
         {
-            var map = _appDbContext.Maps
+            var map = await _appDbContext.Maps
                 .FirstOrDefaultAsync(map => map.Id == entity.MapId);
             _appDbContext.MapEntries.Add(entity);
             await _appDbContext.SaveChangesAsync();
@@ -135,7 +135,9 @@ namespace Eurofurence.App.Server.Services.Maps
 
         public async Task DeleteOneEntryAsync(Guid id)
         {
-            var entity = await _appDbContext.MapEntries.FirstOrDefaultAsync(entity => entity.Id == id);
+            var entity = await _appDbContext.MapEntries
+                .Include(me => me.Links)
+                .FirstOrDefaultAsync(entity => entity.Id == id);
             _appDbContext.Remove(entity);
             await _storageService.TouchAsync();
             await _appDbContext.SaveChangesAsync();
