@@ -1,6 +1,7 @@
 ﻿@using Eurofurence.App.Domain.Model.Knowledge
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Fragments
+@using Eurofurence.App.Domain.Model.Images
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
@@ -148,7 +149,18 @@
         var image = await ImageService.PostImageAsync(file);
         if (image != null)
         {
-            Record?.Images.Add(image);
+            Record?.Images.Add(new ImageRecord()
+            {
+                Id = image.Id,
+                InternalReference = image.InternalReference,
+                MimeType = image.MimeType,
+                SizeInBytes = image.SizeInBytes,
+                LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                ContentHashSha1 = image.ContentHashSha1,
+                Height = image.Height,
+                Width = image.Width,
+                IsDeleted = image.IsDeleted
+            });
             Snackbar.Add("Image uploaded.", Severity.Success);
         }
         else

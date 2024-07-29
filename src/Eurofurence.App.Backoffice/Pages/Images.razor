@@ -4,6 +4,7 @@
 @using Eurofurence.App.Domain.Model.Images
 @using Eurofurence.App.Backoffice.Components
 @attribute [Authorize]
+@inject ISnackbar Snackbar
 @inject IImageService ImageService
 @inject IDialogService DialogService
 
@@ -52,14 +53,9 @@
 
 @code {
     private string? _imageSearch;
-    private IEnumerable<ImageRecord> _images = new List<ImageRecord>();
+    private List<ImageRecord> _images = new();
     private List<KeyValuePair<Guid, string>> _imageContents = [];
     private MudDataGrid<ImageRecord>? _dataGrid;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadImagesAsync();
-    }
 
     private async Task<GridData<ImageRecord?>> GetImages(GridState<ImageRecord?> gridState)
     {
@@ -77,7 +73,25 @@
 
     private async Task LoadImagesAsync()
     {
-        _images = await ImageService.GetImagesAsync();
+        _images = [];
+
+        var imageResponses = await ImageService.GetImagesAsync();
+
+        foreach (var response in imageResponses)
+        {
+            _images.Add(new ImageRecord()
+            {
+                Id = response.Id,
+                InternalReference = response.InternalReference,
+                Height = response.Height,
+                Width = response.Width,
+                ContentHashSha1 = response.ContentHashSha1,
+                MimeType = response.MimeType,
+                LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
+                SizeInBytes = response.SizeInBytes,
+                IsDeleted = response.IsDeleted
+            });
+        }
     }
 
     private async Task LoadImageSourcesAsync(IEnumerable<Guid> imageIds)
@@ -129,8 +143,16 @@
 
     private async Task DeleteImage(Guid id)
     {
-        await ImageService.DeleteImageAsync(id);
-        await LoadImagesAsync();
-        _dataGrid?.ReloadServerData();
+        var result = await ImageService.DeleteImageAsync(id);
+        if (result)
+        {
+            Snackbar.Add("Image deleted.", Severity.Success);
+            await LoadImagesAsync();
+            _dataGrid?.ReloadServerData();
+        }
+        else
+        {
+            Snackbar.Add("Error deleting image.", Severity.Error);
+        }
     }
 }

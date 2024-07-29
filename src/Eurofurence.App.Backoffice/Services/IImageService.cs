@@ -5,10 +5,10 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public interface IImageService
     {
-        public Task<ImageRecord[]> GetImagesAsync();
+        public Task<ImageResponse[]> GetImagesAsync();
         public Task<string> GetImageContentAsync(Guid id);
-        public Task<ImageRecord?> PutImageAsync(Guid id, IBrowserFile file);
-        public Task<ImageRecord?> PostImageAsync(IBrowserFile file);
+        public Task<ImageResponse?> PutImageAsync(Guid id, IBrowserFile file);
+        public Task<ImageResponse?> PostImageAsync(IBrowserFile file);
         public Task<bool> DeleteImageAsync(Guid id);
     }
 }
