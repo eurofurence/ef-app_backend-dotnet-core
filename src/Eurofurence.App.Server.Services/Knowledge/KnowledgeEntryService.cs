@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
@@ -24,6 +25,23 @@ namespace Eurofurence.App.Server.Services.Knowledge
             _appDbContext = appDbContext;
             _storageService = storageServiceFactory.CreateStorageService<KnowledgeEntryRecord>();
         }
+        public override async Task<KnowledgeEntryRecord> FindOneAsync(Guid id)
+        {
+            return await _appDbContext.KnowledgeEntries
+                .Include(m => m.Images)
+                .Include(m => m.Links)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(entity => entity.Id == id);
+        }
+
+        public override IQueryable<KnowledgeEntryRecord> FindAll()
+        {
+            return _appDbContext.KnowledgeEntries
+                .Include(m => m.Images)
+                .Include(m => m.Links)
+                .AsNoTracking();
+        }
+
         public override Task ReplaceOneAsync(KnowledgeEntryRecord entity)
         {
             throw new InvalidOperationException();
