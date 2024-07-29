@@ -3,6 +3,7 @@
 @using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Domain.Model.Images
 @using Markdig
 @attribute [Authorize]
 @inject IKnowledgeService KnowledgeService
@@ -129,7 +130,7 @@
     private string? _knowledgeEntrySearch;
     private KnowledgeGroupRecord? _selectedGroup;
     private IEnumerable<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
-    private IEnumerable<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
+    private IEnumerable<KnowledgeEntryResponse> _knowledgeEntries = new List<KnowledgeEntryResponse>();
     private List<KeyValuePair<Guid, List<string>>> _imageContents = [];
 
     protected override async Task OnInitializedAsync()
@@ -178,7 +179,7 @@
         Loading = false;
     }
 
-    private IEnumerable<KnowledgeEntryRecord> GetKnowledgeEntities()
+    private IEnumerable<KnowledgeEntryResponse> GetKnowledgeEntities()
     {
         if (_selectedGroup == null)
         {
@@ -188,7 +189,7 @@
         return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch).Where(ke => ke.KnowledgeGroupId == _selectedGroup.Id);
     }
 
-    private IEnumerable<KnowledgeEntryRecord> FilterKnowledgeEntries(IEnumerable<KnowledgeEntryRecord> entries, string? searchString)
+    private IEnumerable<KnowledgeEntryResponse> FilterKnowledgeEntries(IEnumerable<KnowledgeEntryResponse> entries, string? searchString)
     {
         return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry => entry.Title.ToLower().Contains(searchString.ToLower()) || entry.Text.ToLower().Contains(searchString.ToLower()));
     }
@@ -210,8 +211,32 @@
         }
     }
 
-    private async Task UpdateKnowledgeEntry(KnowledgeEntryRecord record)
+    private async Task UpdateKnowledgeEntry(KnowledgeEntryResponse entity)
     {
+        var record = new KnowledgeEntryRecord()
+        {
+            Id = entity.Id,
+            Title = entity.Title,
+            Text = entity.Text,
+            KnowledgeGroupId = entity.KnowledgeGroupId,
+            LastChangeDateTimeUtc = entity.LastChangeDateTimeUtc,
+            Order = entity.Order,
+            Images = entity.Images.Select(image => new ImageRecord()
+            {
+                Id = image.Id,
+                InternalReference = image.InternalReference,
+                ContentHashSha1 = image.ContentHashSha1,
+                Height = image.Height,
+                Width = image.Width,
+                LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                MimeType = image.MimeType,
+                SizeInBytes = image.SizeInBytes,
+                IsDeleted = image.IsDeleted
+            }).ToList(),
+            Links = entity.Links,
+            IsDeleted = entity.IsDeleted
+        };
+
         var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, record } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
 

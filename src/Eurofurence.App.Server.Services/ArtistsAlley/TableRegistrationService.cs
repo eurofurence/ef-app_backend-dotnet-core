@@ -39,7 +39,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
         {
-            var records = _appDbContext.TableRegistrations.Where(a => !state.HasValue || a.State == state.Value).AsNoTracking();
+            var records = _appDbContext.TableRegistrations
+                .Include(tr => tr.Image)
+                .Where(a => !state.HasValue || a.State == state.Value).AsNoTracking();
             return records;
         }
 

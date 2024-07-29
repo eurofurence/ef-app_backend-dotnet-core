@@ -13,6 +13,8 @@ builder.Services.AddMudServices();
 
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IArtistAlleyService, ArtistAlleyService>();
+builder.Services.AddScoped<IFursuitService, FursuitService>();
 
 builder.Services.AddScoped<TokenAuthorizationMessageHandler>();
 builder.Services.AddHttpClient("api", options =>

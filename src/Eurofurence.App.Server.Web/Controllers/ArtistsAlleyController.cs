@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Security;
@@ -19,6 +20,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             _tableRegistrationService = tableRegistrationService;
             _mapper = mapper;
+        }
+
+        /// <summary>
+        ///     Retrieves a list of all table registrations.
+        /// </summary>
+        /// <returns>All table registrations.</returns>
+        [HttpGet]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
+        [HttpGet("TableRegistrations")]
+        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
+        {
+            return _mapper.Map<IEnumerable<TableRegistrationResponse>>(_tableRegistrationService.GetRegistrations(null));
         }
 
         [Authorize(Roles = "Attendee")]

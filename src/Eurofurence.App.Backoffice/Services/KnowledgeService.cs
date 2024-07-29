@@ -7,11 +7,11 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class KnowledgeService(HttpClient http) : IKnowledgeService
     {
-        public async Task<KnowledgeEntryRecord[]> GetKnowledgeEntriesAsync()
+        public async Task<KnowledgeEntryResponse[]> GetKnowledgeEntriesAsync()
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return (await http.GetFromJsonAsync<KnowledgeEntryRecord[]>("knowledgeEntries", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<KnowledgeEntryResponse[]>("knowledgeEntries", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
 
         public async Task<bool> PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record)

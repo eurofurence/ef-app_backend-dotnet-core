@@ -103,7 +103,8 @@
     private IEnumerable<ImageRecord> FilterImages(IEnumerable<ImageRecord> entries, string? searchString)
     {
         return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry => 
-        entry.InternalReference.ToLower().Contains(searchString.ToLower()));
+        entry.InternalReference.ToLower().Contains(searchString.ToLower())
+            || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
     }
 
     private async Task AddImage()
