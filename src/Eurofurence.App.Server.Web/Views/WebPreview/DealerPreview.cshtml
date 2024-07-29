@@ -48,20 +48,20 @@
 <section class="summary">
     @if (!string.IsNullOrEmpty(Model.TwitterHandle))
     {
-        <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@Model.TwitterHandle" class="button button-primary"><i class="fa-twitter"></i> @Model.TwitterHandle</a>
+        <a href="https://twitter.com/@Model.TwitterHandle" title="Twitter: @@Model.TwitterHandle" class="button button-primary"><i class="fa-brands fa-twitter"></i> @Model.TwitterHandle</a>
     }
     @if (!string.IsNullOrEmpty(Model.TelegramHandle))
     {
-        <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fa-telegram"></i> @Model.TelegramHandle</a>
+        <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fa-brands fa-telegram"></i> @Model.TelegramHandle</a>
     }
     <!-- TODO: Add Discord, Mastodon etc. -->
     @if (days.Length > 0)
     {
-        <div class="infobox"><label><i class="fa-calendar"></i> Available:</label> @string.Join(", ", days)</div>
+        <div class="infobox"><label><i class="fa fa-calendar"></i> Available:</label> @string.Join(", ", days)</div>
     }
     @if (Model.IsAfterDark)
     {
-        <div class="infobox"><label><i class="fa-moon-o"></i> After Dark</label></div>
+        <div class="infobox"><label><i class="fa fa-moon"></i> After Dark</label></div>
     }
 </section>
 
@@ -86,14 +86,12 @@
     @if (Model.ArtPreviewImageId != null)
     {
         <div class="one-half column">
-            <img src="@apiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" 
-                 style="max-width: 100%;"
-                 />
+            <img src="@apiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" style="max-width: 100%;" />
 
             @if (Model.ArtPreviewCaption != null)
             {
                 <br />
-                <p><small>@Model.ArtPreviewCaption></small></p>
+                <p><small>@Model.ArtPreviewCaption</small></p>
             }
         </div>
     }
