@@ -9,6 +9,7 @@ using FluentScheduler;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -262,7 +263,11 @@ namespace Eurofurence.App.Server.Web
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
 
-            app.UseDefaultFiles();  
+            app.UseRewriter(new RewriteOptions()
+                .AddRewrite("(.*)/apple-app-site-association", "$1/apple-app-site-association.json", true)
+            );
+
+            app.UseDefaultFiles();
             app.UseStaticFiles();
 
             app.Use(async (context, next) =>
