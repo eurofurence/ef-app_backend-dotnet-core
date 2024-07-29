@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using MapsterMapper;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -17,10 +18,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ImagesController : BaseController
     {
         private readonly IImageService _imageService;
+        private readonly IMapper _mapper;
 
-        public ImagesController(IImageService imageService)
+        public ImagesController(IImageService imageService, IMapper mapper)
         {
             _imageService = imageService;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -29,10 +32,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All knowledge groups.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
-        public IQueryable<ImageRecord> GetImagesAsync()
+        [ProducesResponseType(typeof(IEnumerable<ImageResponse>), 200)]
+        public IEnumerable<ImageResponse> GetImagesAsync()
         {
-            return _imageService.FindAll();
+            return _mapper.Map<IEnumerable<ImageResponse>>(_imageService.FindAll());
         }
 
         /// <summary>
@@ -41,10 +44,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(ImageRecord), 200)]
-        public async Task<ImageRecord> GetImageAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(ImageResponse), 200)]
+        public async Task<ImageResponse> GetImageAsync([FromRoute] Guid id)
         {
-            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext);
+            return _mapper.Map<ImageResponse>(await _imageService.FindOneAsync(id).Transient404(HttpContext));
         }
 
         /// <summary>
@@ -102,7 +105,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 await file.CopyToAsync(ms);
                 var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
-                return Ok(result);
+                return Ok(_mapper.Map<ImageResponse>(result));
             }
         }
 
@@ -119,7 +122,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 await file.CopyToAsync(ms);
                 var result = await _imageService.InsertImageAsync(file.FileName, ms);
-                return Ok(result);
+                return Ok(_mapper.Map<ImageResponse>(result));
             }
         }
 

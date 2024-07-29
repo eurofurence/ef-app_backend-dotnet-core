@@ -6,6 +6,7 @@ using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Web.Extensions;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,21 +20,23 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly ILinkFragmentValidator _linkFragmentValidator;
         private readonly IMapService _mapService;
+        private readonly IMapper _mapper;
 
-        public MapsController(IMapService mapService, ILinkFragmentValidator linkFragmentValidator)
+        public MapsController(IMapService mapService, ILinkFragmentValidator linkFragmentValidator, IMapper mapper)
         {
             _mapService = mapService;
             _linkFragmentValidator = linkFragmentValidator;
+            _mapper = mapper;
         }
 
         /// <summary>
         ///     Get all maps
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<MapRecord>), 200)]
-        public IQueryable<MapRecord> GetMapsAsync()
+        [ProducesResponseType(typeof(IEnumerable<MapResponse>), 200)]
+        public IEnumerable<MapResponse> GetMapsAsync()
         {
-            return _mapService.FindAll();
+            return _mapper.Map<IEnumerable<MapResponse>>(_mapService.FindAll());
         }
 
         /// <summary>
@@ -43,10 +46,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for `id`
         /// </response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(MapRecord), 200)]
-        public async Task<MapRecord> GetMapAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(MapResponse), 200)]
+        public async Task<MapResponse> GetMapAsync([FromRoute] Guid id)
         {
-            return (await _mapService.FindOneAsync(id)).Transient404(HttpContext);
+            return _mapper.Map<MapResponse>(await _mapService.FindOneAsync(id).Transient404(HttpContext));
         }
 
 
@@ -57,10 +60,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for `id`
         /// </response>
         [HttpGet("{id}/Entries")]
-        [ProducesResponseType(typeof(ICollection<MapEntryRecord>), 200)]
-        public async Task<ICollection<MapEntryRecord>> GetMapEntriesAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(IEnumerable<MapEntryResponse>), 200)]
+        public async Task<IEnumerable<MapEntryResponse>> GetMapEntriesAsync([FromRoute] Guid id)
         {
-            return (await _mapService.FindOneAsync(id)).Transient404(HttpContext)?.Entries;
+            return _mapper.Map<MapResponse>(await _mapService.FindOneAsync(id).Transient404(HttpContext))?.Entries;
         }
 
         /// <summary>
@@ -71,11 +74,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No entry found for `entryId`on map
         /// </response>
         [HttpGet("{id}/Entries/{entryId}")]
-        [ProducesResponseType(typeof(MapEntryRecord), 200)]
-        public async Task<MapEntryRecord> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
+        [ProducesResponseType(typeof(MapEntryResponse), 200)]
+        public async Task<MapEntryResponse> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
-            return ((await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId))
-                .Transient404(HttpContext);
+            var result = (await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId).Transient404(HttpContext);
+
+            return result != null ? _mapper.Map<MapEntryResponse>(result) : null;
         }
 
         /// <summary>

@@ -3,6 +3,7 @@ using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ArtistsAlleyController : BaseController
     {
         private readonly ITableRegistrationService _tableRegistrationService;
+        private readonly IMapper _mapper;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IMapper mapper)
         {
             _tableRegistrationService = tableRegistrationService;
+            _mapper = mapper;
         }
 
         [Authorize(Roles = "Attendee")]
@@ -28,10 +31,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("TableRegistration/:my-latest")]
-        public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
+        public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext);
+            return _mapper.Map<TableRegistrationResponse>(record.Transient404(HttpContext));
         }
     }
 } 

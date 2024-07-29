@@ -34,8 +34,8 @@ namespace Eurofurence.App.Domain.Model.Images
         [DataMember]
         public string ContentHashSha1 { get; set; }
 
-        public List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
-        public List<TableRegistrationRecord> TableRegistrations { get; set; } = new();
-        public List<MapRecord> Maps { get; set; } = new();
+        public virtual List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
+        public virtual List<TableRegistrationRecord> TableRegistrations { get; set; } = new();
+        public virtual List<MapRecord> Maps { get; set; } = new();
     }
 }
