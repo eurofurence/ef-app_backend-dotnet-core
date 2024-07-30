@@ -171,7 +171,10 @@ namespace Eurofurence.App.Server.Services.Images
             await _minIoClient.GetObjectAsync(new GetObjectArgs()
                 .WithBucket(_minIoConfiguration.Bucket)
                 .WithObject(id.ToString())
-                .WithCallbackStream(stream => { stream.CopyTo(ms); }));
+                .WithCallbackStream(stream =>
+                {
+                    stream.CopyTo(ms);
+                }));
 
             ms.Position = 0;
             return ms;
