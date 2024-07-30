@@ -27,6 +27,10 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
 using Quartz;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Mapster;
 using MapsterMapper;
@@ -186,6 +190,13 @@ namespace Eurofurence.App.Server.Web
                     mySqlOptions => mySqlOptions.UseMicrosoftJson());
             });
 
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+            });
+
+            ILogger logger = loggerFactory.CreateLogger<Startup>();
+
             services.AddQuartz(q =>
             {
                 var flushPrivateMessageNotificationsConfiguration = Configuration
@@ -218,44 +229,68 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateAnnouncementsConfiguration.Enabled)
                 {
-                    var updateAnnouncementsKey = new JobKey(nameof(UpdateAnnouncementsJob));
-                    q.AddJob<UpdateAnnouncementsJob>(opts => opts.WithIdentity(updateAnnouncementsKey));
-                    q.AddTrigger(t =>
-                        t.ForJob(updateAnnouncementsKey)
-                            .WithSimpleSchedule(s =>
-                            {
-                                s.WithIntervalInSeconds(updateAnnouncementsConfiguration
-                                    .SecondsInterval);
-                                s.RepeatForever();
-                            }));
+                    var announcementsConfiguration = AnnouncementConfiguration.FromConfiguration(Configuration);
+                    if (string.IsNullOrWhiteSpace(announcementsConfiguration.Url))
+                    {
+                        logger.LogError( "Update announcements job can't be added: Empty source url");
+                    }
+                    else
+                    {
+                        var updateAnnouncementsKey = new JobKey(nameof(UpdateAnnouncementsJob));
+                        q.AddJob<UpdateAnnouncementsJob>(opts => opts.WithIdentity(updateAnnouncementsKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(updateAnnouncementsKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(updateAnnouncementsConfiguration
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
                 }
 
                 if (updateDealersConfiguration.Enabled)
                 {
-                    var updateDealersKey = new JobKey(nameof(UpdateDealersJob));
-                    q.AddJob<UpdateDealersJob>(opts => opts.WithIdentity(updateDealersKey));
-                    q.AddTrigger(t =>
-                        t.ForJob(updateDealersKey)
-                            .WithSimpleSchedule(s =>
-                            {
-                                s.WithIntervalInSeconds(updateDealersConfiguration
-                                    .SecondsInterval);
-                                s.RepeatForever();
-                            }));
+                    var dealersConfiguration = DealerConfiguration.FromConfiguration(Configuration);
+                    if (string.IsNullOrWhiteSpace(dealersConfiguration.Url))
+                    {
+                        logger.LogError("Update dealers job can't be added: Empty source url");
+                    }
+                    else
+                    {
+                        var updateDealersKey = new JobKey(nameof(UpdateDealersJob));
+                        q.AddJob<UpdateDealersJob>(opts => opts.WithIdentity(updateDealersKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(updateDealersKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(updateDealersConfiguration
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
                 }
 
                 if (updateEventsConfiguration.Enabled)
                 {
-                    var updateEventsKey = new JobKey(nameof(UpdateEventsJob));
-                    q.AddJob<UpdateEventsJob>(opts => opts.WithIdentity(updateEventsKey));
-                    q.AddTrigger(t =>
-                        t.ForJob(updateEventsKey)
-                            .WithSimpleSchedule(s =>
-                            {
-                                s.WithIntervalInSeconds(updateEventsConfiguration
-                                    .SecondsInterval);
-                                s.RepeatForever();
-                            }));
+                    var eventsConfiguration = EventConfiguration.FromConfiguration(Configuration);
+                    if (string.IsNullOrWhiteSpace(eventsConfiguration.Url))
+                    {
+                        logger.LogError("Update events job can't be added: Empty source url");
+                    }
+                    else
+                    {
+                        var updateEventsKey = new JobKey(nameof(UpdateEventsJob));
+                        q.AddJob<UpdateEventsJob>(opts => opts.WithIdentity(updateEventsKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(updateEventsKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(updateEventsConfiguration
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
                 }
 
                 if (updateFursuitCollectionGameParticipationConfiguration.Enabled)
@@ -276,16 +311,24 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateLostAndFoundConfiguration.Enabled)
                 {
-                    var updateLostAndFoundKey = new JobKey(nameof(UpdateLostAndFoundJob));
-                    q.AddJob<UpdateLostAndFoundJob>(opts => opts.WithIdentity(updateLostAndFoundKey));
-                    q.AddTrigger(t =>
-                        t.ForJob(updateLostAndFoundKey)
-                            .WithSimpleSchedule(s =>
-                            {
-                                s.WithIntervalInSeconds(updateLostAndFoundConfiguration
-                                    .SecondsInterval);
-                                s.RepeatForever();
-                            }));
+                    var lassieConfiguration = LassieConfiguration.FromConfiguration(Configuration);
+                    if (string.IsNullOrWhiteSpace(lassieConfiguration.BaseApiUrl))
+                    {
+                        logger.LogError("Update lost and found job can't be added: Empty source url");
+                    }
+                    else
+                    {
+                        var updateLostAndFoundKey = new JobKey(nameof(UpdateLostAndFoundJob));
+                        q.AddJob<UpdateLostAndFoundJob>(opts => opts.WithIdentity(updateLostAndFoundKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(updateLostAndFoundKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(updateLostAndFoundConfiguration
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
                 }
             });
 
