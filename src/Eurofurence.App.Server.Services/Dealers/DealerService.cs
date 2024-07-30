@@ -266,11 +266,25 @@ namespace Eurofurence.App.Server.Services.Dealers
 
             if (imageEntry == null) return null;
 
+            var existingImage = await _imageService.FindAll()
+                .FirstOrDefaultAsync(image => image.InternalReference == internalReference);
+
             var stream = imageEntry.Open();
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
-            var result = await _imageService.InsertImageAsync(internalReference, ms);
-            return result?.Id;
+            if (existingImage != null)
+            {
+                if (imageEntry.Length != existingImage.SizeInBytes)
+                {
+                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms);
+                }
+                return existingImage.Id;
+            }
+            else
+            {
+                var result = await _imageService.InsertImageAsync(internalReference, ms);
+                return result?.Id;
+            }
         }
     }
 
