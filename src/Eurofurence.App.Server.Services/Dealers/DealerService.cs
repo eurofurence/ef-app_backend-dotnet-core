@@ -79,8 +79,7 @@ namespace Eurofurence.App.Server.Services.Dealers
 
             foreach (var link in entity.Links)
             {
-                var linkExists = await _appDbContext.LinkFragments.AsNoTracking().AnyAsync(existingLink => existingLink.Id == link.Id);
-                if (!linkExists)
+                if (!existingEntity.Links.Contains(link))
                 {
                     _appDbContext.LinkFragments.Add(link);
                 }
@@ -249,8 +248,6 @@ namespace Eurofurence.App.Server.Services.Dealers
             if (string.IsNullOrWhiteSpace(websiteUrls)) return;
 
             var linkFragments = new List<LinkFragment>();
-            if (dealerRecord.Links != null)
-                linkFragments.AddRange(dealerRecord.Links);
 
             var sanitizedParts = websiteUrls
                 .Replace(" / ", ";")

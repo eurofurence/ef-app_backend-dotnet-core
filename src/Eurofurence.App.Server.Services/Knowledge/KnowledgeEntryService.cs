@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
 
             foreach (var existingLink in existingEntity.Links)
             {
-                if (request.Links.All(link => link.Id != existingLink.Id))
+                if (!request.Links.Contains(existingLink))
                 {
                     _appDbContext.LinkFragments.Remove(existingLink);
                 }
@@ -97,8 +97,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
 
             foreach (var link in request.Links)
             {
-                var linkExists = await _appDbContext.LinkFragments.AnyAsync(existingLink => existingLink.Id == link.Id);
-                if (!linkExists)
+                if (!existingEntity.Links.Contains(link))
                 {
                     _appDbContext.LinkFragments.Add(link);
                 }
