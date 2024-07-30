@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.Fragments;
+﻿using System;
+using Eurofurence.App.Domain.Model.Fragments;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -7,6 +8,7 @@ namespace Eurofurence.App.Domain.Model.Maps
     [DataContract]
     public class MapEntryRequest
     {
+        public Guid Id { get; set; }
         /// <summary>
         ///     "X" coordinate of the *center* of a *circular area*, expressed in pixels.
         /// </summary>

@@ -8,6 +8,8 @@ namespace Eurofurence.App.Domain.Model.Maps
     [DataContract]
     public class MapRequest
     {
+        public Guid Id { get; set; }
+
         [DataMember]
         [Required]
         public string Description { get; set; }

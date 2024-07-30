@@ -171,7 +171,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create a new map entry in a specific map
         /// </summary>
         /// <remarks>If you can generate guids client-side, you can also use the PUT variant for both create and update.</remarks>
-        /// <param name="request"></param>
+        /// <param name="request">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
         /// <param name="id">"Id" of the map</param>
         /// <returns>The id of the new map entry (guid)</returns>
         /// <response code="400">
@@ -195,13 +195,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create or Update an existing map entry in a specific map
         /// </summary>
         /// <remarks>
-        ///     This both works for updating an existing entry and creating a new entry.
+        ///     The id property of the model (request body) is optional, but if provided, it must match the {entryId} part of the uri.
         /// </remarks>
-        /// <param name="request"></param>
+        /// <param name="request">"Id" property must match the {EntryId} part of the uri</param>
         /// <param name="id">"Id" of the map.</param>
         /// <param name="entryId">"Id" of the entry that gets inserted.</param>
         /// <response code="400">
         ///     * Unable to parse `record`, `id` or `entryId`
+        ///     * `record.Id` does not match `entryId` from uri.
         ///     * No map found with for the specified id.
         /// </response>
         [HttpPut("{id}/Entries/{entryId}")]
@@ -213,10 +214,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (request == null) return BadRequest("Error parsing Record");
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
             if (entryId == Guid.Empty) return BadRequest("Error parsing EntryId");
+            if (request.Id != Guid.Empty && request.Id != entryId) return BadRequest("EntityId must match Record.Id");
 
             var map = await _mapService.FindOneAsync(id);
             if (map == null) return BadRequest("No map with this id");
-            
+
             foreach (var link in request.Links)
             {
                 var linkValidation = await _linkFragmentValidator.ValidateAsync(link);
