@@ -185,6 +185,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (request == null) return BadRequest("Error parsing request");
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
 
+            foreach (var link in request.Links)
+            {
+                var linkValidation = await _linkFragmentValidator.ValidateAsync(link);
+                if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
+            }
+
             var record = _mapper.Map<MapEntryRecord>(request);
             record.MapId = id;
             await _mapService.InsertOneEntryAsync(record);
