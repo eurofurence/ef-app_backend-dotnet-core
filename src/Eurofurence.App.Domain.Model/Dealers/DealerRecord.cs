@@ -83,6 +83,24 @@ namespace Eurofurence.App.Domain.Model.Dealers
         public string TelegramHandle { get; set; }
 
         /// <summary>
+        /// **(pba)** Discord handle of the dealer.
+        /// </summary>
+        [DataMember]
+        public string DiscordHandle { get; set; }
+
+        /// <summary>
+        /// **(pba)** Mastodon handle of the dealer.
+        /// </summary>
+        [DataMember]
+        public string MastodonHandle { get; set; }
+
+        /// <summary>
+        /// **(pba)** Bluesky handle of the dealer.
+        /// </summary>
+        [DataMember]
+        public string BlueskyHandle { get; set; }
+
+        /// <summary>
         /// Flag indicating whether the dealer is present at the dealers den on thursday.
         /// </summary>
         [DataMember]
