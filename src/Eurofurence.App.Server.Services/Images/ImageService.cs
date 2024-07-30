@@ -63,6 +63,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .Include(i => i.TableRegistrations)
                 .Include(i => i.Maps)
                 .ThenInclude(m => m.Entries)
+                .ThenInclude(me => me.Links)
                 .FirstOrDefaultAsync(entity => entity.Id == id);
 
             _appDbContext.Remove(entity);
