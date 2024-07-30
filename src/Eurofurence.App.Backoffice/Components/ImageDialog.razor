@@ -1,5 +1,6 @@
 ﻿@using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.ArtistsAlley
+@using Eurofurence.App.Domain.Model.Dealers
 @using Eurofurence.App.Domain.Model.Fursuits
 @using Eurofurence.App.Domain.Model.Images
 @using Eurofurence.App.Domain.Model.Knowledge
@@ -8,6 +9,7 @@
 @inject IKnowledgeService KnowledgeService
 @inject IArtistAlleyService ArtistAlleyService
 @inject IFursuitService FursuitService
+@inject IDealerService DealerService
 
 <MudDialog>
     <DialogContent>
@@ -50,7 +52,7 @@
                         </MudGrid>
                     </MudTabPanel>
                     <MudTabPanel Icon="@Icons.Material.Outlined.Badge" Text="Fursuit Badges">
-                        <MudDataGrid Items="@_FursuitBadges" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                        <MudDataGrid Items="@_fursuitBadges" Filterable="false" SortMode="@SortMode.None" Groupable="false">
                             <Columns>
                                 <PropertyColumn Title="ID" Property="fursuitBadge => fursuitBadge.Id"/>
                                 <PropertyColumn Title="Name" Property="fursuitBadge => fursuitBadge.Name"/>
@@ -77,6 +79,15 @@
                             </Columns>
                         </MudDataGrid>
                     </MudTabPanel>
+                    <MudTabPanel Icon="@Icons.Material.Outlined.Shop" Text="Dealers">
+                        <MudDataGrid Items="@_dealers" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                            <Columns>
+                                <PropertyColumn Title="ID" Property="dealer => dealer.Id" />
+                                <PropertyColumn Title="Name" Property="dealer => dealer.DisplayNameOrAttendeeNickname" />
+                                <PropertyColumn Title="Description" Property="dealer => dealer.ShortDescription" />
+                            </Columns>
+                        </MudDataGrid>
+                    </MudTabPanel>
                 </MudContainer>
             </MudTabs>
         }
@@ -95,7 +106,8 @@
 
     private IEnumerable<KnowledgeEntryResponse> _knowledgeEntries = new List<KnowledgeEntryResponse>();
     private IEnumerable<TableRegistrationResponse> _tableRegistrations = new List<TableRegistrationResponse>();
-    private IEnumerable<FursuitBadgeResponse> _FursuitBadges = new List<FursuitBadgeResponse>();
+    private IEnumerable<FursuitBadgeResponse> _fursuitBadges = new List<FursuitBadgeResponse>();
+    private IEnumerable<DealerRecord> _dealers = new List<DealerRecord>();
 
     private string _imageSource = string.Empty;
 
@@ -111,12 +123,12 @@
         else
         {
             Update = true;
-            await LoadKnowledgeEntries();
+            await LoadRelatedEntities();
             await LoadImageSourceAsync();
         }
     }
 
-    private async Task LoadKnowledgeEntries()
+    private async Task LoadRelatedEntities()
     {
         if (Record == null)
         {
@@ -124,7 +136,8 @@
         }
         _knowledgeEntries = (await KnowledgeService.GetKnowledgeEntriesAsync()).Where(knowledgeEntry => knowledgeEntry.Images.Any(image => image.Id == Record.Id)).OrderBy(ke => ke.Order);
         _tableRegistrations = (await ArtistAlleyService.GetTableRegistrationsAsync()).Where(tableRegistration => tableRegistration.Image.Id == Record.Id);
-        _FursuitBadges = (await FursuitService.GetFursuitBadgesAsync()).Where(fursuitBadge => fursuitBadge.Image.Id == Record.Id);
+        _fursuitBadges = (await FursuitService.GetFursuitBadgesAsync()).Where(fursuitBadge => fursuitBadge.Image.Id == Record.Id);
+        _dealers = (await DealerService.GetDealersAsync()).Where(dealer => dealer.ArtPreviewImageId == Record.Id || dealer.ArtistImageId == Record.Id || dealer.ArtistThumbnailImageId == Record.Id);
     }
 
     private async Task LoadImageSourceAsync()
