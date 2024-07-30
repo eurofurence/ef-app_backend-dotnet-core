@@ -56,6 +56,18 @@
     {
         <a href="https://t.me/@Model.TelegramHandle" title="Telegram: @@@Model.TelegramHandle" class="button button-primary"><i class="fab fa-telegram"></i> @Model.TelegramHandle</a>
     }
+    @if (!string.IsNullOrEmpty(Model.DiscordHandle))
+    {
+        <a href="https://discord.com/users/@Model.DiscordHandle" title="Discord: @@@Model.DiscordHandle" class="button button-primary"> @Model.DiscordHandle</a>
+    }
+    @if (!string.IsNullOrEmpty(Model.BlueskyHandle))
+    {
+        <a href="https://bsky.app/profile/@Model.BlueskyHandle" title="Bluesky: @@@Model.BlueskyHandle" class="button button-primary"> @Model.BlueskyHandle</a>
+    }
+    @if (!string.IsNullOrEmpty(Model.MastodonHandle))
+    {
+        <a href="@Model.MastodonHandle" title="Mastodon: @@@Model.MastodonHandle" class="button button-primary"> @Model.MastodonHandle</a>
+    }
     @if (days.Length > 0)
     {
         <div class="infobox"><label><i class="fas fa-calendar"></i> Available:</label> @string.Join(", ", days)</div>

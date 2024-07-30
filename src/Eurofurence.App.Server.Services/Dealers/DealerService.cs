@@ -140,6 +140,9 @@ namespace Eurofurence.App.Server.Services.Dealers
                         AttendsOnSaturday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsSat),
                         TelegramHandle = csvRecords[i].Telegram.Trim(),
                         TwitterHandle = csvRecords[i].Twitter.Trim(),
+                        DiscordHandle = csvRecords[i].Discord.Trim(),
+                        MastodonHandle = csvRecords[i].Mastodon.Trim(),
+                        BlueskyHandle = csvRecords[i].Bluesky.Trim(),
                         IsAfterDark = !string.IsNullOrWhiteSpace(csvRecords[i].AfterDark),
                         Keywords = csvRecords[i].GetKeywords(),
                         Categories = csvRecords[i].GetCategories()
@@ -178,6 +181,9 @@ namespace Eurofurence.App.Server.Services.Dealers
                 .Map(s => s.ArtPreviewImageId, t => t.ArtPreviewImageId)
                 .Map(s => s.TelegramHandle, t => t.TelegramHandle)
                 .Map(s => s.TwitterHandle, t => t.TwitterHandle)
+                .Map(s => s.DiscordHandle, t => t.DiscordHandle)
+                .Map(s => s.MastodonHandle, t => t.MastodonHandle)
+                .Map(s => s.BlueskyHandle, t => t.BlueskyHandle)
                 .Map(s => s.AttendsOnThursday, t => t.AttendsOnThursday)
                 .Map(s => s.AttendsOnFriday, t => t.AttendsOnFriday)
                 .Map(s => s.AttendsOnSaturday, t => t.AttendsOnSaturday)
@@ -212,6 +218,20 @@ namespace Eurofurence.App.Server.Services.Dealers
                     .Replace("@", "")
                     .Replace("https://t.me/", "")
                     .Replace("https://telegram.me/", "");
+
+            dealerRecord.DiscordHandle =
+                dealerRecord.DiscordHandle
+                    .Replace("@", "")
+                    .Replace("http://discord.com/users/", "")
+                    .Replace("https://discord.com/users/", "")
+                    .Replace("http://discordapp.com/users/", "")
+                    .Replace("https://discordapp.com/users/", "");
+
+            dealerRecord.BlueskyHandle =
+                dealerRecord.BlueskyHandle
+                    .Replace("@", "")
+                    .Replace("http://bsky.app/profile/", "")
+                    .Replace("https://bsky.app/profile/", "");
 
             dealerRecord.ShortDescription = ConvertKnownUnicodeCharacters(dealerRecord.ShortDescription);
             dealerRecord.AboutTheArtistText = ConvertKnownUnicodeCharacters(dealerRecord.AboutTheArtistText);
@@ -303,6 +323,9 @@ namespace Eurofurence.App.Server.Services.Dealers
             Map(m => m.Website).Name("Website");
             Map(m => m.Telegram).Name("Telegram");
             Map(m => m.Twitter).Name("Twitter");
+            Map(m => m.Discord).Name("Discord");
+            Map(m => m.Mastodon).Name("Mastodon");
+            Map(m => m.Bluesky).Name("Bluesky");
             Map(m => m.AttendsThu).Name("Attends Thu");
             Map(m => m.AttendsFri).Name("Attends Fri");
             Map(m => m.AttendsSat).Name("Attends Sat");
@@ -327,6 +350,9 @@ namespace Eurofurence.App.Server.Services.Dealers
         public string Website { get; set; }
         public string Telegram { get; set; }
         public string Twitter { get; set; }
+        public string Discord { get; set; }
+        public string Mastodon { get; set; }
+        public string Bluesky { get; set; }
         public string AfterDark { get; set; }
         public string Keywords { get; set; }
 
