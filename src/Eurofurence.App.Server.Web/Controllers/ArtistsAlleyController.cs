@@ -29,7 +29,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
-        [HttpGet("TableRegistrations")]
+        [Authorize(Roles = "System,Developer,Admin")]
+        [HttpGet]
         public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
         {
             return _mapper.Map<IEnumerable<TableRegistrationResponse>>(_tableRegistrationService.GetRegistrations(null));

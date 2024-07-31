@@ -11,7 +11,7 @@ namespace Eurofurence.App.Backoffice.Services
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return (await http.GetFromJsonAsync<TableRegistrationResponse[]>("ArtistsAlley/TableRegistrations", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<TableRegistrationResponse[]>("ArtistsAlley", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
     }
 }
