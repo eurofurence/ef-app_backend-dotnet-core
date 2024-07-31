@@ -169,18 +169,9 @@
         }
     }
 
-    private async Task DeleteImage(Guid id)
+    private void DeleteImage(Guid id)
     {
-        var result = await ImageService.DeleteImageAsync(id);
-        if (result)
-        {
-            Record?.Images.Remove(Record.Images.FirstOrDefault(image => image.Id == id));
-            Snackbar.Add("Image deleted.", Severity.Success);
-        }
-        else
-        {
-            Snackbar.Add("Error deleting image.", Severity.Error);
-        }
+        Record?.Images.Remove(Record.Images.FirstOrDefault(image => image.Id == id));
     }
 
     private async Task AddLink()

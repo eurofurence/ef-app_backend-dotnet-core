@@ -135,8 +135,8 @@
             return;
         }
         _knowledgeEntries = (await KnowledgeService.GetKnowledgeEntriesAsync()).Where(knowledgeEntry => knowledgeEntry.Images.Any(image => image.Id == Record.Id)).OrderBy(ke => ke.Order);
-        _tableRegistrations = (await ArtistAlleyService.GetTableRegistrationsAsync()).Where(tableRegistration => tableRegistration.Image.Id == Record.Id);
-        _fursuitBadges = (await FursuitService.GetFursuitBadgesAsync()).Where(fursuitBadge => fursuitBadge.Image.Id == Record.Id);
+        _tableRegistrations = (await ArtistAlleyService.GetTableRegistrationsAsync()).Where(tableRegistration => tableRegistration.Image?.Id == Record.Id);
+        _fursuitBadges = (await FursuitService.GetFursuitBadgesAsync()).Where(fursuitBadge => fursuitBadge.Image?.Id == Record.Id);
         _dealers = (await DealerService.GetDealersAsync()).Where(dealer => dealer.ArtPreviewImageId == Record.Id || dealer.ArtistImageId == Record.Id || dealer.ArtistThumbnailImageId == Record.Id);
     }
 
