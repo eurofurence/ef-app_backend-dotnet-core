@@ -3,6 +3,7 @@
 @using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Domain.Model.Images
 @using Markdig
 @attribute [Authorize]
 @inject IKnowledgeService KnowledgeService
@@ -108,9 +109,9 @@
                         }
                         else if (knowledgeEntry.Images.Count > 0)
                         {
-                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
                         }
-                        
+
                     </MudCardContent>
                     <MudCardActions>
                         @foreach (var link in knowledgeEntry.Links)
@@ -128,8 +129,8 @@
     public bool Loading = true;
     private string? _knowledgeEntrySearch;
     private KnowledgeGroupRecord? _selectedGroup;
-    private IEnumerable<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
-    private IEnumerable<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
+    private List<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
+    private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
     private List<KeyValuePair<Guid, List<string>>> _imageContents = [];
 
     protected override async Task OnInitializedAsync()
@@ -142,14 +143,49 @@
     private async Task LoadKnowledgeEntries()
     {
         Loading = true;
-        _knowledgeEntries = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
+        _knowledgeEntries = [];
+
+        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
+        var imageResponses = await ImageService.GetImagesAsync();
+        foreach (var response in responses)
+        {
+            var record = new KnowledgeEntryRecord()
+            {
+                Id = response.Id,
+                KnowledgeGroupId = response.KnowledgeGroupId,
+                Title = response.Title,
+                Text = response.Text,
+                Order = response.Order,
+                LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
+                IsDeleted = response.IsDeleted,
+                Links = response.Links
+            };
+            foreach (var image in response.Images)
+            {
+                record.Images.Add(new ImageRecord()
+                {
+                    Id = image.Id,
+                    Height = image.Height,
+                    Width = image.Width,
+                    ContentHashSha1 = image.ContentHashSha1,
+                    InternalReference = image.InternalReference,
+                    MimeType = image.MimeType,
+                    SizeInBytes = image.SizeInBytes,
+                    LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                    IsDeleted = image.IsDeleted
+                });
+            }
+
+            _knowledgeEntries.Add(record);
+        }
+
         Loading = false;
     }
 
     private async Task LoadKnowledgeGroups()
     {
         Loading = true;
-        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order);
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToList();
         Loading = false;
     }
 
@@ -157,7 +193,7 @@
     {
         Loading = true;
         _imageContents = [];
-        
+
         foreach (var knowledgeEntry in _knowledgeEntries)
         {
             StateHasChanged();

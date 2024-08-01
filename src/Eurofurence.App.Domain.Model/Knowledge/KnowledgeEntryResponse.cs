@@ -1,12 +1,13 @@
-﻿using System;
+﻿using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Domain.Model.Images;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeEntryRequest
+    public class KnowledgeEntryResponse : EntityBase
     {
         [DataMember]
         public Guid KnowledgeGroupId { get; set; }
@@ -21,9 +22,9 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         public int Order { get; set; }
 
         [DataMember]
-        public List<LinkFragment> Links { get; set; } = new();
+        public virtual List<LinkFragment> Links { get; set; } = new();
 
         [DataMember]
-        public List<Guid> ImageIds { get; set; } = new();
+        public virtual List<ImageResponse> Images { get; set; } = new();
     }
 }

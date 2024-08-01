@@ -116,20 +116,11 @@ namespace Eurofurence.App.Server.Web.Controllers
                                         && link.Target.Equals(dealer.Id.ToString(), StringComparison.CurrentCultureIgnoreCase))))
                 {
                     entry.Map = map;
-                    entry.Map.Image = await _imageService.FindOneAsync(entry.Map.ImageId);
                     mapEntries.Add(entry);
-
                 }
             }
 
-
             ViewData["MapEntries"] = mapEntries;
-
-            
-            
-
-            
-
 
             PopulateViewData();
 
@@ -140,16 +131,14 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
 
-            
-
             return View("DealerPreview", dealer);
         }
 
         [HttpGet("KnowledgeGroups")]
         public async Task<ActionResult> GetKnowledgeGroups()
         {
-            var knowledgeGroups = _knowledgeGroupService.FindAll();
-            var knowledgeEntries = _knowledgeEntryService.FindAll();
+            var knowledgeGroups = await _knowledgeGroupService.FindAll().ToListAsync();
+            var knowledgeEntries = await _knowledgeEntryService.FindAll().ToListAsync();
 
             PopulateViewData();
 
@@ -158,7 +147,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .WithDescription("Helpful information across all areas & departments");
 
             ViewData["knowledgeEntries"] = knowledgeEntries;
-            return View("KnowledgeGroupsPreview", await knowledgeGroups.ToListAsync());
+            return View("KnowledgeGroupsPreview", knowledgeGroups);
         }
 
         [HttpGet("KnowledgeEntries/{id}")]

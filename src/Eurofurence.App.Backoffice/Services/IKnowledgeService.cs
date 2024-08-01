@@ -4,7 +4,7 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public interface IKnowledgeService
     {
-        public Task<KnowledgeEntryRecord[]> GetKnowledgeEntriesAsync();
+        public Task<KnowledgeEntryResponse[]> GetKnowledgeEntriesAsync();
         public Task<bool> PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record);
         public Task<bool> PostKnowledgeEntryAsync(KnowledgeEntryRequest record);
         public Task<bool> DeleteKnowledgeEntryAsync(Guid id);

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MapsterMapper;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -17,13 +18,16 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IDealerService _dealerService;
         private readonly IImageService _imageService;
+        private readonly IMapper _mapper;
 
         public DealersController(
             IDealerService dealerService,
-            IImageService imageService)
+            IImageService imageService,
+            IMapper mapper)
         {
             _dealerService = dealerService;
             _imageService = imageService;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -54,7 +58,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Update an existing dealer.
         /// </summary>
-        /// <param name="Record"></param>
+        /// <param name="request"></param>
         /// <param name="id"></param>
         [Authorize(Roles = "System,Developer")]
         [ProducesResponseType(204)]
@@ -63,21 +67,22 @@ namespace Eurofurence.App.Server.Web.Controllers
         [EnsureNotNull]
         [HttpPut("{id}")]
         public async Task<ActionResult> PutDealerAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("id")] DealerRecord Record,
+            [EnsureNotNull][FromBody][EnsureEntityIdMatches("id")] DealerRequest request,
             [EnsureNotNull][FromRoute] Guid id)
         {
             var exists = await _dealerService.HasOneAsync(id);
             if (!exists) return NotFound($"No record found with it {id}");
 
-            Record.Touch();
+            request.Touch();
 
             var imageIdsExist = await _imageService.HasManyAsync(
-                Record.ArtistImageId, Record.ArtPreviewImageId, Record.ArtistThumbnailImageId
+                request.ArtistImageId, request.ArtPreviewImageId, request.ArtistThumbnailImageId
                 );
 
             if (!imageIdsExist) return BadRequest($"Invalid image ids specified");
 
-            await _dealerService.ReplaceOneAsync(Record);
+            var record = _mapper.Map<DealerRecord>(request);
+            await _dealerService.ReplaceOneAsync(record);
 
             return NoContent();
         }
@@ -85,28 +90,29 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Create a new dealer.
         /// </summary>
-        /// <param name="Record"></param>
+        /// <param name="request"></param>
         /// <returns>Id of the newly created dealer</returns>
         [Authorize(Roles = "System,Developer")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(400)]
         [HttpPost("")]
         public async Task<ActionResult> PostDealerAsync(
-            [EnsureNotNull][FromBody] DealerRecord Record
+            [EnsureNotNull][FromBody] DealerRequest request
         )
         {
-            Record.NewId();
-            Record.Touch();
+            request.NewId();
+            request.Touch();
 
             var imageIdsExist = await _imageService.HasManyAsync(
-                Record.ArtistImageId, Record.ArtPreviewImageId, Record.ArtistThumbnailImageId
+                request.ArtistImageId, request.ArtPreviewImageId, request.ArtistThumbnailImageId
                 );
 
             if (!imageIdsExist) return BadRequest($"Invalid image ids specified");
 
-            await _dealerService.InsertOneAsync(Record);
+            var record = _mapper.Map<DealerRecord>(request);
+            await _dealerService.InsertOneAsync(record);
 
-            return Ok(Record.Id);
+            return Ok(record.Id);
         }
 
         /// <summary>
@@ -127,7 +133,5 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             return NoContent();
         }
-
-
     }
 }

@@ -18,7 +18,6 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Context;
 using Serilog.Events;
-using Serilog.Formatting.Json;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Text.Json;
@@ -27,11 +26,11 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.OpenApi.Models;
-using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Microsoft.AspNetCore.Authentication;
-using Minio;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Mapster;
+using MapsterMapper;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -193,6 +192,13 @@ namespace Eurofurence.App.Server.Web
                     serverVersion,
                     mySqlOptions => mySqlOptions.UseMicrosoftJson());
             });
+
+            // Add Mapster for mapping DTOs
+            var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
+            typeAdapterConfig.Default.PreserveReference(true);
+            typeAdapterConfig.Scan(typeof(Startup).Assembly);
+            services.AddSingleton(typeAdapterConfig);
+            services.AddScoped<IMapper, ServiceMapper>();
 
             builder.Build();
 

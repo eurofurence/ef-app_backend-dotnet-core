@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Eurofurence.App.Domain.Model.Announcements;
+﻿using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
 using Eurofurence.App.Domain.Model.CollectionGame;
@@ -20,8 +17,6 @@ using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Eurofurence.App.Infrastructure.EntityFramework
 {
@@ -73,6 +68,31 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
 
             modelBuilder.Entity<DealerRecord>().Property(x => x.Keywords)
                 .HasColumnType("json");
+
+            modelBuilder.Entity<ImageRecord>()
+                .HasMany(i => i.EventPosters)
+                .WithOne(e => e.PosterImage)
+                .HasForeignKey(e => e.PosterImageId);
+
+            modelBuilder.Entity<ImageRecord>()
+                .HasMany(i => i.EventBanners)
+                .WithOne(e => e.BannerImage)
+                .HasForeignKey(e => e.BannerImageId);
+
+            modelBuilder.Entity<ImageRecord>()
+                .HasMany(i => i.DealerArtists)
+                .WithOne(d => d.ArtistImage)
+                .HasForeignKey(d => d.ArtistImageId);
+
+            modelBuilder.Entity<ImageRecord>()
+                .HasMany(i => i.DealerArtPreviews)
+                .WithOne(d => d.ArtPreviewImage)
+                .HasForeignKey(d => d.ArtPreviewImageId);
+
+            modelBuilder.Entity<ImageRecord>()
+                .HasMany(i => i.DealerArtistThumbnails)
+                .WithOne(d => d.ArtistThumbnailImage)
+                .HasForeignKey(d => d.ArtistThumbnailImageId);
         }
     }
 }

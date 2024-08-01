@@ -24,6 +24,23 @@ namespace Eurofurence.App.Server.Services.Knowledge
             _appDbContext = appDbContext;
             _storageService = storageServiceFactory.CreateStorageService<KnowledgeEntryRecord>();
         }
+        public override async Task<KnowledgeEntryRecord> FindOneAsync(Guid id)
+        {
+            return await _appDbContext.KnowledgeEntries
+                .Include(m => m.Images)
+                .Include(m => m.Links)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(entity => entity.Id == id);
+        }
+
+        public override IQueryable<KnowledgeEntryRecord> FindAll()
+        {
+            return _appDbContext.KnowledgeEntries
+                .Include(m => m.Images)
+                .Include(m => m.Links)
+                .AsNoTracking();
+        }
+
         public override Task ReplaceOneAsync(KnowledgeEntryRecord entity)
         {
             throw new InvalidOperationException();
@@ -59,33 +76,26 @@ namespace Eurofurence.App.Server.Services.Knowledge
 
         public async Task<KnowledgeEntryRecord> ReplaceKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest request)
         {
-            var images = _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id));
-
             var existingEntity = await _appDbContext.KnowledgeEntries
-                .Include(knowledgeEntryRecord => knowledgeEntryRecord.Links)
-                .AsNoTracking()
+                .Include(knowledgeEntry => knowledgeEntry.Links)
+                .Include(knowledgeEntry => knowledgeEntry.Images)
                 .FirstOrDefaultAsync(ke => ke.Id == id);
 
-            var entity = new KnowledgeEntryRecord
-            {
-                Id = id,
-                KnowledgeGroupId = request.KnowledgeGroupId,
-                Title = request.Title,
-                Text = request.Text,
-                Order = request.Order,
-                Links = request.Links,
-                IsDeleted = 0
-            };
+            existingEntity.KnowledgeGroupId = request.KnowledgeGroupId;
+            existingEntity.Title = request.Title;
+            existingEntity.Text = request.Text;
+            existingEntity.Order = request.Order;
+            existingEntity.Links = request.Links;
 
             foreach (var existingLink in existingEntity.Links)
             {
-                if (entity.Links.All(link => link.Id != existingLink.Id))
+                if (request.Links.All(link => link.Id != existingLink.Id))
                 {
                     _appDbContext.LinkFragments.Remove(existingLink);
                 }
             }
 
-            foreach (var link in entity.Links)
+            foreach (var link in request.Links)
             {
                 var linkExists = await _appDbContext.LinkFragments.AnyAsync(existingLink => existingLink.Id == link.Id);
                 if (!linkExists)
@@ -94,14 +104,13 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 }
             }
 
-            entity.Images = [.. images];
+            existingEntity.Images = await _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id)).ToListAsync();
 
-            entity.Touch();
-            var result = _appDbContext.KnowledgeEntries.Update(entity);
+            existingEntity.Touch();
             await _storageService.TouchAsync();
             await _appDbContext.SaveChangesAsync();
 
-            return result.Entity;
+            return existingEntity;
         }
     }
 }

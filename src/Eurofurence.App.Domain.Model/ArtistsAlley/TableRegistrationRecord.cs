@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 
@@ -43,6 +44,9 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 
         [DataMember]
         public string Location { get; set; }
+
+        [DataMember]
+        public Guid? ImageId { get; set; }
 
         [DataMember]
         public ImageRecord Image { get; set; }
