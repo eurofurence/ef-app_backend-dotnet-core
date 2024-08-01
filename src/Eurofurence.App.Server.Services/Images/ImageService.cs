@@ -61,8 +61,12 @@ namespace Eurofurence.App.Server.Services.Images
             var entity = await _appDbContext.Images
                 .Include(i => i.FursuitBadges)
                 .Include(i => i.TableRegistrations)
+                .Include(i => i.DealerArtPreviews)
+                .Include(i => i.DealerArtistThumbnails)
+                .Include(i => i.DealerArtists)
+                .Include(i => i.EventBanners)
+                .Include(i => i.EventPosters)
                 .Include(i => i.Maps)
-                .ThenInclude(m => m.Entries)
                 .FirstOrDefaultAsync(entity => entity.Id == id);
 
             _appDbContext.Remove(entity);
@@ -76,8 +80,12 @@ namespace Eurofurence.App.Server.Services.Images
             var images = _appDbContext.Images
                 .Include(i => i.FursuitBadges)
                 .Include(i => i.TableRegistrations)
-                .Include(i => i.Maps)
-                .ThenInclude(m => m.Entries);
+                .Include(i => i.DealerArtPreviews)
+                .Include(i => i.DealerArtistThumbnails)
+                .Include(i => i.DealerArtists)
+                .Include(i => i.EventBanners)
+                .Include(i => i.EventPosters)
+                .Include(i => i.Maps);
             var imageIds = await images.Select(image => image.Id.ToString()).ToListAsync();
             await DeleteFilesFromMinIoAsync(_minIoConfiguration.Bucket, imageIds);
             _appDbContext.Images.RemoveRange(images);
@@ -165,10 +173,7 @@ namespace Eurofurence.App.Server.Services.Images
             await _minIoClient.GetObjectAsync(new GetObjectArgs()
                 .WithBucket(_minIoConfiguration.Bucket)
                 .WithObject(id.ToString())
-                .WithCallbackStream(stream =>
-                {
-                    stream.CopyTo(ms);
-                }));
+                .WithCallbackStream(stream => { stream.CopyTo(ms); }));
 
             ms.Position = 0;
             return ms;

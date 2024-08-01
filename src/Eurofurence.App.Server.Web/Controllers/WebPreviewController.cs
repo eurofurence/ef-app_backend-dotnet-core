@@ -116,9 +116,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                                         && link.Target.Equals(dealer.Id.ToString(), StringComparison.CurrentCultureIgnoreCase))))
                 {
                     entry.Map = map;
-                    entry.Map.Image = await _imageService.FindOneAsync(entry.Map.ImageId);
                     mapEntries.Add(entry);
-
                 }
             }
 

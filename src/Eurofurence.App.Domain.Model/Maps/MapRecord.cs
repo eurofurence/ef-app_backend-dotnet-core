@@ -25,8 +25,7 @@ namespace Eurofurence.App.Domain.Model.Maps
         public IList<MapEntryRecord> Entries { get; set; } = new List<MapEntryRecord>();
 
         [DataMember]
-        [Required]
-        public Guid ImageId { get; set; }
+        public Guid? ImageId { get; set; }
 
         [IgnoreDataMember]
         public virtual ImageRecord Image { get; set; }

@@ -179,7 +179,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Commands
                 command.Out.WriteLine($"Deleting map {map.Id} (Description={map.Description}, IsBrowseable={map.IsBrowseable})");
 
                 _mapService.DeleteOneAsync(map.Id).Wait();
-                _imageService.DeleteOneAsync(map.ImageId).Wait();
+                if (map.ImageId != null)
+                {
+                    _imageService.DeleteOneAsync((Guid)map.ImageId).Wait();
+                }
 
                 return 0;
             });

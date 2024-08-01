@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.Dealers
 {
@@ -111,6 +113,9 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtistThumbnailImageId { get; set; }
 
+        [DataMember]
+        public ImageRecord ArtistThumbnailImage { get; set; }
+
         /// <summary>
         /// **(pba)** ImageId of the artist image (any aspect ratio) that represents the dealer.
         /// Usually a personal photo / logo / badge, or a high-res version of the thumbnail image.
@@ -118,11 +123,17 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtistImageId { get; set; }
 
+        [DataMember]
+        public ImageRecord ArtistImage { get; set; }
+
         /// <summary>
         /// **(pba)** ImageId of an art/merchandise sample sold/offered by the dealer.
         /// </summary>
         [DataMember]
         public Guid? ArtPreviewImageId { get; set; }
+
+        [DataMember]
+        public ImageRecord ArtPreviewImage { get; set; }
 
         /// <summary>
         /// Flag indicating whether the dealer is located at the after dark dealers den.

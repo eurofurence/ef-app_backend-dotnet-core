@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Eurofurence.App.Domain.Model.Images;
+using System;
 using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Events
@@ -63,12 +64,18 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public Guid? BannerImageId { get; set; }
 
+        [DataMember]
+        public ImageRecord BannerImage { get; set; }
+
         /// <summary>
         ///     If set, refers to an image of any aspect ratio that should be used where enough
         ///     vertical space is available (e.G. event detail).
         /// </summary>
         [DataMember]
         public Guid? PosterImageId { get; set; }
+
+        [DataMember]
+        public ImageRecord PosterImage { get; set; }
 
         [DataMember]
         public string[] Tags { get; set; }
