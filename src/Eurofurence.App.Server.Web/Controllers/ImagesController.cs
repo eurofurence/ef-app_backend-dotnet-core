@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using MapsterMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -29,13 +30,35 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieves a list of all images.
         /// </summary>
-        /// <returns>All knowledge groups.</returns>
+        /// <returns>All images.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<ImageResponse>), 200)]
         public IEnumerable<ImageResponse> GetImagesAsync()
         {
             return _mapper.Map<IEnumerable<ImageResponse>>(_imageService.FindAll());
+        }
+
+        /// <summary>
+        ///     Retrieves a list of all images with related IDs.
+        /// </summary>
+        /// <returns>All images with related IDs.</returns>
+        [HttpGet("with-relations")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<ImageWithRelationsResponse>), 200)]
+        public IEnumerable<ImageWithRelationsResponse> GetImagesWithRelationsAsync()
+        {
+            return _mapper.Map<IEnumerable<ImageWithRelationsResponse>>(
+                _imageService.FindAll()
+                    .Include(i => i.KnowledgeEntries)
+                    .Include(i => i.FursuitBadges)
+                    .Include(i => i.TableRegistrations)
+                    .Include(i => i.Maps)
+                    .Include(i => i.DealerArtPreviews)
+                    .Include(i => i.DealerArtistThumbnails)
+                    .Include(i => i.DealerArtists)
+                    .Include(i => i.EventBanners)
+                    .Include(i => i.EventPosters));
         }
 
         /// <summary>
