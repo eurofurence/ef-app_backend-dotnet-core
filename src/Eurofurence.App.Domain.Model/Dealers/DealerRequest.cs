@@ -1,22 +1,24 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.Serialization;
-using Eurofurence.App.Domain.Model.Fragments;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Domain.Model.Dealers
 {
     /// <summary>
-    /// This record represents a 'dealer' that is offering goods/services at the dealers den.
+    /// This request represents a 'dealer' that is offering goods/services at the dealers den.
     /// All dealers are represented and registered by participating attendees.
     /// 
     /// Properties marked with **(pba)** indicate that its value or the content referenced
     /// by it is provided directly by the attendee during or after dealer registration.
     /// </summary>
     [DataContract]
-    public class DealerRecord : EntityBase
+    public class DealerRequest : EntityBase
     {
         /// <summary>
         /// Registration number (as on badge) of the attendee that acts on behalf/represents this dealer.
@@ -113,9 +115,6 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtistThumbnailImageId { get; set; }
 
-        [DataMember]
-        public ImageRecord ArtistThumbnailImage { get; set; }
-
         /// <summary>
         /// **(pba)** ImageId of the artist image (any aspect ratio) that represents the dealer.
         /// Usually a personal photo / logo / badge, or a high-res version of the thumbnail image.
@@ -123,17 +122,11 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtistImageId { get; set; }
 
-        [DataMember]
-        public ImageRecord ArtistImage { get; set; }
-
         /// <summary>
         /// **(pba)** ImageId of an art/merchandise sample sold/offered by the dealer.
         /// </summary>
         [DataMember]
         public Guid? ArtPreviewImageId { get; set; }
-
-        [DataMember]
-        public ImageRecord ArtPreviewImage { get; set; }
 
         /// <summary>
         /// Flag indicating whether the dealer is located at the after dark dealers den.
