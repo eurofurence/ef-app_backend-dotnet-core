@@ -15,17 +15,17 @@
     <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
     <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddImage">New image</MudButton>
 </MudToolBar>
-<MudDataGrid T="ImageRecord" @ref="_dataGrid" LoadingProgressColor="Color.Primary" ServerData="@GetImages" SortMode="@SortMode.None" Groupable="false">
+<MudDataGrid T="ImageWithRelationsResponse" @ref="_dataGrid" LoadingProgressColor="Color.Primary" ServerData="@GetImages" SortMode="@SortMode.None" Groupable="false">
     <Columns>
         <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
             <CellTemplate>
                 @if (!string.IsNullOrEmpty(@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value))
                 {
-                    <MudImage Class="ml-2" Width="100" Src="@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value" />
+                    <MudImage Class="ml-2" Width="100" Src="@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value"/>
                 }
                 else
                 {
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
                 }
             </CellTemplate>
         </TemplateColumn>
@@ -33,8 +33,46 @@
         <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
         <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
         <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
-        <PropertyColumn Title="Fursuit Badges" Property="image => image.FursuitBadges.Count" />
-        <PropertyColumn Title="Artist Alley Table Registrations" Property="image => image.TableRegistrations.Count" />
+        <TemplateColumn Title="Usage">
+            <CellTemplate>
+                @if (context.Item?.FursuitBadgeIds.Count > 0)
+                {
+                    <MudTooltip Text="Fursuit Badges">
+                        <MudIcon Icon="@Icons.Material.Outlined.Badge"></MudIcon>
+                    </MudTooltip>
+                }
+                @if (context.Item?.TableRegistrationIds.Count > 0)
+                {
+                    <MudTooltip Text="Table Registrations">
+                        <MudIcon Icon="@Icons.Material.Outlined.TableRestaurant"></MudIcon>
+                    </MudTooltip>
+                }
+                @if (context.Item?.KnowledgeEntryIds.Count > 0)
+                {
+                    <MudTooltip Text="Knowledge Base">
+                        <MudIcon Icon="@Icons.Material.Outlined.Info"></MudIcon>
+                    </MudTooltip>
+                }
+                @if (context.Item?.MapIds.Count > 0)
+                {
+                    <MudTooltip Text="Maps">
+                        <MudIcon Icon="@Icons.Material.Outlined.Map"></MudIcon>
+                    </MudTooltip>
+                }
+                @if (context.Item?.DealerArtPreviewIds.Count > 0 || context.Item?.DealerArtistIds.Count > 0 || context.Item?.DealerArtistThumbnailIds.Count > 0)
+                {
+                    <MudTooltip Text="Dealers Den">
+                        <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart"></MudIcon>
+                    </MudTooltip>
+                }
+                @if (context.Item?.EventBannerIds.Count > 0 || context.Item?.EventPosterIds.Count > 0)
+                {
+                    <MudTooltip Text="Events">
+                        <MudIcon Icon="@Icons.Material.Outlined.Event"></MudIcon>
+                    </MudTooltip>
+                }
+            </CellTemplate>
+        </TemplateColumn>
         <TemplateColumn>
             <CellTemplate>
                 @if (context.Item != null)
@@ -53,17 +91,18 @@
 
 @code {
     private string? _imageSearch;
-    private List<ImageRecord> _images = new();
+    private List<ImageWithRelationsResponse> _images = new();
     private List<KeyValuePair<Guid, string>> _imageContents = [];
-    private MudDataGrid<ImageRecord>? _dataGrid;
+    private MudDataGrid<ImageWithRelationsResponse>? _dataGrid;
 
-    private async Task<GridData<ImageRecord?>> GetImages(GridState<ImageRecord?> gridState)
+    private async Task<GridData<ImageWithRelationsResponse?>> GetImages(GridState<ImageWithRelationsResponse?> gridState)
     {
         if (!_images.Any())
         {
             await LoadImagesAsync();
         }
-        var result = new GridData<ImageRecord?>();
+
+        var result = new GridData<ImageWithRelationsResponse?>();
         var filteredItems = FilterImages(_images, _imageSearch).ToList();
         result.Items = filteredItems.Skip(gridState.Page * gridState.PageSize).Take(gridState.PageSize);
         result.TotalItems = filteredItems.Count;
@@ -73,25 +112,7 @@
 
     private async Task LoadImagesAsync()
     {
-        _images = [];
-
-        var imageResponses = await ImageService.GetImagesAsync();
-
-        foreach (var response in imageResponses)
-        {
-            _images.Add(new ImageRecord()
-            {
-                Id = response.Id,
-                InternalReference = response.InternalReference,
-                Height = response.Height,
-                Width = response.Width,
-                ContentHashSha1 = response.ContentHashSha1,
-                MimeType = response.MimeType,
-                LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
-                SizeInBytes = response.SizeInBytes,
-                IsDeleted = response.IsDeleted
-            });
-        }
+        _images = (await ImageService.GetImagesWithRelationsAsync()).ToList();
     }
 
     private async Task LoadImageSourcesAsync(IEnumerable<Guid> imageIds)
@@ -114,11 +135,13 @@
         _dataGrid?.ReloadServerData();
     }
 
-    private IEnumerable<ImageRecord> FilterImages(IEnumerable<ImageRecord> entries, string? searchString)
+    private IEnumerable<ImageWithRelationsResponse> FilterImages(IEnumerable<ImageWithRelationsResponse> entries, string? searchString)
     {
-        return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry => 
-        entry.InternalReference.ToLower().Contains(searchString.ToLower())
-            || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
+        return string.IsNullOrEmpty(searchString)
+            ? entries
+            : entries.Where(entry =>
+                entry.InternalReference.ToLower().Contains(searchString.ToLower())
+                || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
     }
 
     private async Task AddImage()
@@ -131,7 +154,7 @@
         _dataGrid?.ReloadServerData();
     }
 
-    private async Task UpdateImage(ImageRecord record)
+    private async Task UpdateImage(ImageWithRelationsResponse record)
     {
         var parameters = new DialogParameters<ImageDialog> { { x => x.Record, record } };
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
@@ -155,4 +178,5 @@
             Snackbar.Add("Error deleting image.", Severity.Error);
         }
     }
+
 }

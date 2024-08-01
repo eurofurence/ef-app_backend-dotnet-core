@@ -14,6 +14,11 @@ namespace Eurofurence.App.Backoffice.Services
             return (await http.GetFromJsonAsync<ImageResponse[]>("images"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
 
+        public async Task<ImageWithRelationsResponse[]> GetImagesWithRelationsAsync()
+        {
+            return (await http.GetFromJsonAsync<ImageWithRelationsResponse[]>("images/with-relations"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+        }
+
         public async Task<string> GetImageContentAsync(Guid id)
         {
             try

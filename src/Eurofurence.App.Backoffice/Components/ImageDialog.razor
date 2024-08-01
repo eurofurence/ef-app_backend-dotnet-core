@@ -1,93 +1,46 @@
 ﻿@using Eurofurence.App.Backoffice.Services
-@using Eurofurence.App.Domain.Model.ArtistsAlley
-@using Eurofurence.App.Domain.Model.Dealers
-@using Eurofurence.App.Domain.Model.Fursuits
 @using Eurofurence.App.Domain.Model.Images
-@using Eurofurence.App.Domain.Model.Knowledge
 @inject ISnackbar Snackbar
 @inject IImageService ImageService
-@inject IKnowledgeService KnowledgeService
-@inject IArtistAlleyService ArtistAlleyService
-@inject IFursuitService FursuitService
-@inject IDealerService DealerService
 
 <MudDialog>
     <DialogContent>
         @if (Record != null)
         {
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                <MudContainer Style="height: 60vh" Class="overflow-scroll pr-4">
-                    <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="General">
-                        <MudGrid>
-                            <MudItem xs="6">
-                                <MudImage ObjectFit="ObjectFit.Contain" Height="400" Width="500" Class="ml-2" Src="@_imageSource">
-                                    @if (string.IsNullOrEmpty(_imageSource))
-                                    {
-                                        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-                                    }
-                                </MudImage>
+                <MudContainer Style="height: 600px" Class="overflow-scroll pr-4">
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@_imageSource">
+                                @if (string.IsNullOrEmpty(_imageSource))
+                                {
+                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                                }
+                            </MudImage>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               Class="mb-2">
+                                        Upload Image
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            <MudTextField Value="Record.Id" Label="ID" ReadOnly="true"/>
+                            <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true"/>
+                            <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true"/>
+                            <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true"/>
+                            <MudItem xs="3">
+                                <MudTextField Value="Record.Width" Label="Width" ReadOnly="true"/>
                             </MudItem>
-                            <MudItem xs="6">
-                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
-                                    <ActivatorContent>
-                                        <MudButton Variant="Variant.Filled"
-                                                   Color="Color.Primary"
-                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                   Class="mb-2">
-                                            Upload Image
-                                        </MudButton>
-                                    </ActivatorContent>
-                                </MudFileUpload>
-                                <MudTextField Value="Record.Id" Label="ID" ReadOnly="true"/>
-                                <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true"/>
-                                <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true"/>
-                                <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true"/>
-                                <MudItem xs="3">
-                                    <MudTextField Value="Record.Width" Label="Width" ReadOnly="true"/>
-                                </MudItem>
-                                <MudItem xs="3">
-                                    <MudTextField Value="Record.Height" Label="Height" ReadOnly="true"/>
-                                </MudItem>
+                            <MudItem xs="3">
+                                <MudTextField Value="Record.Height" Label="Height" ReadOnly="true"/>
                             </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Outlined.Badge" Text="Fursuit Badges">
-                        <MudDataGrid Items="@_fursuitBadges" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                            <Columns>
-                                <PropertyColumn Title="ID" Property="fursuitBadge => fursuitBadge.Id"/>
-                                <PropertyColumn Title="Name" Property="fursuitBadge => fursuitBadge.Name"/>
-                                <PropertyColumn Title="Worn By" Property="fursuitBadge => fursuitBadge.WornBy"/>
-                            </Columns>
-                        </MudDataGrid>
-                    </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Outlined.TableRestaurant" Text="Artist Alley Table Registrations">
-                        <MudDataGrid Items="@_tableRegistrations" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                            <Columns>
-                                <PropertyColumn Title="ID" Property="tableRegistration => tableRegistration.Id" />
-                                <PropertyColumn Title="Name" Property="tableRegistration => tableRegistration.DisplayName" />
-                                <PropertyColumn Title="Location" Property="tableRegistration => tableRegistration.Location" />
-                                <PropertyColumn Title="Description" Property="tableRegistration => tableRegistration.ShortDescription" />
-                            </Columns>
-                        </MudDataGrid>
-                    </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="Knowledge Base Entries">
-                        <MudDataGrid Items="@_knowledgeEntries" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                            <Columns>
-                                <PropertyColumn Title="ID" Property="knowledgeEntry => knowledgeEntry.Id" />
-                                <PropertyColumn Title="Title" Property="knowledgeEntry => knowledgeEntry.Title" />
-                                <PropertyColumn Title="Group ID" Property="knowledgeEntry => knowledgeEntry.KnowledgeGroupId" />
-                            </Columns>
-                        </MudDataGrid>
-                    </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Outlined.Shop" Text="Dealers">
-                        <MudDataGrid Items="@_dealers" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                            <Columns>
-                                <PropertyColumn Title="ID" Property="dealer => dealer.Id" />
-                                <PropertyColumn Title="Name" Property="dealer => dealer.DisplayNameOrAttendeeNickname" />
-                                <PropertyColumn Title="Description" Property="dealer => dealer.ShortDescription" />
-                            </Columns>
-                        </MudDataGrid>
-                    </MudTabPanel>
+                        </MudItem>
+                    </MudGrid>
                 </MudContainer>
             </MudTabs>
         }
@@ -100,14 +53,9 @@
 @code {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
 
-    [Parameter] public ImageRecord? Record { get; set; }
+    [Parameter] public ImageWithRelationsResponse? Record { get; set; }
 
     private bool Update { get; set; }
-
-    private IEnumerable<KnowledgeEntryResponse> _knowledgeEntries = new List<KnowledgeEntryResponse>();
-    private IEnumerable<TableRegistrationResponse> _tableRegistrations = new List<TableRegistrationResponse>();
-    private IEnumerable<FursuitBadgeResponse> _fursuitBadges = new List<FursuitBadgeResponse>();
-    private IEnumerable<DealerRecord> _dealers = new List<DealerRecord>();
 
     private string _imageSource = string.Empty;
 
@@ -115,29 +63,13 @@
     {
         if (Record == null)
         {
-            Record = new ImageRecord
-            {
-                Id = Guid.NewGuid()
-            };
+            Record = new ImageWithRelationsResponse();
         }
         else
         {
             Update = true;
-            await LoadRelatedEntities();
             await LoadImageSourceAsync();
         }
-    }
-
-    private async Task LoadRelatedEntities()
-    {
-        if (Record == null)
-        {
-            return;
-        }
-        _knowledgeEntries = (await KnowledgeService.GetKnowledgeEntriesAsync()).Where(knowledgeEntry => knowledgeEntry.Images.Any(image => image.Id == Record.Id)).OrderBy(ke => ke.Order);
-        _tableRegistrations = (await ArtistAlleyService.GetTableRegistrationsAsync()).Where(tableRegistration => tableRegistration.Image?.Id == Record.Id);
-        _fursuitBadges = (await FursuitService.GetFursuitBadgesAsync()).Where(fursuitBadge => fursuitBadge.Image?.Id == Record.Id);
-        _dealers = (await DealerService.GetDealersAsync()).Where(dealer => dealer.ArtPreviewImageId == Record.Id || dealer.ArtistImageId == Record.Id || dealer.ArtistThumbnailImageId == Record.Id);
     }
 
     private async Task LoadImageSourceAsync()
