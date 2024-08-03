@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
@@ -37,22 +38,34 @@ namespace Eurofurence.App.Domain.Model.Images
         [DataMember]
         public string ContentHashSha1 { get; set; }
 
+        [IgnoreDataMember]
+        public virtual List<AnnouncementRecord> Announcements { get; set; } = new();
+
+        [IgnoreDataMember]
         public virtual List<KnowledgeEntryRecord> KnowledgeEntries { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<TableRegistrationRecord> TableRegistrations { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<MapRecord> Maps { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<EventRecord> EventBanners { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<EventRecord> EventPosters { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<DealerRecord> DealerArtists { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<DealerRecord> DealerArtistThumbnails { get; set; } = new();
 
+        [IgnoreDataMember]
         public virtual List<DealerRecord> DealerArtPreviews { get; set; } = new();
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240723132344_AddedUsernameToTableRegistration")]
-    partial class AddedUsernameToTableRegistration
+    [Migration("20240803132420_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -66,6 +66,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImageId");
 
                     b.ToTable("Announcements");
                 });
@@ -365,7 +367,13 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<bool>("AttendsOnThursday")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("BlueskyHandle")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Categories")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("DiscordHandle")
                         .HasColumnType("longtext");
 
                     b.Property<string>("DisplayName")
@@ -384,6 +392,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("MastodonHandle")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Merchandise")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -401,6 +412,12 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ArtPreviewImageId");
+
+                    b.HasIndex("ArtistImageId");
+
+                    b.HasIndex("ArtistThumbnailImageId");
 
                     b.ToTable("Dealers");
                 });
@@ -448,7 +465,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventConferenceRoomRecord");
+                    b.ToTable("EventConferenceRooms");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceTrackRecord", b =>
@@ -493,6 +510,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EventId");
 
                     b.ToTable("EventFeedbacks");
                 });
@@ -571,11 +590,15 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BannerImageId");
+
                     b.HasIndex("ConferenceDayId");
 
                     b.HasIndex("ConferenceRoomId");
 
                     b.HasIndex("ConferenceTrackId");
+
+                    b.HasIndex("PosterImageId");
 
                     b.ToTable("Events");
                 });
@@ -792,9 +815,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("KnowledgeEntryRecordId")
-                        .HasColumnType("char(36)");
-
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
@@ -809,8 +829,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("KnowledgeEntryRecordId");
 
                     b.ToTable("Images");
                 });
@@ -956,7 +974,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<Guid>("ImageId")
+                    b.Property<Guid?>("ImageId")
                         .HasColumnType("char(36)");
 
                     b.Property<bool>("IsBrowseable")
@@ -1223,6 +1241,30 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ImageRecordKnowledgeEntryRecord", b =>
+                {
+                    b.Property<Guid>("ImagesId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("KnowledgeEntriesId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("ImagesId", "KnowledgeEntriesId");
+
+                    b.HasIndex("KnowledgeEntriesId");
+
+                    b.ToTable("ImageRecordKnowledgeEntryRecord");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Announcements.AnnouncementRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
+                        .WithMany("Announcements")
+                        .HasForeignKey("ImageId");
+
+                    b.Navigation("Image");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.TableRegistrationRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
@@ -1250,8 +1292,44 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasForeignKey("PlayerParticipationRecordId");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Dealers.DealerRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "ArtPreviewImage")
+                        .WithMany("DealerArtPreviews")
+                        .HasForeignKey("ArtPreviewImageId");
+
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "ArtistImage")
+                        .WithMany("DealerArtists")
+                        .HasForeignKey("ArtistImageId");
+
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "ArtistThumbnailImage")
+                        .WithMany("DealerArtistThumbnails")
+                        .HasForeignKey("ArtistThumbnailImageId");
+
+                    b.Navigation("ArtPreviewImage");
+
+                    b.Navigation("ArtistImage");
+
+                    b.Navigation("ArtistThumbnailImage");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFeedbackRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventRecord", b =>
                 {
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "BannerImage")
+                        .WithMany("EventBanners")
+                        .HasForeignKey("BannerImageId");
+
                     b.HasOne("Eurofurence.App.Domain.Model.Events.EventConferenceDayRecord", "ConferenceDay")
                         .WithMany("Events")
                         .HasForeignKey("ConferenceDayId")
@@ -1270,11 +1348,19 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "PosterImage")
+                        .WithMany("EventPosters")
+                        .HasForeignKey("PosterImageId");
+
+                    b.Navigation("BannerImage");
+
                     b.Navigation("ConferenceDay");
 
                     b.Navigation("ConferenceRoom");
 
                     b.Navigation("ConferenceTrack");
+
+                    b.Navigation("PosterImage");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Fragments.LinkFragment", b =>
@@ -1301,13 +1387,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("Image");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>
-                {
-                    b.HasOne("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", null)
-                        .WithMany("Images")
-                        .HasForeignKey("KnowledgeEntryRecordId");
-                });
-
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapEntryRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Maps.MapRecord", "Map")
@@ -1323,9 +1402,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
                         .WithMany("Maps")
-                        .HasForeignKey("ImageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ImageId");
 
                     b.Navigation("Image");
                 });
@@ -1353,6 +1430,21 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasOne("Eurofurence.App.Domain.Model.Security.RegSysIdentityRecord", null)
                         .WithMany("Roles")
                         .HasForeignKey("RegSysIdentityRecordId");
+                });
+
+            modelBuilder.Entity("ImageRecordKnowledgeEntryRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", null)
+                        .WithMany()
+                        .HasForeignKey("ImagesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", null)
+                        .WithMany()
+                        .HasForeignKey("KnowledgeEntriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.TableRegistrationRecord", b =>
@@ -1392,6 +1484,18 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>
                 {
+                    b.Navigation("Announcements");
+
+                    b.Navigation("DealerArtPreviews");
+
+                    b.Navigation("DealerArtistThumbnails");
+
+                    b.Navigation("DealerArtists");
+
+                    b.Navigation("EventBanners");
+
+                    b.Navigation("EventPosters");
+
                     b.Navigation("FursuitBadges");
 
                     b.Navigation("Maps");
@@ -1401,8 +1505,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", b =>
                 {
-                    b.Navigation("Images");
-
                     b.Navigation("Links");
                 });
 

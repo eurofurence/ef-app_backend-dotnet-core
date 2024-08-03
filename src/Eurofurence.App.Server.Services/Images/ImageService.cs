@@ -67,6 +67,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .Include(i => i.EventBanners)
                 .Include(i => i.EventPosters)
                 .Include(i => i.Maps)
+                .Include(i => i.Announcements)
                 .FirstOrDefaultAsync(entity => entity.Id == id);
 
             _appDbContext.Remove(entity);
@@ -85,6 +86,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .Include(i => i.DealerArtists)
                 .Include(i => i.EventBanners)
                 .Include(i => i.EventPosters)
+                .Include(i => i.Announcements)
                 .Include(i => i.Maps);
             var imageIds = await images.Select(image => image.Id.ToString()).ToListAsync();
             await DeleteFilesFromMinIoAsync(_minIoConfiguration.Bucket, imageIds);

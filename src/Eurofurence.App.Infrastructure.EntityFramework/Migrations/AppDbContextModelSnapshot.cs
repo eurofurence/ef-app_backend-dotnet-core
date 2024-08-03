@@ -64,6 +64,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ImageId");
+
                     b.ToTable("Announcements");
                 });
 
@@ -1251,6 +1253,15 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("ImageRecordKnowledgeEntryRecord");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Announcements.AnnouncementRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
+                        .WithMany("Announcements")
+                        .HasForeignKey("ImageId");
+
+                    b.Navigation("Image");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.TableRegistrationRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
@@ -1297,6 +1308,17 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("ArtistImage");
 
                     b.Navigation("ArtistThumbnailImage");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFeedbackRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventRecord", b =>
@@ -1459,6 +1481,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>
                 {
+                    b.Navigation("Announcements");
+
                     b.Navigation("DealerArtPreviews");
 
                     b.Navigation("DealerArtistThumbnails");

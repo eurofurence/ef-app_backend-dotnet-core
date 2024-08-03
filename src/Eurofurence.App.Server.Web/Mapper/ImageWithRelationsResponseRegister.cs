@@ -21,7 +21,8 @@ namespace Eurofurence.App.Server.Web.Mapper
                 .Map(dest => dest.EventPosterIds, src => src.EventPosters.Select(ep => ep.Id))
                 .Map(dest => dest.DealerArtistIds, src => src.DealerArtists.Select(da => da.Id))
                 .Map(dest => dest.DealerArtistThumbnailIds, src => src.DealerArtistThumbnails.Select(dat => dat.Id))
-                .Map(dest => dest.DealerArtPreviewIds, src => src.DealerArtPreviews.Select(dap => dap.Id));
+                .Map(dest => dest.DealerArtPreviewIds, src => src.DealerArtPreviews.Select(dap => dap.Id))
+                .Map(dest => dest.AnnouncementIds, src => src.Announcements.Select(a => a.Id));
         }
     }
 }

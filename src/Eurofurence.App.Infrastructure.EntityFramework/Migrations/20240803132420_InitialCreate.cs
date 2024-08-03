@@ -45,75 +45,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Announcements",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    ValidFromDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ValidUntilDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ExternalReference = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Area = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Author = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Title = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Content = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Announcements", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Dealers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    RegistrationNumber = table.Column<int>(type: "int", nullable: false),
-                    AttendeeNickname = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DisplayName = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Merchandise = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ShortDescription = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AboutTheArtistText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AboutTheArtText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TwitterHandle = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TelegramHandle = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AttendsOnThursday = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AttendsOnFriday = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AttendsOnSaturday = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    ArtPreviewCaption = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ArtistThumbnailImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    ArtistImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    ArtPreviewImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    IsAfterDark = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Categories = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Dealers", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "EntityStorageInfos",
                 columns: table => new
                 {
@@ -148,7 +79,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "EventConferenceRoomRecord",
+                name: "EventConferenceRooms",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
@@ -161,7 +92,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EventConferenceRoomRecord", x => x.Id);
+                    table.PrimaryKey("PK_EventConferenceRooms", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -178,75 +109,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EventConferenceTracks", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "EventFeedbacks",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    EventId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Rating = table.Column<int>(type: "int", nullable: false),
-                    Message = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EventFeedbacks", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "FursuitBadgeImages",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    SourceContentHashSha1 = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Width = table.Column<int>(type: "int", nullable: false),
-                    Height = table.Column<int>(type: "int", nullable: false),
-                    SizeInBytes = table.Column<long>(type: "bigint", nullable: false),
-                    MimeType = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ImageBytes = table.Column<byte[]>(type: "longblob", nullable: false),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FursuitBadgeImages", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "FursuitBadges",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    ExternalReference = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerUid = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Name = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    WornBy = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Species = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Gender = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    IsPublic = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    CollectionCode = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FursuitBadges", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -270,41 +132,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FursuitParticipations", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "ImageContents",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Content = table.Column<byte[]>(type: "longblob", nullable: true),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ImageContents", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "ImageFragment",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Width = table.Column<int>(type: "int", nullable: false),
-                    Height = table.Column<int>(type: "int", nullable: false),
-                    SizeInBytes = table.Column<long>(type: "bigint", nullable: false),
-                    MimeType = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ImageBytes = table.Column<byte[]>(type: "longblob", nullable: false),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ImageFragment", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -369,8 +196,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     Text = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Order = table.Column<int>(type: "int", nullable: false),
-                    ImageIds = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)
                 },
@@ -391,7 +216,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Order = table.Column<int>(type: "int", nullable: false),
                     ShowInHamburgerMenu = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    FontAwesomeIconCharacterUnicodeAddress = table.Column<string>(type: "longtext", nullable: true)
+                    FontAwesomeIconName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)
@@ -486,8 +311,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DeviceId = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Topics = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)
                 },
@@ -503,8 +326,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     Token = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GrantRoles = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ClaimedByUid = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -531,7 +352,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     IssuedDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IssuedByUid = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    PinConsumptionDatesUtc = table.Column<string>(type: "longtext", nullable: true)
+                    PinConsumptionDatesUtc = table.Column<string>(type: "json", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)
@@ -550,8 +371,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     Uid = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Username = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Roles = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)
@@ -600,6 +419,103 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Announcements",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ValidFromDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ValidUntilDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ExternalReference = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Area = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Author = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Title = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Content = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Announcements", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Announcements_Images_ImageId",
+                        column: x => x.ImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Dealers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RegistrationNumber = table.Column<int>(type: "int", nullable: false),
+                    AttendeeNickname = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DisplayName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Merchandise = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ShortDescription = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AboutTheArtistText = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AboutTheArtText = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TwitterHandle = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TelegramHandle = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DiscordHandle = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    MastodonHandle = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BlueskyHandle = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AttendsOnThursday = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AttendsOnFriday = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AttendsOnSaturday = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ArtPreviewCaption = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ArtistThumbnailImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    ArtistImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    ArtPreviewImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    IsAfterDark = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Categories = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Keywords = table.Column<string>(type: "json", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Dealers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Dealers_Images_ArtPreviewImageId",
+                        column: x => x.ArtPreviewImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Dealers_Images_ArtistImageId",
+                        column: x => x.ArtistImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Dealers_Images_ArtistThumbnailImageId",
+                        column: x => x.ArtistThumbnailImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Events",
                 columns: table => new
                 {
@@ -644,9 +560,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Events_EventConferenceRoomRecord_ConferenceRoomId",
+                        name: "FK_Events_EventConferenceRooms_ConferenceRoomId",
                         column: x => x.ConferenceRoomId,
-                        principalTable: "EventConferenceRoomRecord",
+                        principalTable: "EventConferenceRooms",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -655,6 +571,75 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         principalTable: "EventConferenceTracks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Events_Images_BannerImageId",
+                        column: x => x.BannerImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Events_Images_PosterImageId",
+                        column: x => x.PosterImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "FursuitBadges",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ExternalReference = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerUid = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    WornBy = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Species = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Gender = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsPublic = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CollectionCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FursuitBadges", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FursuitBadges_Images_ImageId",
+                        column: x => x.ImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Maps",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Description = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    IsBrowseable = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ImageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Maps", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Maps_Images_ImageId",
+                        column: x => x.ImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -665,6 +650,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     CreatedDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     OwnerUid = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerUsername = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DisplayName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -685,40 +672,40 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 {
                     table.PrimaryKey("PK_TableRegistrations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TableRegistrations_ImageFragment_ImageId",
+                        name: "FK_TableRegistrations_Images_ImageId",
                         column: x => x.ImageId,
-                        principalTable: "ImageFragment",
+                        principalTable: "Images",
                         principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Maps",
+                name: "ImageRecordKnowledgeEntryRecord",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    ImageId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Description = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Order = table.Column<int>(type: "int", nullable: false),
-                    IsBrowseable = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                    ImagesId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    KnowledgeEntriesId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Maps", x => x.Id);
+                    table.PrimaryKey("PK_ImageRecordKnowledgeEntryRecord", x => new { x.ImagesId, x.KnowledgeEntriesId });
                     table.ForeignKey(
-                        name: "FK_Maps_Images_ImageId",
-                        column: x => x.ImageId,
+                        name: "FK_ImageRecordKnowledgeEntryRecord_Images_ImagesId",
+                        column: x => x.ImagesId,
                         principalTable: "Images",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ImageRecordKnowledgeEntryRecord_KnowledgeEntries_KnowledgeEn~",
+                        column: x => x.KnowledgeEntriesId,
+                        principalTable: "KnowledgeEntries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "CollectionEntry",
+                name: "CollectionEntries",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
@@ -733,14 +720,14 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CollectionEntry", x => x.Id);
+                    table.PrimaryKey("PK_CollectionEntries", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CollectionEntry_FursuitParticipations_FursuitParticipationRe~",
+                        name: "FK_CollectionEntries_FursuitParticipations_FursuitParticipation~",
                         column: x => x.FursuitParticipationRecordId,
                         principalTable: "FursuitParticipations",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_CollectionEntry_PlayerParticipations_PlayerParticipationReco~",
+                        name: "FK_CollectionEntries_PlayerParticipations_PlayerParticipationRe~",
                         column: x => x.PlayerParticipationRecordId,
                         principalTable: "PlayerParticipations",
                         principalColumn: "Id");
@@ -748,7 +735,29 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "IssueRecord",
+                name: "Topics",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Name = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PushNotificationChannelRecordId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Topics", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Topics_PushNotificationChannels_PushNotificationChannelRecor~",
+                        column: x => x.PushNotificationChannelRecordId,
+                        principalTable: "PushNotificationChannels",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "IssueRecords",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
@@ -763,12 +772,86 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_IssueRecord", x => x.Id);
+                    table.PrimaryKey("PK_IssueRecords", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_IssueRecord_RegSysAlternativePins_RegSysAlternativePinRecord~",
+                        name: "FK_IssueRecords_RegSysAlternativePins_RegSysAlternativePinRecor~",
                         column: x => x.RegSysAlternativePinRecordId,
                         principalTable: "RegSysAlternativePins",
                         principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Roles",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Name = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RegSysAccessTokenRecordId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    RegSysIdentityRecordId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Roles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Roles_RegSysAccessTokens_RegSysAccessTokenRecordId",
+                        column: x => x.RegSysAccessTokenRecordId,
+                        principalTable: "RegSysAccessTokens",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Roles_RegSysIdentities_RegSysIdentityRecordId",
+                        column: x => x.RegSysIdentityRecordId,
+                        principalTable: "RegSysIdentities",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "EventFeedbacks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    EventId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Message = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EventFeedbacks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EventFeedbacks_Events_EventId",
+                        column: x => x.EventId,
+                        principalTable: "Events",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "MapEntries",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    X = table.Column<int>(type: "int", nullable: false),
+                    Y = table.Column<int>(type: "int", nullable: false),
+                    TapRadius = table.Column<int>(type: "int", nullable: false),
+                    MapId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MapEntries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MapEntries_Maps_MapId",
+                        column: x => x.MapId,
+                        principalTable: "Maps",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -793,27 +876,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         name: "FK_StateChangeRecord_TableRegistrations_TableRegistrationRecord~",
                         column: x => x.TableRegistrationRecordId,
                         principalTable: "TableRegistrations",
-                        principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "MapEntries",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    X = table.Column<int>(type: "int", nullable: false),
-                    Y = table.Column<int>(type: "int", nullable: false),
-                    TapRadius = table.Column<int>(type: "int", nullable: false),
-                    MapId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MapEntries", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MapEntries_Maps_MapId",
-                        column: x => x.MapId,
-                        principalTable: "Maps",
                         principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -856,14 +918,44 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CollectionEntry_FursuitParticipationRecordId",
-                table: "CollectionEntry",
+                name: "IX_Announcements_ImageId",
+                table: "Announcements",
+                column: "ImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CollectionEntries_FursuitParticipationRecordId",
+                table: "CollectionEntries",
                 column: "FursuitParticipationRecordId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CollectionEntry_PlayerParticipationRecordId",
-                table: "CollectionEntry",
+                name: "IX_CollectionEntries_PlayerParticipationRecordId",
+                table: "CollectionEntries",
                 column: "PlayerParticipationRecordId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Dealers_ArtistImageId",
+                table: "Dealers",
+                column: "ArtistImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Dealers_ArtistThumbnailImageId",
+                table: "Dealers",
+                column: "ArtistThumbnailImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Dealers_ArtPreviewImageId",
+                table: "Dealers",
+                column: "ArtPreviewImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventFeedbacks_EventId",
+                table: "EventFeedbacks",
+                column: "EventId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Events_BannerImageId",
+                table: "Events",
+                column: "BannerImageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Events_ConferenceDayId",
@@ -881,8 +973,23 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 column: "ConferenceTrackId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_IssueRecord_RegSysAlternativePinRecordId",
-                table: "IssueRecord",
+                name: "IX_Events_PosterImageId",
+                table: "Events",
+                column: "PosterImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FursuitBadges_ImageId",
+                table: "FursuitBadges",
+                column: "ImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ImageRecordKnowledgeEntryRecord_KnowledgeEntriesId",
+                table: "ImageRecordKnowledgeEntryRecord",
+                column: "KnowledgeEntriesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_IssueRecords_RegSysAlternativePinRecordId",
+                table: "IssueRecords",
                 column: "RegSysAlternativePinRecordId");
 
             migrationBuilder.CreateIndex(
@@ -911,6 +1018,16 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 column: "ImageId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Roles_RegSysAccessTokenRecordId",
+                table: "Roles",
+                column: "RegSysAccessTokenRecordId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Roles_RegSysIdentityRecordId",
+                table: "Roles",
+                column: "RegSysIdentityRecordId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StateChangeRecord_TableRegistrationRecordId",
                 table: "StateChangeRecord",
                 column: "TableRegistrationRecordId");
@@ -919,6 +1036,11 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 name: "IX_TableRegistrations_ImageId",
                 table: "TableRegistrations",
                 column: "ImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Topics_PushNotificationChannelRecordId",
+                table: "Topics",
+                column: "PushNotificationChannelRecordId");
         }
 
         /// <inheritdoc />
@@ -931,7 +1053,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 name: "Announcements");
 
             migrationBuilder.DropTable(
-                name: "CollectionEntry");
+                name: "CollectionEntries");
 
             migrationBuilder.DropTable(
                 name: "EntityStorageInfos");
@@ -940,19 +1062,13 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 name: "EventFeedbacks");
 
             migrationBuilder.DropTable(
-                name: "Events");
-
-            migrationBuilder.DropTable(
-                name: "FursuitBadgeImages");
-
-            migrationBuilder.DropTable(
                 name: "FursuitBadges");
 
             migrationBuilder.DropTable(
-                name: "ImageContents");
+                name: "ImageRecordKnowledgeEntryRecord");
 
             migrationBuilder.DropTable(
-                name: "IssueRecord");
+                name: "IssueRecords");
 
             migrationBuilder.DropTable(
                 name: "ItemActivitys");
@@ -970,19 +1086,16 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 name: "PrivateMessages");
 
             migrationBuilder.DropTable(
-                name: "PushNotificationChannels");
-
-            migrationBuilder.DropTable(
-                name: "RegSysAccessTokens");
-
-            migrationBuilder.DropTable(
-                name: "RegSysIdentities");
+                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "StateChangeRecord");
 
             migrationBuilder.DropTable(
                 name: "Tokens");
+
+            migrationBuilder.DropTable(
+                name: "Topics");
 
             migrationBuilder.DropTable(
                 name: "Users");
@@ -994,13 +1107,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 name: "PlayerParticipations");
 
             migrationBuilder.DropTable(
-                name: "EventConferenceDays");
-
-            migrationBuilder.DropTable(
-                name: "EventConferenceRoomRecord");
-
-            migrationBuilder.DropTable(
-                name: "EventConferenceTracks");
+                name: "Events");
 
             migrationBuilder.DropTable(
                 name: "RegSysAlternativePins");
@@ -1015,13 +1122,28 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 name: "MapEntries");
 
             migrationBuilder.DropTable(
+                name: "RegSysAccessTokens");
+
+            migrationBuilder.DropTable(
+                name: "RegSysIdentities");
+
+            migrationBuilder.DropTable(
                 name: "TableRegistrations");
 
             migrationBuilder.DropTable(
-                name: "Maps");
+                name: "PushNotificationChannels");
 
             migrationBuilder.DropTable(
-                name: "ImageFragment");
+                name: "EventConferenceDays");
+
+            migrationBuilder.DropTable(
+                name: "EventConferenceRooms");
+
+            migrationBuilder.DropTable(
+                name: "EventConferenceTracks");
+
+            migrationBuilder.DropTable(
+                name: "Maps");
 
             migrationBuilder.DropTable(
                 name: "Images");
