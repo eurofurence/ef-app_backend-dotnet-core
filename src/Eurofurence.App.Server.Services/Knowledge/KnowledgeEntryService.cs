@@ -85,11 +85,16 @@ namespace Eurofurence.App.Server.Services.Knowledge
             existingEntity.Title = request.Title;
             existingEntity.Text = request.Text;
             existingEntity.Order = request.Order;
-            existingEntity.Links = request.Links;
 
             foreach (var existingLink in existingEntity.Links)
             {
-                if (!request.Links.Contains(existingLink))
+                var entityLinkInNewEntity = request.Links.FirstOrDefault(link => Equals(link, existingLink));
+
+                if (entityLinkInNewEntity != null)
+                {
+                    entityLinkInNewEntity.Id = existingLink.Id;
+                }
+                else
                 {
                     _appDbContext.LinkFragments.Remove(existingLink);
                 }
@@ -100,6 +105,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 if (!existingEntity.Links.Contains(link))
                 {
                     _appDbContext.LinkFragments.Add(link);
+                    existingEntity.Links.Add(link);
                 }
             }
 

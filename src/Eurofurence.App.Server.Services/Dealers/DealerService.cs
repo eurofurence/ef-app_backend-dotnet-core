@@ -71,7 +71,13 @@ namespace Eurofurence.App.Server.Services.Dealers
 
             foreach (var existingLink in existingEntity.Links)
             {
-                if (!entity.Links.Contains(existingLink))
+                var entityLinkInNewEntity = entity.Links.FirstOrDefault(link => Equals(link, existingLink));
+
+                if (entityLinkInNewEntity != null)
+                {
+                    entityLinkInNewEntity.Id = existingLink.Id;
+                }
+                else
                 {
                     _appDbContext.LinkFragments.Remove(existingLink);
                 }
@@ -84,6 +90,7 @@ namespace Eurofurence.App.Server.Services.Dealers
                     _appDbContext.LinkFragments.Add(link);
                 }
             }
+
             await base.ReplaceOneAsync(entity);
         }
 

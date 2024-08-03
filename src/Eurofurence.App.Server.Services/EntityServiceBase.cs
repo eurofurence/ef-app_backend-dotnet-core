@@ -197,11 +197,11 @@ namespace Eurofurence.App.Server.Services
             {
                 if (item.IsDeleted == 1)
                 {
-                    _appDbContext.Remove(item);
+                    _appDbContext.Set<T>().Remove(item);
                 } else
                 {
                     item.Touch();
-                    _appDbContext.Update(item);
+                    _appDbContext.Set<T>().Update(item);
                 }
             }
 

@@ -48,8 +48,6 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         [DataMember]
         public string Location { get; set; }
 
-        public Guid? ImageId { get; set; }
-
         [DataMember]
         public Guid? ImageId { get; set; }
 
