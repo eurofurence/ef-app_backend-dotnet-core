@@ -66,11 +66,11 @@ namespace Eurofurence.App.Server.Services.Events
             var fileStream = await httpClient.GetStreamAsync(_configuration.Url);
             TextReader reader = new StreamReader(fileStream);
 
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture) { Delimiter = "," });
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
             csv.Context.RegisterClassMap<EventImportRowClassMap>();
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
             csvRecords = csvRecords
-                .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.CurrentCultureIgnoreCase)).ToList();
+                .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
             if (csvRecords.Count == 0) return;
 
@@ -86,7 +86,7 @@ namespace Eurofurence.App.Server.Services.Events
                 .Distinct().OrderBy(a => a).ToList();
 
             var conferenceDays = csvRecords.Select(a =>
-                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay), DateTimeKind.Utc),
+                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, new CultureInfo("de-DE")), DateTimeKind.Utc),
                         a.ConferenceDayName))
                 .Distinct().OrderBy(a => a).ToList();
 
