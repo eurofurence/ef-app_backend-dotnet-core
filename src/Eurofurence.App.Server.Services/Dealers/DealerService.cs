@@ -304,11 +304,9 @@ namespace Eurofurence.App.Server.Services.Dealers
                 }
                 return existingImage.Id;
             }
-            else
-            {
-                var result = await _imageService.InsertImageAsync(internalReference, ms);
-                return result?.Id;
-            }
+
+            var result = await _imageService.InsertImageAsync(internalReference, ms);
+            return result?.Id;
         }
     }
 

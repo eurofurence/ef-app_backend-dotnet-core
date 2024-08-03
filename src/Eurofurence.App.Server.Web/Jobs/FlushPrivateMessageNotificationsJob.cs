@@ -34,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
+                _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }
 
             return Task.CompletedTask;

@@ -707,7 +707,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 await _appDbContext.SaveChangesAsync();
 
-                _logger.LogInformation(LogEvents.Import, "fursuit collection game participation import finished successfully.");
+                _logger.LogInformation(LogEvents.Import, "Fursuit collection game participation import finished successfully.");
             }
             finally
             {

@@ -19,7 +19,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public async Task PushAnnouncementNotificationAsync(AnnouncementRecord announcement)
         {
             await _wnsChannelManager.PushAnnouncementNotificationAsync(announcement);
-
             if (announcement.ValidFromDateTimeUtc <= DateTime.UtcNow)
                 await _firebaseChannelManager.PushAnnouncementNotificationAsync(announcement);
         }

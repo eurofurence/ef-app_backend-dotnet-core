@@ -9,6 +9,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
@@ -42,7 +43,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             };
 
             var recipients = GetAllRecipientsAsyncByTopic(_configuration.TargetTopic);
-
             await SendRawAsync(recipients, JsonSerializer.Serialize(message));
         }
 

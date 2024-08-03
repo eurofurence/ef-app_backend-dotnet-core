@@ -30,7 +30,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
+                _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }
         }
     }

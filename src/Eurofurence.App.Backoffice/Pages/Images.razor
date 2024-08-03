@@ -71,6 +71,12 @@
                         <MudIcon Icon="@Icons.Material.Outlined.Event"></MudIcon>
                     </MudTooltip>
                 }
+                @if (context.Item?.AnnouncementIds.Count > 0)
+                {
+                    <MudTooltip Text="Announcements">
+                        <MudIcon Icon="@Icons.Material.Outlined.Announcement"></MudIcon>
+                    </MudTooltip>
+                }
             </CellTemplate>
         </TemplateColumn>
         <TemplateColumn>

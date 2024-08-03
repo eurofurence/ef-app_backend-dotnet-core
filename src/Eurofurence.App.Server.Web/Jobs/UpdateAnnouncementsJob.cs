@@ -11,6 +11,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
@@ -25,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Jobs
         private readonly ILogger _logger;
 
         public UpdateAnnouncementsJob(
-            IAnnouncementService announcementService, 
+            IAnnouncementService announcementService,
             IImageService imageService,
             IPushEventMediator pushEventMediator,
             AnnouncementConfiguration configuration,
@@ -75,13 +76,16 @@ namespace Eurofurence.App.Server.Web.Jobs
                     {
                         ExternalReference = j.GetProperty("id").GetString(),
                         Area = j.GetProperty("news").GetProperty("type").GetString().UppercaseFirst(),
-                        Author = j.GetProperty("news").GetProperty("department").GetString().UppercaseFirst() ?? "Eurofurence",
+                        Author = j.GetProperty("news").GetProperty("department").GetString().UppercaseFirst() ??
+                                 "Eurofurence",
                         Title = j.GetProperty("news").GetProperty("title").GetString(),
                         Content = j.GetProperty("news").GetProperty("message").GetString(),
-                        ValidFromDateTimeUtc = unixReference.AddSeconds(j.GetProperty("date").GetDouble()).ToUniversalTime(),
+                        ValidFromDateTimeUtc =
+                            unixReference.AddSeconds(double.Parse(j.GetProperty("date").ToString())).ToUniversalTime(),
                         ValidUntilDateTimeUtc = unixReference
-                            .AddSeconds(j.GetProperty("news").GetProperty("valid_until").GetDouble()).ToUniversalTime(),
-                        ImageId = GetImageIdForEntryAsync(j.GetProperty("id").GetString(), j.GetProperty("data").GetProperty("imagedata").GetString()).Result
+                            .AddSeconds(double.Parse(j.GetProperty("news").GetProperty("valid_until").ToString())).ToUniversalTime(),
+                        ImageId = j.GetProperty("data").TryGetProperty("imagedata", out var _) == true ? GetImageIdForEntryAsync(j.GetProperty("id").GetString(),
+                            j.GetProperty("data").GetProperty("imagedata").GetString()).Result : null
                     },
                     Type = j.GetProperty("news").GetProperty("type").GetString()
                 }).ToList();
@@ -120,7 +124,9 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 foreach (var record in diff.Where(a => a.Action == ActionEnum.Add))
                 {
-                    _logger.LogInformation(LogEvents.Import, "Sending push notification for announcement {id} ({title})", record.Entity.Id, record.Entity.Title);
+                    _logger.LogInformation(LogEvents.Import,
+                        "Sending push notification for announcement {id} ({title})", record.Entity.Id,
+                        record.Entity.Title);
                     await _pushEventMediator.PushAnnouncementNotificationAsync(record.Entity);
                 }
 
@@ -128,9 +134,9 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
-                _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception {e.Message} {e.StackTrace}");
+                _logger.LogError(LogEvents.Import,
+                    $"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }
-
         }
 
         private async Task<Guid?> GetImageIdForEntryAsync(string reference, string imageDataBase64)
@@ -140,9 +146,21 @@ namespace Eurofurence.App.Server.Web.Jobs
             if (string.IsNullOrWhiteSpace(imageDataBase64)) return null;
             var imageBytes = Convert.FromBase64String(imageDataBase64);
 
+            var existingImage = await _imageService.FindAll()
+                .FirstOrDefaultAsync(image => image.InternalReference == reference);
+
             using MemoryStream ms = new(imageBytes);
-            var image = await _imageService.InsertImageAsync(reference, ms);
-            return image.Id;
+            if (existingImage != null)
+            {
+                if (ms.Length != existingImage.SizeInBytes)
+                {
+                    await _imageService.ReplaceImageAsync(existingImage.Id, reference, ms);
+                }
+                return existingImage.Id;
+            }
+
+            var result = await _imageService.InsertImageAsync(reference, ms);
+            return result?.Id;
         }
     }
 }
