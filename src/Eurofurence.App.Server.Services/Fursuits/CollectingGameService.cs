@@ -649,13 +649,15 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         public async Task UpdateFursuitParticipationAsync()
         {
+            _logger.LogInformation(LogEvents.Import, "Starting fursuit collection game participation import.");
+
             try
             {
                 await _semaphore.WaitAsync();
 
                 var participatingFursuitBadges =
-                    _appDbContext.FursuitBadges.Where(badge => !string.IsNullOrEmpty(badge.CollectionCode));
-                var fursuitParticipationRecords = _appDbContext.FursuitParticipations;
+                    _appDbContext.FursuitBadges.Where(badge => !string.IsNullOrEmpty(badge.CollectionCode)).AsNoTracking();
+                var fursuitParticipationRecords = _appDbContext.FursuitParticipations.AsNoTracking();
 
                 var toJoin = participatingFursuitBadges
                     .Where(badge => !fursuitParticipationRecords.Any(fpr => fpr.FursuitBadgeId == badge.Id)).ToList();
@@ -674,9 +676,9 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     _appDbContext.FursuitParticipations.Add(newParticipation);
                 }
 
-                foreach (var existingParticipation in fursuitParticipationRecords)
+                foreach (var existingParticipation in await fursuitParticipationRecords.ToListAsync())
                 {
-                    var badge = participatingFursuitBadges.SingleOrDefault(badge =>
+                    var badge = await participatingFursuitBadges.FirstOrDefaultAsync(badge =>
                         badge.Id == existingParticipation.FursuitBadgeId);
 
                     // Badge exists, collection code is the same? Move on.
@@ -704,6 +706,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 }
 
                 await _appDbContext.SaveChangesAsync();
+
+                _logger.LogInformation(LogEvents.Import, "Fursuit collection game participation import finished successfully.");
             }
             finally
             {

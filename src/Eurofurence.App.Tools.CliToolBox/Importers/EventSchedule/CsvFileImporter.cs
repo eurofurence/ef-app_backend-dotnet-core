@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -166,15 +167,13 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
         public int ImportCsvFile(string inputPath)
         {
             var stream = new FileStream(inputPath, FileMode.Open);
-            TextReader r = new StreamReader(stream);
+            TextReader reader = new StreamReader(stream);
 
-            var csv = new CsvReader(r, CultureInfo.CurrentCulture);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
             csv.Context.RegisterClassMap<EventImportRowClassMap>();
-            csv.Context.Configuration.Delimiter = ",";
             var csvRecords = csv.GetRecords<EventImportRow>().ToList();
-
             csvRecords = csvRecords
-                .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.CurrentCultureIgnoreCase)).ToList();
+                .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
             if (csvRecords.Count == 0) return 0;
 
@@ -190,7 +189,7 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
                 .Distinct().OrderBy(a => a).ToList();
 
             var conferenceDays = csvRecords.Select(a =>
-                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay), DateTimeKind.Utc),
+                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, new CultureInfo("de-DE")), DateTimeKind.Utc),
                         a.ConferenceDayName))
                 .Distinct().OrderBy(a => a).ToList();
 
@@ -212,10 +211,10 @@ namespace Eurofurence.App.Tools.CliToolBox.Importers.EventSchedule
             var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
             var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, ref modifiedRecords);
             var eventEntries = UpdateEventEntries(csvRecords,
-               eventConferenceTracks,
-               eventConferenceRooms,
-               eventConferenceDays,
-               ref modifiedRecords);
+                eventConferenceTracks,
+                eventConferenceRooms,
+                eventConferenceDays,
+                ref modifiedRecords);
 
             return modifiedRecords;
         }

@@ -595,13 +595,9 @@ namespace Eurofurence.App.Server.Services.Telegram
                     {
                         var records = _tableRegistrationService.GetRegistrations(Domain.Model.ArtistsAlley
                             .TableRegistrationRecord.RegistrationStateEnum.Pending);
-                        var ownerUids = records.Select(a => a.OwnerUid);
-                        var ownerIdentities = _appDbContext.RegSysIdentities
-                            .AsNoTracking()
-                            .Where(a => ownerUids.Contains(a.Uid));
 
                         var list = records.Select(record =>
-                            $"{record.OwnerUid} {ownerIdentities.Single(a => a.Uid == record.OwnerUid).Username.RemoveMarkdown()}=*edit-{record.Id}"
+                            $"{record.OwnerUid} {record.OwnerUsername.RemoveMarkdown()}=*edit-{record.Id}"
                         ).ToList();
 
                         list.Add("Cancel=/cancel");
@@ -625,17 +621,11 @@ namespace Eurofurence.App.Server.Services.Telegram
                                 }
                                 else
                                 {
-                                    var ownerIdentity =
-                                        await _appDbContext.RegSysIdentities
-                                            .AsNoTracking()
-                                            .FirstOrDefaultAsync(a =>
-                                            a.Uid == nextRecord.OwnerUid);
-
                                     var message = new StringBuilder();
 
                                     message.AppendLine("You are reviewing:");
                                     message.AppendLine(
-                                        $"*Id:*`{nextRecord.Id}` (from: {nextRecord.OwnerUid} {ownerIdentity.Username.RemoveMarkdown()})\n");
+                                        $"*Id:*`{nextRecord.Id}` (from: {nextRecord.OwnerUid} {nextRecord.OwnerUsername.RemoveMarkdown()})\n");
 
                                     message.AppendLine($"Location: `{nextRecord.Location.RemoveMarkdown()}`");
                                     message.AppendLine($"Display Name: *{nextRecord.DisplayName.RemoveMarkdown()}*");

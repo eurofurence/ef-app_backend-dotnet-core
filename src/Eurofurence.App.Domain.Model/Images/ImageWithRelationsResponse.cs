@@ -8,6 +8,9 @@ namespace Eurofurence.App.Domain.Model.Images
     public class ImageWithRelationsResponse : ImageResponse
     {
         [DataMember]
+        public List<Guid> AnnouncementIds { get; set; } = new();
+
+        [DataMember]
         public List<Guid> KnowledgeEntryIds { get; set; } = new();
 
         [DataMember]

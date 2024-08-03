@@ -56,6 +56,11 @@ namespace Eurofurence.App.Server.Services
 
         public virtual async Task ReplaceMultipleAsync(IQueryable<T> entities)
         {
+            if (entities == null || !entities.Any())
+            {
+                return;
+            }
+
             foreach (var entity in entities)
             {
                 entity.Touch();
@@ -69,7 +74,7 @@ namespace Eurofurence.App.Server.Services
         public virtual async Task InsertOneAsync(T entity)
         {
             entity.Touch();
-            await _appDbContext.AddAsync(entity);
+            _appDbContext.Add(entity);
             await _storageService.TouchAsync();
             await _appDbContext.SaveChangesAsync();
         }
@@ -192,11 +197,11 @@ namespace Eurofurence.App.Server.Services
             {
                 if (item.IsDeleted == 1)
                 {
-                    _appDbContext.Remove(item);
+                    _appDbContext.Set<T>().Remove(item);
                 } else
                 {
                     item.Touch();
-                    _appDbContext.Update(item);
+                    _appDbContext.Set<T>().Update(item);
                 }
             }
 

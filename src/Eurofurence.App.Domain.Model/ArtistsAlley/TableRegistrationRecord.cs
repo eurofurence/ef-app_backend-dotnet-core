@@ -31,6 +31,9 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         public string OwnerUid { get; set; }
 
         [DataMember]
+        public string OwnerUsername { get; set; }
+
+        [DataMember]
         public string DisplayName { get; set; }
 
         [DataMember]

@@ -1,22 +1,22 @@
-﻿using Eurofurence.App.Server.Services.Abstractions.Fursuits;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using System;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Quartz;
 using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
-    public class UpdateFursuitCollectionGameParticipationJob : IJob
+    public class UpdateDealersJob : IJob
     {
-        private readonly ICollectingGameService _collectingGameService;
+        private readonly IDealerService _dealerService;
         private readonly ILogger _logger;
 
-        public UpdateFursuitCollectionGameParticipationJob(
+        public UpdateDealersJob(
             ILoggerFactory loggerFactory,
-            ICollectingGameService collectingGameService)
+            IDealerService dealerService)
         {
-            _collectingGameService = collectingGameService;
+            _dealerService = dealerService;
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
             try
             {
-                await _collectingGameService.UpdateFursuitParticipationAsync();
+                await _dealerService.RunImportAsync();
             }
             catch (Exception e)
             {

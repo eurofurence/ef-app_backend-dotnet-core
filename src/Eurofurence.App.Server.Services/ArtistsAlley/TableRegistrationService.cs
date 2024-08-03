@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
@@ -10,6 +11,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,24 +47,23 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             return records;
         }
 
-        public async Task RegisterTableAsync(string uid, TableRegistrationRequest request)
+        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
         {
-            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == uid);
-
             var image = await _imageService.FindOneAsync(request.ImageId);
 
-            image = await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
+            await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
-                OwnerUid = uid,
+                OwnerUid = user.GetSubject(),
+                OwnerUsername = user.Identity?.Name,
                 CreatedDateTimeUtc = DateTime.UtcNow,
                 DisplayName = request.DisplayName,
                 WebsiteUrl = request.WebsiteUrl,
                 ShortDescription = request.ShortDescription,
                 TelegramHandle = request.TelegramHandle,
                 Location = request.Location,
-                Image = image,
+                ImageId = request.ImageId,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
             };
 
@@ -72,7 +73,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _appDbContext.TableRegistrations.Add(record);
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*New Request:* {identity.Username.EscapeMarkdown()} ({uid.EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Location:* {record.Location.RemoveMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
+                $"*New Request:* {record.OwnerUsername.EscapeMarkdown()} ({user.GetSubject().EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Location:* {record.Location.RemoveMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
             await _appDbContext.SaveChangesAsync();
         }
 
@@ -80,23 +81,21 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                                                                            && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
-
             record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*Approved:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
+                $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
 
             await BroadcastAsync(record);
 
-            var message = $"Dear {identity.Username},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
+            var message = $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
 
             var sendPrivateMessageRequest = new SendPrivateMessageRequest()
             {
                 AuthorName = "Artist Alley",
-                RecipientUid = identity.Uid,
+                RecipientUid = record.OwnerUid,
                 Subject = "Your table registration was accepted",
                 Message = message,
                 ToastTitle = "Artist Alley",
@@ -152,20 +151,19 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                 && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var identity = await _appDbContext.RegSysIdentities.AsNoTracking().FirstOrDefaultAsync(a => a.Uid == record.OwnerUid);
 
             record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
-                $"*Rejected:* {identity.Username.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
+                $"*Rejected:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
 
-            var message = $"Dear {identity.Username},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
+            var message = $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
 
             var sendPrivateMessageRequest = new SendPrivateMessageRequest()
             {
                 AuthorName = "Artist Alley",
-                RecipientUid = identity.Uid,
+                RecipientUid = record.OwnerUid,
                 Subject = "Your table registration was rejected",
                 Message = message,
                 ToastTitle = "Artist Alley",

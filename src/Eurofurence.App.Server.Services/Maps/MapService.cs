@@ -111,7 +111,13 @@ namespace Eurofurence.App.Server.Services.Maps
 
             foreach (var existingLink in existingEntity.Links)
             {
-                if (entity.Links.All(link => link.Id != existingLink.Id))
+                var entityLinkInNewEntity = entity.Links.FirstOrDefault(link => Equals(link, existingLink));
+
+                if (entityLinkInNewEntity != null)
+                {
+                    entityLinkInNewEntity.Id = existingLink.Id;
+                }
+                else
                 {
                     _appDbContext.LinkFragments.Remove(existingLink);
                 }
@@ -119,13 +125,10 @@ namespace Eurofurence.App.Server.Services.Maps
 
             foreach (var link in entity.Links)
             {
-                if (_appDbContext.LinkFragments.Any(l => l.Id == link.Id))
+                if (!existingEntity.Links.Contains(link))
                 {
-                    _appDbContext.LinkFragments.Update(link);
-                    continue;
+                    _appDbContext.LinkFragments.Add(link);
                 }
-
-                _appDbContext.LinkFragments.Add(link);
             }
 
             _appDbContext.MapEntries.Update(entity);

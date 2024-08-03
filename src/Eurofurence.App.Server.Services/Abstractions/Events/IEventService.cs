@@ -1,6 +1,7 @@
 using Eurofurence.App.Domain.Model.Events;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
@@ -12,5 +13,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
             DateTime conflictStartTime,
             DateTime conflictEndTime,
             TimeSpan tolerance);
+
+        public Task RunImportAsync();
     }
 }

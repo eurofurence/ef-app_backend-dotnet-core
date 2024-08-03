@@ -137,7 +137,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             result.PrivateMessageId = privateMessageId;
             result.NotificationDateTimeUtc = DateTime.UtcNow;
 
-            _appDbContext.Update(result);
+            _appDbContext.AgentClosingResults.Update(result);
             await _appDbContext.SaveChangesAsync();
         }
 

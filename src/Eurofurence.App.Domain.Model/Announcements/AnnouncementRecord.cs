@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
@@ -36,5 +37,8 @@ namespace Eurofurence.App.Domain.Model.Announcements
 
         [DataMember]
         public Guid? ImageId { get; set; }
+
+        [IgnoreDataMember]
+        public ImageRecord Image { get; set; }
     }
 }

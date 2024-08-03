@@ -1,30 +1,37 @@
 ﻿using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.LostAndFound;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Services.LostAndFound
 {
     public class LostAndFoundLassieImporter : ILostAndFoundLassieImporter
     {
-        private ILostAndFoundService _lostAndFoundService;
-        private ILassieApiClient _lassieApiClient;
+        private readonly ILostAndFoundService _lostAndFoundService;
+        private readonly ILassieApiClient _lassieApiClient;
+        private readonly ILogger _logger;
 
         public LostAndFoundLassieImporter(
             ILostAndFoundService lostAndFoundService,
-            ILassieApiClient lassieApiClient
+            ILassieApiClient lassieApiClient,
+            ILoggerFactory loggerFactory
             )
         {
             _lostAndFoundService = lostAndFoundService;
             _lassieApiClient = lassieApiClient;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         public async Task RunImportAsync()
         {
+            _logger.LogInformation(LogEvents.Import, "Starting LostAndFound import.");
+
             var existingRecords = _lostAndFoundService.FindAll();
             var newRecords = await _lassieApiClient.QueryLostAndFoundDbAsync();
 
@@ -55,6 +62,8 @@ namespace Eurofurence.App.Server.Services.LostAndFound
             var patchResult = patch.Patch(newRecords, existingRecords);
 
             await _lostAndFoundService.ApplyPatchOperationAsync(patchResult);
+
+            _logger.LogInformation(LogEvents.Import, "LostAndFound import finished successfully.");
         }
     }
 }
