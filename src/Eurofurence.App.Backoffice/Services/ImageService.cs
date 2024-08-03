@@ -9,6 +9,11 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class ImageService(HttpClient http) : IImageService
     {
+        public async Task<ImageResponse?> GetImageAsync(Guid id)
+        {
+            return (await http.GetFromJsonAsync<ImageResponse>($"images/{id}"));
+        }
+
         public async Task<ImageResponse[]> GetImagesAsync()
         {
             return (await http.GetFromJsonAsync<ImageResponse[]>("images"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
@@ -17,18 +22,6 @@ namespace Eurofurence.App.Backoffice.Services
         public async Task<ImageWithRelationsResponse[]> GetImagesWithRelationsAsync()
         {
             return (await http.GetFromJsonAsync<ImageWithRelationsResponse[]>("images/with-relations"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
-        }
-
-        public async Task<string> GetImageContentAsync(Guid id)
-        {
-            try
-            {
-                return Convert.ToBase64String(await http.GetByteArrayAsync($"images/{id}/Content"));
-            }
-            catch
-            {
-                return string.Empty;
-            }
         }
 
         public async Task<ImageResponse?> PutImageAsync(Guid id, IBrowserFile file)
