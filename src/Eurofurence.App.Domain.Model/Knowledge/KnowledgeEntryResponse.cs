@@ -25,6 +25,6 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         public virtual List<LinkFragment> Links { get; set; } = new();
 
         [DataMember]
-        public virtual List<ImageResponse> Images { get; set; } = new();
+        public virtual List<Guid> ImageIds { get; set; } = new();
     }
 }
