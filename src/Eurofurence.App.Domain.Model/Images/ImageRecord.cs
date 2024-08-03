@@ -39,6 +39,14 @@ namespace Eurofurence.App.Domain.Model.Images
         [DataMember]
         public string ContentHashSha1 { get; set; }
 
+        [Required]
+        [DataMember]
+        public string Url { get; set; }
+
+        [Required]
+        [JsonIgnore]
+        public string InternalFileName { get; set; }
+
         [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<AnnouncementRecord> Announcements { get; set; } = new();

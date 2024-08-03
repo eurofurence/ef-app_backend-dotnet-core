@@ -1,4 +1,5 @@
 ﻿using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Images
 {
@@ -22,5 +23,11 @@ namespace Eurofurence.App.Domain.Model.Images
 
         [DataMember]
         public string ContentHashSha1 { get; set; }
+
+        [DataMember]
+        public string Url { get; set; }
+
+        [JsonIgnore]
+        public string InternalFileName { get; set; }
     }
 }
