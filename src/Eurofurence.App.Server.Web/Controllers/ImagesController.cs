@@ -33,10 +33,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All images.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<ImageResponse>), 200)]
-        public IEnumerable<ImageResponse> GetImagesAsync()
+        [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
+        public IEnumerable<ImageRecord> GetImagesAsync()
         {
-            return _mapper.Map<IEnumerable<ImageResponse>>(_imageService.FindAll());
+            return _imageService.FindAll();
         }
 
         /// <summary>
@@ -68,10 +68,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(ImageResponse), 200)]
-        public async Task<ImageResponse> GetImageAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(ImageRecord), 200)]
+        public async Task<ImageRecord> GetImageAsync([FromRoute] Guid id)
         {
-            return _mapper.Map<ImageResponse>(await _imageService.FindOneAsync(id).Transient404(HttpContext));
+            return await _imageService.FindOneAsync(id).Transient404(HttpContext);
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 await file.CopyToAsync(ms);
                 var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
-                return Ok(_mapper.Map<ImageResponse>(result));
+                return Ok(result);
             }
         }
 
@@ -148,7 +148,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 await file.CopyToAsync(ms);
                 var result = await _imageService.InsertImageAsync(file.FileName, ms);
-                return Ok(_mapper.Map<ImageResponse>(result));
+                return Ok(result);
             }
         }
 

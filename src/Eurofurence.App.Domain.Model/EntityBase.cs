@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Common.Abstractions;
 
 namespace Eurofurence.App.Domain.Model
@@ -22,7 +23,7 @@ namespace Eurofurence.App.Domain.Model
         [Required]
         public Guid Id { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         [Required]
         public int IsDeleted { get; set; }
 

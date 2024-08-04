@@ -47,43 +47,33 @@ namespace Eurofurence.App.Domain.Model.Images
         [JsonIgnore]
         public string InternalFileName { get; set; }
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<AnnouncementRecord> Announcements { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<KnowledgeEntryRecord> KnowledgeEntries { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<TableRegistrationRecord> TableRegistrations { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<MapRecord> Maps { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<EventRecord> EventBanners { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<EventRecord> EventPosters { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<DealerRecord> DealerArtists { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<DealerRecord> DealerArtistThumbnails { get; set; } = new();
 
-        [IgnoreDataMember]
         [JsonIgnore]
         public virtual List<DealerRecord> DealerArtPreviews { get; set; } = new();
     }

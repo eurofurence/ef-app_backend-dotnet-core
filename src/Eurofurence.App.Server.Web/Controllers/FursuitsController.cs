@@ -16,16 +16,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IFursuitBadgeService _fursuitBadgeService;
         private readonly ICollectingGameService _collectingGameService;
-        private readonly IMapper _mapper;
 
         public FursuitsController(
             IFursuitBadgeService fursuitBadgeService,
-            ICollectingGameService collectingGameService,
-            IMapper mapper)
+            ICollectingGameService collectingGameService)
         {
             _fursuitBadgeService = fursuitBadgeService;
             _collectingGameService = collectingGameService;
-            _mapper = mapper;
         }
         /// <summary>
         ///     Upsert Fursuit Badge information
@@ -54,11 +51,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </remarks>
         [Authorize(Roles = "System,Developer,FursuitBadgeSystem")]
         [HttpGet("Badges")]
-        [ProducesResponseType(typeof(IEnumerable<FursuitBadgeResponse>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<FursuitBadgeRecord>), 200)]
         [ProducesResponseType(401)]
-        public IEnumerable<FursuitBadgeResponse> GetFursuitBadgesAsync(FursuitBadgeFilter filter)
+        public IEnumerable<FursuitBadgeRecord> GetFursuitBadgesAsync(FursuitBadgeFilter filter)
         {
-            return _mapper.Map<IEnumerable<FursuitBadgeResponse>>(_fursuitBadgeService.GetFursuitBadges(filter));
+            return _fursuitBadgeService.GetFursuitBadges(filter);
         }
 
         /// <summary>
@@ -104,10 +101,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("CollectingGame/FursuitParticipation")]
-        [ProducesResponseType(typeof(IEnumerable<FursuitParticipationInfoResponse>), 200)]
-        public Task<IEnumerable<FursuitParticipationInfoResponse>> GetFursuitParticipationInfoForOwnerAsync()
+        [ProducesResponseType(typeof(IEnumerable<FursuitParticipationInfo>), 200)]
+        public Task<IEnumerable<FursuitParticipationInfo>> GetFursuitParticipationInfoForOwnerAsync()
         {
-            return _mapper.Map<Task<IEnumerable<FursuitParticipationInfoResponse>>>(_collectingGameService.GetFursuitParticipationInfoForOwnerAsync(User.GetSubject()));
+            return _collectingGameService.GetFursuitParticipationInfoForOwnerAsync(User.GetSubject());
         }
 
         [Authorize(Roles = "Attendee")]

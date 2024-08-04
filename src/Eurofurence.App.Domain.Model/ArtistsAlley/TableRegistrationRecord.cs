@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
@@ -57,7 +58,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         [DataMember]
         public RegistrationStateEnum State { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public IList<StateChangeRecord> StateChangeLog { get; set; }
 
         public TableRegistrationRecord()

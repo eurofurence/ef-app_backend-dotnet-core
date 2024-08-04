@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.Fursuits
@@ -34,9 +35,13 @@ namespace Eurofurence.App.Domain.Model.Fursuits
         [DataMember]
         public bool IsPublic { get; set; }
 
+        [DataMember]
         public string CollectionCode { get; set; }
 
+        [DataMember]
         public Guid? ImageId { get; set; }
+
+        [JsonIgnore]
         public ImageRecord Image { get; set; }
     }
 }

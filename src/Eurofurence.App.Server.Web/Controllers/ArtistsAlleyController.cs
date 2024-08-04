@@ -14,12 +14,10 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ArtistsAlleyController : BaseController
     {
         private readonly ITableRegistrationService _tableRegistrationService;
-        private readonly IMapper _mapper;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IMapper mapper)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService)
         {
             _tableRegistrationService = tableRegistrationService;
-            _mapper = mapper;
         }
 
         /// <summary>
@@ -28,28 +26,28 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All table registrations.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
         [Authorize(Roles = "System,Developer,Admin")]
         [HttpGet]
-        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
+        public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
         {
-            return _mapper.Map<IEnumerable<TableRegistrationResponse>>(_tableRegistrationService.GetRegistrations(null));
+            return _tableRegistrationService.GetRegistrations(null);
         }
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromBody]TableRegistrationRequest Request)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromBody]TableRegistrationRequest request)
         {
-            await _tableRegistrationService.RegisterTableAsync(User, Request);
+            await _tableRegistrationService.RegisterTableAsync(User, request);
             return NoContent();
         }
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("TableRegistration/:my-latest")]
-        public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
+        public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return _mapper.Map<TableRegistrationResponse>(record.Transient404(HttpContext));
+            return record.Transient404(HttpContext);
         }
     }
 } 

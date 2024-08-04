@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 
@@ -29,7 +30,7 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [DataMember] 
         public virtual List<LinkFragment> Links { get; set; } = new();
 
-        [DataMember]
+        [JsonIgnore]
         public virtual List<ImageRecord> Images { get; set; } = new();
     }
 }

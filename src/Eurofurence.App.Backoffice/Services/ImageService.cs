@@ -9,14 +9,14 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class ImageService(HttpClient http) : IImageService
     {
-        public async Task<ImageResponse?> GetImageAsync(Guid id)
+        public async Task<ImageRecord?> GetImageAsync(Guid id)
         {
-            return (await http.GetFromJsonAsync<ImageResponse>($"images/{id}"));
+            return (await http.GetFromJsonAsync<ImageRecord>($"images/{id}"));
         }
 
-        public async Task<ImageResponse[]> GetImagesAsync()
+        public async Task<ImageRecord[]> GetImagesAsync()
         {
-            return (await http.GetFromJsonAsync<ImageResponse[]>("images"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<ImageRecord[]>("images"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
 
         public async Task<ImageWithRelationsResponse[]> GetImagesWithRelationsAsync()
@@ -24,7 +24,7 @@ namespace Eurofurence.App.Backoffice.Services
             return (await http.GetFromJsonAsync<ImageWithRelationsResponse[]>("images/with-relations"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
 
-        public async Task<ImageResponse?> PutImageAsync(Guid id, IBrowserFile file)
+        public async Task<ImageRecord?> PutImageAsync(Guid id, IBrowserFile file)
         {
             using (var content = new MultipartFormDataContent())
             {
@@ -36,11 +36,11 @@ namespace Eurofurence.App.Backoffice.Services
                 {
                     return null;
                 }
-                return JsonSerializer.Deserialize<ImageResponse>(await response.Content.ReadAsStreamAsync());
+                return JsonSerializer.Deserialize<ImageRecord>(await response.Content.ReadAsStreamAsync());
             }
         }
 
-        public async Task<ImageResponse?> PostImageAsync(IBrowserFile file)
+        public async Task<ImageRecord?> PostImageAsync(IBrowserFile file)
         {
             using (var content = new MultipartFormDataContent())
             {
@@ -52,7 +52,7 @@ namespace Eurofurence.App.Backoffice.Services
                 {
                     return null;
                 }
-                return JsonSerializer.Deserialize<ImageResponse>(await response.Content.ReadAsStreamAsync());
+                return JsonSerializer.Deserialize<ImageRecord>(await response.Content.ReadAsStreamAsync());
             }
         }
 

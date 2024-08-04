@@ -7,11 +7,11 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class FursuitService(HttpClient http) : IFursuitService
     {
-        public async Task<FursuitBadgeResponse[]> GetFursuitBadgesAsync()
+        public async Task<FursuitBadgeRecord[]> GetFursuitBadgesAsync()
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return (await http.GetFromJsonAsync<FursuitBadgeResponse[]>("Fursuits/Badges", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<FursuitBadgeRecord[]>("Fursuits/Badges", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
     }
 }

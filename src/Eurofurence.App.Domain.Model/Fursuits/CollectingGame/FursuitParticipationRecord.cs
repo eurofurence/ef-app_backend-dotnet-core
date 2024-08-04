@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.CollectionGame;
 
 namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
@@ -28,7 +29,7 @@ namespace Eurofurence.App.Domain.Model.Fursuits.CollectingGame
         [DataMember]
         public int CollectionCount { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public IList<CollectionEntryRecord> CollectionEntries { get; set; } = new List<CollectionEntryRecord>();
     }
 }

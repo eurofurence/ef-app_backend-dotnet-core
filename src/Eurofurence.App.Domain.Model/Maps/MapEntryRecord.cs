@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Domain.Model.Maps
@@ -34,9 +35,10 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember] 
         public List<LinkFragment> Links { get; set; } = new();
 
+        [JsonIgnore]
         public Guid MapId { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public virtual MapRecord Map { get; set; }
     }
 }
