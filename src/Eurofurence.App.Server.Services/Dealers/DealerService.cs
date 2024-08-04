@@ -11,6 +11,7 @@ using CsvHelper.Configuration;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
@@ -92,6 +93,41 @@ namespace Eurofurence.App.Server.Services.Dealers
             }
 
             await base.ReplaceOneAsync(entity);
+        }
+
+        public override async Task<DeltaResponse<DealerRecord>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
+        {
+            var storageInfo = await GetStorageInfoAsync();
+            var response = new DeltaResponse<DealerRecord>
+            {
+                StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
+                StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
+            };
+
+            if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
+            {
+                response.RemoveAllBeforeInsert = true;
+                response.DeletedEntities = Array.Empty<Guid>();
+                response.ChangedEntities = await
+                    _appDbContext.Dealers
+                        .Include(d => d.Links)
+                        .Where(entity => entity.IsDeleted == 0)
+                        .ToArrayAsync();
+            }
+            else
+            {
+                response.RemoveAllBeforeInsert = false;
+
+                var entities = _appDbContext.Dealers
+                    .Include(d => d.Links)
+                    .IgnoreQueryFilters()
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+
+                response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
+                response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();
+            }
+
+            return response;
         }
 
         public async Task RunImportAsync()

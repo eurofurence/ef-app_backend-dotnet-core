@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
@@ -8,6 +9,7 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
+using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -28,7 +30,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly ILogger _logger;
         private readonly IMapService _mapService;
         private readonly ConventionSettings _conventionSettings;
-
+        private readonly IMapper _mapper;
         public SyncController(
             ILoggerFactory loggerFactory,
             IEventService eventService,
@@ -41,7 +43,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IDealerService dealerService,
             IAnnouncementService announcementService,
             IMapService mapService,
-            ConventionSettings conventionSettings
+            ConventionSettings conventionSettings,
+            IMapper mapper
         )
         {
             _logger = loggerFactory.CreateLogger(GetType());
@@ -56,6 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _announcementService = announcementService;
             _mapService = mapService;
             _conventionSettings = conventionSettings;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 EventConferenceRooms = await _eventConferenceRoomService.GetDeltaResponseAsync(since),
                 EventConferenceTracks = await _eventConferenceTrackService.GetDeltaResponseAsync(since),
                 KnowledgeGroups = await _knowledgeGroupService.GetDeltaResponseAsync(since),
-                KnowledgeEntries = await _knowledgeEntryService.GetDeltaResponseAsync(since),
+                KnowledgeEntries = _mapper.Map<DeltaResponse<KnowledgeEntryResponse>>(await _knowledgeEntryService.GetDeltaResponseAsync(since)),
                 Images = await _imageService.GetDeltaResponseAsync(since),
                 Dealers = await _dealerService.GetDeltaResponseAsync(since),
                 Announcements = await _announcementService.GetDeltaResponseAsync(since),

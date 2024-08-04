@@ -21,7 +21,7 @@ namespace Eurofurence.App.Domain.Model.Sync
         public DeltaResponse<EventConferenceRoomRecord> EventConferenceRooms { get; set; }
         public DeltaResponse<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
         public DeltaResponse<KnowledgeGroupRecord> KnowledgeGroups { get; set; }
-        public DeltaResponse<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
+        public DeltaResponse<KnowledgeEntryResponse> KnowledgeEntries { get; set; }
         public DeltaResponse<ImageRecord> Images { get; set; }
         public DeltaResponse<DealerRecord> Dealers { get; set; }
         public DeltaResponse<AnnouncementRecord> Announcements { get; set; }
