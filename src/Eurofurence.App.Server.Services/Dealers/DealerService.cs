@@ -96,15 +96,15 @@ namespace Eurofurence.App.Server.Services.Dealers
 
         public async Task RunImportAsync()
         {
-            _logger.LogInformation(LogEvents.Import, "Starting dealers import.");
+            _logger.LogDebug(LogEvents.Import, "Starting dealers import.");
 
             if (!Directory.Exists(_conventionSettings.WorkingDirectory))
             {
                 Directory.CreateDirectory(_conventionSettings.WorkingDirectory);
             }
 
-            var csvPath = Path.Combine(_conventionSettings.WorkingDirectory, "dealers.zip");
-            var newDealersExportDownloaded = await _dealerApiClient.DownloadDealersExportAsync(csvPath);
+            var dealerPackagePath = Path.Combine(_conventionSettings.WorkingDirectory, "dealers.zip");
+            var newDealersExportDownloaded = await _dealerApiClient.DownloadDealersExportAsync(dealerPackagePath);
 
             if (!newDealersExportDownloaded)
             {
@@ -114,17 +114,26 @@ namespace Eurofurence.App.Server.Services.Dealers
 
             var importRecords = new List<DealerRecord>();
 
-            await using (var fileStream = File.OpenRead(csvPath))
+            await using (var fileStream = File.OpenRead(dealerPackagePath))
             using (var archive = new ZipArchive(fileStream))
             {
                 var csvEntry =
-                    archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase));
+                    archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase));
 
                 TextReader reader = new StreamReader(csvEntry.Open(), true);
 
-                var csvReader = new CsvReader(reader, CultureInfo.CurrentCulture);
+                var badData = new List<string>();
+
+                var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture) {
+                    Delimiter = ";",
+                    HasHeaderRecord = true,
+                    TrimOptions = TrimOptions.Trim,
+                    NewLine = "\n",
+                    BadDataFound = arg => badData.Add(arg.Context.Parser.RawRecord)
+                };
+
+                var csvReader = new CsvReader(reader, csvConfiguration);
                 csvReader.Context.RegisterClassMap<DealerImportRowClassMap>();
-                csvReader.Context.Configuration.Delimiter = ";";
                 var csvRecords = csvReader.GetRecords<DealerImportRow>().ToList();
 
                 _logger.LogDebug(LogEvents.Import, $"Parsed {csvRecords.Count} records from CSV");
@@ -165,6 +174,11 @@ namespace Eurofurence.App.Server.Services.Dealers
                     SanitizeFields(dealerRecord);
 
                     importRecords.Add(dealerRecord);
+                }
+
+                if (badData.Count > 0)
+                {
+                    _logger.LogInformation($"Found {badData.Count} bad rows:\n{string.Join("\n", badData)}");
                 }
             }
 
@@ -207,8 +221,8 @@ namespace Eurofurence.App.Server.Services.Dealers
             _logger.LogDebug(LogEvents.Import, $"Updated: {diff.Count(a => a.Action == ActionEnum.Update)}");
             _logger.LogDebug(LogEvents.Import, $"Not Modified: {diff.Count(a => a.Action == ActionEnum.NotModified)}");
 
-            File.Delete(csvPath);
-            _logger.LogInformation(LogEvents.Import, "Dealers import finished successfully.");
+            File.Delete(dealerPackagePath);
+            _logger.LogInformation(LogEvents.Import, $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully.");
         }
 
         private void SanitizeFields(DealerRecord dealerRecord)
@@ -265,8 +279,8 @@ namespace Eurofurence.App.Server.Services.Dealers
                 var assumedUri = part;
                 if (part.Length < 10) continue;
 
-                if (!assumedUri.StartsWith("http://", StringComparison.CurrentCultureIgnoreCase) &&
-                    !assumedUri.StartsWith("https://", StringComparison.CurrentCultureIgnoreCase))
+                if (!assumedUri.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) &&
+                    !assumedUri.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                     assumedUri = $"http://{part}";
 
                 if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute)) { }
@@ -286,7 +300,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         {
             var imageEntry =
                 archive.Entries.SingleOrDefault(
-                    a => a.Name.StartsWith(fileNameStartsWith, StringComparison.CurrentCultureIgnoreCase));
+                    a => a.Name.StartsWith(fileNameStartsWith, StringComparison.InvariantCultureIgnoreCase));
 
             if (imageEntry == null) return null;
 
