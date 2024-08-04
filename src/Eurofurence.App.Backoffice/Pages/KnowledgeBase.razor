@@ -101,18 +101,10 @@
                     <MudCardContent>
                         <MudText Class="mb-4">@((MarkupString)Markdown.ToHtml(knowledgeEntry.Text))</MudText>
 
-                        @if (_imageContents.Any(kvp => kvp.Key == knowledgeEntry.Id))
+                        @foreach (var image in knowledgeEntry.Images)
                         {
-                            @foreach (var image in _imageContents.FirstOrDefault(kvp => kvp.Key == knowledgeEntry.Id).Value)
-                            {
-                                <MudImage Class="ml-2" Height="100" Src="@image"/>
-                            }
+                            <MudImage Class="ml-2" Height="100" ObjectFit="ObjectFit.Contain" Src="@image.Url" />
                         }
-                        else if (knowledgeEntry.Images.Count > 0)
-                        {
-                            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-                        }
-
                     </MudCardContent>
                     <MudCardActions>
                         @foreach (var link in knowledgeEntry.Links)
@@ -132,13 +124,11 @@
     private KnowledgeGroupRecord? _selectedGroup;
     private List<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
     private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
-    private List<KeyValuePair<Guid, List<string>>> _imageContents = [];
 
     protected override async Task OnInitializedAsync()
     {
         await LoadKnowledgeEntries();
         await LoadKnowledgeGroups();
-        await LoadImageSourcesAsync();
     }
 
     private async Task LoadKnowledgeEntries()
@@ -147,7 +137,6 @@
         _knowledgeEntries = [];
 
         var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
-        var imageResponses = await ImageService.GetImagesAsync();
         foreach (var response in responses)
         {
             var record = new KnowledgeEntryRecord()
@@ -161,20 +150,25 @@
                 IsDeleted = response.IsDeleted,
                 Links = response.Links
             };
-            foreach (var image in response.Images)
+            foreach (var imageId in response.ImageIds)
             {
-                record.Images.Add(new ImageRecord()
+                var image = await ImageService.GetImageAsync(imageId);
+                if (image != null)
                 {
-                    Id = image.Id,
-                    Height = image.Height,
-                    Width = image.Width,
-                    ContentHashSha1 = image.ContentHashSha1,
-                    InternalReference = image.InternalReference,
-                    MimeType = image.MimeType,
-                    SizeInBytes = image.SizeInBytes,
-                    LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
-                    IsDeleted = image.IsDeleted
-                });
+                    record.Images.Add(new ImageRecord()
+                    {
+                        Id = image.Id,
+                        Url = image.Url,
+                        Height = image.Height,
+                        Width = image.Width,
+                        ContentHashSha1 = image.ContentHashSha1,
+                        InternalReference = image.InternalReference,
+                        MimeType = image.MimeType,
+                        SizeInBytes = image.SizeInBytes,
+                        LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                        IsDeleted = image.IsDeleted
+                    });
+                }
             }
 
             _knowledgeEntries.Add(record);
@@ -187,31 +181,6 @@
     {
         Loading = true;
         _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToList();
-        Loading = false;
-    }
-
-    private async Task LoadImageSourcesAsync()
-    {
-        Loading = true;
-        _imageContents = [];
-
-        foreach (var knowledgeEntry in _knowledgeEntries)
-        {
-            StateHasChanged();
-            var keyValuePair = new KeyValuePair<Guid, List<string>>(knowledgeEntry.Id, new List<string>());
-
-            foreach (var image in knowledgeEntry.Images)
-            {
-                var imageContent = await ImageService.GetImageContentAsync(image.Id);
-                if (!string.IsNullOrEmpty(imageContent))
-                {
-                    keyValuePair.Value.Add($"data:image/jpeg;base64,{imageContent}");
-                }
-            }
-
-            _imageContents.Add(keyValuePair);
-        }
-
         Loading = false;
     }
 
@@ -239,11 +208,10 @@
         var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("New knowledge base entry", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             Loading = true;
             await LoadKnowledgeEntries();
-            await LoadImageSourcesAsync();
         }
     }
 
@@ -253,14 +221,10 @@
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
         var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("Update knowledge base entry", parameters, options);
-        var result = await dialog.Result;
+        await dialog.Result;
 
-        if (!result.Canceled)
-        {
-            Loading = true;
-            await LoadKnowledgeEntries();
-            await LoadImageSourcesAsync();
-        }
+        Loading = true;
+        await LoadKnowledgeEntries();
     }
 
     private async Task DeleteKnowledgeEntry(Guid id)
@@ -300,7 +264,7 @@
         var dialog = await DialogService.ShowAsync<KnowledgeGroupDialog>("Update knowledge base group", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             Loading = true;
             await LoadKnowledgeGroups();

@@ -8,7 +8,6 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using SixLabors.ImageSharp;
 using System.IO;
 using System.Linq;
-using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
@@ -110,8 +109,17 @@ namespace Eurofurence.App.Server.Services.Images
 
             var imageFormat = image.Metadata.DecodedImageFormat;
 
+            var guid = Guid.NewGuid();
+
+            var fileName = imageFormat != null
+                ? guid + "." + imageFormat.FileExtensions.FirstOrDefault("png")
+                : guid + ".png";
+
             var record = new ImageRecord
             {
+                Id = guid,
+                InternalFileName = fileName,
+                Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.BaseUrl}/{_minIoConfiguration.Bucket}/{fileName}",
                 InternalReference = internalReference,
                 IsDeleted = 0,
                 MimeType = imageFormat?.DefaultMimeType,
@@ -123,7 +131,7 @@ namespace Eurofurence.App.Server.Services.Images
 
             await base.InsertOneAsync(record);
 
-            await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, record.Id.ToString(),
+            await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, record.InternalFileName,
                 imageFormat?.DefaultMimeType, stream);
 
             await _appDbContext.SaveChangesAsync();
@@ -142,16 +150,24 @@ namespace Eurofurence.App.Server.Services.Images
                 image = Image.Load(byteArray);
             }
 
-            IImageFormat imageFormat = image.Metadata.DecodedImageFormat;
+            var imageFormat = image.Metadata.DecodedImageFormat;
 
             var existingRecord = await
                 _appDbContext.Images
                     .AsNoTracking()
                     .FirstOrDefaultAsync(entity => entity.Id == id);
 
-            await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, existingRecord.Id.ToString(),
+            await DeleteFileFromMinIoAsync(_minIoConfiguration.Bucket, existingRecord.InternalFileName);
+
+            var fileName = imageFormat != null
+                ? existingRecord.Id + "." + imageFormat.FileExtensions.FirstOrDefault("png")
+                : existingRecord.Id + ".png";
+
+            await UploadFileToMinIoAsync(_minIoConfiguration.Bucket, existingRecord.InternalFileName,
                 imageFormat?.DefaultMimeType, stream);
 
+            existingRecord.InternalFileName = fileName;
+            existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.BaseUrl}/{_minIoConfiguration.Bucket}/{fileName}";
             existingRecord.InternalReference = internalReference;
             existingRecord.MimeType = imageFormat?.DefaultMimeType;
             existingRecord.Width = image.Width;
@@ -164,15 +180,20 @@ namespace Eurofurence.App.Server.Services.Images
 
         public async Task<Stream> GetImageContentByImageIdAsync(Guid id)
         {
+            var existingRecord = await
+                _appDbContext.Images
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.Id == id);
+
             // Checks if the object exists
             await _minIoClient.StatObjectAsync(new StatObjectArgs()
                 .WithBucket(_minIoConfiguration.Bucket)
-                .WithObject(id.ToString()));
+                .WithObject(existingRecord.InternalFileName));
 
             var ms = new MemoryStream();
             await _minIoClient.GetObjectAsync(new GetObjectArgs()
                 .WithBucket(_minIoConfiguration.Bucket)
-                .WithObject(id.ToString())
+                .WithObject(existingRecord.InternalFileName)
                 .WithCallbackStream(stream =>
                 {
                     stream.CopyTo(ms);

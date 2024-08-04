@@ -53,6 +53,8 @@ services:
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
     volumes:
       - db:/var/lib/mysql
+    ports:
+      - '33306:3306'
     healthcheck:
       test: mariadb-admin ping -h 127.0.0.1 -u root
       start_period: 5s

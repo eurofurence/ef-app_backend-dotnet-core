@@ -81,6 +81,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("{id}/Content")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(byte[]), 200)]
+        [Obsolete("Deprecated. Please use the 'Url' property of the image to stream the image from there instead.")]
         public async Task<ActionResult> GetImageContentAsync([FromRoute] Guid id)
         {
             var record = await _imageService.FindOneAsync(id);
@@ -99,6 +100,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(byte[]), 200)]
         [ResponseCache(Duration = 60 * 60 * 24, Location = ResponseCacheLocation.Any)]
+        [Obsolete("Deprecated. Please use the 'Url' property of the image to stream the image from there instead.")]
         public async Task<ActionResult> GetImageWithHashContentAsync(
             [EnsureNotNull][FromRoute] Guid id,
             [EnsureNotNull][FromRoute] string contentHashBase64Encoded)

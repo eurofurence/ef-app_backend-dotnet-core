@@ -19,9 +19,11 @@
     <Columns>
         <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
             <CellTemplate>
-                @if (!string.IsNullOrEmpty(@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value))
+                @if (!string.IsNullOrEmpty(@context.Item.Url))
                 {
-                    <MudImage Class="ml-2" Width="100" Src="@_imageContents.FirstOrDefault(kvp => kvp.Key == @context.Item.Id).Value"/>
+                    <MudLink Href="@context.Item.Url">
+                        <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain" Src="@context.Item.Url" />
+                    </MudLink>
                 }
                 else
                 {
@@ -98,7 +100,6 @@
 @code {
     private string? _imageSearch;
     private List<ImageWithRelationsResponse> _images = new();
-    private List<KeyValuePair<Guid, string>> _imageContents = [];
     private MudDataGrid<ImageWithRelationsResponse>? _dataGrid;
 
     private async Task<GridData<ImageWithRelationsResponse?>> GetImages(GridState<ImageWithRelationsResponse?> gridState)
@@ -112,26 +113,15 @@
         var filteredItems = FilterImages(_images, _imageSearch).ToList();
         result.Items = filteredItems.Skip(gridState.Page * gridState.PageSize).Take(gridState.PageSize);
         result.TotalItems = filteredItems.Count;
-        _ = Task.Run(() => LoadImageSourcesAsync(result.Items.Select(item => item!.Id)));
         return result;
     }
 
     private async Task LoadImagesAsync()
     {
         _images = (await ImageService.GetImagesWithRelationsAsync()).ToList();
-    }
-
-    private async Task LoadImageSourcesAsync(IEnumerable<Guid> imageIds)
-    {
-        _imageContents = [];
-        foreach (var imageId in imageIds)
+        foreach (var image in _images)
         {
-            var imageContent = await ImageService.GetImageContentAsync(imageId);
-            if (!string.IsNullOrEmpty(imageContent))
-            {
-                _imageContents.Add(new KeyValuePair<Guid, string>(imageId, $"data:image/jpeg;base64,{imageContent}"));
-                StateHasChanged();
-            }
+            image.Url += "?" + Guid.NewGuid();
         }
     }
 
@@ -155,8 +145,12 @@
         var parameters = new DialogParameters<ImageDialog> { { x => x.Record, null } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
-        await DialogService.ShowAsync<ImageDialog>("New image", parameters, options);
+        var dialog = await DialogService.ShowAsync<ImageDialog>("New image", parameters, options);
 
+        await dialog.Result;
+
+        await LoadImagesAsync();
+        StateHasChanged();
         _dataGrid?.ReloadServerData();
     }
 
@@ -165,8 +159,11 @@
         var parameters = new DialogParameters<ImageDialog> { { x => x.Record, record } };
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
 
-        await DialogService.ShowAsync<ImageDialog>("Update image", parameters, options);
+        var dialog = await DialogService.ShowAsync<ImageDialog>("Update image", parameters, options);
+        await dialog.Result;
 
+        await LoadImagesAsync();
+        StateHasChanged();
         _dataGrid?.ReloadServerData();
     }
 

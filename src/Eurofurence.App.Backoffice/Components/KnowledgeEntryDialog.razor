@@ -61,13 +61,18 @@
                         {
                             <MudDataGrid Items="@Record.Images" Filterable="false" SortMode="@SortMode.None" Groupable="false">
                                 <Columns>
-                                    <PropertyColumn Title="ID" Property="image => image.Id" />
-                                    <PropertyColumn Title="Name" Property="image => image.InternalReference" />
-                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
-                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))" />
+                                            <MudImage Height="100" ObjectFit="ObjectFit.Contain" Src="@context.Item.Url" />
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                    <PropertyColumn Title="ID" Property="image => image.Id"/>
+                                    <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
+                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
+                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
+                                    <TemplateColumn>
+                                        <CellTemplate>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))"/>
                                         </CellTemplate>
                                     </TemplateColumn>
                                 </Columns>
@@ -152,6 +157,7 @@
             Record?.Images.Add(new ImageRecord()
             {
                 Id = image.Id,
+                Url = image.Url,
                 InternalReference = image.InternalReference,
                 MimeType = image.MimeType,
                 SizeInBytes = image.SizeInBytes,

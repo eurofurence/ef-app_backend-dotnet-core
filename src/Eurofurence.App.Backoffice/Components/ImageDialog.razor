@@ -11,8 +11,8 @@
                 <MudContainer Style="height: 600px" Class="overflow-scroll pr-4">
                     <MudGrid>
                         <MudItem xs="6">
-                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@_imageSource">
-                                @if (string.IsNullOrEmpty(_imageSource))
+                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Url">
+                                @if (string.IsNullOrEmpty(@Record.Url))
                                 {
                                     <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
                                 }
@@ -57,9 +57,7 @@
 
     private bool Update { get; set; }
 
-    private string _imageSource = string.Empty;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         if (Record == null)
         {
@@ -68,25 +66,9 @@
         else
         {
             Update = true;
-            await LoadImageSourceAsync();
         }
     }
-
-    private async Task LoadImageSourceAsync()
-    {
-        if (Record == null)
-        {
-            return;
-        }
-
-        var imageContent = await ImageService.GetImageContentAsync(Record.Id);
-        if (!string.IsNullOrEmpty(imageContent))
-        {
-            _imageSource = $"data:image/jpeg;base64,{imageContent}";
-            StateHasChanged();
-        }
-    }
-
+    
     private async Task UploadImage(IBrowserFile? file)
     {
         if (file == null || Record == null)
@@ -94,9 +76,10 @@
             return;
         }
 
+        ImageResponse? image;
         if (Update)
         {
-            var image = await ImageService.PutImageAsync(Record.Id, file);
+            image = await ImageService.PutImageAsync(Record.Id, file);
             if (image != null)
             {
                 Snackbar.Add("Image updated.", Severity.Success);
@@ -108,7 +91,7 @@
         }
         else
         {
-            var image = await ImageService.PostImageAsync(file);
+            image = await ImageService.PostImageAsync(file);
             if (image != null)
             {
                 Snackbar.Add("Image added.", Severity.Success);
@@ -119,7 +102,18 @@
             }
         }
 
-        await LoadImageSourceAsync();
+        if (image != null)
+        {
+            Record.Id = image.Id;
+            Record.InternalReference = image.InternalReference;
+            Record.SizeInBytes = image.SizeInBytes;
+            Record.MimeType = image.MimeType;
+            Record.Width = image.Width;
+            Record.Height = image.Height;
+            Record.Url = image.Url + "?" + Guid.NewGuid();
+        }
+
+        StateHasChanged();
     }
 
     private void Close()
