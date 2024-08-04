@@ -51,7 +51,7 @@ namespace Eurofurence.App.Server.Web.Jobs
                     var url = _configuration.Url;
                     if (string.IsNullOrWhiteSpace(url))
                     {
-                        _logger.LogError(LogEvents.Import, "Empty source url; cancelling job", url);
+                        _logger.LogError(LogEvents.Import, "Empty source url; cancelling job");
                         return;
                     }
 
