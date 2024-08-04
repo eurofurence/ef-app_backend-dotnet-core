@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
+﻿using System;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
 using Eurofurence.App.Domain.Model.CollectionGame;
@@ -22,6 +23,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
 {
     public class AppDbContext : DbContext
     {
+        public AppDbContext() { }
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -59,6 +61,26 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<RoleRecord> Roles { get; set; }
         public virtual DbSet<TopicRecord> Topics { get; set; }
         public virtual DbSet<LinkFragment> LinkFragments { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                var connectionString = "Server=db; Port=3306; Database=ef_backend; user=root; SslMode=Preferred;";
+
+                var serverVersionString = Environment.GetEnvironmentVariable("MYSQL_VERSION");
+                ServerVersion serverVersion;
+                if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out serverVersion))
+                {
+                    serverVersion = ServerVersion.AutoDetect(connectionString);
+                }
+                
+                optionsBuilder.UseMySql(
+                    connectionString,
+                    serverVersion,
+                    mySqlOptions => mySqlOptions.UseMicrosoftJson());
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

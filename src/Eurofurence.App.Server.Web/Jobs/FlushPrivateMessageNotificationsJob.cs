@@ -22,7 +22,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public Task Execute(IJobExecutionContext context)
         {
-            _logger.LogInformation($"Starting job {context.JobDetail.Key.Name}");
+            _logger.LogDebug($"Starting job {context.JobDetail.Key.Name}");
 
             try
             {
