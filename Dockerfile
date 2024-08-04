@@ -11,7 +11,7 @@ RUN dotnet restore \
 	&& dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --output "/app/artifacts" --configuration Release
 RUN dotnet tool install --global dotnet-ef \
 	&& export PATH="$PATH:/root/.dotnet/tools" \
-	&& dotnet ef migrations bundle -o "/app/artifacts/db-migration-bundle" -p src/Eurofurence.App.Server.Web
+	&& dotnet ef migrations bundle -o "/app/artifacts/db-migration-bundle" -p src/Eurofurence.App.Infrastructure.EntityFramework
 ENTRYPOINT dotnet artifacts/Eurofurence.App.Server.Web.dll http://*:30001
 EXPOSE 30001
 
