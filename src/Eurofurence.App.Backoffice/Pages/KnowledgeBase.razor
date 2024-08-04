@@ -6,6 +6,7 @@
 @using Eurofurence.App.Domain.Model.Images
 @using Markdig
 @attribute [Authorize]
+@inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
 @inject IDialogService DialogService
@@ -228,7 +229,15 @@
 
     private async Task DeleteKnowledgeEntry(Guid id)
     {
-        await KnowledgeService.DeleteKnowledgeEntryAsync(id);
+        var result = await KnowledgeService.DeleteKnowledgeEntryAsync(id);
+        if (result)
+        {
+            Snackbar.Add("Knowledge entry deleted.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error deleting knowledge entry.", Severity.Error);
+        }
         await LoadKnowledgeEntries();
     }
 
@@ -264,7 +273,15 @@
 
     private async Task DeleteKnowledgeGroup(Guid id)
     {
-        await KnowledgeService.DeleteKnowledgeGroupAsync(id);
+        var result = await KnowledgeService.DeleteKnowledgeGroupAsync(id);
+        if (result)
+        {
+            Snackbar.Add("Knowledge group deleted.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error deleting knowledge group.", Severity.Error);
+        }
         await LoadKnowledgeGroups();
         await LoadKnowledgeEntries();
     }

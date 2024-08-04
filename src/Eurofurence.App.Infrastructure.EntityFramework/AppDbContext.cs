@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Eurofurence.App.Domain.Model;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
@@ -18,6 +18,10 @@ using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
+using System;
+using System.Linq;
 
 namespace Eurofurence.App.Infrastructure.EntityFramework
 {
@@ -85,6 +89,20 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Global query filter for soft deleted entities
+            Expression<Func<EntityBase, bool>> filterExpr = eb => eb.IsDeleted != 1;
+            foreach (var mutableEntityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (mutableEntityType.ClrType.IsAssignableTo(typeof(EntityBase)))
+                {
+                    var parameter = Expression.Parameter(mutableEntityType.ClrType);
+                    var body = ReplacingExpressionVisitor.Replace(filterExpr.Parameters.First(), parameter, filterExpr.Body);
+                    var lambdaExpression = Expression.Lambda(body, parameter);
+
+                    mutableEntityType.SetQueryFilter(lambdaExpression);
+                }
+            }
 
             modelBuilder.Entity<RegSysAlternativePinRecord>().Property(x => x.PinConsumptionDatesUtc)
                 .HasColumnType("json");
