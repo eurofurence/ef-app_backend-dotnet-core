@@ -119,7 +119,7 @@ namespace Eurofurence.App.Server.Services.Images
             {
                 Id = guid,
                 InternalFileName = fileName,
-                Url = $"{_minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}",
+                Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.BaseUrl}/{_minIoConfiguration.Bucket}/{fileName}",
                 InternalReference = internalReference,
                 IsDeleted = 0,
                 MimeType = imageFormat?.DefaultMimeType,
@@ -167,7 +167,7 @@ namespace Eurofurence.App.Server.Services.Images
                 imageFormat?.DefaultMimeType, stream);
 
             existingRecord.InternalFileName = fileName;
-            existingRecord.Url = $"{_minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}";
+            existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.BaseUrl}/{_minIoConfiguration.Bucket}/{fileName}";
             existingRecord.InternalReference = internalReference;
             existingRecord.MimeType = imageFormat?.DefaultMimeType;
             existingRecord.Width = image.Width;
