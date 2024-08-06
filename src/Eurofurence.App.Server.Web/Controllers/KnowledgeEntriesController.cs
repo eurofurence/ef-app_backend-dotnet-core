@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var result = await _knowledgeEntryService.InsertKnowledgeEntryAsync(request);
 
-            return Ok(result);
+            return Ok(result.Id);
         }
 
         /// <summary>
