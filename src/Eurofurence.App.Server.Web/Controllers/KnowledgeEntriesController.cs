@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -62,7 +62,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull][HttpPut("{id}")]
+        [EnsureNotNull]
+        [HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeEntryAsync(
             [EnsureNotNull][FromBody] KnowledgeEntryRequest request,
             [EnsureNotNull][FromRoute] Guid id)
@@ -82,14 +83,25 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>Id of the newly created knowledge entry</returns>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(typeof(Guid), 200)]
+        [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
         public async Task<ActionResult> PostKnowledgeEntryAsync(
             [EnsureNotNull][FromBody] KnowledgeEntryRequest request
         )
         {
-            var result = await _knowledgeEntryService.InsertKnowledgeEntryAsync(request);
-
-            return Ok(result.Id);
+            try
+            {
+                var result = await _knowledgeEntryService.InsertKnowledgeEntryAsync(request);
+                return Ok(result.Id);
+            }
+            catch (DbUpdateException e)
+            {
+                if ((e.InnerException as MySqlConnector.MySqlException)?.ErrorCode == MySqlConnector.MySqlErrorCode.DuplicateKeyEntry)
+                {
+                    return Conflict($"Record with id {request.Id} already exists.");
+                }
+                return BadRequest();
+            }
         }
 
         /// <summary>

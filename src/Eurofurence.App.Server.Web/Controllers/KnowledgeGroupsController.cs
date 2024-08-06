@@ -7,6 +7,8 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -14,10 +16,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class KnowledgeGroupsController : BaseController
     {
         private readonly IKnowledgeGroupService _knowledgeGroupService;
+        private readonly ILogger _logger;
 
-        public KnowledgeGroupsController(IKnowledgeGroupService knowledgeGroupService)
+        public KnowledgeGroupsController(IKnowledgeGroupService knowledgeGroupService,
+            ILoggerFactory loggerFactory)
         {
             _knowledgeGroupService = knowledgeGroupService;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         /// <summary>
@@ -76,16 +81,26 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>Id of the newly created knowledge group</returns>
         [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
         [ProducesResponseType(typeof(Guid), 200)]
+        [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
         public async Task<ActionResult> PostKnowledgeGroupAsync(
             [EnsureNotNull][FromBody] KnowledgeGroupRecord Record
         )
         {
-            Record.NewId();
-            Record.Touch();
-            await _knowledgeGroupService.InsertOneAsync(Record);
-
-            return Ok(Record.Id);
+            try
+            {
+                Record.Touch();
+                await _knowledgeGroupService.InsertOneAsync(Record);
+                return Ok(Record.Id);
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException e)
+            {
+                if ((e.InnerException as MySqlConnector.MySqlException)?.ErrorCode == MySqlConnector.MySqlErrorCode.DuplicateKeyEntry)
+                {
+                    return Conflict($"Record with id {Record.Id} already exists.");
+                }
+                return BadRequest();
+            }
         }
 
         /// <summary>
