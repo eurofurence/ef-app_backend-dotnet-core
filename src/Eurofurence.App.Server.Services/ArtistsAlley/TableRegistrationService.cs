@@ -8,6 +8,7 @@ using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -17,7 +18,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
-    public class TableRegistrationService : ITableRegistrationService
+    public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord>, ITableRegistrationService
     {
         private readonly AppDbContext _appDbContext;
         private readonly ArtistAlleyConfiguration _configuration;
@@ -27,10 +28,11 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public TableRegistrationService(
             AppDbContext context,
+            IStorageServiceFactory storageServiceFactory,
             ArtistAlleyConfiguration configuration,
             ITelegramMessageSender telegramMessageSender,
-            IPrivateMessageService privateMessageService,
-            IImageService imageService)
+        IPrivateMessageService privateMessageService,
+            IImageService imageService) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
             _configuration = configuration;
@@ -45,6 +47,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .Include(tr => tr.Image)
                 .Where(a => !state.HasValue || a.State == state.Value).AsNoTracking();
             return records;
+        }
+
+        public override async Task<TableRegistrationRecord> FindOneAsync(Guid id)
+        {
+            return await _appDbContext.TableRegistrations
+                .Include(tr => tr.Image)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(tr => tr.Id == id);
         }
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
