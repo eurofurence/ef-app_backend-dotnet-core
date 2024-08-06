@@ -60,7 +60,7 @@ namespace Eurofurence.App.Server.Services.Events
 
         public async Task RunImportAsync()
         {
-            _logger.LogInformation(LogEvents.Import, "Starting events import.");
+            _logger.LogDebug(LogEvents.Import, "Starting event import.");
 
             var httpClient = new HttpClient();
             var fileStream = await httpClient.GetStreamAsync(_configuration.Url);
@@ -86,7 +86,7 @@ namespace Eurofurence.App.Server.Services.Events
                 .Distinct().OrderBy(a => a).ToList();
 
             var conferenceDays = csvRecords.Select(a =>
-                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, new CultureInfo("de-DE")), DateTimeKind.Utc),
+                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture), DateTimeKind.Utc),
                         a.ConferenceDayName))
                 .Distinct().OrderBy(a => a).ToList();
 
@@ -101,7 +101,7 @@ namespace Eurofurence.App.Server.Services.Events
                 eventConferenceDays,
                 ref modifiedRecords);
 
-            _logger.LogInformation(LogEvents.Import, "Events import finished successfully.");
+            _logger.LogInformation(LogEvents.Import, $"Event import finished successfully modifying {modifiedRecords} record(s).");
         }
 
         private List<EventConferenceDayRecord> UpdateEventConferenceDays(
@@ -197,8 +197,8 @@ namespace Eurofurence.App.Server.Services.Events
 
             patch.Map(s => s.EventId, t => t.SourceEventId)
                 .Map(s => s.Slug, t => t.Slug)
-                .Map(s => s.Title.Split('–')[0]?.Trim(), t => t.Title)
-                .Map(s => (s.Title + '–').Split('–')[1]?.Trim(), t => t.SubTitle)
+                .Map(s => s.Title.Split('ï¿½')[0]?.Trim(), t => t.Title)
+                .Map(s => (s.Title + 'ï¿½').Split('ï¿½')[1]?.Trim(), t => t.SubTitle)
                 .Map(s => s.Abstract, t => t.Abstract)
                 .Map(
                     s => CurrentConferenceTracks.Single(a => a.Name == s.ConferenceTrack).Id,
