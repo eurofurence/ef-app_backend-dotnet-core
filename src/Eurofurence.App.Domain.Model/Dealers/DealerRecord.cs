@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.Dealers
@@ -131,7 +132,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtistThumbnailImageId { get; set; }
 
-        [DataMember]
+        [JsonIgnore]
         public ImageRecord ArtistThumbnailImage { get; set; }
 
         /// <summary>
@@ -141,7 +142,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtistImageId { get; set; }
 
-        [DataMember]
+        [JsonIgnore]
         public ImageRecord ArtistImage { get; set; }
 
         /// <summary>
@@ -150,7 +151,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Guid? ArtPreviewImageId { get; set; }
 
-        [DataMember]
+        [JsonIgnore]
         public ImageRecord ArtPreviewImage { get; set; }
 
         /// <summary>

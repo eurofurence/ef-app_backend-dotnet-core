@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Eurofurence.App.Domain.Model.Sync;
 
 namespace Eurofurence.App.Server.Services.Maps
 {
@@ -29,7 +30,6 @@ namespace Eurofurence.App.Server.Services.Maps
         public override async Task<MapRecord> FindOneAsync(Guid id)
         {
             return await _appDbContext.Maps
-                .Include(m => m.Image)
                 .Include(m => m.Entries)
                 .ThenInclude(me => me.Links)
                 .AsNoTracking()
@@ -39,10 +39,46 @@ namespace Eurofurence.App.Server.Services.Maps
         public override IQueryable<MapRecord> FindAll()
         {
             return _appDbContext.Maps
-                .Include(m => m.Image)
                 .Include(m => m.Entries)
                 .ThenInclude(me => me.Links)
                 .AsNoTracking();
+        }
+
+        public override async Task<DeltaResponse<MapRecord>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
+        {
+            var storageInfo = await GetStorageInfoAsync();
+            var response = new DeltaResponse<MapRecord>
+            {
+                StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
+                StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
+            };
+
+            if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
+            {
+                response.RemoveAllBeforeInsert = true;
+                response.DeletedEntities = Array.Empty<Guid>();
+                response.ChangedEntities = await
+                    _appDbContext.Maps
+                        .Include(d => d.Entries)
+                        .ThenInclude(me => me.Links)
+                        .Where(entity => entity.IsDeleted == 0)
+                        .ToArrayAsync();
+            }
+            else
+            {
+                response.RemoveAllBeforeInsert = false;
+
+                var entities = _appDbContext.Maps
+                    .Include(d => d.Entries)
+                    .ThenInclude(me => me.Links)
+                    .IgnoreQueryFilters()
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+
+                response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
+                response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();
+            }
+
+            return response;
         }
 
         public override async Task InsertOneAsync(MapRecord entity)

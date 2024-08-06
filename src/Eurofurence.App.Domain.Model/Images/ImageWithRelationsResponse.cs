@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Images
 {
     [DataContract]
-    public class ImageWithRelationsResponse : ImageResponse
+    public class ImageWithRelationsResponse : ImageRecord
     {
         [DataMember]
         public List<Guid> AnnouncementIds { get; set; } = new();

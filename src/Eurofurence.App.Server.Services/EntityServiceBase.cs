@@ -162,7 +162,7 @@ namespace Eurofurence.App.Server.Services
             {
                 response.RemoveAllBeforeInsert = false;
 
-                var entities = _appDbContext.Set<T>().Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+                var entities = _appDbContext.Set<T>().IgnoreQueryFilters().Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
                 response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();

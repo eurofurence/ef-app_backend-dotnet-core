@@ -1,12 +1,13 @@
 ﻿using Eurofurence.App.Domain.Model.Images;
 using System;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
     public class EventRecord : EntityBase
     {
-        [IgnoreDataMember]
+        [JsonIgnore]
         public int SourceEventId { get; set; }
 
         [DataMember]
@@ -64,7 +65,7 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public Guid? BannerImageId { get; set; }
 
-        [DataMember]
+        [JsonIgnore]
         public ImageRecord BannerImage { get; set; }
 
         /// <summary>
@@ -74,19 +75,19 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public Guid? PosterImageId { get; set; }
 
-        [DataMember]
+        [JsonIgnore]
         public ImageRecord PosterImage { get; set; }
 
         [DataMember]
         public string[] Tags { get; set; }
         
-        [IgnoreDataMember]
+        [JsonIgnore]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public virtual EventConferenceDayRecord ConferenceDay { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public virtual EventConferenceRoomRecord ConferenceRoom { get; set; }
     }
 }

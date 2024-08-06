@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Maps
 {
@@ -27,7 +28,7 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember]
         public Guid? ImageId { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public virtual ImageRecord Image { get; set; }
 
     }

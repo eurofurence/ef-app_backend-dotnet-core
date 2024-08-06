@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.Announcements
@@ -16,7 +17,7 @@ namespace Eurofurence.App.Domain.Model.Announcements
         [Required]
         public DateTime ValidUntilDateTimeUtc { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public string ExternalReference { get; set; }
 
         [DataMember]
@@ -38,7 +39,7 @@ namespace Eurofurence.App.Domain.Model.Announcements
         [DataMember]
         public Guid? ImageId { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public ImageRecord Image { get; set; }
     }
 }

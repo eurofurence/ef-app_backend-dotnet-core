@@ -76,7 +76,7 @@
             return;
         }
 
-        ImageResponse? image;
+        ImageRecord? image;
         if (Update)
         {
             image = await ImageService.PutImageAsync(Record.Id, file);

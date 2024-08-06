@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
@@ -116,6 +117,43 @@ namespace Eurofurence.App.Server.Services.Knowledge
             await _appDbContext.SaveChangesAsync();
 
             return existingEntity;
+        }
+
+        public override async Task<DeltaResponse<KnowledgeEntryRecord>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
+        {
+            var storageInfo = await GetStorageInfoAsync();
+            var response = new DeltaResponse<KnowledgeEntryRecord>
+            {
+                StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
+                StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
+            };
+
+            if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
+            {
+                response.RemoveAllBeforeInsert = true;
+                response.DeletedEntities = Array.Empty<Guid>();
+                response.ChangedEntities = await
+                    _appDbContext.KnowledgeEntries
+                        .Include(ke => ke.Links)
+                        .Include(ke => ke.Images)
+                        .Where(entity => entity.IsDeleted == 0)
+                        .ToArrayAsync();
+            }
+            else
+            {
+                response.RemoveAllBeforeInsert = false;
+
+                var entities = _appDbContext.KnowledgeEntries
+                    .Include(ke => ke.Links)
+                    .Include(ke => ke.Images)
+                    .IgnoreQueryFilters()
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+
+                response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
+                response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();
+            }
+
+            return response;
         }
     }
 }

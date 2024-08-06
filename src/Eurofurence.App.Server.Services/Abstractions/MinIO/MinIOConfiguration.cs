@@ -16,7 +16,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.MinIO
             => new()
             {
                 Endpoint = configuration["minIo:endpoint"],
-                BaseUrl = configuration["minIo:baseUrl"] ?? configuration["minIo:endpoint"],
+                BaseUrl = configuration["minIo:baseUrl"],
                 Region = configuration["minIo:region"] ?? "us-east-1",
                 AccessKey = configuration["minIo:accessKey"],
                 SecretKey = configuration["minIo:secretKey"],

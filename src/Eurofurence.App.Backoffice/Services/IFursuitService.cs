@@ -4,6 +4,6 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public interface IFursuitService
     {
-        public Task<FursuitBadgeResponse[]> GetFursuitBadgesAsync();
+        public Task<FursuitBadgeRecord[]> GetFursuitBadgesAsync();
     }
 }

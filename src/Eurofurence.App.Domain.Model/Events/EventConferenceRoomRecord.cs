@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
@@ -11,7 +12,7 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public string ShortName { get; set; }
 
-        [IgnoreDataMember]
+        [JsonIgnore]
         public virtual ICollection<EventRecord> Events { get; set; }
     }
 }

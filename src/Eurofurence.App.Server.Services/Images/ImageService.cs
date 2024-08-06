@@ -23,7 +23,6 @@ namespace Eurofurence.App.Server.Services.Images
     public class ImageService : EntityServiceBase<ImageRecord>, IImageService
     {
         private readonly AppDbContext _appDbContext;
-        private readonly IStorageService _storageService;
         private readonly IMinioClient _minIoClient;
         private readonly MinIoConfiguration _minIoConfiguration;
 
@@ -34,7 +33,6 @@ namespace Eurofurence.App.Server.Services.Images
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
-            _storageService = storageServiceFactory.CreateStorageService<ImageRecord>();
             _minIoConfiguration = minIoConfiguration;
             _minIoClient = new MinioClient().WithEndpoint(minIoConfiguration.Endpoint)
                 .WithCredentials(minIoConfiguration.AccessKey, minIoConfiguration.SecretKey)
@@ -55,43 +53,21 @@ namespace Eurofurence.App.Server.Services.Images
 
         public override async Task DeleteOneAsync(Guid id)
         {
-            await DeleteFileFromMinIoAsync(_minIoConfiguration.Bucket, id.ToString());
-
             var entity = await _appDbContext.Images
-                .Include(i => i.FursuitBadges)
-                .Include(i => i.TableRegistrations)
-                .Include(i => i.DealerArtPreviews)
-                .Include(i => i.DealerArtistThumbnails)
-                .Include(i => i.DealerArtists)
-                .Include(i => i.EventBanners)
-                .Include(i => i.EventPosters)
-                .Include(i => i.Maps)
-                .Include(i => i.Announcements)
                 .FirstOrDefaultAsync(entity => entity.Id == id);
 
-            _appDbContext.Remove(entity);
+            await DeleteFileFromMinIoAsync(_minIoConfiguration.Bucket, entity.InternalFileName);
 
-            await _storageService.TouchAsync();
-            await _appDbContext.SaveChangesAsync();
+            await base.DeleteOneAsync(id);
         }
 
         public override async Task DeleteAllAsync()
         {
-            var images = _appDbContext.Images
-                .Include(i => i.FursuitBadges)
-                .Include(i => i.TableRegistrations)
-                .Include(i => i.DealerArtPreviews)
-                .Include(i => i.DealerArtistThumbnails)
-                .Include(i => i.DealerArtists)
-                .Include(i => i.EventBanners)
-                .Include(i => i.EventPosters)
-                .Include(i => i.Announcements)
-                .Include(i => i.Maps);
-            var imageIds = await images.Select(image => image.Id.ToString()).ToListAsync();
+            var imageIds = await _appDbContext.Images.Select(image => image.Id.ToString()).ToListAsync();
+
             await DeleteFilesFromMinIoAsync(_minIoConfiguration.Bucket, imageIds);
-            _appDbContext.Images.RemoveRange(images);
-            await _storageService.ResetDeltaStartAsync();
-            await _appDbContext.SaveChangesAsync();
+
+            await base.DeleteAllAsync();
         }
 
         public async Task<ImageRecord> InsertImageAsync(string internalReference, Stream stream)
@@ -119,7 +95,7 @@ namespace Eurofurence.App.Server.Services.Images
             {
                 Id = guid,
                 InternalFileName = fileName,
-                Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.BaseUrl}/{_minIoConfiguration.Bucket}/{fileName}",
+                Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}",
                 InternalReference = internalReference,
                 IsDeleted = 0,
                 MimeType = imageFormat?.DefaultMimeType,
@@ -167,7 +143,7 @@ namespace Eurofurence.App.Server.Services.Images
                 imageFormat?.DefaultMimeType, stream);
 
             existingRecord.InternalFileName = fileName;
-            existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.BaseUrl}/{_minIoConfiguration.Bucket}/{fileName}";
+            existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}";
             existingRecord.InternalReference = internalReference;
             existingRecord.MimeType = imageFormat?.DefaultMimeType;
             existingRecord.Width = image.Width;

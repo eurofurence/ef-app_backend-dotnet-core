@@ -7,11 +7,11 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class ArtistAlleyService(HttpClient http) : IArtistAlleyService
     {
-        public async Task<TableRegistrationResponse[]> GetTableRegistrationsAsync()
+        public async Task<TableRegistrationRecord[]> GetTableRegistrationsAsync()
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return (await http.GetFromJsonAsync<TableRegistrationResponse[]>("ArtistsAlley", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<TableRegistrationRecord[]>("ArtistsAlley", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
     }
 }
