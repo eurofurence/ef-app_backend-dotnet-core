@@ -3,6 +3,7 @@
 .github
 .gitignore
 .private
+.venv
 .vs
 .vscode
 *.csv
@@ -14,3 +15,4 @@ artifacts
 docker-compose.yml
 justfile
 Dockerfile
+scripts
