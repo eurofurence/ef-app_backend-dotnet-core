@@ -30,16 +30,6 @@ public class RolesClaimsTransformation(IOptionsSnapshot<AuthorizationOptions> op
                 roles.Add("Admin");
             }
             
-            if (options.Value.System.Contains(claim.Value))
-            {
-                roles.Add("System");
-            }
-
-            if (options.Value.Developer.Contains(claim.Value))
-            {
-                roles.Add("Developer");
-            }
-
             if (options.Value.KnowledgeBaseMaintainer.Contains(claim.Value))
             {
                 roles.Add("KnowledgeBase-Maintainer");
