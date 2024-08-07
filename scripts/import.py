@@ -100,7 +100,10 @@ def main():
 		level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%dT%H:%M:%S%z"
 	)
 
-	with urllib3.connection_from_url(args.api) as api, urllib3.PoolManager() as http:
+	with (
+		urllib3.connection_from_url(args.api, headers={"Authorization": f"Bearer {args.token}"}) as api,
+		urllib3.PoolManager() as http,
+	):
 		try:
 			openapi_schema_response = api.request("GET", "/swagger/api/swagger.json")
 		except urllib3.exceptions.HTTPError:
@@ -173,7 +176,7 @@ def main():
 
 			if args.image_source is not None and "ImageIds" in item and len(item["ImageIds"]) > 0:
 				if api.request("GET", f"{types[args.type]["path"]}/{item["Id"]}").status != 404:
-					logger.warn(f"{args.type} with ID {item["Id"]} seems to already exist, skipping image upload…")
+					logger.warning(f"{args.type} with ID {item["Id"]} seems to already exist, skipping image upload…")
 					continue
 
 				logger.info(f"Found {len(item["ImageIds"])} image IDs on {args.type} with ID {item["Id"]}.")
@@ -181,7 +184,7 @@ def main():
 				for image_id in item["ImageIds"]:
 					image_meta_response = http.request("GET", f"{args.image_source}/Api/Images/{image_id}")
 					if image_meta_response.status != 200:
-						logger.warn(
+						logger.warning(
 							f"Failed to get image metadata for {image_id} from {args.image_source}: {image_meta_response.status}"
 						)
 						continue
@@ -195,7 +198,7 @@ def main():
 						)
 
 					if image_content_response.status != 200:
-						logger.warn(
+						logger.warning(
 							f"Failed to get image data for {image_id} from {args.image_source}: {image_content_response.status}"
 						)
 						continue
@@ -206,22 +209,37 @@ def main():
 						fields={"file": (image_meta_data["InternalReference"], image_content_response.data)},
 					)
 					if image_post_response.status == 200:
-						image_id_new = image_post_response.data.decode("UTF-8")
+						image_id_new = json.loads(image_post_response.data)["Id"]
 						image_ids.append(image_id_new)
 						logger.info(
 							f"Successfully uploaded image {image_id} ({image_meta_data["InternalReference"]}) to {args.image_source} with new ID {image_id_new}."
 						)
 					else:
-						logger.warn(
+						logger.warning(
 							f"Failed to upload {image_id} ({image_meta_data["InternalReference"]}) to {args.api}: {image_post_response.status}"
 						)
 						continue
-				item["ImageIds"] = image_ids
+
+				if len(item["ImageIds"]) != len(image_ids):
+					logger.warning(
+						f"Number of uploaded images ({len(image_ids)}) does not match expected number of images ({len(item["ImageIds"])}) for {args.type} with ID {item["Id"]}. Rolling back…"
+					)
+					for image_id in image_ids:
+						image_delete_response = api.request("DELETE", f"{args.image_source}/Api/Images/{image_id}")
+						if image_delete_response.status == 204:
+							logger.info(
+								f"Successfully deleted image {image_id_new} ({image_meta_data["InternalReference"]}) from {args.image_source}."
+							)
+						else:
+							logger.warning(
+								f"Failed to delete {image_id_new} ({image_meta_data["InternalReference"]}) from {args.api}: {image_delete_response.status}"
+							)
+					continue
+				else:
+					item["ImageIds"] = image_ids
 
 			try:
-				api_response = api.request(
-					"POST", types[args.type]["path"], json=item, headers={"Authorization": f"Bearer {args.token}"}
-				)
+				api_response = api.request("POST", types[args.type]["path"], json=item)
 
 				if api_response.status != 200 and api_response.status != 204:
 					logger.error(
