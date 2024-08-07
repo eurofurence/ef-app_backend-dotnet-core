@@ -69,6 +69,14 @@ def parse_arguments():
 	)
 
 	parser.add_argument(
+		"--with-images-from",
+		dest="image_source",
+		help="Retrieve images from given API, upload and reference them on imported items.",
+		type=str,
+		required=False,
+	)
+
+	parser.add_argument(
 		"--debug",
 		dest="debug",
 		help="Enable debug logging.",
@@ -79,6 +87,9 @@ def parse_arguments():
 	args = parser.parse_args()
 
 	args.api = args.api.removesuffix("/")
+
+	if args.image_source is not None:
+		args.image_source = args.image_source.removesuffix("/")
 
 	return args
 
@@ -156,9 +167,56 @@ def main():
 				validator.validate(item)
 			except ValidationError:
 				logger.error(
-					f"Unable to import {args.type} with id {item["Id"]} due to failed validation.", exc_info=args.debug
+					f"Unable to import {args.type} with ID {item["Id"]} due to failed validation.", exc_info=args.debug
 				)
 				continue
+
+			if args.image_source is not None and "ImageIds" in item and len(item["ImageIds"]) > 0:
+				if api.request("GET", f"{types[args.type]["path"]}/{item["Id"]}").status != 404:
+					logger.warn(f"{args.type} with ID {item["Id"]} seems to already exist, skipping image upload…")
+					continue
+
+				logger.info(f"Found {len(item["ImageIds"])} image IDs on {args.type} with ID {item["Id"]}.")
+				image_ids = []
+				for image_id in item["ImageIds"]:
+					image_meta_response = http.request("GET", f"{args.image_source}/Api/Images/{image_id}")
+					if image_meta_response.status != 200:
+						logger.warn(
+							f"Failed to get image metadata for {image_id} from {args.image_source}: {image_meta_response.status}"
+						)
+						continue
+
+					image_meta_data = json.loads(image_meta_response.data)
+					if "Url" in image_meta_data:
+						image_content_response = http.request("GET", image_meta_data["Url"])
+					else:
+						image_content_response = http.request(
+							"GET", f"{args.image_source}/Api/Images/{image_id}/Content"
+						)
+
+					if image_content_response.status != 200:
+						logger.warn(
+							f"Failed to get image data for {image_id} from {args.image_source}: {image_content_response.status}"
+						)
+						continue
+
+					image_post_response = api.request(
+						"POST",
+						"/Api/Images",
+						fields={"file": (image_meta_data["InternalReference"], image_content_response.data)},
+					)
+					if image_post_response.status == 200:
+						image_id_new = image_post_response.data.decode("UTF-8")
+						image_ids.append(image_id_new)
+						logger.info(
+							f"Successfully uploaded image {image_id} ({image_meta_data["InternalReference"]}) to {args.image_source} with new ID {image_id_new}."
+						)
+					else:
+						logger.warn(
+							f"Failed to upload {image_id} ({image_meta_data["InternalReference"]}) to {args.api}: {image_post_response.status}"
+						)
+						continue
+				item["ImageIds"] = image_ids
 
 			try:
 				api_response = api.request(
@@ -167,15 +225,15 @@ def main():
 
 				if api_response.status != 200 and api_response.status != 204:
 					logger.error(
-						f"Failed to import {args.type} with id {item["Id"]}: [{api_response.status}] {api_response.data.decode('UTF-8')}"
+						f"Failed to import {args.type} with ID {item["Id"]}: [{api_response.status}] {api_response.data.decode("UTF-8")}"
 					)
 					logger.debug(f"Problematic item: {json.dumps(item)}")
 				else:
 					logger.info(
-						f"Successfully imported {args.type} with id {item["Id"]}: {api_response.data.decode('UTF-8')}."
+						f"Successfully imported {args.type} with ID {item["Id"]}: {api_response.data.decode('UTF-8')}."
 					)
 			except urllib3.exceptions.HTTPError:
-				logger.error(f"Failed to POST {args.type} with id {item["Id"]}.", exc_info=args.debug)
+				logger.error(f"Failed to POST {args.type} with ID {item["Id"]}.", exc_info=args.debug)
 				continue
 
 
