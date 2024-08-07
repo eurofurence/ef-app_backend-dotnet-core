@@ -13,10 +13,6 @@ namespace Eurofurence.App.Domain.Model.Knowledge
     {
         [Required]
         [DataMember]
-        public Guid KnowledgeGroupId { get; set; }
-
-        [Required]
-        [DataMember]
         public string Title { get; set; }
 
         [Required]
@@ -26,6 +22,13 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [Required]
         [DataMember]
         public int Order { get; set; }
+
+        [Required]
+        [DataMember]
+        public Guid KnowledgeGroupId { get; set; }
+
+        [JsonIgnore]
+        public KnowledgeGroupRecord KnowledgeGroup { get; set; }
 
         [DataMember] 
         public virtual List<LinkFragment> Links { get; set; } = new();

@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return _mapper.Map<KnowledgeEntryResponse>(await _knowledgeEntryService.FindAll()
                 .Include(ke => ke.Images)
                 .Include(ke => ke.Links)
-                .FirstOrDefaultAsync(entity => entity.Id == id).Transient404(HttpContext));
+                .FirstOrDefaultAsync(entity => entity.Id == id)).Transient404(HttpContext);
         }
 
 
@@ -62,7 +62,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull][HttpPut("{id}")]
+        [EnsureNotNull]
+        [HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeEntryAsync(
             [EnsureNotNull][FromBody] KnowledgeEntryRequest request,
             [EnsureNotNull][FromRoute] Guid id)
@@ -82,14 +83,25 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>Id of the newly created knowledge entry</returns>
         [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [ProducesResponseType(typeof(Guid), 200)]
+        [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
         public async Task<ActionResult> PostKnowledgeEntryAsync(
             [EnsureNotNull][FromBody] KnowledgeEntryRequest request
         )
         {
-            var result = await _knowledgeEntryService.InsertKnowledgeEntryAsync(request);
-
-            return Ok(result);
+            try
+            {
+                var result = await _knowledgeEntryService.InsertKnowledgeEntryAsync(request);
+                return Ok(result.Id);
+            }
+            catch (DbUpdateException e)
+            {
+                if ((e.InnerException as MySqlConnector.MySqlException)?.ErrorCode == MySqlConnector.MySqlErrorCode.DuplicateKeyEntry)
+                {
+                    return Conflict($"Record with id {request.Id} already exists.");
+                }
+                return BadRequest();
+            }
         }
 
         /// <summary>

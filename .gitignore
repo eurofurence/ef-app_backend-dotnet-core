@@ -259,3 +259,6 @@ paket-files/
 
 # Local user files
 .private
+
+# Python
+.venv
