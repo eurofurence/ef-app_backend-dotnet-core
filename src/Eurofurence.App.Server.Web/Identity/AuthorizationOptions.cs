@@ -8,13 +8,13 @@ public class AuthorizationOptions
 
     public HashSet<string> Admin { get; set; } = new();
 
-    public HashSet<string> KnowledgeBaseMaintainer { get; set; } = new();
-    
+    public HashSet<string> KnowledgeBaseEditor { get; set; } = new();
+
+    public HashSet<string> MapEditor { get; set; } = new();
+
     public HashSet<string> ArtShow { get; set; } = new();
     
     public HashSet<string> FursuitBadgeSystem { get; set; } = new();
     
-    public HashSet<string> PrivateMessagesSend { get; set; } = new();
-    
-    public HashSet<string> PrivateMessagesQuery { get; set; } = new();
+    public HashSet<string> PrivateMessageSender { get; set; } = new();
 }

@@ -123,7 +123,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for the given `id`
         /// </response>
         [HttpDelete("{id}/Entries")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,MapEditor")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> DeleteMapEntriesAsync([FromRoute] Guid id)
         {
@@ -145,7 +145,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for the given `id`
         /// </response>
         [HttpDelete("{id}/Entries/{entryId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,MapEditor")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> DeleteSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
@@ -174,7 +174,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * Unable to parse `record` or `id`
         /// </response>
         [HttpPost("{id}/Entries")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,MapEditor")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id)
         {
@@ -207,7 +207,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found with for the specified id.
         /// </response>
         [HttpPut("{id}/Entries/{entryId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,MapEditor")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id,
             [FromRoute] Guid entryId)

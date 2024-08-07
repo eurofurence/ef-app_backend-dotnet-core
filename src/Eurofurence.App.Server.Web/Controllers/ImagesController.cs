@@ -120,7 +120,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return File(content, record.MimeType);
         }
 
-        [Authorize(Roles = "Admin,KnowledgeBase-Maintainer")]
+        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [HttpPost]
         public async Task<ActionResult> PostImageAsync(IFormFile file)
         {

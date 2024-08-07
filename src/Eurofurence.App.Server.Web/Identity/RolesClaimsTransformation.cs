@@ -24,35 +24,35 @@ public class RolesClaimsTransformation(IOptionsSnapshot<AuthorizationOptions> op
             {
                 roles.Add("Attendee");
             }
-            
-            if (options.Value.Admin.Contains(claim.Value))
-            {
-                roles.Add("Admin");
-            }
-            
-            if (options.Value.KnowledgeBaseMaintainer.Contains(claim.Value))
-            {
-                roles.Add("KnowledgeBase-Maintainer");
-            }
 
             if (options.Value.ArtShow.Contains(claim.Value))
             {
                 roles.Add("ArtShow");
+            }
+
+            if (options.Value.PrivateMessageSender.Contains(claim.Value))
+            {
+                roles.Add("PrivateMessageSender");
+            }
+            
+            if (options.Value.KnowledgeBaseEditor.Contains(claim.Value))
+            {
+                roles.Add("KnowledgeBaseEditor");
+            }
+
+            if (options.Value.MapEditor.Contains(claim.Value))
+            {
+                roles.Add("MapEditor");
             }
             
             if (options.Value.FursuitBadgeSystem.Contains(claim.Value))
             {
                 roles.Add("FursuitBadgeSystem");
             }
-            
-            if (options.Value.PrivateMessagesSend.Contains(claim.Value))
+
+            if (options.Value.Admin.Contains(claim.Value))
             {
-                roles.Add("Action-PrivateMessages-Send");
-            }
-            
-            if (options.Value.PrivateMessagesQuery.Contains(claim.Value))
-            {
-                roles.Add("Action-PrivateMessages-Query");
+                roles.Add("Admin");
             }
         }
 

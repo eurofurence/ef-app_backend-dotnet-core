@@ -74,7 +74,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(Roles = "Admin,Action-PrivateMessages-Send")]
+        [Authorize(Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageAsync([FromBody] SendPrivateMessageRequest Request)
@@ -91,7 +91,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
 
         [HttpGet("PrivateMessages/{messageId}/Status")]
-        [Authorize(Roles = "Admin,Action-PrivateMessages-Query")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(
@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("PrivateMessages/:sent-by-me")]
-        [Authorize]
+        [Authorize(Roles = "PrivateMessageSender")]
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
         public IQueryable<PrivateMessageRecord> GetMySentPrivateMessagesAsync()
         {
