@@ -47,7 +47,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
@@ -60,7 +60,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> PostAnnouncementAsync([FromBody] AnnouncementRecord record)
         {
             record.Touch();
@@ -74,7 +74,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> PutAnnouncementAsync([FromBody] AnnouncementRecord record)
         {
             if (record == null) return BadRequest("Error parsing Record");
@@ -92,7 +92,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpDelete]
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> ClearAnnouncementAsync()
         {
             await _announcementService.DeleteAllAsync();

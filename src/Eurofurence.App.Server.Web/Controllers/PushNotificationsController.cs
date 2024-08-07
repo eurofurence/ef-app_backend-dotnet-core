@@ -29,7 +29,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPost("SyncRequest")]
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> PushSyncRequestAsync()
         {
@@ -38,7 +38,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPost("WnsToast")]
-        [Authorize(Roles = "Developer")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> PostWnsToastAsync([FromBody] ToastTest request)
         {
             await _wnsChannelManager.SendToastAsync(request.Topic, request.Message);
@@ -69,7 +69,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("Statistics")]
-        [Authorize(Roles = "Developer")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(PushNotificationChannelStatistics), 200)]
         public async Task<PushNotificationChannelStatistics> GetStatisticsAsync([FromQuery] DateTime? Since)
         {
