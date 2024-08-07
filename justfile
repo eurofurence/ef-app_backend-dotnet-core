@@ -78,3 +78,17 @@ homepage: (_open_url "Homepage" ("http://localhost:"+env_var('EF_MOBILE_APP_BACK
 
 # Open Backoffice UI in default browser
 backoffice: (_open_url "Backoffice UI" ("https://localhost:"+env_var('EF_MOBILE_APP_BACKOFFICE_PORT')+env_var('EF_MOBILE_APP_BACKOFFICE_BASE_PATH')+"/"))
+
+[doc('Verify an Apple App Site Association file for a given domain and path
+(see https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links)')]
+verify-aasa DOMAIN PATH:
+	#!/usr/bin/env bash
+	set -euxo pipefail
+	echo "Attempting download of AASA file for {{DOMAIN}} via swcutil…"
+	sudo swcutil dl -d {{DOMAIN}}
+	echo "Downloading AASA file as JSON…"
+	AASA_TEMP_PATH=$(mktemp)
+	trap 'rm -f -- "$AASA_TEMP_PATH"' EXIT
+	curl -o $AASA_TEMP_PATH https://{{DOMAIN}}/.well-known/apple-app-site-association
+	echo "Performing verification of URL https://{{DOMAIN}}/{{PATH}} via swcutil…"
+	sudo swcutil verify -d {{DOMAIN}} -j $AASA_TEMP_PATH -u https://{{DOMAIN}}/{{PATH}}
