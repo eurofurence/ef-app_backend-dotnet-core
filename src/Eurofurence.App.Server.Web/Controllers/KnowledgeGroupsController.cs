@@ -56,7 +56,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="record"></param>
         /// <param name="id"></param>
-        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
@@ -79,7 +79,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="Record"></param>
         /// <returns>Id of the newly created knowledge group</returns>
-        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
@@ -107,7 +107,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a knowledge group.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]

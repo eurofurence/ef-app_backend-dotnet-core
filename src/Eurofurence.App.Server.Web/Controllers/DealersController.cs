@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="record"></param>
         /// <param name="id"></param>
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 400)]
         [ProducesResponseType(typeof(string), 404)]
@@ -88,7 +88,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="record"></param>
         /// <returns>Id of the newly created dealer</returns>
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(400)]
         [HttpPost("")]
@@ -116,7 +116,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "System,Developer")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteDealerAsync([EnsureNotNull][FromRoute] Guid id)

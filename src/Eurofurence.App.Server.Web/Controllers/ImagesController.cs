@@ -120,22 +120,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return File(content, record.MimeType);
         }
 
-        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
-        [HttpPut("{id}")]
-        public async Task<ActionResult> PutImageAsync([FromRoute] Guid id, IFormFile file)
-        {
-            var record = await _imageService.FindOneAsync(id);
-            if (record == null) return NotFound();
-
-            using (var ms = new MemoryStream())
-            {
-                await file.CopyToAsync(ms);
-                var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
-                return Ok(result);
-            }
-        }
-
-        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [HttpPost]
         public async Task<ActionResult> PostImageAsync(IFormFile file)
         {
@@ -152,11 +137,26 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<ActionResult> PutImageAsync([FromRoute] Guid id, IFormFile file)
+        {
+            var record = await _imageService.FindOneAsync(id);
+            if (record == null) return NotFound();
+
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+                var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
+                return Ok(result);
+            }
+        }
+
         /// <summary>
         ///     Delete an image.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = "System,Developer,KnowledgeBase-Maintainer")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]
