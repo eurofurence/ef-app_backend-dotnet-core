@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -91,7 +91,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
 
         [HttpGet("PrivateMessages/{messageId}/Status")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,PrivateMessageSender")]
         [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(
@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("PrivateMessages/:sent-by-me")]
-        [Authorize(Roles = "PrivateMessageSender")]
+        [Authorize]
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
         public IQueryable<PrivateMessageRecord> GetMySentPrivateMessagesAsync()
         {
