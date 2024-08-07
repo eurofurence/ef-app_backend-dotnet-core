@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return _mapper.Map<KnowledgeEntryResponse>(await _knowledgeEntryService.FindAll()
                 .Include(ke => ke.Images)
                 .Include(ke => ke.Links)
-                .FirstOrDefaultAsync(entity => entity.Id == id).Transient404(HttpContext));
+                .FirstOrDefaultAsync(entity => entity.Id == id)).Transient404(HttpContext);
         }
 
 

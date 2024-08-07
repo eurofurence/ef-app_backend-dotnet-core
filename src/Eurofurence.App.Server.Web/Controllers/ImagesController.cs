@@ -71,7 +71,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ImageRecord), 200)]
         public async Task<ImageRecord> GetImageAsync([FromRoute] Guid id)
         {
-            return await _imageService.FindOneAsync(id).Transient404(HttpContext);
+            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var content = await _imageService.GetImageContentByImageIdAsync(id);
             return File(content, record.MimeType);
         }
-        
+
         /// <summary>
         ///     Retrieve a single image content using hash code (preferred, as it allows caching).
         /// </summary>
