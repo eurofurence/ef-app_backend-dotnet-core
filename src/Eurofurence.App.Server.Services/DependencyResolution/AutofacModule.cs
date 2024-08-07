@@ -61,7 +61,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             if (_configuration == null) return;
 
             builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
-            builder.RegisterInstance(WnsConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(TelegramConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
@@ -121,10 +120,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<PrivateMessageService>()
                 .As<IPrivateMessageService>()
                 .SingleInstance();
-            builder.RegisterType<PushEventMediator>().As<IPushEventMediator>();
             builder.RegisterType<PushNotificationChannelStatisticsService>()
                 .As<IPushNotificationChannelStatisticsService>();
-            builder.RegisterType<PushNotificiationChannelService>().As<IPushNotificiationChannelService>();
             builder.RegisterType<QrCodeService>().As<IQrCodeService>();
             builder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
             builder.RegisterType<TableRegistrationService>().As<ITableRegistrationService>();
@@ -133,7 +130,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<ITelegramMessageSender>()
                 .SingleInstance();
             builder.RegisterType<UserManager>().As<IUserManager>();
-            builder.RegisterType<WnsChannelManager>().As<IWnsChannelManager>();
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
         }
     }

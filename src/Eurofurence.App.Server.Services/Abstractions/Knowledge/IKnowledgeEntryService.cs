@@ -1,5 +1,6 @@
 ﻿using Eurofurence.App.Domain.Model.Knowledge;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Knowledge
@@ -8,8 +9,13 @@ namespace Eurofurence.App.Server.Services.Abstractions.Knowledge
         IEntityServiceOperations<KnowledgeEntryRecord>,
         IPatchOperationProcessor<KnowledgeEntryRecord>
     {
-        public Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(KnowledgeEntryRequest request);
+        public Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(
+            KnowledgeEntryRequest request,
+            CancellationToken cancellationToken = default);
 
-        public Task<KnowledgeEntryRecord> ReplaceKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest request);
+        public Task<KnowledgeEntryRecord> ReplaceKnowledgeEntryAsync(
+            Guid id,
+            KnowledgeEntryRequest request,
+            CancellationToken cancellationToken = default);
     }
 }

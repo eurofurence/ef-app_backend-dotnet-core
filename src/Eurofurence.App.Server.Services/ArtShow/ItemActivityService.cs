@@ -58,7 +58,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 var newRecord = new ItemActivityRecord()
                 {
                     Id = Guid.NewGuid(),
-                    OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{csvRecord.RegNo}",
+                    OwnerUid = csvRecord.RegNo.ToString(),
                     ASIDNO = csvRecord.ASIDNO,
                     ArtistName = csvRecord.ArtistName,
                     ArtPieceTitle = csvRecord.ArtPieceTitle,
@@ -142,7 +142,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 AuthorName = "Art Show",
                 Subject = title,
                 Message = message.ToString(),
-                RecipientUid = recipientUid,
+                RecipientRegSysId = recipientUid,
                 ToastTitle = "Art Show Results",
                 ToastMessage = title
             };
@@ -178,7 +178,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 AuthorName = "Art Show",
                 Subject = title,
                 Message = message.ToString(),
-                RecipientUid = recipientUid,
+                RecipientRegSysId = recipientUid,
                 ToastTitle = "Art Show Results",
                 ToastMessage = title
             };

@@ -14,9 +14,7 @@ using Microsoft.Extensions.Options;
 namespace Eurofurence.App.Server.Web.Identity;
 
 public class ConfigureOAuth2IntrospectionOptions(
-    IOptionsMonitor<IdentityOptions> identityOptions,
-    IHttpClientFactory httpClientFactory,
-    IDistributedCache cache
+    IOptionsMonitor<IdentityOptions> identityOptions
 ) : IConfigureNamedOptions<OAuth2IntrospectionOptions>
 {
     public void Configure(OAuth2IntrospectionOptions options)
@@ -34,71 +32,9 @@ public class ConfigureOAuth2IntrospectionOptions(
 
     private async Task OnTokenValidated(TokenValidatedContext context)
     {
-        var identity = (ClaimsIdentity)context.Principal.Identity;
-
-        if (await TryReadCachedClaims(identity, context.SecurityToken, context.HttpContext.RequestAborted))
+        if (context.Principal?.Identity is ClaimsIdentity identity)
         {
-            return;
-        }
-
-        var current = identityOptions.CurrentValue;
-        using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
-
-        var response = await client.GetUserInfoAsync(new UserInfoRequest
-        {
-            Address = current.UserInfoEndpoint,
-            Token = context.SecurityToken
-        }, context.HttpContext.RequestAborted);
-
-        identity.AddClaims(response.Claims);
-
-        var exp = identity.FindFirst(x => x.Type == "exp");
-        if (exp is not null && long.TryParse(exp.Value, out var seconds))
-        {
-            await cache.SetStringAsync(
-                $"{context.SecurityToken}_userinfo",
-                JsonSerializer.Serialize(response.Claims.Select(x => new CachedClaim(x.Type, x.Value)).ToList()),
-                new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(seconds)
-                }
-            );
-        }
-    }
-
-    private async Task<bool> TryReadCachedClaims(
-        ClaimsIdentity identity,
-        string token,
-        CancellationToken cancellationToken = default)
-    {
-        var cached = await cache.GetStringAsync($"{token}_userinfo", cancellationToken);
-        if (cached is null)
-        {
-            return false;
-        }
-
-        foreach (var claim in JsonSerializer.Deserialize<List<CachedClaim>>(cached))
-        {
-            identity.AddClaim(new Claim(claim.Type, claim.Value));
-        }
-
-        return true;
-    }
-
-    private class CachedClaim
-    {
-        public string Type { get; set; }
-
-        public string Value { get; set; }
-
-        public CachedClaim()
-        {
-        }
-
-        public CachedClaim(string type, string value)
-        {
-            Type = type;
-            Value = value;
+            identity.AddClaim(new Claim("token", context.SecurityToken));    
         }
     }
 }

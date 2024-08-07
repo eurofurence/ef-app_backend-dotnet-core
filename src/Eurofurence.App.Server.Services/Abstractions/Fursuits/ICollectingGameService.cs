@@ -12,7 +12,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Fursuits
         Task<PlayerCollectionEntry[]> GetPlayerCollectionEntriesForPlayerAsync(string playerUid);
 
         Task<IResult> RegisterTokenForFursuitBadgeForOwnerAsync(string ownerUid, Guid fursuitBadgeId, string tokenValue);
-        Task<IResult<CollectTokenResponse>> CollectTokenForPlayerAsync(string playerUid, string tokenValue);
+        Task<IResult<CollectTokenResponse>> CollectTokenForPlayerAsync(string identityId, string tokenValue, string username);
 
         Task<IResult<PlayerScoreboardEntry[]>>  GetPlayerScoreboardEntriesAsync(int top);
         Task<IResult<FursuitScoreboardEntry[]>> GetFursuitScoreboardEntriesAsync(int top);

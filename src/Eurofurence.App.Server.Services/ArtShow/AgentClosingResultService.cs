@@ -127,7 +127,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 AuthorName = "Art Show",
                 Subject = title,
                 Message = message.ToString(),
-                RecipientUid = result.OwnerUid,
+                RecipientRegSysId = result.AgentBadgeNo.ToString(),
                 ToastTitle = "Art Show Agent Results",
                 ToastMessage = $"{result.ArtistName}: ({result.ExhibitsSold} sold, {result.ExhibitsUnsold} unsold, {result.ExhibitsToAuction} to auction)"
             };

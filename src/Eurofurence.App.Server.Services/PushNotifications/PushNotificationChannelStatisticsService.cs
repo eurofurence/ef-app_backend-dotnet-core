@@ -1,6 +1,7 @@
 ﻿using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
@@ -9,52 +10,46 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 {
     public class PushNotificationChannelStatisticsService : IPushNotificationChannelStatisticsService
     {
-        private readonly AppDbContext _appDbContext;
+        private readonly IDeviceService _deviceService;
 
-        public PushNotificationChannelStatisticsService(
-            AppDbContext appDbContext
-        )
+        public PushNotificationChannelStatisticsService(IDeviceService deviceService)
         {
-            _appDbContext = appDbContext;
+            _deviceService = deviceService;
         }
 
         public async Task<PushNotificationChannelStatistics> PushNotificationChannelStatisticsAsync(
-            DateTime? sinceLastSeenDateTimeUtc)
+            DateTime? sinceLastSeenDateTimeUtc,
+            CancellationToken cancellationToken = default)
         {
-            if (!sinceLastSeenDateTimeUtc.HasValue)
-                sinceLastSeenDateTimeUtc = DateTime.UtcNow.AddMonths(-1);
+            var since = sinceLastSeenDateTimeUtc ?? DateTime.UtcNow.AddMonths(-1);
 
-            var records = await _appDbContext.PushNotificationChannels
-                .AsNoTracking()
-                .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc)
-                .Include(pushNotificationChannelRecord => pushNotificationChannelRecord.Topics)
-                .ToListAsync();
+            var devices = await _deviceService
+                .FindAll(x => x.LastChangeDateTimeUtc >= since)
+                .ToListAsync(cancellationToken);
 
-            var devicesWithSessions =
-                records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase)).ToList();
+            var numberOfDevices = devices.GroupBy(x => x.DeviceToken).Count();
+            var numberOfAuthenticatedDevices = devices
+                .Where(x => !string.IsNullOrEmpty(x.RegSysId))
+                .GroupBy(x => x.DeviceToken)
+                .Count();
+            var numberOfUniqueUserIds = devices.GroupBy(x => x.IdentityId).Count();
 
-            var devicesWithSessionCount = devicesWithSessions.Count();
-            var uniqueUserIds = devicesWithSessions.Select(a => a.Uid).Distinct().Count();
-
-            var groups = records
-                .GroupBy(a => $"{a.Platform}-{string.Join("-", a.Topics.Select(topic => topic.Name))}")
-                .Select(a => new PushNotificationChannelStatistics.PlatformTagInfo()
+            var platformStatistics = devices
+                .GroupBy(x => x.IsAndroid)
+                .Select(x => new PushNotificationChannelStatistics.PlatformTagInfo
                 {
-                    Platform = a.First().Platform.ToString(),
-                    Tags = a.First().Topics.Select(topic => topic.Name).ToArray(),
-                    DeviceCount = a.Count()
+                    Platform = x.Key ? "android" : "ios",
+                    DeviceCount = x.Count(),
                 })
-                .OrderByDescending(a => a.DeviceCount)
                 .ToArray();
-
 
             return new PushNotificationChannelStatistics()
             {
                 SinceLastSeenDateTimeUtc = sinceLastSeenDateTimeUtc.Value,
-                NumberOfDevices = records.Count,
-                NumberOfAuthenticatedDevices = devicesWithSessionCount,
-                NumberOfUniqueUserIds = uniqueUserIds,
-                PlatformStatistics = groups
+                NumberOfDevices = numberOfDevices,
+                NumberOfAuthenticatedDevices = numberOfAuthenticatedDevices,
+                NumberOfUniqueUserIds = numberOfUniqueUserIds,
+                PlatformStatistics = platformStatistics
             };
         }
     }

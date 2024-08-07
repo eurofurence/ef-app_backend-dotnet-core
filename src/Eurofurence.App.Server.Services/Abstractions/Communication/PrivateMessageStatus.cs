@@ -7,7 +7,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
     public class PrivateMessageStatus
     {
         public Guid Id { get; set; }
-        public string RecipientUid { get; set; }
+        public string RecipientRegSysId { get; set; }
+        public string RecipientIdentityId { get; set; }
 
         public DateTime CreatedDateTimeUtc { get; set; }
 

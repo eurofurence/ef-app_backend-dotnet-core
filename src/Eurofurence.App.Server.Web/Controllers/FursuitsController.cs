@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
@@ -129,7 +130,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
         public async Task<ActionResult> CollectTokenForPlayerAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(User.GetSubject(), TokenValue.Trim().ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                User.GetSubject(),
+                TokenValue.Trim().ToUpper(),
+                User.GetName()
+            );
             return result.AsActionResult();
         }
 
@@ -139,7 +144,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ApiSafeResult<CollectTokenResponse>), 200)]
         public async Task<ActionResult> CollectTokenForPlayerSafeAsync([FromBody] string TokenValue)
         {
-            var result = await _collectingGameService.CollectTokenForPlayerAsync(User.GetSubject(), TokenValue.Trim().ToUpper());
+            var result = await _collectingGameService.CollectTokenForPlayerAsync(
+                User.GetSubject(),
+                TokenValue.Trim().ToUpper(),
+                User.GetName()
+            );
             return result.AsActionResultSafeVariant();
         }
 

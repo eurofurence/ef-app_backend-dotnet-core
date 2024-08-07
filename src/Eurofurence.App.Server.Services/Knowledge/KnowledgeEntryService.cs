@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
@@ -10,8 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Knowledge
 {
-    public class KnowledgeEntryService : EntityServiceBase<KnowledgeEntryRecord>,
-        IKnowledgeEntryService
+    public class KnowledgeEntryService : EntityServiceBase<KnowledgeEntryRecord>, IKnowledgeEntryService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IStorageService _storageService;
@@ -25,13 +25,15 @@ namespace Eurofurence.App.Server.Services.Knowledge
             _appDbContext = appDbContext;
             _storageService = storageServiceFactory.CreateStorageService<KnowledgeEntryRecord>();
         }
-        public override async Task<KnowledgeEntryRecord> FindOneAsync(Guid id)
+        public override async Task<KnowledgeEntryRecord> FindOneAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
             return await _appDbContext.KnowledgeEntries
                 .Include(m => m.Images)
                 .Include(m => m.Links)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(entity => entity.Id == id);
+                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
         public override IQueryable<KnowledgeEntryRecord> FindAll()
@@ -42,17 +44,19 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 .AsNoTracking();
         }
 
-        public override Task ReplaceOneAsync(KnowledgeEntryRecord entity)
+        public override Task ReplaceOneAsync(KnowledgeEntryRecord entity, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException();
         }
 
-        public override Task InsertOneAsync(KnowledgeEntryRecord entity)
+        public override Task InsertOneAsync(KnowledgeEntryRecord entity, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException();
         }
 
-        public async Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(KnowledgeEntryRequest request)
+        public async Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(
+            KnowledgeEntryRequest request,
+            CancellationToken cancellationToken = default)
         {
             var images = _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id));
             
@@ -69,18 +73,21 @@ namespace Eurofurence.App.Server.Services.Knowledge
             entity.Images.AddRange(images);
 
             entity.Touch();
-            var result = await _appDbContext.AddAsync(entity);
-            await _storageService.TouchAsync();
-            await _appDbContext.SaveChangesAsync();
+            var result = await _appDbContext.AddAsync(entity, cancellationToken);
+            await _storageService.TouchAsync(cancellationToken);
+            await _appDbContext.SaveChangesAsync(cancellationToken);
             return result.Entity;
         }
 
-        public async Task<KnowledgeEntryRecord> ReplaceKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest request)
+        public async Task<KnowledgeEntryRecord> ReplaceKnowledgeEntryAsync(
+            Guid id,
+            KnowledgeEntryRequest request,
+            CancellationToken cancellationToken = default)
         {
             var existingEntity = await _appDbContext.KnowledgeEntries
                 .Include(knowledgeEntry => knowledgeEntry.Links)
                 .Include(knowledgeEntry => knowledgeEntry.Images)
-                .FirstOrDefaultAsync(ke => ke.Id == id);
+                .FirstOrDefaultAsync(ke => ke.Id == id, cancellationToken);
 
             existingEntity.KnowledgeGroupId = request.KnowledgeGroupId;
             existingEntity.Title = request.Title;
@@ -110,18 +117,22 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 }
             }
 
-            existingEntity.Images = await _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id)).ToListAsync();
+            existingEntity.Images = await _appDbContext.Images
+                .Where(image => request.ImageIds.Contains(image.Id))
+                .ToListAsync(cancellationToken);
 
             existingEntity.Touch();
-            await _storageService.TouchAsync();
-            await _appDbContext.SaveChangesAsync();
+            await _storageService.TouchAsync(cancellationToken);
+            await _appDbContext.SaveChangesAsync(cancellationToken);
 
             return existingEntity;
         }
 
-        public override async Task<DeltaResponse<KnowledgeEntryRecord>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
+        public override async Task<DeltaResponse<KnowledgeEntryRecord>> GetDeltaResponseAsync(
+            DateTime? minLastDateTimeChangedUtc = null,
+            CancellationToken cancellationToken = default)
         {
-            var storageInfo = await GetStorageInfoAsync();
+            var storageInfo = await GetStorageInfoAsync(cancellationToken);
             var response = new DeltaResponse<KnowledgeEntryRecord>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
@@ -137,7 +148,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
                         .Include(ke => ke.Links)
                         .Include(ke => ke.Images)
                         .Where(entity => entity.IsDeleted == 0)
-                        .ToArrayAsync();
+                        .ToArrayAsync(cancellationToken);
             }
             else
             {
@@ -149,8 +160,13 @@ namespace Eurofurence.App.Server.Services.Knowledge
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
-                response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
-                response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();
+                response.ChangedEntities = await entities
+                    .Where(a => a.IsDeleted == 0)
+                    .ToArrayAsync(cancellationToken);
+                response.DeletedEntities = await entities
+                    .Where(a => a.IsDeleted == 1)
+                    .Select(a => a.Id)
+                    .ToArrayAsync(cancellationToken);
             }
 
             return response;

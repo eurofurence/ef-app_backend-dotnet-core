@@ -1,13 +1,13 @@
 using Eurofurence.App.Common.Results;
 using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
-using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Moq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Fursuits;
 using Microsoft.EntityFrameworkCore;
@@ -41,25 +41,20 @@ namespace Eurofurence.App.Server.Services.Tests
                 new Mock<ITelegramMessageSender>().As<ITelegramMessageSender>().Object);
         }
 
-        private async Task<RegSysIdentityRecord> CreateRegSysIdentityAsync(AppDbContext appDbContext)
+        private async Task<DeviceRecord> CreateDeviceAsync(AppDbContext appDbContext)
         {
             var id = Guid.NewGuid();
 
-            var role = new RoleRecord()
-            {
-                Name = "Attendee"
-            };
-            appDbContext.Roles.Add(role);
-
-            var record = new RegSysIdentityRecord()
+            var record = new DeviceRecord()
             {
                 Id = id,
-                Uid = $"Test:{id}",
-                Username = $"Test Attendee {id}",
-                Roles = [role],
+                IdentityId = "Identity",
+                RegSysId = "123",
+                DeviceToken = "DeviceToken",
+                IsAndroid = true
             };
 
-            appDbContext.RegSysIdentities.Add(record);
+            appDbContext.Devices.Add(record);
             await appDbContext.SaveChangesAsync();
             return record;
         }
@@ -101,12 +96,12 @@ namespace Eurofurence.App.Server.Services.Tests
             var appDbContext = GetCleanDbContext();
             var collectingGameService = GetService(appDbContext);
 
-            var testUser = await CreateRegSysIdentityAsync(appDbContext);
+            var testUser = await CreateDeviceAsync(appDbContext);
             var testToken = await CreateTokenAsync(appDbContext);
-            var testUserFursuitBadge = await CreateFursuitBadgeAsync(appDbContext, ownerUid: testUser.Uid);
+            var testUserFursuitBadge = await CreateFursuitBadgeAsync(appDbContext, ownerUid: testUser.IdentityId);
             
-            var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, testUserFursuitBadge.Id, testToken.Value);
-            var testUserFursuitParticipation = await appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.Uid);
+            var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.IdentityId, testUserFursuitBadge.Id, testToken.Value);
+            var testUserFursuitParticipation = await appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.IdentityId);
             testToken = await appDbContext.Tokens.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == testToken.Id);
 
             Assert.True(result.IsSuccessful);
@@ -121,15 +116,15 @@ namespace Eurofurence.App.Server.Services.Tests
             var appDbContext = GetCleanDbContext();
             var collectingGameService = GetService(appDbContext);
 
-            var testUser = await CreateRegSysIdentityAsync(appDbContext);
+            var testUser = await CreateDeviceAsync(appDbContext);
             var testToken = INVALID_TOKEN;
-            var testUserFursuitBadge = await CreateFursuitBadgeAsync(appDbContext, ownerUid: testUser.Uid);
+            var testUserFursuitBadge = await CreateFursuitBadgeAsync(appDbContext, ownerUid: testUser.IdentityId);
             
             Assert.NotNull(testUser);
             Assert.NotNull(testUserFursuitBadge);
 
-            var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, testUserFursuitBadge.Id, testToken);
-            var testUserFursuitParticipation = await appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.Uid);
+            var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.IdentityId, testUserFursuitBadge.Id, testToken);
+            var testUserFursuitParticipation = await appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.IdentityId);
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_TOKEN", result.ErrorCode);
@@ -142,14 +137,14 @@ namespace Eurofurence.App.Server.Services.Tests
             var appDbContext = GetCleanDbContext();
             var collectingGameService = GetService(appDbContext);
 
-            var testUser = await CreateRegSysIdentityAsync(appDbContext);
+            var testUser = await CreateDeviceAsync(appDbContext);
             var testToken = await CreateTokenAsync(appDbContext);
             var invalidFursuitBadgeId = Guid.NewGuid();
             
             Assert.NotNull(testUser);
             Assert.NotNull(testToken);
 
-            var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.Uid, invalidFursuitBadgeId, testToken.Value);
+            var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.IdentityId, invalidFursuitBadgeId, testToken.Value);
 
             Assert.False(result.IsSuccessful);
             Assert.Equal("INVALID_FURSUIT_BADGE_ID", result.ErrorCode);
@@ -158,10 +153,10 @@ namespace Eurofurence.App.Server.Services.Tests
 
         private struct TwoPlayersWithOneFursuitToken
         {
-            public RegSysIdentityRecord player1WithFursuit;
+            public DeviceRecord player1WithFursuit;
             public FursuitBadgeRecord player1FursuitBadge;
             public TokenRecord player1Token;
-            public RegSysIdentityRecord player2WithoutFursuit;
+            public DeviceRecord player2WithoutFursuit;
         }
 
         private async Task<TwoPlayersWithOneFursuitToken> SetupTwoPlayersWithOneFursuitTokenAsync()
@@ -171,17 +166,17 @@ namespace Eurofurence.App.Server.Services.Tests
 
             var result = new TwoPlayersWithOneFursuitToken();
 
-            result.player1WithFursuit = await CreateRegSysIdentityAsync(appDbContext);
+            result.player1WithFursuit = await CreateDeviceAsync(appDbContext);
             result.player1Token = await CreateTokenAsync(appDbContext);
-            result.player1FursuitBadge = await CreateFursuitBadgeAsync(appDbContext, result.player1WithFursuit.Uid);
+            result.player1FursuitBadge = await CreateFursuitBadgeAsync(appDbContext, result.player1WithFursuit.IdentityId);
 
             await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(
-                result.player1WithFursuit.Uid,
+                result.player1WithFursuit.IdentityId,
                 result.player1FursuitBadge.Id,
                 result.player1Token.Value
             );
 
-            result.player2WithoutFursuit = await CreateRegSysIdentityAsync(appDbContext);
+            result.player2WithoutFursuit = await CreateDeviceAsync(appDbContext);
 
             return result;
         }
@@ -195,21 +190,22 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.Uid, 
-                setup.player1Token.Value
+                setup.player2WithoutFursuit.IdentityId, 
+                setup.player1Token.Value,
+                "Test User 2"
             );
 
             var player1FursuitParticipation = await appDbContext.FursuitParticipations
                 .AsNoTracking()
-                .Include(fursuitParticipationRecord => fursuitParticipationRecord.CollectionEntries).FirstOrDefaultAsync(a => a.OwnerUid == setup.player1WithFursuit.Uid);
+                .Include(fursuitParticipationRecord => fursuitParticipationRecord.CollectionEntries).FirstOrDefaultAsync(a => a.OwnerUid == setup.player1WithFursuit.IdentityId);
             var player2PlayerParticipation = await appDbContext.PlayerParticipations
                 .AsNoTracking()
-                .Include(playerParticipationRecord => playerParticipationRecord.CollectionEntries).FirstOrDefaultAsync(a => a.PlayerUid == setup.player2WithoutFursuit.Uid);
+                .Include(playerParticipationRecord => playerParticipationRecord.CollectionEntries).FirstOrDefaultAsync(a => a.PlayerUid == setup.player2WithoutFursuit.IdentityId);
 
             Assert.True(result.IsSuccessful);
             Assert.Equal(1, player1FursuitParticipation.CollectionCount);
             Assert.Equal(1, player2PlayerParticipation.CollectionCount);
-            Assert.Contains(player1FursuitParticipation.CollectionEntries, a => a.PlayerParticipationId == setup.player2WithoutFursuit.Uid);
+            Assert.Contains(player1FursuitParticipation.CollectionEntries, a => a.PlayerParticipationId == setup.player2WithoutFursuit.IdentityId);
             Assert.Contains(player2PlayerParticipation.CollectionEntries, a => a.FursuitParticipationId == player1FursuitParticipation.Id);
         }
 
@@ -222,13 +218,15 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.Uid, 
-                setup.player1Token.Value
+                setup.player2WithoutFursuit.IdentityId, 
+                setup.player1Token.Value,
+                "Test User 2"
             );
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.Uid, 
-                setup.player1Token.Value
+                setup.player2WithoutFursuit.IdentityId, 
+                setup.player1Token.Value,
+                "Test User 2"
             );
 
             Assert.False(result.IsSuccessful);
@@ -245,8 +243,9 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.Uid, 
-                INVALID_TOKEN
+                setup.player2WithoutFursuit.IdentityId, 
+                INVALID_TOKEN,
+                "Test User 2"
             );
 
             Assert.False(result.IsSuccessful);
@@ -262,8 +261,9 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player1WithFursuit.Uid,
-                setup.player1Token.Value
+                setup.player1WithFursuit.IdentityId,
+                setup.player1Token.Value,
+                "Test User 1"
             );
 
             Assert.False(result.IsSuccessful);
@@ -281,8 +281,9 @@ namespace Eurofurence.App.Server.Services.Tests
             IResult<CollectTokenResponse> result = null;
             for (int i = 0; i < 20; i++)
                 result = await collectingGameService.CollectTokenForPlayerAsync(
-                    setup.player1WithFursuit.Uid, 
-                    INVALID_TOKEN
+                    setup.player1WithFursuit.IdentityId, 
+                    INVALID_TOKEN,
+                    "Test User 1"
                 );
 
             Assert.False(result.IsSuccessful);
@@ -295,19 +296,19 @@ namespace Eurofurence.App.Server.Services.Tests
             var appDbContext = GetCleanDbContext();
             var collectingGameService = GetService(appDbContext);
 
-            var players = new RegSysIdentityRecord[3];
+            var players = new DeviceRecord[3];
             var tokens = new TokenRecord[3];
             var fursuitBadges = new FursuitBadgeRecord[3];
 
             // 3 players, each with suit
             for (int i = 0; i < 3; i++)
             {
-                players[i] = await CreateRegSysIdentityAsync(appDbContext);
+                players[i] = await CreateDeviceAsync(appDbContext);
                 tokens[i] = await CreateTokenAsync(appDbContext);
-                fursuitBadges[i] = await CreateFursuitBadgeAsync(appDbContext, players[i].Uid);
+                fursuitBadges[i] = await CreateFursuitBadgeAsync(appDbContext, players[i].IdentityId);
 
                 await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(
-                    players[i].Uid, fursuitBadges[i].Id, tokens[i].Value);
+                    players[i].IdentityId, fursuitBadges[i].Id, tokens[i].Value);
             }
 
             // Each catches everyone else.
@@ -318,7 +319,7 @@ namespace Eurofurence.App.Server.Services.Tests
                     if (j == i) continue;
 
                     var result = await collectingGameService.CollectTokenForPlayerAsync(
-                        players[i].Uid, tokens[j].Value);
+                        players[i].IdentityId, tokens[j].Value, $"Test User {i}");
 
                     Assert.True(result.IsSuccessful);
                 }
@@ -330,9 +331,9 @@ namespace Eurofurence.App.Server.Services.Tests
             // 1 catches first, then 2, then 3
             Assert.Equal(3, playerScoreboard.Value.Length);
             Assert.True(playerScoreboard.Value.All(a => a.CollectionCount == 2));
-            Assert.Equal(players[0].Username, playerScoreboard.Value[0].Name);
-            Assert.Equal(players[1].Username, playerScoreboard.Value[1].Name);
-            Assert.Equal(players[2].Username, playerScoreboard.Value[2].Name);
+            Assert.Equal("Test User 0", playerScoreboard.Value[0].Name);
+            Assert.Equal("Test User 1", playerScoreboard.Value[1].Name);
+            Assert.Equal("Test User 2", playerScoreboard.Value[2].Name);
 
             // 3 gets the 2 catches first (by 1 + 2), then 1 (by 2 + 3), then 2
             Assert.Equal(3, fursuitScoreboard.Value.Length);

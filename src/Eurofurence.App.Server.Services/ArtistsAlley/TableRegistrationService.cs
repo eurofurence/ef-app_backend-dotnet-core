@@ -95,7 +95,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var sendPrivateMessageRequest = new SendPrivateMessageRequest()
             {
                 AuthorName = "Artist Alley",
-                RecipientUid = record.OwnerUid,
+                RecipientIdentityId = record.OwnerUid,
                 Subject = "Your table registration was accepted",
                 Message = message,
                 ToastTitle = "Artist Alley",
@@ -163,7 +163,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var sendPrivateMessageRequest = new SendPrivateMessageRequest()
             {
                 AuthorName = "Artist Alley",
-                RecipientUid = record.OwnerUid,
+                RecipientIdentityId = record.OwnerUid,
                 Subject = "Your table registration was rejected",
                 Message = message,
                 ToastTitle = "Artist Alley",

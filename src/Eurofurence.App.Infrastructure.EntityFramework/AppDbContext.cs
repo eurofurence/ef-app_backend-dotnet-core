@@ -13,8 +13,6 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Domain.Model.Maps;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Security;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +20,7 @@ using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
 using System;
 using System.Linq;
+using Eurofurence.App.Domain.Model.PushNotifications;
 
 namespace Eurofurence.App.Infrastructure.EntityFramework
 {
@@ -54,16 +53,10 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<LostAndFoundRecord> LostAndFounds { get; set; }
         public virtual DbSet<MapEntryRecord> MapEntries { get; set; }
         public virtual DbSet<MapRecord> Maps { get; set; }
-        public virtual DbSet<PushNotificationChannelRecord> PushNotificationChannels { get; set; }
-        public virtual DbSet<RegSysAccessTokenRecord> RegSysAccessTokens { get; set; }
-        public virtual DbSet<RegSysAlternativePinRecord> RegSysAlternativePins { get; set; }
-        public virtual DbSet<IssueRecord> IssueRecords { get; set; }
-        public virtual DbSet<RegSysIdentityRecord> RegSysIdentities { get; set; }
         public virtual DbSet<EntityStorageInfoRecord> EntityStorageInfos { get; set; }
         public virtual DbSet<UserRecord> Users { get; set; }
-        public virtual DbSet<RoleRecord> Roles { get; set; }
-        public virtual DbSet<TopicRecord> Topics { get; set; }
         public virtual DbSet<LinkFragment> LinkFragments { get; set; }
+        public virtual DbSet<DeviceRecord> Devices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,9 +75,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
                     mutableEntityType.SetQueryFilter(lambdaExpression);
                 }
             }
-
-            modelBuilder.Entity<RegSysAlternativePinRecord>().Property(x => x.PinConsumptionDatesUtc)
-                .HasColumnType("json");
 
             modelBuilder.Entity<DealerRecord>().Property(x => x.Keywords)
                 .HasColumnType("json");
