@@ -54,7 +54,7 @@ public class RolesClaimsTransformation(
             {
                 roles.Add("PrivateMessageSender");
             }
-            
+
             if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
             {
                 roles.Add("KnowledgeBaseEditor");
@@ -64,7 +64,7 @@ public class RolesClaimsTransformation(
             {
                 roles.Add("MapEditor");
             }
-            
+
             if (authorizationOptions.Value.FursuitBadgeSystem.Contains(claim.Value))
             {
                 roles.Add("FursuitBadgeSystem");
@@ -165,6 +165,10 @@ public class RolesClaimsTransformation(
             identity.AddClaim(new Claim("RegSysId", id));
         }
 
+        if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId)
+        {
+            await UpdateRegSysIdsInDb(ids, identityId);
+        }
 
         var exp = identity.FindFirst(x => x.Type == "exp");
         if (exp is not null && long.TryParse(exp.Value, out var seconds))

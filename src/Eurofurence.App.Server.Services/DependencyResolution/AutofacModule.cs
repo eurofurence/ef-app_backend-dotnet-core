@@ -131,6 +131,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .SingleInstance();
             builder.RegisterType<UserManager>().As<IUserManager>();
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
+            builder.RegisterType<DeviceService>().As<IDeviceService>();
         }
     }
 }

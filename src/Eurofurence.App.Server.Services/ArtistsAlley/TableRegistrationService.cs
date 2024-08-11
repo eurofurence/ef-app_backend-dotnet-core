@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
@@ -30,8 +31,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
             ArtistAlleyConfiguration configuration,
-            ITelegramMessageSender telegramMessageSender,
-        IPrivateMessageService privateMessageService,
+            ITelegramMessageSender telegramMessageSender, 
+            IPrivateMessageService privateMessageService,
             IImageService imageService) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
@@ -49,12 +50,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             return records;
         }
 
-        public override async Task<TableRegistrationRecord> FindOneAsync(Guid id)
+        public override async Task<TableRegistrationRecord> FindOneAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
             return await _appDbContext.TableRegistrations
                 .Include(tr => tr.Image)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(tr => tr.Id == id);
+                .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
