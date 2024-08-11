@@ -6,7 +6,9 @@ using Eurofurence.App.Domain.Model.ArtistsAlley;
 
 namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
 {
-    public interface ITableRegistrationService
+    public interface ITableRegistrationService :
+        IEntityServiceOperations<TableRegistrationRecord>,
+        IPatchOperationProcessor<TableRegistrationRecord>
     {
         Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request);
         IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state);

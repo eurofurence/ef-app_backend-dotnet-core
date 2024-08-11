@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -86,7 +86,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(Roles = "Developer,System,Action-PrivateMessages-Send")]
+        [Authorize(Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageAsync(
@@ -141,7 +141,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
 
         [HttpGet("PrivateMessages/{messageId}/Status")]
-        [Authorize(Roles = "Developer,System,Action-PrivateMessages-Query")]
+        [Authorize(Roles = "Admin,PrivateMessageSender")]
         [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(
@@ -162,7 +162,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("NotificationQueue/Count")]
-        [Authorize(Roles = "Developer,System")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(int), 200)]
         public int GetNotificationQueueSize()
         {

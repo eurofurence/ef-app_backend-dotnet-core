@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -22,6 +23,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
+        [Authorize(Roles = "Attendee")]
         public async Task<ActionResult> PostEventFeedbackAsync([FromBody]PostEventFeedbackRequest request)
         {
             if (request == null) return BadRequest();

@@ -45,44 +45,34 @@ public class RolesClaimsTransformation(
 
         foreach (var claim in identity.Claims.Where(x => x.Type == "groups"))
         {
-            if (authorizationOptions.Value.Admin.Contains(claim.Value))
-            {
-                roles.Add("Admin");
-            }
-
-            if (authorizationOptions.Value.System.Contains(claim.Value))
-            {
-                roles.Add("System");
-            }
-
-            if (authorizationOptions.Value.Developer.Contains(claim.Value))
-            {
-                roles.Add("Developer");
-            }
-
-            if (authorizationOptions.Value.KnowledgeBaseMaintainer.Contains(claim.Value))
-            {
-                roles.Add("KnowledgeBase-Maintainer");
-            }
-
             if (authorizationOptions.Value.ArtShow.Contains(claim.Value))
             {
                 roles.Add("ArtShow");
             }
 
+            if (authorizationOptions.Value.PrivateMessageSender.Contains(claim.Value))
+            {
+                roles.Add("PrivateMessageSender");
+            }
+            
+            if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
+            {
+                roles.Add("KnowledgeBaseEditor");
+            }
+
+            if (authorizationOptions.Value.MapEditor.Contains(claim.Value))
+            {
+                roles.Add("MapEditor");
+            }
+            
             if (authorizationOptions.Value.FursuitBadgeSystem.Contains(claim.Value))
             {
                 roles.Add("FursuitBadgeSystem");
             }
 
-            if (authorizationOptions.Value.PrivateMessagesSend.Contains(claim.Value))
+            if (authorizationOptions.Value.Admin.Contains(claim.Value))
             {
-                roles.Add("Action-PrivateMessages-Send");
-            }
-
-            if (authorizationOptions.Value.PrivateMessagesQuery.Contains(claim.Value))
-            {
-                roles.Add("Action-PrivateMessages-Query");
+                roles.Add("Admin");
             }
         }
 

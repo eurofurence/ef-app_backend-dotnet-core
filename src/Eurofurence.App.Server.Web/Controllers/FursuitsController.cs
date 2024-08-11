@@ -33,7 +33,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     **Not meant to be consumed by the mobile apps**
         /// </remarks>
         /// <param name="registration"></param>
-        [Authorize(Roles = "System,Developer,FursuitBadgeSystem")]
+        [Authorize(Roles = "Admin,FursuitBadgeSystem")]
         [HttpPost("Badges/Registration")]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <remarks>
         ///     **Not meant to be consumed by the mobile apps**
         /// </remarks>
-        [Authorize(Roles = "System,Developer,FursuitBadgeSystem")]
+        [Authorize(Roles = "Admin,FursuitBadgeSystem")]
         [HttpGet("Badges")]
         [ProducesResponseType(typeof(IEnumerable<FursuitBadgeRecord>), 200)]
         [ProducesResponseType(401)]
@@ -176,7 +176,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
-        [Authorize(Roles = "Developer,System")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("CollectingGame/Tokens")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
@@ -186,7 +186,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 .AsActionResult();
         }
 
-        [Authorize(Roles = "Developer,System")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("CollectingGame/Tokens/Batch")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]
@@ -197,7 +197,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
-        [Authorize(Roles = "Developer,System")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("CollectingGame/Recalculate")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(ApiErrorResult), 400)]

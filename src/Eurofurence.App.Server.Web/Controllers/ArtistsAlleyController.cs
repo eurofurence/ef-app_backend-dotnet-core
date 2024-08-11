@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
-using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,14 +24,28 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all table registrations.
         /// </summary>
         /// <returns>All table registrations.</returns>
-        [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
-        [Authorize(Roles = "System,Developer,Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
         {
             return _tableRegistrationService.GetRegistrations(null);
+        }
+
+        /// <summary>
+        ///     Retrieve a single table registration.
+        /// </summary>
+        /// <param name="id">id of the requested entity</param>
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(TableRegistrationRecord), 200)]
+        [Authorize(Roles = "Admin")]
+        [HttpGet("{id}")]
+        public async Task<TableRegistrationRecord> GetTableRegistrationAsync(
+            [EnsureNotNull][FromRoute] Guid id
+        )
+        {
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
         [Authorize(Roles = "Attendee")]
@@ -48,6 +62,25 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
             return record.Transient404(HttpContext);
+        }
+
+        /// <summary>
+        ///     Delete a table registration..
+        /// </summary>
+        /// <param name="id">The table registration id.</param>
+        /// <returns></returns>
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(string), 404)]
+        public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull][FromRoute] Guid id)
+        {
+            var exists = await _tableRegistrationService.HasOneAsync(id);
+            if (!exists) return NotFound();
+
+            await _tableRegistrationService.DeleteOneAsync(id);
+
+            return NoContent();
         }
     }
 } 
