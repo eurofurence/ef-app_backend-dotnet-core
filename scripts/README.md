@@ -5,20 +5,23 @@ Make sure to have all dependencies from the [requirements.txt](./requirements.tx
 
 **ToDo:**
 
-* amend [justfile](../justfile) with a few recipies to make things easier…
 * provide an easier, programmatic way to obtain a token from the IDP
 
 ## [import.py](./import.py) – Import Data between APIs
 
 The token required will be a bearer token obtained from the [IDP](https://identity.eurofurence.org), which is currently easiest by going to the backoffice and simply pulling it from the browser's session storage.
 
-Currently the script has only been tested with `KnowledgeGroupRecord`s and `KnowledgeEntryRequest`s.
+Currently the script has only been tested with `KnowledgeGroups` and `KnowledgeEntries`.
+
+Just recipes are available for listing (potentially) supported types (`just import-list-types`) and running the importer (`just import`).
 
 ```text
-% python import.py --help
-usage: import.py [-h] [--token TOKEN] [--source SOURCE] [--type TYPE] [--list-types] api
+usage: import.py [-h] [--token TOKEN] [--source SOURCE] [--type TYPE] [--list-types]
+                 [--with-images-from IMAGE_SOURCE] [--debug]
+                 api
 
-Import data exported from the API (e.g. of another instance or a previous year) into the current backend via the API to restore it or import test data.
+Import data exported from the API (e.g. of another instance or a previous year) into the current backend via the API
+to restore it or import test data.
 
 positional arguments:
   api                   Base URL of the API (e.g. https://app.eurofurence.org/EFXX).
@@ -31,6 +34,9 @@ options:
                         Path or URL to JSON containing the data to be imported.
   --type TYPE, -t TYPE  Name of the entity type to be imported.
   --list-types, -l      List available entity types from API.
+  --with-images-from IMAGE_SOURCE
+                        Retrieve images from given API, upload and reference them on imported items.
+  --debug               Enable debug logging.
 
 Please be aware that this may result in a high number of API requests and thus run into rate limit on big imports!
 ```
@@ -42,5 +48,7 @@ The `FontAwesomeIconCharacterUnicodeAddress` field got replaced by `FontAwesomeI
 ```bash
 curl https://app.eurofurence.org/EF27/Api/KnowledgeGroups | sed 's/"FontAwesomeIconCharacterUnicodeAddress": "[^"]*"/"FontAwesomeIconName": ""/'
 ```
+
+Or simply use `just import-kb-ef27` with appropriate arguments.
 
 Icons will have to be set again manually after importing this! Feel free to add a mapper to the import script if you want though. (;

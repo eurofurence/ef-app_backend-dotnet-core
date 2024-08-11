@@ -21,19 +21,27 @@ If you have [`just`](https://github.com/casey/just) available on your system, yo
 ```plain
 just --list
 Available recipes:
-    backoffice                  # Open Backoffice UI in default browser
+    backoffice                                 # Open Backoffice UI in default browser
     build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION') # Perform restore, build & publish with dotnet
-    build-cli                   # Build just CLI tools as single, self-contained executable
-    clean                       # Clean build, stack, container images, volumes and artifacts
-    containerize *ARGS          # Build release container using spec from docker-compose.yml
-    containerize-backoffice-dev # Build sdk container for backoffice without executing second stage
-    containerize-dev            # Build sdk container for backend without executing second stage
-    default                     # List available recipes
-    down                        # Bring the docker compose stack down and remove volumes
-    init                        # Initialize configuration files in root folder
-    stop                        # Stop the docker compose stack
-    swagger                     # Open Swagger UI in default browser
-    up *ARGS                    # Start the docker compose stack
+    build-cli                                  # Build just CLI tools as single, self-contained executable
+    clean                                      # Clean build files, compose stack, container images and other artifacts
+    containerize *ARGS                         # Build release container using spec from docker-compose.yml
+    containerize-backoffice-dev                # Build sdk container for backoffice without executing second stage
+    containerize-dev                           # Build sdk container for backend without executing second stage
+    default                                    # List available recipes
+    down                                       # Bring the docker compose stack down and remove volumes
+    homepage                                   # Open homepage in default browser
+    import SOURCE TARGET_API TOKEN TYPE *ARGS  # Import data from source URL or path to the target API.
+    import-kb-ef27 SOURCE_API TARGET_API TOKEN # Import knowledgebase from an EF27 backend into a latest version target via API.
+    import-list-types TARGET_API               # List types supported for import.
+    init                                       # Initialize configuration files in root folder
+    stop                                       # Stop the docker compose stack
+    swagger                                    # Open Swagger UI in default browser
+    up *ARGS                                   # Start the docker compose stack
+    # Verify an Apple App Site Association file for a given domain and path
+    # (see https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links)
+    verify-aasa DOMAIN PATH
+
 ```
 
 ## Local Configuration
@@ -51,21 +59,21 @@ _________________
 
 ## Potentially outdated information below (Here be dragons!)
 
-- Backend is written in .NET Core an requires at least the Microsoft.NETCore.App 1.0.3 runtime.
+* Backend is written in .NET Core an requires at least the Microsoft.NETCore.App 1.0.3 runtime.
 
-- We use Swagger to document our API & data models.
-  - You can us [SwaggerUI](https://app.eurofurence.org/swagger/v2/ui/) to interactively play with the backend in your browser.
+* We use Swagger to document our API & data models.
+  * You can us [SwaggerUI](https://app.eurofurence.org/swagger/v2/ui/) to interactively play with the backend in your browser.
 
-- Our production backend is located at <https://app.eurofurence.org/api/v2/> - it will return data (~3 months before of a convention usually fresh data, otherwise from last year) to test and design against.
-  - You are free to consume the API from your own website/project/application! Please keep the request rates sane and feel free to share your work with us, we'd love to see!
+* Our production backend is located at <https://app.eurofurence.org/api/v2/> - it will return data (~3 months before of a convention usually fresh data, otherwise from last year) to test and design against.
+  * You are free to consume the API from your own website/project/application! Please keep the request rates sane and feel free to share your work with us, we'd love to see!
 
 ### How to set up
 
 What you'll need
 
-- A MongoDB server
-- A server capable of running dotnet core
-- Some time and patience
+* A MongoDB server
+* A server capable of running dotnet core
+* Some time and patience
 
 First steps
 
