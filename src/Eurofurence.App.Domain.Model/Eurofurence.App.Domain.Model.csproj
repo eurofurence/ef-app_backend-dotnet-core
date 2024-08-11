@@ -17,7 +17,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Security\" />
-  </ItemGroup>
 </Project>

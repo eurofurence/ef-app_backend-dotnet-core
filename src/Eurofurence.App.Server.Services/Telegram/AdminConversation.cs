@@ -289,10 +289,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             var recipientUid =
                                                 $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}";
                                             var messageId = await _privateMessageService.SendPrivateMessageAsync(
-                                                new SendPrivateMessageRequest()
+                                                new SendPrivateMessageByRegSysRequest()
                                                 {
                                                     AuthorName = $"{from}",
-                                                    RecipientRegSysId = regNo.ToString(),
+                                                    RecipientUid = regNo.ToString(),
                                                     Message = body,
                                                     Subject = subject,
                                                     ToastTitle = "You received a new personal message",

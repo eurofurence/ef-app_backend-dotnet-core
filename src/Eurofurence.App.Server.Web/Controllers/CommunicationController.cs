@@ -90,7 +90,39 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("PrivateMessages")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageAsync(
-            [FromBody] SendPrivateMessageRequest Request,
+            [FromBody] SendPrivateMessageByRegSysRequest Request,
+            CancellationToken cancellationToken = default)
+        {
+            if (Request == null) return BadRequest();
+
+            if (User.IsInRole("Attendee"))
+            {
+                Request.AuthorName = User.GetName();
+            }
+
+            return Json(await _privateMessageService.SendPrivateMessageAsync(
+                Request,
+                User.GetSubject(),
+                cancellationToken
+            ));
+        }
+        
+        /// <summary>
+        ///     Sends a private message to a specific recipient/attendee.
+        /// </summary>
+        /// <remarks>
+        ///     If the backend has a push-channel available to any given device(s) that are currently signed into the app
+        ///     with the same recipient uid, it will push a toast message to those devices.
+        ///     The toast message content is defined by the `ToastTitle` and `ToastMessage` properties.
+        /// </remarks>
+        /// <param name="Request"></param>
+        /// <returns>The `Id` of the message that has been delivered.</returns>
+        /// <response code="400">Unable to parse `Request`</response>
+        [Authorize(Roles = "Developer,System,Action-PrivateMessages-Send")]
+        [HttpPost("PrivateMessages/Identity")]
+        [ProducesResponseType(typeof(Guid), 200)]
+        public async Task<ActionResult> SendPrivateMessageIdentityAsync(
+            [FromBody] SendPrivateMessageByIdentityRequest Request,
             CancellationToken cancellationToken = default)
         {
             if (Request == null) return BadRequest();

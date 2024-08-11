@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Services.Communication
         }
 
         public async Task<Guid> SendPrivateMessageAsync(
-            SendPrivateMessageRequest request,
+            SendPrivateMessageByRegSysRequest request,
             string senderUid = "System",
             CancellationToken cancellationToken = default)
         {
@@ -101,8 +101,7 @@ namespace Eurofurence.App.Server.Services.Communication
             {
                 AuthorName = request.AuthorName,
                 SenderUid = senderUid,
-                RecipientRegSysId = request.RecipientRegSysId,
-                RecipientIdentityId = request.RecipientIdentityId,
+                RecipientRegSysId = request.RecipientUid,
                 Message = request.Message,
                 Subject = request.Subject,
                 CreatedDateTimeUtc = DateTime.UtcNow
@@ -113,8 +112,36 @@ namespace Eurofurence.App.Server.Services.Communication
 
             _notificationQueue.Enqueue(new QueuedNotificationParameters()
             {
-                RecipientRegSysId = request.RecipientRegSysId,
-                RecipientIdentityId = request.RecipientIdentityId,
+                RecipientRegSysId = request.RecipientUid,
+                ToastTitle = request.ToastTitle,
+                ToastMessage = request.ToastMessage,
+                RelatedId = entity.Id
+            });
+
+            return entity.Id;
+        }
+
+        public async Task<Guid> SendPrivateMessageAsync(
+            SendPrivateMessageByIdentityRequest request,
+            string senderUid = "System",
+            CancellationToken cancellationToken = default)
+        {
+            var entity = new PrivateMessageRecord
+            {
+                AuthorName = request.AuthorName,
+                SenderUid = senderUid,
+                RecipientIdentityId = request.RecipientUid,
+                Message = request.Message,
+                Subject = request.Subject,
+                CreatedDateTimeUtc = DateTime.UtcNow
+            };
+            entity.NewId();
+
+            await InsertOneAsync(entity, cancellationToken);
+
+            _notificationQueue.Enqueue(new QueuedNotificationParameters()
+            {
+                RecipientIdentityId = request.RecipientUid,
                 ToastTitle = request.ToastTitle,
                 ToastMessage = request.ToastMessage,
                 RelatedId = entity.Id

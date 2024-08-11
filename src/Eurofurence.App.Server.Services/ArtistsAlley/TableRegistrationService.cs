@@ -92,10 +92,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
 
-            var sendPrivateMessageRequest = new SendPrivateMessageRequest()
+            var sendPrivateMessageRequest = new SendPrivateMessageByIdentityRequest()
             {
                 AuthorName = "Artist Alley",
-                RecipientIdentityId = record.OwnerUid,
+                RecipientUid = record.OwnerUid,
                 Subject = "Your table registration was accepted",
                 Message = message,
                 ToastTitle = "Artist Alley",
@@ -160,10 +160,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
 
-            var sendPrivateMessageRequest = new SendPrivateMessageRequest()
+            var sendPrivateMessageRequest = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Artist Alley",
-                RecipientIdentityId = record.OwnerUid,
+                RecipientUid = record.OwnerUid,
                 Subject = "Your table registration was rejected",
                 Message = message,
                 ToastTitle = "Artist Alley",

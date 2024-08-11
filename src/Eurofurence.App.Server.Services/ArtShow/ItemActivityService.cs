@@ -137,12 +137,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
             message.AppendLine("\nIf you wish to defend your current bids against other potential higher bids, please attend the auction.\n\nThank you!");
 
-            var request = new SendPrivateMessageRequest()
+            var request = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Art Show",
                 Subject = title,
                 Message = message.ToString(),
-                RecipientRegSysId = recipientUid,
+                RecipientUid = recipientUid,
                 ToastTitle = "Art Show Results",
                 ToastMessage = title
             };
@@ -173,12 +173,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
             message.AppendLine("\nPlease pick them up at the Art Show during sales hours (these are announced in the event schedule and can be found both in your con book or the mobile app).\n\nThank you!");
 
-            var request = new SendPrivateMessageRequest()
+            var request = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Art Show",
                 Subject = title,
                 Message = message.ToString(),
-                RecipientRegSysId = recipientUid,
+                RecipientUid = recipientUid,
                 ToastTitle = "Art Show Results",
                 ToastMessage = title
             };

@@ -122,12 +122,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 .AppendLine($"Your expected payout as of now is {result.TotalCashAmount} € (charity percentages, where applicable, already deducted).\n\nIf any exhibits are heading to the auction, the actual payout amount may still increase.\n")
                 .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) in the Art Show during Sales & Unsold Art Pickup times and collect your payout during Artists' Payout times.\n\nThank you!");
 
-            var request = new SendPrivateMessageRequest()
+            var request = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Art Show",
                 Subject = title,
                 Message = message.ToString(),
-                RecipientRegSysId = result.AgentBadgeNo.ToString(),
+                RecipientUid = result.AgentBadgeNo.ToString(),
                 ToastTitle = "Art Show Agent Results",
                 ToastMessage = $"{result.ArtistName}: ({result.ExhibitsSold} sold, {result.ExhibitsUnsold} unsold, {result.ExhibitsToAuction} to auction)"
             };
