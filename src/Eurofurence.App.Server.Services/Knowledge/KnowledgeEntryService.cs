@@ -55,9 +55,10 @@ namespace Eurofurence.App.Server.Services.Knowledge
         public async Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(KnowledgeEntryRequest request)
         {
             var images = _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id));
-            
+
             var entity = new KnowledgeEntryRecord
             {
+                Id = request.Id,
                 KnowledgeGroupId = request.KnowledgeGroupId,
                 Title = request.Title,
                 Text = request.Text,

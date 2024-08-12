@@ -78,3 +78,38 @@ homepage: (_open_url "Homepage" ("http://localhost:"+env_var('EF_MOBILE_APP_BACK
 
 # Open Backoffice UI in default browser
 backoffice: (_open_url "Backoffice UI" ("https://localhost:"+env_var('EF_MOBILE_APP_BACKOFFICE_PORT')+env_var('EF_MOBILE_APP_BACKOFFICE_BASE_PATH')+"/"))
+
+[doc('Verify an Apple App Site Association file for a given domain and path
+(see https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links)')]
+verify-aasa DOMAIN PATH:
+	#!/usr/bin/env bash
+	set -euxo pipefail
+	echo "Attempting download of AASA file for {{DOMAIN}} via swcutil…"
+	sudo swcutil dl -d {{DOMAIN}}
+	echo "Downloading AASA file as JSON…"
+	AASA_TEMP_PATH=$(mktemp)
+	trap 'rm -f -- "$AASA_TEMP_PATH"' EXIT
+	curl -o $AASA_TEMP_PATH https://{{DOMAIN}}/.well-known/apple-app-site-association
+	echo "Performing verification of URL https://{{DOMAIN}}/{{PATH}} via swcutil…"
+	sudo swcutil verify -d {{DOMAIN}} -j $AASA_TEMP_PATH -u https://{{DOMAIN}}/{{PATH}}
+
+# Import knowledgebase from an EF27 backend into a latest version target via API.
+import-kb-ef27 SOURCE_API TARGET_API TOKEN:
+	#!/usr/bin/env bash
+	set -euxo pipefail
+	echo "Retrieving source data from {{SOURCE_API}} and patching compatibility…"
+	SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH=$(mktemp)
+	trap 'rm -f -- "$SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH"' EXIT
+	curl {{SOURCE_API}}/Api/KnowledgeGroups | sed 's/"FontAwesomeIconCharacterUnicodeAddress": "[^"]*"/"FontAwesomeIconName": ""/' > $SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH
+	echo "Importing KnowledgeGroups to {{TARGET_API}}…"
+	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s $SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH -t KnowledgeGroups
+	echo "Importing KnowledgeEntries to {{TARGET_API}}…"
+	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s {{SOURCE_API}}/Api/KnowledgeEntries -t KnowledgeEntries --with-images-from {{SOURCE_API}}
+
+# Import data from source URL or path to the target API.
+import SOURCE TARGET_API TOKEN TYPE *ARGS:
+	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s {{SOURCE}} -t {{TYPE}} {{ARGS}}
+
+# List types supported for import.
+import-list-types TARGET_API:
+	python ./scripts/import.py {{TARGET_API}} --list-types

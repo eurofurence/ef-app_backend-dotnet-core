@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
@@ -23,5 +25,8 @@ namespace Eurofurence.App.Domain.Model.Knowledge
 
         [DataMember]
         public string FontAwesomeIconName { get; set; }
+
+        [JsonIgnore]
+        public List<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
     }
 }
