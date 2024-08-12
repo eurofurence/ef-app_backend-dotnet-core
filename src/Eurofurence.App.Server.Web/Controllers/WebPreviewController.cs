@@ -1,4 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -96,6 +96,16 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData["eventConferenceTrack"] = eventConferenceTrack;
 
             return View("EventPreview", @event);
+        }
+
+        [HttpGet("Events")]
+        public ActionResult GetEvents()
+        {
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                            .WithTitle($"Eurofurence {_conventionSettings.ConventionNumber} Event Schedule")
+                            .WithDescription($"Find out what is happening when and where at Eurofurence {_conventionSettings.ConventionNumber}");
+
+            return View("EventsPreview", _conventionSettings);
         }
 
         [HttpGet("Dealers/{id}")]
