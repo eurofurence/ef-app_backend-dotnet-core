@@ -29,9 +29,9 @@
 }
 
 <header>
-    @if (Model.ArtistImageId != null)
+    @if (Model.ArtistImage != null)
     {
-        <img src="@apiBaseUrl/Images/@Model.ArtistImageId.ToString()/Content" title="@Model.DisplayName" 
+        <img src="@Model.ArtistImage.Url" title="@Model.DisplayName" 
              style="max-width: 256px;"
              />
     }
@@ -89,15 +89,15 @@
 <section class="row">
     @if (!string.IsNullOrEmpty(Model.AboutTheArtText))
     {
-        <div class="@(Model.ArtPreviewImageId == null ? "three" : "one-half") column">
+        <div class="@(Model.ArtPreviewImage == null ? "three" : "one-half") column">
             <h4>About the Art</h4>
             <p>@Model.AboutTheArtText</p>
         </div>
     }
-    @if (Model.ArtPreviewImageId != null)
+    @if (Model.ArtPreviewImage != null)
     {
         <div class="one-half column">
-            <img src="@apiBaseUrl/Images/@Model.ArtPreviewImageId.ToString()/Content" title="@Model.ArtPreviewCaption" style="max-width: 100%;" />
+            <img src="@Model.ArtPreviewImage.Url" title="@Model.ArtPreviewCaption" style="max-width: 100%;" />
 
             @if (Model.ArtPreviewCaption != null)
             {
