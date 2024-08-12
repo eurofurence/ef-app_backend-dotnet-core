@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -48,12 +49,12 @@ namespace Eurofurence.App.Server.Services.Dealers
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
-        public override async Task<DealerRecord> FindOneAsync(Guid id)
+        public override async Task<DealerRecord> FindOneAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _appDbContext.Dealers
                 .Include(d => d.Links)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(entity => entity.Id == id);
+                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
         public override IQueryable<DealerRecord> FindAll()
@@ -63,12 +64,12 @@ namespace Eurofurence.App.Server.Services.Dealers
                 .AsNoTracking();
         }
 
-        public override async Task ReplaceOneAsync(DealerRecord entity)
+        public override async Task ReplaceOneAsync(DealerRecord entity, CancellationToken cancellationToken = default)
         {
             var existingEntity = await _appDbContext.Dealers
                 .Include(dealerRecord => dealerRecord.Links)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(ke => ke.Id == entity.Id);
+                .FirstOrDefaultAsync(ke => ke.Id == entity.Id, cancellationToken);
 
             foreach (var existingLink in existingEntity.Links)
             {
@@ -92,12 +93,14 @@ namespace Eurofurence.App.Server.Services.Dealers
                 }
             }
 
-            await base.ReplaceOneAsync(entity);
+            await base.ReplaceOneAsync(entity, cancellationToken);
         }
 
-        public override async Task<DeltaResponse<DealerRecord>> GetDeltaResponseAsync(DateTime? minLastDateTimeChangedUtc = null)
+        public override async Task<DeltaResponse<DealerRecord>> GetDeltaResponseAsync(
+            DateTime? minLastDateTimeChangedUtc = null,
+            CancellationToken cancellationToken = default)
         {
-            var storageInfo = await GetStorageInfoAsync();
+            var storageInfo = await GetStorageInfoAsync(cancellationToken);
             var response = new DeltaResponse<DealerRecord>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
@@ -112,7 +115,7 @@ namespace Eurofurence.App.Server.Services.Dealers
                     _appDbContext.Dealers
                         .Include(d => d.Links)
                         .Where(entity => entity.IsDeleted == 0)
-                        .ToArrayAsync();
+                        .ToArrayAsync(cancellationToken);
             }
             else
             {
@@ -123,14 +126,19 @@ namespace Eurofurence.App.Server.Services.Dealers
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
-                response.ChangedEntities = await entities.Where(a => a.IsDeleted == 0).ToArrayAsync();
-                response.DeletedEntities = await entities.Where(a => a.IsDeleted == 1).Select(a => a.Id).ToArrayAsync();
+                response.ChangedEntities = await entities
+                    .Where(a => a.IsDeleted == 0)
+                    .ToArrayAsync(cancellationToken);
+                response.DeletedEntities = await entities
+                    .Where(a => a.IsDeleted == 1)
+                    .Select(a => a.Id)
+                    .ToArrayAsync(cancellationToken);
             }
 
             return response;
         }
 
-        public async Task RunImportAsync()
+        public async Task RunImportAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogDebug(LogEvents.Import, "Starting dealers import.");
 
@@ -160,7 +168,8 @@ namespace Eurofurence.App.Server.Services.Dealers
 
                 var badData = new List<string>();
 
-                var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture) {
+                var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
                     Delimiter = ";",
                     HasHeaderRecord = true,
                     TrimOptions = TrimOptions.Trim,
@@ -174,7 +183,7 @@ namespace Eurofurence.App.Server.Services.Dealers
 
                 _logger.LogDebug(LogEvents.Import, $"Parsed {csvRecords.Count} records from CSV");
 
-                for (var i = 0;  i < csvRecords.Count; i++)
+                for (var i = 0; i < csvRecords.Count; i++)
                 {
                     var dealerRecord = new DealerRecord
                     {
@@ -199,12 +208,23 @@ namespace Eurofurence.App.Server.Services.Dealers
                         Categories = csvRecords[i].GetCategories()
                     };
 
-                    dealerRecord.ArtistImageId = await GetImageIdAsync(archive, $"artist_{csvRecords[i].RegNo}.",
-                        $"dealer:artist:{csvRecords[i].RegNo}");
-                    dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(archive, $"thumbnail_{csvRecords[i].RegNo}.",
-                        $"dealer:thumbnail:{csvRecords[i].RegNo}");
-                    dealerRecord.ArtPreviewImageId =
-                        await GetImageIdAsync(archive, $"art_{csvRecords[i].RegNo}.", $"dealer:art:{csvRecords[i].RegNo}");
+                    dealerRecord.ArtistImageId = await GetImageIdAsync(
+                        archive,
+                        $"artist_{csvRecords[i].RegNo}.",
+                        $"dealer:artist:{csvRecords[i].RegNo}",
+                        cancellationToken
+                    );
+                    dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(
+                        archive,
+                        $"thumbnail_{csvRecords[i].RegNo}.",
+                        $"dealer:thumbnail:{csvRecords[i].RegNo}",
+                        cancellationToken
+                    );
+                    dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive,
+                        $"art_{csvRecords[i].RegNo}.",
+                        $"dealer:art:{csvRecords[i].RegNo}",
+                        cancellationToken
+                    );
 
                     ImportLinks(dealerRecord, csvRecords[i].Website);
                     SanitizeFields(dealerRecord);
@@ -250,7 +270,7 @@ namespace Eurofurence.App.Server.Services.Dealers
 
             var diff = patch.Patch(importRecords, existingRecords);
             _appDbContext.ChangeTracker.Clear();
-            await ApplyPatchOperationAsync(diff);
+            await ApplyPatchOperationAsync(diff, cancellationToken);
 
             _logger.LogDebug(LogEvents.Import, $"Added: {diff.Count(a => a.Action == ActionEnum.Add)}");
             _logger.LogDebug(LogEvents.Import, $"Deleted: {diff.Count(a => a.Action == ActionEnum.Delete)}");
@@ -258,7 +278,8 @@ namespace Eurofurence.App.Server.Services.Dealers
             _logger.LogDebug(LogEvents.Import, $"Not Modified: {diff.Count(a => a.Action == ActionEnum.NotModified)}");
 
             File.Delete(dealerPackagePath);
-            _logger.LogInformation(LogEvents.Import, $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully.");
+            _logger.LogInformation(LogEvents.Import,
+                $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully.");
         }
 
         private void SanitizeFields(DealerRecord dealerRecord)
@@ -319,7 +340,10 @@ namespace Eurofurence.App.Server.Services.Dealers
                     !assumedUri.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                     assumedUri = $"http://{part}";
 
-                if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute)) { }
+                if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute))
+                {
+                }
+
                 linkFragments.Add(new LinkFragment()
                 {
                     FragmentType = LinkFragment.FragmentTypeEnum.WebExternal,
@@ -331,8 +355,11 @@ namespace Eurofurence.App.Server.Services.Dealers
             dealerRecord.Links = linkFragments;
         }
 
-        private async Task<Guid?> GetImageIdAsync(ZipArchive archive, string fileNameStartsWith,
-            string internalReference)
+        private async Task<Guid?> GetImageIdAsync(
+            ZipArchive archive,
+            string fileNameStartsWith,
+            string internalReference,
+            CancellationToken cancellationToken)
         {
             var imageEntry =
                 archive.Entries.SingleOrDefault(
@@ -341,21 +368,22 @@ namespace Eurofurence.App.Server.Services.Dealers
             if (imageEntry == null) return null;
 
             var existingImage = await _imageService.FindAll()
-                .FirstOrDefaultAsync(image => image.InternalReference == internalReference);
+                .FirstOrDefaultAsync(image => image.InternalReference == internalReference, cancellationToken);
 
             var stream = imageEntry.Open();
             using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
+            await stream.CopyToAsync(ms, cancellationToken);
             if (existingImage != null)
             {
                 if (imageEntry.Length != existingImage.SizeInBytes)
                 {
-                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms);
+                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken);
                 }
+
                 return existingImage.Id;
             }
 
-            var result = await _imageService.InsertImageAsync(internalReference, ms);
+            var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken);
             return result?.Id;
         }
     }

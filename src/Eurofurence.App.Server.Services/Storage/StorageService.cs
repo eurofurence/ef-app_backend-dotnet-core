@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -19,30 +20,31 @@ namespace Eurofurence.App.Server.Services.Storage
         }
 
 
-        public async Task TouchAsync()
+        public async Task TouchAsync(CancellationToken cancellationToken = default)
         {
-            var record = await GetEntityStorageRecordAsync();
+            var record = await GetEntityStorageRecordAsync(cancellationToken);
             record.LastChangeDateTimeUtc = DateTime.UtcNow;
             _appDbContext.EntityStorageInfos.Update(record);
-            await _appDbContext.SaveChangesAsync();
+            await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task ResetDeltaStartAsync()
+        public async Task ResetDeltaStartAsync(CancellationToken cancellationToken = default)
         {
-            var record = await GetEntityStorageRecordAsync();
+            var record = await GetEntityStorageRecordAsync(cancellationToken);
             record.DeltaStartDateTimeUtc = DateTime.UtcNow;
             _appDbContext.EntityStorageInfos.Update(record);
-            await _appDbContext.SaveChangesAsync();
+            await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public Task<EntityStorageInfoRecord> GetStorageInfoAsync()
+        public Task<EntityStorageInfoRecord> GetStorageInfoAsync(CancellationToken cancellationToken = default)
         {
-            return GetEntityStorageRecordAsync();
+            return GetEntityStorageRecordAsync(cancellationToken);
         }
 
-        private async Task<EntityStorageInfoRecord> GetEntityStorageRecordAsync()
+        private async Task<EntityStorageInfoRecord> GetEntityStorageRecordAsync(CancellationToken cancellationToken = default)
         {
-            var record = await _appDbContext.EntityStorageInfos.FirstOrDefaultAsync(entity => entity.EntityType == _entityType);
+            var record = await _appDbContext.EntityStorageInfos
+                .FirstOrDefaultAsync(entity => entity.EntityType == _entityType, cancellationToken);
 
             if (record == null)
             {
@@ -56,7 +58,7 @@ namespace Eurofurence.App.Server.Services.Storage
                 record.Touch();
 
                 _appDbContext.EntityStorageInfos.Add(record);
-                await _appDbContext.SaveChangesAsync();
+                await _appDbContext.SaveChangesAsync(cancellationToken);
             }
 
             return record;

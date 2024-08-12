@@ -7,7 +7,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
         public class PlatformTagInfo
         {
             public string Platform { get; set; }
-            public string[] Tags { get; set; }
             public int DeviceCount { get; set; }
         }
 

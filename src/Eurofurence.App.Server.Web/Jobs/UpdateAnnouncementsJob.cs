@@ -9,6 +9,7 @@ using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Microsoft.EntityFrameworkCore;
@@ -21,20 +22,23 @@ namespace Eurofurence.App.Server.Web.Jobs
     {
         private readonly IAnnouncementService _announcementService;
         private readonly IImageService _imageService;
-        private readonly IPushEventMediator _pushEventMediator;
+        private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IEventService _eventService;
         private readonly AnnouncementConfiguration _configuration;
         private readonly ILogger _logger;
 
         public UpdateAnnouncementsJob(
             IAnnouncementService announcementService,
             IImageService imageService,
-            IPushEventMediator pushEventMediator,
+            IFirebaseChannelManager firebaseChannelManager,
+            IEventService eventService,
             AnnouncementConfiguration configuration,
             ILoggerFactory loggerFactory)
         {
             _announcementService = announcementService;
             _imageService = imageService;
-            _pushEventMediator = pushEventMediator;
+            _firebaseChannelManager = firebaseChannelManager;
+            _eventService = eventService;
             _configuration = configuration;
             _logger = loggerFactory.CreateLogger(GetType());
         }
@@ -120,14 +124,21 @@ namespace Eurofurence.App.Server.Web.Jobs
                 _logger.LogInformation(LogEvents.Import, "Processing {count} new/modified records", diff.Count);
 
                 await _announcementService.ApplyPatchOperationAsync(diff);
-                await _pushEventMediator.PushSyncRequestAsync();
+
+                if (diff.Where(p => (p.Action == ActionEnum.Add || p.Action == ActionEnum.Update) && (p.Entity.Area == "New" || p.Entity.Area == "Deleted" || p.Entity.Area == "Rescheduled")).Any())
+                {
+                    _logger.LogInformation(LogEvents.Import, "Found new/modified Announcements affecting events; performing event import.");
+                    await _eventService.RunImportAsync();
+                }
+
+                await _firebaseChannelManager.PushSyncRequestAsync();
 
                 foreach (var record in diff.Where(a => a.Action == ActionEnum.Add))
                 {
                     _logger.LogInformation(LogEvents.Import,
                         "Sending push notification for announcement {id} ({title})", record.Entity.Id,
                         record.Entity.Title);
-                    await _pushEventMediator.PushAnnouncementNotificationAsync(record.Entity);
+                    await _firebaseChannelManager.PushAnnouncementNotificationAsync(record.Entity);
                 }
 
                 _logger.LogInformation(LogEvents.Import, "Announcements import finished successfully.");

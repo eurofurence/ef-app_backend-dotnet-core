@@ -1,6 +1,6 @@
 ﻿namespace Eurofurence.App.Domain.Model.Communication
 {
-    public class SendPrivateMessageRequest
+    public class SendPrivateMessageByRegSysRequest
     {
         public string RecipientUid { get; set; }
         public string AuthorName { get; set; }

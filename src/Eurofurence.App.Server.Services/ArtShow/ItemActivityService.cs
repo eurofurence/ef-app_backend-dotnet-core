@@ -58,7 +58,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 var newRecord = new ItemActivityRecord()
                 {
                     Id = Guid.NewGuid(),
-                    OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{csvRecord.RegNo}",
+                    OwnerUid = csvRecord.RegNo.ToString(),
                     ASIDNO = csvRecord.ASIDNO,
                     ArtistName = csvRecord.ArtistName,
                     ArtPieceTitle = csvRecord.ArtPieceTitle,
@@ -137,7 +137,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
             message.AppendLine("\nIf you wish to defend your current bids against other potential higher bids, please attend the auction.\n\nThank you!");
 
-            var request = new SendPrivateMessageRequest()
+            var request = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Art Show",
                 Subject = title,
@@ -173,7 +173,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
             message.AppendLine("\nPlease pick them up at the Art Show during sales hours (these are announced in the event schedule and can be found both in your con book or the mobile app).\n\nThank you!");
 
-            var request = new SendPrivateMessageRequest()
+            var request = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Art Show",
                 Subject = title,

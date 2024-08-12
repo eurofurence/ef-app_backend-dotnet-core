@@ -16,6 +16,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using System.Threading;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -254,12 +255,17 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var records = await _appDbContext.PushNotificationChannels
-                        .AsNoTracking()
-                        .Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
+                    var devices = await _appDbContext.RegistrationIdentities
+                        .Where(x => x.RegSysId == regNo.ToString())
+                        .Join(
+                            _appDbContext.DeviceIdentities,
+                            x => x.IdentityId,
+                            x => x.IdentityId,
+                            (_, x) => x
+                        )
                         .ToListAsync();
 
-                    if (records.Count == 0)
+                    if (devices.Count == 0)
                     {
                         await ReplyAsync(
                             $"*WARNING: RegNo {regNo} is not logged in on any known device - they will receive the message when they login.*");
@@ -276,7 +282,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     var from = $"{_user.FirstName} {_user.LastName}";
 
                                     c4 = () => AskAsync(
-                                        $"*{title} - Review*\n\nFrom: *{from.EscapeMarkdown()}*\nTo: *{regNo}*\nSubject: *{subject.EscapeMarkdown()}*\n\nMessage:\n*{body.EscapeMarkdown()}*\n\n_Message will be placed in the users inbox and directly pushed to _*{records.Count}*_ devices._",
+                                        $"*{title} - Review*\n\nFrom: *{from.EscapeMarkdown()}*\nTo: *{regNo}*\nSubject: *{subject.EscapeMarkdown()}*\n\nMessage:\n*{body.EscapeMarkdown()}*\n\n_Message will be placed in the users inbox and directly pushed to _*{devices.Count}*_ devices._",
                                         async c4a =>
                                         {
                                             if (c4a != "*send")
@@ -288,10 +294,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             var recipientUid =
                                                 $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}";
                                             var messageId = await _privateMessageService.SendPrivateMessageAsync(
-                                                new SendPrivateMessageRequest()
+                                                new SendPrivateMessageByRegSysRequest()
                                                 {
                                                     AuthorName = $"{from}",
-                                                    RecipientUid = recipientUid,
+                                                    RecipientUid = regNo.ToString(),
                                                     Message = body,
                                                     Subject = subject,
                                                     ToastTitle = "You received a new personal message",
@@ -372,14 +378,17 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var records =
-                        await _appDbContext.PushNotificationChannels
-                            .AsNoTracking()
-                            .Where(a => a.Uid.StartsWith("RegSys:") && a.Uid.EndsWith($":{regNo}"))
-                            .Include(pushNotificationChannelRecord => pushNotificationChannelRecord.Topics)
-                            .ToListAsync();
+                    var devices = await _appDbContext.RegistrationIdentities
+                        .Where(x => x.RegSysId == regNo.ToString())
+                        .Join(
+                            _appDbContext.DeviceIdentities,
+                            x => x.IdentityId,
+                            x => x.IdentityId,
+                            (_, x) => x
+                        )
+                        .ToListAsync();
 
-                    if (records.Count == 0)
+                    if (devices.Count == 0)
                     {
                         await ReplyAsync($"*{title} - Result*\nRegNo {regNo} is not logged in on any known device.");
                         return;
@@ -387,10 +396,12 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                     var response = new StringBuilder();
                     response.AppendLine($"*{title} - Result*");
-                    response.AppendLine($"RegNo *{regNo}* is logged in on *{records.Count}* devices:");
-                    foreach (var record in records)
+                    response.AppendLine($"RegNo *{regNo}* is logged in on *{devices.Count}* devices:");
+                    foreach (var device in devices)
+                    {
                         response.AppendLine(
-                            $"`{record.Platform} {string.Join(",", record.Topics.Select(t => t.Name))} ({record.LastChangeDateTimeUtc})`");
+                            $"`{Enum.GetName(device.DeviceType)} {device.IdentityId} ({device.LastChangeDateTimeUtc})`");
+                    }
 
 
                     await ReplyAsync(response.ToString());
@@ -400,23 +411,29 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task CommandStatistics()
         {
-            var records = _appDbContext.PushNotificationChannels.AsNoTracking();
+            var devicesWithSessionCount = await _appDbContext.DeviceIdentities.CountAsync();
 
-            var devicesWithSessions =
-                records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase));
+            var uniqueUserIds = await _appDbContext.RegistrationIdentities
+                .Join(
+                    _appDbContext.DeviceIdentities,
+                    x => x.IdentityId,
+                    x => x.IdentityId,
+                    (x, _) => x.RegSysId
+                )
+                .Distinct()
+                .CountAsync();
 
-            var devicesWithSessionCount = devicesWithSessions.Count();
-            var uniqueUserIds = devicesWithSessions.Select(a => a.Uid).Distinct().Count();
-
-            var groups = records.GroupBy(a => new Tuple<string, string>(a.Platform.ToString(),
-                String.Join(", ", a.Topics.OrderByDescending(b => b))));
+            var groups = _appDbContext.DeviceIdentities
+                .AsNoTracking()
+                .GroupBy(x => x.DeviceType);
 
             var message = new StringBuilder();
-            message.AppendLine($"*{records.Count()}* devices in reach of global / targeted push.");
+            message.AppendLine(
+                $"*{await _appDbContext.DeviceIdentities.CountAsync()}* devices in reach of global / targeted push.");
 
             foreach (var group in groups.OrderByDescending(g => g.Count()))
             {
-                message.AppendLine($"`{group.Count().ToString().PadLeft(5)} {group.Key.Item1} - {group.Key.Item2}`");
+                message.AppendLine($"`{group.Count().ToString().PadLeft(5)} {Enum.GetName(group.Key)}`");
             }
 
             message.AppendLine();
@@ -640,7 +657,8 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     await ReplyAsync(message.ToString());
                                     if (nextRecord.Image != null)
                                     {
-                                        var stream = await _imageService.GetImageContentByImageIdAsync(nextRecord.Image.Id);
+                                        var stream =
+                                            await _imageService.GetImageContentByImageIdAsync(nextRecord.Image.Id);
                                         await BotClient.SendPhotoAsync(ChatId, new InputFileStream(stream));
                                         await stream.DisposeAsync();
                                     }
@@ -711,7 +729,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                     var badge = await _appDbContext.FursuitBadges
                                         .AsNoTracking()
                                         .FirstOrDefaultAsync(
-                                        a => a.ExternalReference == fursuitBadgeNo.ToString());
+                                            a => a.ExternalReference == fursuitBadgeNo.ToString());
 
                                     if (badge == null)
                                     {
@@ -732,7 +750,8 @@ namespace Eurofurence.App.Server.Services.Telegram
 
                                     if (badge.ImageId != null)
                                     {
-                                        var imageContent = await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
+                                        var imageContent =
+                                            await _imageService.GetImageContentByImageIdAsync((Guid)badge.ImageId);
                                         await BotClient.SendPhotoAsync(ChatId, new InputFileStream(imageContent));
                                         await imageContent.DisposeAsync();
                                     }

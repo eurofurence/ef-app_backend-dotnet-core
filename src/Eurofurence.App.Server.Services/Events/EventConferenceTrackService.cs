@@ -5,6 +5,7 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Events
@@ -23,12 +24,14 @@ namespace Eurofurence.App.Server.Services.Events
             _appDbContext = appDbContext;
         }
 
-        public override async Task<EventConferenceTrackRecord> FindOneAsync(Guid id)
+        public override async Task<EventConferenceTrackRecord> FindOneAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
             return await _appDbContext.EventConferenceTracks
                 .Include(eventConferenceTrack => eventConferenceTrack.Events)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(entity => entity.Id == id);
+                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
         public override IQueryable<EventConferenceTrackRecord> FindAll()

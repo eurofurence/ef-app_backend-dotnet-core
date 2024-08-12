@@ -8,8 +8,10 @@ namespace Eurofurence.App.Domain.Model.Communication
     public class PrivateMessageRecord : EntityBase
     {
         [DataMember]
-        [Required]
-        public string RecipientUid { get; set; }
+        public string RecipientRegSysId { get; set; }
+        
+        [DataMember]
+        public string RecipientIdentityId { get; set; }
 
         [DataMember]
         public string SenderUid { get; set; }

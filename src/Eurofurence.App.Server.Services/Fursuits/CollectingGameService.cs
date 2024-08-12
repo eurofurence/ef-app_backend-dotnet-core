@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Results;
 using Eurofurence.App.Common.Utility;
-using Eurofurence.App.Domain.Model;
 using Eurofurence.App.Domain.Model.CollectionGame;
 using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -277,17 +276,21 @@ namespace Eurofurence.App.Server.Services.Fursuits
             }
         }
 
-        public async Task<IResult<CollectTokenResponse>> CollectTokenForPlayerAsync(string playerUid, string tokenValue)
+        public async Task<IResult<CollectTokenResponse>> CollectTokenForPlayerAsync(
+            string identityId,
+            string tokenValue,
+            string username)
         {
             using (new TimeTrap(time => _logger.LogTrace(
                        LogEvents.CollectionGame,
-                       "Benchmark: CollectTokenForPlayerAsync({playerUid}, {tokenValue}): {time} ms",
-                       playerUid, tokenValue, time.TotalMilliseconds)))
+                       "Benchmark: CollectTokenForPlayerAsync({identityId}, {tokenValue}, {username}): {time} ms",
+                       identityId, tokenValue, username, time.TotalMilliseconds)))
             {
                 if (string.IsNullOrWhiteSpace(tokenValue))
                 {
                     _logger.LogTrace(LogEvents.CollectionGame,
-                        "Rejected CollectTokenForPlayerAsync (empty token) for player {playerUid}", playerUid);
+                        "Rejected CollectTokenForPlayerAsync (empty token) for player {username} ({identityId})",
+                        username, identityId);
                     return Result<CollectTokenResponse>.Error("EMPTY_TOKEN", "Token cannot be empty.");
                 }
 
@@ -298,17 +301,18 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     var playerParticipation =
                         await _appDbContext.PlayerParticipations
                             .Include(playerParticipationRecord => playerParticipationRecord.CollectionEntries)
-                            .FirstOrDefaultAsync(a => a.PlayerUid == playerUid);
+                            .FirstOrDefaultAsync(a => a.PlayerUid == identityId);
                     if (playerParticipation == null)
                     {
-                        playerParticipation = new PlayerParticipationRecord()
+                        playerParticipation = new PlayerParticipationRecord
                         {
-                            PlayerUid = playerUid,
+                            PlayerUid = identityId,
                             Karma = 0
                         };
 
                         _logger.LogDebug(LogEvents.CollectionGame,
-                            "Creating initial PlayerParticipationRecord for {playerUid}", playerUid);
+                            "Creating initial PlayerParticipationRecord for {username} ({identityId})",
+                            username, identityId);
                         _appDbContext.PlayerParticipations.Add(playerParticipation);
                         await _appDbContext.SaveChangesAsync();
                     }
@@ -316,7 +320,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     if (playerParticipation.IsBanned)
                     {
                         _logger.LogDebug(LogEvents.CollectionGame,
-                            "Rejected CollectTokenForPlayerAsync for banned player {playerUid}", playerUid);
+                            "Rejected CollectTokenForPlayerAsync for banned player {username} ({identityId})",
+                            username, identityId);
                         return Result<CollectTokenResponse>.Error("BANNED",
                             "You have been disqualified from the game.");
                     }
@@ -346,29 +351,25 @@ namespace Eurofurence.App.Server.Services.Fursuits
                                     $" Careful - you will be disqualified after {playerParticipation.Karma + 10} more failed attempts.");
                                 _logger.LogInformation(LogEvents.CollectionGame,
                                     "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}",
-                                    playerUid, tokenValue, "INVALID_TOKEN_BAN_IMMINENT");
+                                    identityId, tokenValue, "INVALID_TOKEN_BAN_IMMINENT");
                                 return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BAN_IMMINENT", sb.ToString());
                             }
                             else
                             {
-                                var identity =
-                                    await _appDbContext.RegSysIdentities.FirstOrDefaultAsync(a =>
-                                        a.Uid == playerParticipation.PlayerUid);
-
                                 await SendToTelegramManagementChannelAsync(
-                                    $"*Player Banned:*\n{playerParticipation.PlayerUid} ({identity.Username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
+                                    $"*Player Banned:*\n{playerParticipation.PlayerUid} ({username})\n(Had {playerParticipation.CollectionCount} codes successfully collected so far.)");
 
                                 sb.Append(" You have been disqualified.");
                                 _logger.LogWarning(LogEvents.CollectionGame,
                                     "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}",
-                                    playerUid, tokenValue, "INVALID_TOKEN_BANNED");
+                                    identityId, tokenValue, "INVALID_TOKEN_BANNED");
                                 return Result<CollectTokenResponse>.Error("INVALID_TOKEN_BANNED", sb.ToString());
                             }
                         }
 
                         _logger.LogDebug(LogEvents.CollectionGame,
                             "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}",
-                            playerUid, tokenValue, "INVALID_TOKEN");
+                            identityId, tokenValue, "INVALID_TOKEN");
                         return Result<CollectTokenResponse>.Error("INVALID_TOKEN", sb.ToString());
                     }
 
@@ -376,7 +377,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     {
                         _logger.LogDebug(LogEvents.CollectionGame,
                             "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}",
-                            playerUid, tokenValue, "INVALID_TOKEN_OWN_SUIT");
+                            identityId, tokenValue, "INVALID_TOKEN_OWN_SUIT");
                         return Result<CollectTokenResponse>.Error("INVALID_TOKEN_OWN_SUIT",
                             "You cannot collect your own fursuits.");
                     }
@@ -386,7 +387,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     {
                         _logger.LogDebug(LogEvents.CollectionGame,
                             "Failed CollectTokenForPlayerAsync for {playerUid} using token {tokenValue}: {reason}",
-                            playerUid, tokenValue, "INVALID_TOKEN_ALREADY_COLLECTED");
+                            identityId, tokenValue, "INVALID_TOKEN_ALREADY_COLLECTED");
                         return Result<CollectTokenResponse>.Error("INVALID_TOKEN_ALREADY_COLLECTED",
                             "You have already collected this suit!");
                     }
@@ -397,7 +398,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     {
                         EventDateTimeUtc = DateTime.UtcNow,
                         FursuitParticipationId = fursuitParticipation.Id,
-                        PlayerParticipationId = playerUid
+                        PlayerParticipationId = identityId
                     });
 
                     playerParticipation.CollectionEntries.Add(collectionEntry.Entity);
@@ -408,7 +409,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     await _appDbContext.SaveChangesAsync();
 
                     // This should never *not* happen, but makes testing a bit easier.
-                    if (fursuitParticipation.CollectionEntries.All(a => a.PlayerParticipationId != playerUid))
+                    if (fursuitParticipation.CollectionEntries.All(a => a.PlayerParticipationId != identityId))
                     {
                         fursuitParticipation.CollectionEntries.Add(collectionEntry.Entity);
 
@@ -426,7 +427,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     _logger.LogInformation(
                         LogEvents.CollectionGame,
                         "Successful CollectTokenForPlayerAsync for {playerUid} using token {tokenValue} (now has {playerCollectionCount} catches): {fursuitName} ({fursuitCollectionCount} times caught)",
-                        playerUid, tokenValue, playerParticipation.CollectionCount, fursuitBadge.Name,
+                        identityId, tokenValue, playerParticipation.CollectionCount, fursuitBadge.Name,
                         fursuitParticipation.CollectionCount);
 
                     return Result<CollectTokenResponse>.Ok(new CollectTokenResponse()
@@ -460,16 +461,16 @@ namespace Eurofurence.App.Server.Services.Fursuits
                     .ThenBy(a => a.LastCollectionDateTimeUtc)
                     .Take(top);
 
-                var topPlayersUids = topPlayers.Select(a => a.PlayerUid);
-                var identities = _appDbContext.RegSysIdentities
-                    .AsNoTracking()
-                    .Where(a => topPlayersUids.Contains(a.Uid));
+                // var topPlayersUids = topPlayers.Select(a => a.PlayerUid);
+                // var identities = _appDbContext.RegSysIdentities
+                //     .AsNoTracking()
+                //     .Where(a => topPlayersUids.Contains(a.Uid));
 
                 var result = await topPlayers
                     .Select(a => new PlayerScoreboardEntry()
                     {
-                        Name = identities.SingleOrDefault(b => b.Uid == a.PlayerUid).Username ?? "(?)",
-                        CollectionCount = a.CollectionCount,
+                        Name = a.PlayerUid,
+                        CollectionCount = a.CollectionCount
                     })
                     .ToArrayAsync();
 
@@ -656,7 +657,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 await _semaphore.WaitAsync();
 
                 var participatingFursuitBadges =
-                    _appDbContext.FursuitBadges.Where(badge => !string.IsNullOrEmpty(badge.CollectionCode)).AsNoTracking();
+                    _appDbContext.FursuitBadges.Where(badge => !string.IsNullOrEmpty(badge.CollectionCode))
+                        .AsNoTracking();
                 var fursuitParticipationRecords = _appDbContext.FursuitParticipations.AsNoTracking();
 
                 var toJoin = participatingFursuitBadges
@@ -707,7 +709,8 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
                 await _appDbContext.SaveChangesAsync();
 
-                _logger.LogInformation(LogEvents.Import, "Fursuit collection game participation import finished successfully.");
+                _logger.LogInformation(LogEvents.Import,
+                    "Fursuit collection game participation import finished successfully.");
             }
             finally
             {

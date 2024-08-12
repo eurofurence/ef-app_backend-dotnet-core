@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
@@ -30,8 +31,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
             ArtistAlleyConfiguration configuration,
-            ITelegramMessageSender telegramMessageSender,
-        IPrivateMessageService privateMessageService,
+            ITelegramMessageSender telegramMessageSender, 
+            IPrivateMessageService privateMessageService,
             IImageService imageService) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
@@ -49,12 +50,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             return records;
         }
 
-        public override async Task<TableRegistrationRecord> FindOneAsync(Guid id)
+        public override async Task<TableRegistrationRecord> FindOneAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
             return await _appDbContext.TableRegistrations
                 .Include(tr => tr.Image)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(tr => tr.Id == id);
+                .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
@@ -102,7 +105,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
 
-            var sendPrivateMessageRequest = new SendPrivateMessageRequest()
+            var sendPrivateMessageRequest = new SendPrivateMessageByIdentityRequest()
             {
                 AuthorName = "Artist Alley",
                 RecipientUid = record.OwnerUid,
@@ -170,7 +173,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
 
-            var sendPrivateMessageRequest = new SendPrivateMessageRequest()
+            var sendPrivateMessageRequest = new SendPrivateMessageByRegSysRequest()
             {
                 AuthorName = "Artist Alley",
                 RecipientUid = record.OwnerUid,

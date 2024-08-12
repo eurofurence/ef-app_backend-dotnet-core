@@ -4,6 +4,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240807202914_PushNotificationsRework")]
+    partial class PushNotificationsRework
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -868,8 +871,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("KnowledgeGroupId");
-
                     b.ToTable("KnowledgeEntries");
                 });
 
@@ -1005,7 +1006,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("Maps");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.DeviceIdentityRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.DeviceRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1015,33 +1016,12 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("DeviceType")
-                        .HasColumnType("int");
-
                     b.Property<string>("IdentityId")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("IsDeleted")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastChangeDateTimeUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DeviceIdentities");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.RegistrationIdentityRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("IdentityId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<bool>("IsAndroid")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
@@ -1050,12 +1030,11 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("RegSysId")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("RegistrationIdentities");
+                    b.ToTable("Devices");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Sync.EntityStorageInfoRecord", b =>
@@ -1250,17 +1229,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("Image");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", b =>
-                {
-                    b.HasOne("Eurofurence.App.Domain.Model.Knowledge.KnowledgeGroupRecord", "KnowledgeGroup")
-                        .WithMany("KnowledgeEntries")
-                        .HasForeignKey("KnowledgeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("KnowledgeGroup");
-                });
-
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapEntryRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Maps.MapRecord", "Map")
@@ -1355,11 +1323,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", b =>
                 {
                     b.Navigation("Links");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeGroupRecord", b =>
-                {
-                    b.Navigation("KnowledgeEntries");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapEntryRecord", b =>

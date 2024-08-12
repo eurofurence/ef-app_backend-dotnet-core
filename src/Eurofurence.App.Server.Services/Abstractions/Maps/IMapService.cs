@@ -3,6 +3,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Storage;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Maps
 {
@@ -10,9 +11,9 @@ namespace Eurofurence.App.Server.Services.Abstractions.Maps
         IEntityServiceOperations<MapRecord>,
         IPatchOperationProcessor<MapRecord>
     {
-        public Task InsertOneEntryAsync(MapEntryRecord entity);
-        public Task ReplaceOneEntryAsync(MapEntryRecord entity);
-        public Task DeleteOneEntryAsync(Guid id);
-        public Task DeleteAllEntriesAsync(Guid id);
+        public Task InsertOneEntryAsync(MapEntryRecord entity, CancellationToken cancellationToken = default);
+        public Task ReplaceOneEntryAsync(MapEntryRecord entity, CancellationToken cancellationToken = default);
+        public Task DeleteOneEntryAsync(Guid id, CancellationToken cancellationToken = default);
+        public Task DeleteAllEntriesAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

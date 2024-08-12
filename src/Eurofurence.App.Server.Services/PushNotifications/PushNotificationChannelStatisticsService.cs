@@ -1,60 +1,60 @@
 ﻿using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
-    public class PushNotificationChannelStatisticsService : IPushNotificationChannelStatisticsService
+    public class PushNotificationChannelStatisticsService(
+        AppDbContext db
+    ) : IPushNotificationChannelStatisticsService
     {
-        private readonly AppDbContext _appDbContext;
-
-        public PushNotificationChannelStatisticsService(
-            AppDbContext appDbContext
-        )
-        {
-            _appDbContext = appDbContext;
-        }
-
         public async Task<PushNotificationChannelStatistics> PushNotificationChannelStatisticsAsync(
-            DateTime? sinceLastSeenDateTimeUtc)
+            DateTime? sinceLastSeenDateTimeUtc,
+            CancellationToken cancellationToken = default)
         {
-            if (!sinceLastSeenDateTimeUtc.HasValue)
-                sinceLastSeenDateTimeUtc = DateTime.UtcNow.AddMonths(-1);
+            var since = sinceLastSeenDateTimeUtc ?? DateTime.UtcNow.AddMonths(-1);
 
-            var records = await _appDbContext.PushNotificationChannels
-                .AsNoTracking()
-                .Where(a => a.LastChangeDateTimeUtc >= sinceLastSeenDateTimeUtc)
-                .Include(pushNotificationChannelRecord => pushNotificationChannelRecord.Topics)
-                .ToListAsync();
+            var devices = db.DeviceIdentities
+                .Where(x => x.LastChangeDateTimeUtc >= since);
 
-            var devicesWithSessions =
-                records.Where(a => a.Uid.StartsWith("RegSys:", StringComparison.CurrentCultureIgnoreCase)).ToList();
+            var numberOfDevices = await devices
+                .GroupBy(x => x.DeviceToken)
+                .CountAsync(cancellationToken);
 
-            var devicesWithSessionCount = devicesWithSessions.Count();
-            var uniqueUserIds = devicesWithSessions.Select(a => a.Uid).Distinct().Count();
+            var numberOfAuthenticatedDevices = await devices
+                .Join(
+                    db.RegistrationIdentities,
+                    x => x.IdentityId,
+                    x => x.IdentityId,
+                    (x, _) => x
+                )
+                .GroupBy(x => x.DeviceToken)
+                .CountAsync(cancellationToken);
 
-            var groups = records
-                .GroupBy(a => $"{a.Platform}-{string.Join("-", a.Topics.Select(topic => topic.Name))}")
-                .Select(a => new PushNotificationChannelStatistics.PlatformTagInfo()
+            var numberOfUniqueUserIds = await devices
+                .GroupBy(x => x.IdentityId)
+                .CountAsync(cancellationToken);
+
+            var platformStatistics = await devices
+                .GroupBy(x => x.DeviceType)
+                .Select(x => new PushNotificationChannelStatistics.PlatformTagInfo
                 {
-                    Platform = a.First().Platform.ToString(),
-                    Tags = a.First().Topics.Select(topic => topic.Name).ToArray(),
-                    DeviceCount = a.Count()
+                    Platform = Enum.GetName(x.Key),
+                    DeviceCount = x.Count(),
                 })
-                .OrderByDescending(a => a.DeviceCount)
-                .ToArray();
-
+                .ToArrayAsync(cancellationToken);
 
             return new PushNotificationChannelStatistics()
             {
-                SinceLastSeenDateTimeUtc = sinceLastSeenDateTimeUtc.Value,
-                NumberOfDevices = records.Count,
-                NumberOfAuthenticatedDevices = devicesWithSessionCount,
-                NumberOfUniqueUserIds = uniqueUserIds,
-                PlatformStatistics = groups
+                SinceLastSeenDateTimeUtc = since,
+                NumberOfDevices = numberOfDevices,
+                NumberOfAuthenticatedDevices = numberOfAuthenticatedDevices,
+                NumberOfUniqueUserIds = numberOfUniqueUserIds,
+                PlatformStatistics = platformStatistics
             };
         }
     }
