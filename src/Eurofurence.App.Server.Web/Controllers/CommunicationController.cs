@@ -59,8 +59,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("PrivateMessages/{messageId}/Read")]
         [ProducesResponseType(typeof(DateTime), 200)]
         public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync(
-            [EnsureNotNull] [FromRoute] Guid messageId,
-            [EnsureNotNull] [FromBody] bool isRead,
+            [EnsureNotNull][FromRoute] Guid messageId,
+            [EnsureNotNull][FromBody] bool isRead,
             CancellationToken cancellationToken = default
         )
         {
@@ -88,6 +88,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <response code="400">Unable to parse `Request`</response>
         [Authorize(Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages")]
+        [HttpPost("PrivateMessages/:byRegistrationId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageAsync(
             [FromBody] SendPrivateMessageByRegSysRequest Request,
@@ -106,7 +107,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 cancellationToken
             ));
         }
-        
+
         /// <summary>
         ///     Sends a private message to a specific recipient/attendee.
         /// </summary>
@@ -118,8 +119,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(Roles = "Developer,System,Action-PrivateMessages-Send")]
-        [HttpPost("PrivateMessages/Identity")]
+        [Authorize(Roles = "Admin,PrivateMessageSender")]
+        [HttpPost("PrivateMessages/:byIdentityId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageIdentityAsync(
             [FromBody] SendPrivateMessageByIdentityRequest Request,
@@ -139,13 +140,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             ));
         }
 
-
         [HttpGet("PrivateMessages/{messageId}/Status")]
         [Authorize(Roles = "Admin,PrivateMessageSender")]
         [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(
-            [FromRoute] [EnsureNotNull] Guid messageId,
+            [FromRoute][EnsureNotNull] Guid messageId,
             CancellationToken cancellationToken = default)
         {
             var result = await _privateMessageService.GetPrivateMessageStatusAsync(messageId, cancellationToken);
