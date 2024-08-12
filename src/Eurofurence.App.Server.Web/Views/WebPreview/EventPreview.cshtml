@@ -16,21 +16,19 @@
     var subTitle = Model.SubTitle;
 
     bool showAbstract = !Model.Abstract.Equals(Model.Description, StringComparison.InvariantCultureIgnoreCase);
-    bool hasPoster = Model.PosterImageId.HasValue;
 }
 
 <header>
-    @if (Model.BannerImageId != null)
+    @if (Model.BannerImage != null)
     {
-        <img src="@apiBaseUrl/Images/@Model.BannerImageId.ToString()/Content" title="@Model.Title"
-             style="max-width: 100%;" />
+        <img src="@Model.BannerImage.Url" title="@Model.Title" style="max-width: 100%;" />
     }
 
     <h1>
         @title
         <span>@subTitle</span>
     </h1>
-    
+
     @if (showAbstract)
     {
         @Html.Raw(Markdig.Markdown.ToHtml(Model.Abstract))
@@ -38,22 +36,20 @@
 </header>
 
 <section class="summary">
-    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name (@Model.StartDateTimeUtc.ToString("dddd"))</div>
+    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name
+        (@Model.StartDateTimeUtc.ToString("dddd"))</div>
     <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @Model.StartTime.ToString("hh\\:mm")</div>
     <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @Model.EndTime.ToString("hh\\:mm")</div>
     <div class="infobox"><label><i class="fas fa-map-marker-alt"></i>Where:</label> @eventConferenceRoom.Name</div>
 </section>
 
 <section class="row">
-    <p class="@(hasPoster ? "one-half" : "three") column">
+    <div class="@(Model.PosterImage != null ? "one-half" : "three") column">
         @Html.Raw(Markdig.Markdown.ToHtml(Model.Description))
-    </p>
+    </div>
 
-    @if (Model.PosterImageId != null)
+    @if (Model.PosterImage != null)
     {
-        <img src="@apiBaseUrl/Images/@Model.PosterImageId.ToString()/Content"
-             style="max-width: 100%;"
-             title="@Model.Title"
-             class="one-half column" />
+        <img src="@Model.PosterImage.Url" style="max-width: 100%;" title="@Model.Title" class="one-half column" />
     }
 </section>

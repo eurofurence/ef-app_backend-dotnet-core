@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -13,10 +15,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class EventsController : BaseController
     {
         private readonly IEventService _eventService;
+        private readonly IImageService _imageService;
 
-        public EventsController(IEventService eventService)
+        public EventsController(IEventService eventService,
+            IImageService imageService)
         {
             _eventService = eventService;
+            _imageService = imageService;
         }
 
         /// <summary>
@@ -59,6 +64,60 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<EventRecord> GetEventAsync([FromRoute] Guid id)
         {
             return (await _eventService.FindOneAsync(id)).Transient404(HttpContext);
+        }
+
+        /// <summary>
+        ///     Update the banner image of an existing event in the event schedule.
+        /// </summary>
+        /// <param name="imageId">id of the image to be used</param>
+        /// <param name="id">id of the event entity</param>
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(string), 404)]
+        [EnsureNotNull]
+        [HttpPut("{id}:bannerImageId")]
+        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
+        {
+            var eventRecord = await _eventService.FindOneAsync(id);
+            if (eventRecord == null)
+                return NotFound("Unknown event ID.");
+
+            if (imageId.HasValue && !await _imageService.HasOneAsync(imageId.Value))
+            {
+                return NotFound("Unknown image ID.");
+            }
+
+            eventRecord.BannerImageId = imageId;
+            await _eventService.ReplaceOneAsync(eventRecord);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        ///     Update the poster image of an existing event in the event schedule.
+        /// </summary>
+        /// <param name="imageId">id of the image to be used</param>
+        /// <param name="id">id of the event entity</param>
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(string), 404)]
+        [EnsureNotNull]
+        [HttpPut("{id}:posterImageId")]
+        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
+        {
+            var eventRecord = await _eventService.FindOneAsync(id);
+            if (eventRecord == null)
+                return NotFound("Unknown event ID.");
+
+            if (imageId.HasValue && !await _imageService.HasOneAsync(imageId.Value))
+            {
+                return NotFound("Unknown image ID.");
+            }
+
+            eventRecord.PosterImageId = imageId;
+            await _eventService.ReplaceOneAsync(eventRecord);
+
+            return NoContent();
         }
     }
 }
