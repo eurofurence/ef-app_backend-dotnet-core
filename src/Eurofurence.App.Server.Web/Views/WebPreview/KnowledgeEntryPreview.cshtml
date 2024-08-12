@@ -8,6 +8,7 @@
     var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
 
     var knowledgeGroup = (ViewData["knowledgeGroup"] as Eurofurence.App.Domain.Model.Knowledge.KnowledgeGroupRecord);
+    var knowledgeEntryImage = Model.Images?.FirstOrDefault();
 }
 
 <header>
@@ -19,10 +20,11 @@
 
 <hr />
 
-@if (Model.Images?.Count > 0) {
+@if (knowledgeEntryImage != null)
+{
     <section class="center">
-        <img src="@apiBaseUrl/Images/@Model.Images[0].Id.ToString()/Content" style="max-width: 100%;" />
-    </section>
+    <img src="@knowledgeEntryImage.Url" style="max-width: 100%;" />
+</section>
 }
 
 <section class="row">
@@ -30,9 +32,11 @@
         @Html.Raw(Markdig.Markdown.ToHtml(Model.Text))
     </p>
 
-    @foreach (var linkFragment in Model.Links?.Where(a => a.FragmentType == Eurofurence.App.Domain.Model.Fragments.LinkFragment.FragmentTypeEnum.WebExternal)) {
+    @foreach (var linkFragment in Model.Links?.Where(a => a.FragmentType ==
+    Eurofurence.App.Domain.Model.Fragments.LinkFragment.FragmentTypeEnum.WebExternal))
+    {
 
-    <a href="@linkFragment.Target" target="_blank" class="button button-primary">@linkFragment.Name</a>
+        <a href="@linkFragment.Target" target="_blank" class="button button-primary">@linkFragment.Name</a>
 
     }
 

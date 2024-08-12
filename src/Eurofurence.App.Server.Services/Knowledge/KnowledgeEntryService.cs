@@ -59,9 +59,10 @@ namespace Eurofurence.App.Server.Services.Knowledge
             CancellationToken cancellationToken = default)
         {
             var images = _appDbContext.Images.Where(image => request.ImageIds.Contains(image.Id));
-            
+
             var entity = new KnowledgeEntryRecord
             {
+                Id = request.Id,
                 KnowledgeGroupId = request.KnowledgeGroupId,
                 Title = request.Title,
                 Text = request.Text,

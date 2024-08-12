@@ -6,7 +6,7 @@ using Eurofurence.App.Domain.Model.Fragments;
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeEntryRequest
+    public class KnowledgeEntryRequest : EntityBase
     {
         [DataMember]
         public Guid KnowledgeGroupId { get; set; }

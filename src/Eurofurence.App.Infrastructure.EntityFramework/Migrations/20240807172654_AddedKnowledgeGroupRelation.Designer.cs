@@ -4,6 +4,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240807172654_AddedKnowledgeGroupRelation")]
+    partial class AddedKnowledgeGroupRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -312,10 +315,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime?>("ReceivedDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("RecipientIdentityId")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("RecipientRegSysId")
+                    b.Property<string>("RecipientUid")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("SenderUid")
@@ -1005,21 +1006,16 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("Maps");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.DeviceIdentityRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.PushNotificationChannelRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("DeviceToken")
-                        .IsRequired()
+                    b.Property<string>("ChannelUri")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("DeviceType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IdentityId")
-                        .IsRequired()
+                    b.Property<string>("DeviceId")
                         .HasColumnType("longtext");
 
                     b.Property<int>("IsDeleted")
@@ -1028,19 +1024,83 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("Platform")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Uid")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
-                    b.ToTable("DeviceIdentities");
+                    b.ToTable("PushNotificationChannels");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.RegistrationIdentityRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.TopicRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("IdentityId")
-                        .IsRequired()
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("PushNotificationChannelRecordId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PushNotificationChannelRecordId");
+
+                    b.ToTable("Topics");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.IssueRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NameOnBadge")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("RegSysAlternativePinRecordId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("RequestDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RequesterUid")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegSysAlternativePinRecordId");
+
+                    b.ToTable("IssueRecords");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RegSysAccessTokenRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("ClaimedAtDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ClaimedByUid")
                         .HasColumnType("longtext");
 
                     b.Property<int>("IsDeleted")
@@ -1049,13 +1109,100 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("RegSysId")
-                        .IsRequired()
+                    b.Property<string>("Token")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("RegistrationIdentities");
+                    b.ToTable("RegSysAccessTokens");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RegSysAlternativePinRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IssuedByUid")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("IssuedDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NameOnBadge")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Pin")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PinConsumptionDatesUtc")
+                        .HasColumnType("json");
+
+                    b.Property<int>("RegNo")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RegSysAlternativePins");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RegSysIdentityRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Uid")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RegSysIdentities");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RoleRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("RegSysAccessTokenRecordId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("RegSysIdentityRecordId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegSysAccessTokenRecordId");
+
+                    b.HasIndex("RegSysIdentityRecordId");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Sync.EntityStorageInfoRecord", b =>
@@ -1281,6 +1428,31 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("Image");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.TopicRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.PushNotifications.PushNotificationChannelRecord", null)
+                        .WithMany("Topics")
+                        .HasForeignKey("PushNotificationChannelRecordId");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.IssueRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Security.RegSysAlternativePinRecord", null)
+                        .WithMany("IssueLog")
+                        .HasForeignKey("RegSysAlternativePinRecordId");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RoleRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Security.RegSysAccessTokenRecord", null)
+                        .WithMany("GrantRoles")
+                        .HasForeignKey("RegSysAccessTokenRecordId");
+
+                    b.HasOne("Eurofurence.App.Domain.Model.Security.RegSysIdentityRecord", null)
+                        .WithMany("Roles")
+                        .HasForeignKey("RegSysIdentityRecordId");
+                });
+
             modelBuilder.Entity("ImageRecordKnowledgeEntryRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", null)
@@ -1370,6 +1542,26 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapRecord", b =>
                 {
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.PushNotificationChannelRecord", b =>
+                {
+                    b.Navigation("Topics");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RegSysAccessTokenRecord", b =>
+                {
+                    b.Navigation("GrantRoles");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RegSysAlternativePinRecord", b =>
+                {
+                    b.Navigation("IssueLog");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Security.RegSysIdentityRecord", b =>
+                {
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

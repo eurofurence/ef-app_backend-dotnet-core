@@ -75,10 +75,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Events/{id}")]
         public async Task<ActionResult> GetEventById(Guid id)
         {
-            var @event = await _eventService.FindOneAsync(id);
+            var @event = await _eventService.FindAll().Include(e => e.BannerImage).Include(e => e.PosterImage).FirstOrDefaultAsync(e => e.Id == id);
             if (@event == null) return NotFound();
 
-            var previewImageId = @event.PosterImageId ?? @event.BannerImageId ?? null;
+            var previewImageUrl = @event.PosterImage?.Url ?? @event.BannerImage?.Url ?? string.Empty;
 
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
             var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
@@ -88,8 +88,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {@event.StartTime.ToString("hh\\:mm")}-{@event.EndTime.ToString("hh\\:mm")}, {eventConferenceRoom.Name}\n\n{@event.Description}")
-                .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
+                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {@event.StartTime:hh\\:mm}-{@event.EndTime:hh\\:mm}, {eventConferenceRoom.Name}\n\n{@event.Description}")
+                .WithImage(previewImageUrl);
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
             ViewData["eventConferenceRoom"] = eventConferenceRoom;
@@ -98,10 +98,20 @@ namespace Eurofurence.App.Server.Web.Controllers
             return View("EventPreview", @event);
         }
 
+        [HttpGet("Events")]
+        public ActionResult GetEvents()
+        {
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                            .WithTitle($"Eurofurence {_conventionSettings.ConventionNumber} Event Schedule")
+                            .WithDescription($"Find out what is happening when and where at Eurofurence {_conventionSettings.ConventionNumber}");
+
+            return View("EventsPreview", _conventionSettings);
+        }
+
         [HttpGet("Dealers/{id}")]
         public async Task<ActionResult> GetDealerById(Guid id)
         {
-            var dealer = await _dealerService.FindOneAsync(id);
+            var dealer = await _dealerService.FindAll().Include(d => d.ArtistImage).Include(d => d.ArtistThumbnailImage).Include(d => d.ArtPreviewImage).FirstOrDefaultAsync(d => d.Id == id);
             if (dealer == null) return NotFound();
 
 
@@ -124,12 +134,12 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             PopulateViewData();
 
-            var previewImageId = dealer.ArtistImageId ?? dealer.ArtistImageId ?? null;
+            var previewImageUrl = dealer.ArtistImage?.Url ?? dealer.ArtistImage?.Url ?? string.Empty;
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
-                .WithImage(previewImageId.HasValue ? $"{_conventionSettings.ApiBaseUrl}/Images/{previewImageId}/Content" : string.Empty);
+                .WithImage(previewImageUrl);
 
             return View("DealerPreview", dealer);
         }
@@ -155,13 +165,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var knowledgeEntry = await _knowledgeEntryService.FindOneAsync(id);
             var knowledgeGroup = await _knowledgeGroupService.FindOneAsync(knowledgeEntry.KnowledgeGroupId);
-            
+
             PopulateViewData();
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
                 .WithTitle(knowledgeEntry.Title)
                 .WithDescription(knowledgeGroup.Name)
-                .WithImage(knowledgeEntry.Images?.Count > 0 ? $"{_conventionSettings.ApiBaseUrl}/Images/{knowledgeEntry.Images[0].Id}/Content" : string.Empty);
+                .WithImage(knowledgeEntry.Images?.FirstOrDefault()?.Url ?? string.Empty);
 
             ViewData["knowledgeGroup"] = knowledgeGroup;
             return View("KnowledgeEntryPreview", knowledgeEntry);
