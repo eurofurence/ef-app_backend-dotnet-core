@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -46,7 +47,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 request.DeviceId,
                 User.GetSubject(),
                 ids,
-                request.IsAndroid,
+                request.DeviceType,
                 cancellationToken
             );
             return NoContent();
@@ -68,7 +69,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             public string DeviceId { get; set; }
 
-            public bool IsAndroid { get; set; }
+            public DeviceType DeviceType { get; set; }
         }
     }
 }

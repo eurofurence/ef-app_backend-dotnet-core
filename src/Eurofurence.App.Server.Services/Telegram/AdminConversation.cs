@@ -255,9 +255,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var devices = await _appDbContext.Devices
-                        .AsNoTracking()
+                    var devices = await _appDbContext.RegistrationIdentities
                         .Where(x => x.RegSysId == regNo.ToString())
+                        .Join(
+                            _appDbContext.DeviceIdentities,
+                            x => x.IdentityId,
+                            x => x.IdentityId,
+                            (_, x) => x
+                        )
                         .ToListAsync();
 
                     if (devices.Count == 0)
@@ -373,9 +378,14 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var devices = await _appDbContext.Devices
-                        .AsNoTracking()
+                    var devices = await _appDbContext.RegistrationIdentities
                         .Where(x => x.RegSysId == regNo.ToString())
+                        .Join(
+                            _appDbContext.DeviceIdentities,
+                            x => x.IdentityId,
+                            x => x.IdentityId,
+                            (_, x) => x
+                        )
                         .ToListAsync();
 
                     if (devices.Count == 0)
@@ -390,7 +400,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     foreach (var device in devices)
                     {
                         response.AppendLine(
-                            $"`{(device.IsAndroid ? "Android" : "iOS")} {device.IdentityId} ({device.LastChangeDateTimeUtc})`");
+                            $"`{Enum.GetName(device.DeviceType)} {device.IdentityId} ({device.LastChangeDateTimeUtc})`");
                     }
 
 
@@ -401,25 +411,29 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task CommandStatistics()
         {
-            var devices = _appDbContext.Devices.AsNoTracking();
+            var devicesWithSessionCount = await _appDbContext.DeviceIdentities.CountAsync();
 
-            var devicesWithSessions =
-                devices.Where(x => !string.IsNullOrEmpty(x.RegSysId));
-
-            var devicesWithSessionCount = devicesWithSessions.CountAsync();
-            var uniqueUserIds = devicesWithSessions
-                .Select(x => x.RegSysId)
+            var uniqueUserIds = await _appDbContext.RegistrationIdentities
+                .Join(
+                    _appDbContext.DeviceIdentities,
+                    x => x.IdentityId,
+                    x => x.IdentityId,
+                    (x, _) => x.RegSysId
+                )
                 .Distinct()
                 .CountAsync();
 
-            var groups = devices.GroupBy(x => x.IsAndroid);
+            var groups = _appDbContext.DeviceIdentities
+                .AsNoTracking()
+                .GroupBy(x => x.DeviceType);
 
             var message = new StringBuilder();
-            message.AppendLine($"*{await devices.CountAsync()}* devices in reach of global / targeted push.");
+            message.AppendLine(
+                $"*{await _appDbContext.DeviceIdentities.CountAsync()}* devices in reach of global / targeted push.");
 
             foreach (var group in groups.OrderByDescending(g => g.Count()))
             {
-                message.AppendLine($"`{group.Count().ToString().PadLeft(5)} {(group.Key ? "Android" : "iOS")}`");
+                message.AppendLine($"`{group.Count().ToString().PadLeft(5)} {Enum.GetName(group.Key)}`");
             }
 
             message.AppendLine();

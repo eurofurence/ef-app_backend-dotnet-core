@@ -1,14 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using IdentityModel.AspNetCore.OAuth2Introspection;
-using IdentityModel.Client;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Identity;
@@ -34,7 +26,7 @@ public class ConfigureOAuth2IntrospectionOptions(
     {
         if (context.Principal?.Identity is ClaimsIdentity identity)
         {
-            identity.AddClaim(new Claim("token", context.SecurityToken));    
+            identity.AddClaim(new Claim("token", context.SecurityToken));
         }
     }
 }

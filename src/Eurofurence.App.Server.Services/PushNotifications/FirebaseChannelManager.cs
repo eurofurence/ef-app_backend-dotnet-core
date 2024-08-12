@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,25 +18,31 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 {
     public class FirebaseChannelManager : IFirebaseChannelManager
     {
-        private readonly IDeviceService _deviceService;
+        private readonly IDeviceIdentityService _deviceService;
+        private readonly IRegistrationIdentityService _registrationService;
         private readonly FirebaseConfiguration _configuration;
         private readonly ConventionSettings _conventionSettings;
         private readonly FirebaseApp _firebaseApp;
         private readonly FirebaseMessaging _firebaseMessaging;
 
         public FirebaseChannelManager(
-            IDeviceService deviceService,
+            IDeviceIdentityService deviceService,
+            IRegistrationIdentityService registrationService,
             FirebaseConfiguration configuration,
             ConventionSettings conventionSettings)
         {
             _deviceService = deviceService;
+            _registrationService = registrationService;
             _configuration = configuration;
             _conventionSettings = conventionSettings;
 
-            var googleCredential = GoogleCredential.FromFile(_configuration.GoogleServiceCredentialKeyFile);
+            if (_configuration.GoogleServiceCredentialKeyFile is { Length: > 0 } file)
+            {
+                var googleCredential = GoogleCredential.FromFile(file);
 
-            _firebaseApp = FirebaseApp.Create(new AppOptions { Credential = googleCredential });
-            _firebaseMessaging = FirebaseMessaging.GetMessaging(_firebaseApp);
+                _firebaseApp = FirebaseApp.Create(new AppOptions { Credential = googleCredential });
+                _firebaseMessaging = FirebaseMessaging.GetMessaging(_firebaseApp);
+            }
         }
 
         public Task PushAnnouncementNotificationAsync(
@@ -111,9 +118,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         {
             if (!_configuration.IsConfigured) return;
 
-            var devices = await _deviceService
-                .FindAll(x => x.RegSysId == null && x.IdentityId == identityId)
-                .ToListAsync(cancellationToken);
+            var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
             await PushPrivateMessageNotificationAsync(devices,
                 toastTitle,
@@ -132,9 +137,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         {
             if (!_configuration.IsConfigured) return;
 
-            var devices = await _deviceService
-                .FindAll(x => x.RegSysId == regSysId)
-                .ToListAsync(cancellationToken);
+            var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
             await PushPrivateMessageNotificationAsync(devices,
                 toastTitle,
@@ -200,7 +203,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             string deviceToken,
             string identityId,
             string[] regSysIds,
-            bool isAndroid,
+            DeviceType type,
             CancellationToken cancellationToken = default)
         {
             if (await _deviceService.FindAll(a => a.DeviceToken == deviceToken).AnyAsync(cancellationToken))
@@ -208,28 +211,32 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 return;
             }
 
-            await _deviceService.InsertOneAsync(new DeviceRecord
+            await _deviceService.InsertOneAsync(new DeviceIdentityRecord
             {
                 IdentityId = identityId,
-                RegSysId = null,
                 DeviceToken = deviceToken,
-                IsAndroid = isAndroid
+                DeviceType = type
             }, cancellationToken);
 
-            foreach (var id in regSysIds)
+            var set = new HashSet<string>(regSysIds);
+
+            foreach (var id in await _registrationService
+                         .FindAll(x => set.Contains(x.RegSysId))
+                         .Select(x => x.RegSysId)
+                         .ToListAsync(cancellationToken))
             {
-                await _deviceService.InsertOneAsync(new DeviceRecord
-                {
-                    IdentityId = identityId,
-                    RegSysId = id,
-                    DeviceToken = deviceToken,
-                    IsAndroid = isAndroid
-                }, cancellationToken);
+                set.Remove(id);
             }
+
+            await _registrationService.InsertMultipleAsync(set.Select(x => new RegistrationIdentityRecord
+            {
+                RegSysId = x,
+                IdentityId = identityId
+            }).ToList(), cancellationToken);
         }
 
         private async Task PushPrivateMessageNotificationAsync(
-            List<DeviceRecord> devices,
+            List<DeviceIdentityRecord> devices,
             string toastTitle,
             string toastMessage,
             Guid relatedId,
@@ -239,64 +246,69 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             foreach (var device in devices)
             {
-                if (device.IsAndroid)
+                switch (device.DeviceType)
                 {
-                    messages.Add(new Message()
-                    {
-                        Token = device.DeviceToken,
-                        Android = new AndroidConfig()
+                    case DeviceType.Android:
+                        messages.Add(new Message()
                         {
-                            Notification = new AndroidNotification()
+                            Token = device.DeviceToken,
+                            Android = new AndroidConfig()
+                            {
+                                Notification = new AndroidNotification()
+                                {
+                                    Title = toastTitle,
+                                    Body = toastMessage,
+                                    Icon = "notification_icon",
+                                    Color = "#006459"
+                                }
+                            },
+                            Data = new Dictionary<string, string>()
+                            {
+                                // For Legacy Native Android App
+                                { "Event", "Notification" },
+                                { "Title", toastTitle },
+                                { "Message", toastMessage },
+                                { "RelatedId", relatedId.ToString() },
+                                { "CID", _conventionSettings.ConventionIdentifier },
+
+                                // For Expo / React Native
+                                { "experienceId", _configuration.ExpoExperienceId },
+                                { "scopeKey", _configuration.ExpoScopeKey }
+                            }
+                        });
+                        break;
+
+                    case DeviceType.Ios:
+                        messages.Add(new Message()
+                        {
+                            Token = device.DeviceToken,
+                            Data = new Dictionary<string, string>()
+                            {
+                                { "event", "notification" },
+                                { "message_id", relatedId.ToString() }
+                            },
+                            Notification = new Notification()
                             {
                                 Title = toastTitle,
                                 Body = toastMessage,
-                                Icon = "notification_icon",
-                                Color = "#006459"
-                            }
-                        },
-                        Data = new Dictionary<string, string>()
-                        {
-                            // For Legacy Native Android App
-                            { "Event", "Notification" },
-                            { "Title", toastTitle },
-                            { "Message", toastMessage },
-                            { "RelatedId", relatedId.ToString() },
-                            { "CID", _conventionSettings.ConventionIdentifier },
-
-                            // For Expo / React Native
-                            { "experienceId", _configuration.ExpoExperienceId },
-                            { "scopeKey", _configuration.ExpoScopeKey }
-                        }
-                    });
-                }
-                else
-                {
-                    messages.Add(new Message()
-                    {
-                        Token = device.DeviceToken,
-                        Data = new Dictionary<string, string>()
-                        {
-                            { "event", "notification" },
-                            { "message_id", relatedId.ToString() }
-                        },
-                        Notification = new Notification()
-                        {
-                            Title = toastTitle,
-                            Body = toastMessage,
-                        },
-                        Apns = new ApnsConfig()
-                        {
-                            Headers = new Dictionary<string, string>()
-                            {
-                                { "apns-priority", "5" },
-                                { "apns-push-type", "alert" }
                             },
-                            Aps = new Aps()
+                            Apns = new ApnsConfig()
                             {
-                                Sound = "personal_notification.caf",
+                                Headers = new Dictionary<string, string>()
+                                {
+                                    { "apns-priority", "5" },
+                                    { "apns-push-type", "alert" }
+                                },
+                                Aps = new Aps()
+                                {
+                                    Sound = "personal_notification.caf",
+                                }
                             }
-                        }
-                    });
+                        });
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
 

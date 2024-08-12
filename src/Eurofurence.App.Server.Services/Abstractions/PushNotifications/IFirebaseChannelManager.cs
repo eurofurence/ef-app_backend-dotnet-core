@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 {
@@ -11,7 +12,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
             string deviceToken,
             string identityId,
             string[] regSysIds,
-            bool isAndroid,
+            DeviceType type,
             CancellationToken cancellationToken = default);
 
         Task PushSyncRequestAsync(CancellationToken cancellationToken = default);

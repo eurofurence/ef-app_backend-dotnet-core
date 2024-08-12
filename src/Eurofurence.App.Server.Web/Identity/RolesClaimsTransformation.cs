@@ -188,8 +188,9 @@ public class RolesClaimsTransformation(
     {
         var newIds = new HashSet<string>(ids);
 
-        var existingIds = await db.Devices
-            .Where(x => newIds.Contains(x.RegSysId)).Select(x => x.RegSysId)
+        var existingIds = await db.RegistrationIdentities
+            .Where(x => newIds.Contains(x.RegSysId))
+            .Select(x => x.RegSysId)
             .ToListAsync();
 
         foreach (var existingId in existingIds)
@@ -199,23 +200,11 @@ public class RolesClaimsTransformation(
 
         if (newIds.Count > 0)
         {
-            var devices = await db.Devices
-                .Where(x => x.RegSysId == null && x.IdentityId == identityId)
-                .ToListAsync();
-
-            foreach (var id in newIds)
+            await db.RegistrationIdentities.AddRangeAsync(newIds.Select(x => new RegistrationIdentityRecord
             {
-                foreach (var device in devices)
-                {
-                    db.Devices.Add(new DeviceRecord
-                    {
-                        IdentityId = identityId,
-                        RegSysId = id,
-                        DeviceToken = device.DeviceToken,
-                        IsAndroid = device.IsAndroid
-                    });
-                }
-            }
+                RegSysId = x,
+                IdentityId = identityId
+            }));
 
             await db.SaveChangesAsync();
         }

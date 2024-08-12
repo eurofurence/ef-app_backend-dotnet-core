@@ -8,44 +8,49 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
-    public class PushNotificationChannelStatisticsService : IPushNotificationChannelStatisticsService
+    public class PushNotificationChannelStatisticsService(
+        AppDbContext db
+    ) : IPushNotificationChannelStatisticsService
     {
-        private readonly IDeviceService _deviceService;
-
-        public PushNotificationChannelStatisticsService(IDeviceService deviceService)
-        {
-            _deviceService = deviceService;
-        }
-
         public async Task<PushNotificationChannelStatistics> PushNotificationChannelStatisticsAsync(
             DateTime? sinceLastSeenDateTimeUtc,
             CancellationToken cancellationToken = default)
         {
             var since = sinceLastSeenDateTimeUtc ?? DateTime.UtcNow.AddMonths(-1);
 
-            var devices = await _deviceService
-                .FindAll(x => x.LastChangeDateTimeUtc >= since)
-                .ToListAsync(cancellationToken);
+            var devices = db.DeviceIdentities
+                .Where(x => x.LastChangeDateTimeUtc >= since);
 
-            var numberOfDevices = devices.GroupBy(x => x.DeviceToken).Count();
-            var numberOfAuthenticatedDevices = devices
-                .Where(x => !string.IsNullOrEmpty(x.RegSysId))
+            var numberOfDevices = await devices
                 .GroupBy(x => x.DeviceToken)
-                .Count();
-            var numberOfUniqueUserIds = devices.GroupBy(x => x.IdentityId).Count();
+                .CountAsync(cancellationToken);
 
-            var platformStatistics = devices
-                .GroupBy(x => x.IsAndroid)
+            var numberOfAuthenticatedDevices = await devices
+                .Join(
+                    db.RegistrationIdentities,
+                    x => x.IdentityId,
+                    x => x.IdentityId,
+                    (x, _) => x
+                )
+                .GroupBy(x => x.DeviceToken)
+                .CountAsync(cancellationToken);
+
+            var numberOfUniqueUserIds = await devices
+                .GroupBy(x => x.IdentityId)
+                .CountAsync(cancellationToken);
+
+            var platformStatistics = await devices
+                .GroupBy(x => x.DeviceType)
                 .Select(x => new PushNotificationChannelStatistics.PlatformTagInfo
                 {
-                    Platform = x.Key ? "android" : "ios",
+                    Platform = Enum.GetName(x.Key),
                     DeviceCount = x.Count(),
                 })
-                .ToArray();
+                .ToArrayAsync(cancellationToken);
 
             return new PushNotificationChannelStatistics()
             {
-                SinceLastSeenDateTimeUtc = sinceLastSeenDateTimeUtc.Value,
+                SinceLastSeenDateTimeUtc = since,
                 NumberOfDevices = numberOfDevices,
                 NumberOfAuthenticatedDevices = numberOfAuthenticatedDevices,
                 NumberOfUniqueUserIds = numberOfUniqueUserIds,

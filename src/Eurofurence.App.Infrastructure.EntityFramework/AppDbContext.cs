@@ -56,7 +56,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<EntityStorageInfoRecord> EntityStorageInfos { get; set; }
         public virtual DbSet<UserRecord> Users { get; set; }
         public virtual DbSet<LinkFragment> LinkFragments { get; set; }
-        public virtual DbSet<DeviceRecord> Devices { get; set; }
+        public virtual DbSet<DeviceIdentityRecord> DeviceIdentities { get; set; }
+        public virtual DbSet<RegistrationIdentityRecord> RegistrationIdentities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

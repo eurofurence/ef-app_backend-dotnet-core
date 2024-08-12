@@ -41,20 +41,23 @@ namespace Eurofurence.App.Server.Services.Tests
                 new Mock<ITelegramMessageSender>().As<ITelegramMessageSender>().Object);
         }
 
-        private async Task<DeviceRecord> CreateDeviceAsync(AppDbContext appDbContext)
+        private async Task<DeviceIdentityRecord> CreateDeviceAsync(AppDbContext appDbContext)
         {
-            var id = Guid.NewGuid();
-
-            var record = new DeviceRecord()
+            var record = new DeviceIdentityRecord()
             {
-                Id = id,
                 IdentityId = "Identity",
-                RegSysId = "123",
                 DeviceToken = "DeviceToken",
-                IsAndroid = true
+                DeviceType = DeviceType.Android
             };
+            
+            appDbContext.DeviceIdentities.Add(record);
 
-            appDbContext.Devices.Add(record);
+            appDbContext.RegistrationIdentities.Add(new RegistrationIdentityRecord
+            {
+                RegSysId = "123",
+                IdentityId = "Identity"
+            });
+            
             await appDbContext.SaveChangesAsync();
             return record;
         }
@@ -153,10 +156,10 @@ namespace Eurofurence.App.Server.Services.Tests
 
         private struct TwoPlayersWithOneFursuitToken
         {
-            public DeviceRecord player1WithFursuit;
+            public DeviceIdentityRecord player1WithFursuit;
             public FursuitBadgeRecord player1FursuitBadge;
             public TokenRecord player1Token;
-            public DeviceRecord player2WithoutFursuit;
+            public DeviceIdentityRecord player2WithoutFursuit;
         }
 
         private async Task<TwoPlayersWithOneFursuitToken> SetupTwoPlayersWithOneFursuitTokenAsync()
@@ -296,7 +299,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var appDbContext = GetCleanDbContext();
             var collectingGameService = GetService(appDbContext);
 
-            var players = new DeviceRecord[3];
+            var players = new DeviceIdentityRecord[3];
             var tokens = new TokenRecord[3];
             var fursuitBadges = new FursuitBadgeRecord[3];
 

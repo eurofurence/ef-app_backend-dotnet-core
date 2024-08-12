@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Services
                 entity.Touch();
             }
 
-            await _appDbContext.AddAsync(entities, cancellationToken);
+            await _appDbContext.AddRangeAsync(entities, cancellationToken);
             await _storageService.TouchAsync(cancellationToken);
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }

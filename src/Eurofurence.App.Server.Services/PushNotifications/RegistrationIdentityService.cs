@@ -5,8 +5,9 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.PushNotifications;
 
-public class DeviceService(
+public class RegistrationIdentityService(
     AppDbContext appDbContext,
     IStorageServiceFactory storageServiceFactory,
     bool useSoftDelete = true
-) : EntityServiceBase<DeviceRecord>(appDbContext, storageServiceFactory, useSoftDelete), IDeviceService;
+) : EntityServiceBase<RegistrationIdentityRecord>(appDbContext, storageServiceFactory, useSoftDelete),
+    IRegistrationIdentityService;
