@@ -2,6 +2,7 @@
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
+@using Ganss.Xss
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
@@ -37,7 +38,7 @@
                                             </CardHeaderContent>
                                         </MudCardHeader>
                                         <MudCardContent>
-                                            <MudText>@((MarkupString)_markdownHtml)</MudText>
+                                            <MudText>@((MarkupString) new HtmlSanitizer().Sanitize(_markdownHtml)))</MudText>
                                         </MudCardContent>
                                     </MudCard>
                                 </MudItem>
