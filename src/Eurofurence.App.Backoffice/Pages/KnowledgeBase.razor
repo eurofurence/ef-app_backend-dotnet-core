@@ -100,7 +100,7 @@
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText Class="mb-4">@((MarkupString)new HtmlSanitizer().Sanitize(Markdown.ToHtml(knowledgeEntry.Text)))</MudText>
+                        <MudText Class="mb-4">@((MarkupString)_htmlSanitizer.Sanitize(Markdown.ToHtml(knowledgeEntry.Text)))</MudText>
 
                         @foreach (var image in knowledgeEntry.Images)
                         {
@@ -126,6 +126,8 @@
     private List<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
     private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
 
+    private HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadKnowledgeEntries();
