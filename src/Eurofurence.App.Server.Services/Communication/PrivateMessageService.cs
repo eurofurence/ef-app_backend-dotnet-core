@@ -66,20 +66,26 @@ namespace Eurofurence.App.Server.Services.Communication
         {
             var message = await FindOneAsync(messageId, cancellationToken);
             if (message == null) return null;
-            if (
-                (regSysIds is not null && regSysIds.Contains(message.RecipientRegSysId)) ||
-                (!string.IsNullOrWhiteSpace(identityId) && message.RecipientIdentityId != identityId))
-            {
-                return null;
-            }
 
-            if (!message.ReadDateTimeUtc.HasValue)
+            if ((
+                    // Message sent to RegSysId
+                    !string.IsNullOrWhiteSpace(message.RecipientRegSysId)
+                    && regSysIds is not null
+                    && regSysIds.Contains(message.RecipientRegSysId)
+                ) || (
+                    // Message sent to IdentityId
+                    !string.IsNullOrWhiteSpace(message.RecipientIdentityId)
+                    && identityId == message.RecipientIdentityId
+                ))
             {
                 message.ReadDateTimeUtc = DateTime.UtcNow;
                 await ReplaceOneAsync(message, cancellationToken);
+                return message.ReadDateTimeUtc;
             }
-
-            return message.ReadDateTimeUtc;
+            else
+            {
+                return null;
+            }
         }
 
 
