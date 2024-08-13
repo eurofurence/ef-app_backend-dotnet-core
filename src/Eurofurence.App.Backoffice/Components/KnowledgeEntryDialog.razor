@@ -2,6 +2,7 @@
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
+@using Ganss.Xss
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
@@ -37,7 +38,7 @@
                                             </CardHeaderContent>
                                         </MudCardHeader>
                                         <MudCardContent>
-                                            <MudText>@((MarkupString)_markdownHtml)</MudText>
+                                            <MudText>@((MarkupString) _htmlSanitizer.Sanitize(_markdownHtml)))</MudText>
                                         </MudCardContent>
                                     </MudCard>
                                 </MudItem>
@@ -124,6 +125,8 @@
 
     private bool _formIsValid;
     private MudForm? _form;
+    
+    private HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
 
     string _markdownHtml = string.Empty;
 
@@ -144,7 +147,7 @@
             SelectedGroupRecord = _knowledgeGroups.FirstOrDefault(knowledgeGroup => knowledgeGroup.Id == Record?.KnowledgeGroupId);
         }
     }
-
+    
     private async Task UploadImage(IBrowserFile? file)
     {
         if (file == null)

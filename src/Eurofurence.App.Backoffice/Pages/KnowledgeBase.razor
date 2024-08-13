@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
 @using Eurofurence.App.Domain.Model.Images
+@using Ganss.Xss
 @using Markdig
 @attribute [Authorize]
 @inject ISnackbar Snackbar
@@ -99,7 +100,7 @@
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText Class="mb-4">@((MarkupString)Markdown.ToHtml(knowledgeEntry.Text))</MudText>
+                        <MudText Class="mb-4">@((MarkupString)_htmlSanitizer.Sanitize(Markdown.ToHtml(knowledgeEntry.Text)))</MudText>
 
                         @foreach (var image in knowledgeEntry.Images)
                         {
@@ -125,6 +126,8 @@
     private List<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
     private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
 
+    private HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadKnowledgeEntries();
