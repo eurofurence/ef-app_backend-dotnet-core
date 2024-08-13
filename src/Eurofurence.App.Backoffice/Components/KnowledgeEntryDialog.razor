@@ -16,19 +16,22 @@
                 <MudContainer Style="height: 60vh" Class="overflow-scroll pr-4">
                     <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="General">
                         <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
-                            <MudSelect Required="true" T="KnowledgeGroupRecord" Label="Group" ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
+                            <MudSelect Required="true" T="KnowledgeGroupRecord" Label="Group"
+                                ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
                                 @foreach (var knowledgeGroup in _knowledgeGroups)
                                 {
                                     <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
                                 }
                             </MudSelect>
                             <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
-                            <MudTextField @bind-Value="Record.Title" Required="true" RequiredError="Title is required." Label="Title" />
-                            <MudNumericField @bind-Value="Record.Order" Required="true" RequiredError="Order number is required." Label="Order Number" />
+                            <MudTextField @bind-Value="Record.Title" Required="true" RequiredError="Title is required."
+                                Label="Title" />
+                            <MudNumericField @bind-Value="Record.Order" Required="true"
+                                RequiredError="Order number is required." Label="Order Number" />
                             <MudGrid>
                                 <MudItem xs="6">
                                     <MarkdownEditor @bind-Value="@Record.Text"
-                                                    ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
+                                        ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
                                 </MudItem>
                                 <MudItem xs="6">
                                     <MudCard>
@@ -38,7 +41,7 @@
                                             </CardHeaderContent>
                                         </MudCardHeader>
                                         <MudCardContent>
-                                            <MudText>@((MarkupString) _htmlSanitizer.Sanitize(_markdownHtml)))</MudText>
+                                            <MudText>@((MarkupString)_htmlSanitizer.Sanitize(_markdownHtml))</MudText>
                                         </MudCardContent>
                                     </MudCard>
                                 </MudItem>
@@ -50,9 +53,8 @@
                             <MudSpacer />
                             <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
                                 <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled"
-                                               Color="Color.Primary"
-                                               StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                        StartIcon="@Icons.Material.Filled.CloudUpload">
                                         Upload Image
                                     </MudButton>
                                 </ActivatorContent>
@@ -67,13 +69,14 @@
                                             <MudImage Height="100" ObjectFit="ObjectFit.Contain" Src="@context.Item.Url" />
                                         </CellTemplate>
                                     </TemplateColumn>
-                                    <PropertyColumn Title="ID" Property="image => image.Id"/>
-                                    <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
-                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
-                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
+                                    <PropertyColumn Title="ID" Property="image => image.Id" />
+                                    <PropertyColumn Title="Name" Property="image => image.InternalReference" />
+                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
+                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
                                     <TemplateColumn>
                                         <CellTemplate>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))"/>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                OnClick="@(() => DeleteImage(@context.Item.Id))" />
                                         </CellTemplate>
                                     </TemplateColumn>
                                 </Columns>
@@ -84,7 +87,8 @@
                     <MudTabPanel Icon="@Icons.Material.Outlined.Link" Text="Links">
                         <MudToolBar>
                             <MudSpacer />
-                            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">New Link</MudButton>
+                            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">New Link</MudButton>
                         </MudToolBar>
                         @if (Record.Links != null)
                         {
@@ -96,7 +100,8 @@
                                     <PropertyColumn Title="Target" Property="link => link.Target" />
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteLink(@context.Item.Id))" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                OnClick="@(() => DeleteLink(@context.Item.Id))" />
                                         </CellTemplate>
                                     </TemplateColumn>
                                 </Columns>
@@ -125,7 +130,7 @@
 
     private bool _formIsValid;
     private MudForm? _form;
-    
+
     private HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
 
     string _markdownHtml = string.Empty;
@@ -137,9 +142,9 @@
         if (Record == null)
         {
             Record = new KnowledgeEntryRecord
-            {
-                Id = Guid.NewGuid()
-            };
+                {
+                    Id = Guid.NewGuid()
+                };
         }
         else
         {
@@ -147,7 +152,7 @@
             SelectedGroupRecord = _knowledgeGroups.FirstOrDefault(knowledgeGroup => knowledgeGroup.Id == Record?.KnowledgeGroupId);
         }
     }
-    
+
     private async Task UploadImage(IBrowserFile? file)
     {
         if (file == null)
@@ -158,18 +163,18 @@
         if (image != null)
         {
             Record?.Images.Add(new ImageRecord()
-            {
-                Id = image.Id,
-                Url = image.Url,
-                InternalReference = image.InternalReference,
-                MimeType = image.MimeType,
-                SizeInBytes = image.SizeInBytes,
-                LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
-                ContentHashSha1 = image.ContentHashSha1,
-                Height = image.Height,
-                Width = image.Width,
-                IsDeleted = image.IsDeleted
-            });
+                {
+                    Id = image.Id,
+                    Url = image.Url,
+                    InternalReference = image.InternalReference,
+                    MimeType = image.MimeType,
+                    SizeInBytes = image.SizeInBytes,
+                    LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                    ContentHashSha1 = image.ContentHashSha1,
+                    Height = image.Height,
+                    Width = image.Width,
+                    IsDeleted = image.IsDeleted
+                });
             Snackbar.Add("Image uploaded.", Severity.Success);
         }
         else
@@ -223,14 +228,14 @@
         if (SelectedGroupRecord != null) Record.KnowledgeGroupId = SelectedGroupRecord.Id;
 
         var request = new KnowledgeEntryRequest()
-        {
-            Title = Record.Title,
-            Text = Record.Text,
-            KnowledgeGroupId = Record.KnowledgeGroupId,
-            Order = Record.Order,
-            Links = Record.Links,
-            ImageIds = Record.Images.Select(image => image.Id).ToList()
-        };
+            {
+                Title = Record.Title,
+                Text = Record.Text,
+                KnowledgeGroupId = Record.KnowledgeGroupId,
+                Order = Record.Order,
+                Links = Record.Links,
+                ImageIds = Record.Images.Select(image => image.Id).ToList()
+            };
 
         if (Update)
         {
