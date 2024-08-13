@@ -75,7 +75,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
-        [HttpPut("{id}:bannerImageId")]
+        [HttpPut("{id}/:bannerImageId")]
         public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
-        [HttpPut("{id}:posterImageId")]
+        [HttpPut("{id}/:posterImageId")]
         public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
