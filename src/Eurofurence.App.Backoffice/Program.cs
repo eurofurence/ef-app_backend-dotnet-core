@@ -32,4 +32,18 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.DefaultScopes.Add("profile");
 });
 
+var authSettings = builder.Configuration.GetSection("Authorization").Get<AuthorizationSettings>() ?? new AuthorizationSettings();
+
+builder.Services.AddAuthorizationCore(config =>
+{
+    config.AddPolicy("RequireKnowledgeBaseEditor", policy =>
+        policy.RequireAssertion(context =>
+            context.User.Claims.Any(c =>
+                c.Type == "groups" && authSettings.KnowledgeBaseEditor.Any(group => c.Value.Contains(group))
+                )
+            )
+        );
+}
+);
+
 await builder.Build().RunAsync();
