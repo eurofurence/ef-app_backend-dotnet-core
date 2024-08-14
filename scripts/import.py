@@ -102,9 +102,14 @@ def parse_arguments():
 	return args
 
 
-def loadSchemas(api: urllib3.connectionpool.ConnectionPool):
+def loadSchemas(api: urllib3.connectionpool.ConnectionPool, api_base: str):
 	try:
-		openapi_schema_response = api.request("GET", "/swagger/api/swagger.json")
+		openapi_schema_response = api.request("GET", f"{api_base}/swagger/api/swagger.json")
+		if openapi_schema_response.status != 200:
+			logger.error(
+				f"Failed to get OpenAPI schema from {openapi_schema_response.url}: [{openapi_schema_response.status}]"
+			)
+			sys.exit(32)
 	except urllib3.exceptions.HTTPError:
 		logger.error(f"Failed to retrieve OpenAPI schema from {api.host}.", exc_info=debug)
 		sys.exit(22)
@@ -140,6 +145,9 @@ def getSourceData(http: urllib3.connectionpool.ConnectionPool, source: str):
 	if source.startswith("https://") or source.startswith("http://"):
 		try:
 			data_response = http.request("GET", source)
+			if data_response.status != 200:
+				logger.error(f"Failed to get source data from {source}: [{data_response.status}]")
+				sys.exit(33)
 		except urllib3.exceptions.HTTPError:
 			logger.error(f"Failed to retrieve source file from {source}.", exc_info=debug)
 			sys.exit(23)
@@ -152,6 +160,7 @@ def getSourceData(http: urllib3.connectionpool.ConnectionPool, source: str):
 def processImages(
 	http: urllib3.connectionpool.ConnectionPool,
 	api: urllib3.connectionpool.ConnectionPool,
+	api_base: str,
 	image_ids: list[str],
 	image_source: str,
 ):
@@ -160,7 +169,7 @@ def processImages(
 		image_meta_response = http.request("GET", f"{image_source}/Api/Images/{image_id}")
 		if image_meta_response.status != 200:
 			logger.warning(
-				f"Failed to get image metadata for {image_id} from {image_source}: {image_meta_response.status}"
+				f"Failed to get image metadata for {image_id} from {image_source}: [{image_meta_response.status}]"
 			)
 			break
 
@@ -172,13 +181,13 @@ def processImages(
 
 		if image_content_response.status != 200:
 			logger.warning(
-				f"Failed to get image data for {image_id} from {image_source}: {image_content_response.status}"
+				f"Failed to get image data for {image_id} from {image_source}: [{image_content_response.status}]"
 			)
 			break
 
 		image_post_response = api.request(
 			"POST",
-			"/Api/Images",
+			f"{api_base}/Api/Images",
 			fields={"file": (image_meta_data["InternalReference"], image_content_response.data)},
 		)
 		if image_post_response.status == 200:
@@ -189,7 +198,7 @@ def processImages(
 			)
 		else:
 			logger.warning(
-				f"Failed to upload {image_id} ({image_meta_data["InternalReference"]}) to {api.host}: {image_post_response.status}"
+				f"Failed to upload {image_id} ({image_meta_data["InternalReference"]}) to {api.host}: [{image_post_response.status}]"
 			)
 			break
 
@@ -198,14 +207,14 @@ def processImages(
 			f"Number of uploaded images ({len(image_ids_new)}) does not match expected number of images ({len(image_ids)}). Rolling back…"
 		)
 		for image_id in image_ids_new:
-			image_delete_response = api.request("DELETE", f"{image_source}/Api/Images/{image_id}")
+			image_delete_response = api.request("DELETE", f"{api_base}/Api/Images/{image_id}")
 			if image_delete_response.status == 204:
 				logger.info(
 					f"Successfully deleted image {image_id_new} ({image_meta_data["InternalReference"]}) from {image_source}."
 				)
 			else:
 				logger.warning(
-					f"Failed to delete {image_id_new} ({image_meta_data["InternalReference"]}) from {api.host}: {image_delete_response.status}"
+					f"Failed to delete {image_id_new} ({image_meta_data["InternalReference"]}) from {api.host}: [{image_delete_response.status}]"
 				)
 		raise ProcessImagesError()
 	else:
@@ -215,6 +224,7 @@ def processImages(
 def processData(
 	http: urllib3.connectionpool.ConnectionPool,
 	api: urllib3.connectionpool.ConnectionPool,
+	api_base: str,
 	data: dict,
 	validator: OAS30Validator,
 	types: dict,
@@ -229,19 +239,19 @@ def processData(
 			continue
 
 		if image_source is not None and item["ImageIds"] is not None and len(item["ImageIds"]) > 0:
-			if api.request("GET", f"{types[type_name]["path"]}/{item["Id"]}").status != 404:
+			if api.request("GET", f"{api_base}/{types[type_name]["path"]}/{item["Id"]}").status != 404:
 				logger.warning(f"{type_name} with ID {item["Id"]} seems to already exist, skipping image upload…")
 				continue
 			else:
 				logger.info(f"Found {len(item["ImageIds"])} image IDs on {type_name} with ID {item["Id"]}.")
 				try:
-					item["ImageIds"] = processImages(http, api, item["ImageIds"], image_source=image_source)
+					item["ImageIds"] = processImages(http, api, api_base, item["ImageIds"], image_source=image_source)
 				except ProcessImagesError:
 					logger.warning(f"Failed to process images for {type_name} with ID {item["Id"]}, skipping…")
 					continue
 
 		try:
-			api_response = api.request("POST", types[type_name]["path"], json=item)
+			api_response = api.request("POST", f"{api_base}/{types[type_name]["path"]}", json=item)
 
 			if api_response.status != 200 and api_response.status != 204:
 				logger.error(
@@ -267,7 +277,8 @@ def main():
 		urllib3.connection_from_url(args.api, headers={"Authorization": f"Bearer {args.token}"}) as api,
 		urllib3.PoolManager() as http,
 	):
-		schemas, types = loadSchemas(api)
+		api_base = urllib3.util.parse_url(args.api).request_uri
+		schemas, types = loadSchemas(api, api_base)
 
 		if args.list:
 			type_info = reduce(
@@ -290,7 +301,7 @@ def main():
 
 		data = getSourceData(http, args.source)
 
-		processData(http, api, data, validator, types, type_name=args.type, image_source=args.image_source)
+		processData(http, api, api_base, data, validator, types, type_name=args.type, image_source=args.image_source)
 
 
 if __name__ == "__main__":
