@@ -129,10 +129,17 @@ public class RolesClaimsTransformation(
         {
             identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
 
-            foreach (var registration in JsonSerializer.Deserialize<Dictionary<string, string>>(cached))
+            var cachedRegistrations = JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
+
+            foreach (var registration in cachedRegistrations)
             {
                 identity.AddClaim(new Claim(UserRegistrationClaims.Id, registration.Key));
-                identity.AddClaim(new Claim(UserRegistrationClaims.Status(registration.Key), registration.Value));
+                identity.AddClaim(new Claim(UserRegistrationClaims.Status(registration.Key), registration.Value.ToString()));
+            }
+
+            if (cachedRegistrations.Any(registrationStatus => registrationStatus.Value == UserRegistrationStatus.CheckedIn))
+            {
+                identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
             }
 
             return;
@@ -159,7 +166,7 @@ public class RolesClaimsTransformation(
                 var status = await GetRegistrationStatus(current.RegSysUrl, token, id);
 
                 identity.AddClaim(new Claim(UserRegistrationClaims.Id, id));
-                identity.AddClaim(new Claim(UserRegistrationClaims.Status(id), status));
+                identity.AddClaim(new Claim(UserRegistrationClaims.Status(id), status.ToString()));
                 return status;
             }).Select(
                 async registration => new { Id = registration.Key, Status = await registration.Value }
@@ -192,7 +199,7 @@ public class RolesClaimsTransformation(
         }
     }
 
-    private async Task<string> GetRegistrationStatus(string regSysUrl, string token, string id)
+    private async Task<UserRegistrationStatus> GetRegistrationStatus(string regSysUrl, string token, string id)
     {
         using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
@@ -204,10 +211,11 @@ public class RolesClaimsTransformation(
         if (statusResponse.IsSuccessStatusCode)
         {
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
-            return statusJson.RootElement.TryGetString("status");
+            Enum.TryParse(statusJson.RootElement.TryGetString("status"), true, out UserRegistrationStatus status);
+            return status;
         }
 
-        return null;
+        return UserRegistrationStatus.Unknown;
     }
 
     private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId)
