@@ -377,13 +377,13 @@ namespace Eurofurence.App.Server.Services.Dealers
             {
                 if (imageEntry.Length != existingImage.SizeInBytes)
                 {
-                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken);
+                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken: cancellationToken);
                 }
 
                 return existingImage.Id;
             }
 
-            var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken);
+            var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken: cancellationToken);
             return result?.Id;
         }
     }
