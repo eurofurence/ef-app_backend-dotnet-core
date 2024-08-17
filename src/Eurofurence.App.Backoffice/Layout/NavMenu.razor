@@ -1,7 +1,8 @@
 ﻿<MudNavMenu>
     <MudNavLink Href="./" Icon="@Icons.Material.Outlined.Home" Match="NavLinkMatch.All">Home</MudNavLink>
-    <AuthorizeView>
-        <MudNavLink Href="knowledgebase" Icon="@Icons.Material.Outlined.Info" Match="NavLinkMatch.Prefix">Knowledge Base</MudNavLink>
+    <AuthorizeView Policy="RequireKnowledgeBaseEditor">
+        <MudNavLink Href="knowledgebase" Icon="@Icons.Material.Outlined.Info" Match="NavLinkMatch.Prefix">Knowledge Base
+        </MudNavLink>
         <MudNavLink Href="images" Icon="@Icons.Material.Outlined.Image" Match="NavLinkMatch.Prefix">Images</MudNavLink>
     </AuthorizeView>
 </MudNavMenu>

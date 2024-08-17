@@ -1,4 +1,5 @@
 ﻿@page "/knowledgebase"
+@attribute [Authorize(Policy = "RequireKnowledgeBaseEditor")]
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
@@ -6,7 +7,6 @@
 @using Eurofurence.App.Domain.Model.Images
 @using Ganss.Xss
 @using Markdig
-@attribute [Authorize]
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService

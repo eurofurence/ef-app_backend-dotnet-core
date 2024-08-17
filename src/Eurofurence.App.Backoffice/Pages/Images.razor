@@ -1,40 +1,44 @@
 ﻿@page "/images"
+@attribute [Authorize(Policy = "RequireKnowledgeBaseEditor")]
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Images
 @using Eurofurence.App.Backoffice.Components
-@attribute [Authorize]
 @inject ISnackbar Snackbar
 @inject IImageService ImageService
 @inject IDialogService DialogService
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Images</MudText>
-    <MudSpacer/>
-    <MudSpacer/>
-    <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
-    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddImage">New image</MudButton>
+    <MudSpacer />
+    <MudSpacer />
+    <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
+        Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
+    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+        @onclick="AddImage">New image</MudButton>
 </MudToolBar>
-<MudDataGrid T="ImageWithRelationsResponse" @ref="_dataGrid" LoadingProgressColor="Color.Primary" ServerData="@GetImages" SortMode="@SortMode.None" Groupable="false">
+<MudDataGrid T="ImageWithRelationsResponse" @ref="_dataGrid" LoadingProgressColor="Color.Primary"
+    ServerData="@GetImages" SortMode="@SortMode.None" Groupable="false">
     <Columns>
         <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
             <CellTemplate>
                 @if (!string.IsNullOrEmpty(@context.Item.Url))
                 {
                     <MudLink Href="@context.Item.Url">
-                        <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain" Src="@context.Item.Url" />
+                        <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain"
+                            Src="@context.Item.Url" />
                     </MudLink>
                 }
                 else
                 {
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
                 }
             </CellTemplate>
         </TemplateColumn>
-        <PropertyColumn Title="ID" Property="image => image.Id"/>
-        <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
-        <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
-        <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
+        <PropertyColumn Title="ID" Property="image => image.Id" />
+        <PropertyColumn Title="Name" Property="image => image.InternalReference" />
+        <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
+        <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
         <TemplateColumn Title="Usage">
             <CellTemplate>
                 @if (context.Item?.FursuitBadgeIds.Count > 0)
@@ -61,7 +65,8 @@
                         <MudIcon Icon="@Icons.Material.Outlined.Map"></MudIcon>
                     </MudTooltip>
                 }
-                @if (context.Item?.DealerArtPreviewIds.Count > 0 || context.Item?.DealerArtistIds.Count > 0 || context.Item?.DealerArtistThumbnailIds.Count > 0)
+                @if (context.Item?.DealerArtPreviewIds.Count > 0 || context.Item?.DealerArtistIds.Count > 0 ||
+                context.Item?.DealerArtistThumbnailIds.Count > 0)
                 {
                     <MudTooltip Text="Dealers Den">
                         <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart"></MudIcon>
@@ -85,14 +90,15 @@
             <CellTemplate>
                 @if (context.Item != null)
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateImage(context.Item)"></MudIconButton>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateImage(context.Item)">
+                    </MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteImage(@context.Item.Id))" />
                 }
             </CellTemplate>
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="ImageWithRelationsResponse"/>
+        <MudDataGridPager T="ImageWithRelationsResponse" />
     </PagerContent>
 </MudDataGrid>
 
@@ -131,13 +137,14 @@
         _dataGrid?.ReloadServerData();
     }
 
-    private IEnumerable<ImageWithRelationsResponse> FilterImages(IEnumerable<ImageWithRelationsResponse> entries, string? searchString)
+    private IEnumerable<ImageWithRelationsResponse> FilterImages(IEnumerable<ImageWithRelationsResponse> entries, string?
+    searchString)
     {
         return string.IsNullOrEmpty(searchString)
-            ? entries
-            : entries.Where(entry =>
-                entry.InternalReference.ToLower().Contains(searchString.ToLower())
-                || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
+        ? entries
+        : entries.Where(entry =>
+        entry.InternalReference.ToLower().Contains(searchString.ToLower())
+        || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
     }
 
     private async Task AddImage()
