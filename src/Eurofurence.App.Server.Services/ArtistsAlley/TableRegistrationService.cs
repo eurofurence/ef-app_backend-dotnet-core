@@ -67,7 +67,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .Where(x =>
                     x.OwnerUid == subject && 
                     x.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
-                .AsNoTracking()
                 .ToListAsync();
 
             foreach (var registration in activeRegistrations)
