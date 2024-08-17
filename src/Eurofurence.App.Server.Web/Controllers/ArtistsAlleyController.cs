@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
@@ -75,12 +75,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull][FromRoute] Guid id)
         {
-            var exists = await _tableRegistrationService.HasOneAsync(id);
-            if (!exists) return NotFound();
+            var tableRegistration = await _tableRegistrationService.FindOneAsync(id);
+            if (tableRegistration == null) return NotFound();
 
             await _tableRegistrationService.DeleteOneAsync(id);
+
+            if (tableRegistration.ImageId is Guid imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }
     }
-} 
+}
