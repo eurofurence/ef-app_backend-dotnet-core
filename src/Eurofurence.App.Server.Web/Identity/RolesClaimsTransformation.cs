@@ -75,6 +75,16 @@ public class RolesClaimsTransformation(
             {
                 roles.Add("Admin");
             }
+
+            if (authorizationOptions.Value.Attendee.Contains(claim.Value))
+            {
+                roles.Add("Attendee");
+            }
+
+            if (authorizationOptions.Value.AttendeeCheckedIn.Contains(claim.Value))
+            {
+                roles.Add("AttendeeCheckedIn");
+            }
         }
 
         foreach (var role in roles)
@@ -125,6 +135,13 @@ public class RolesClaimsTransformation(
 
     private async Task ReadRegSys(ClaimsIdentity identity, string token)
     {
+        var current = identityOptions.CurrentValue;
+
+        if (string.IsNullOrEmpty(current.RegSysUrl))
+        {
+            return;
+        }
+
         if (await cache.GetStringAsync($"{token}_regsys") is { Length: > 0 } cached)
         {
             identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
@@ -145,7 +162,6 @@ public class RolesClaimsTransformation(
             return;
         }
 
-        var current = identityOptions.CurrentValue;
         using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
         var request = new HttpRequestMessage(HttpMethod.Get,
