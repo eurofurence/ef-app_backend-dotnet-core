@@ -64,7 +64,7 @@ containerize SERVICE *ARGS:
 	docker compose build {{ARGS}} {{SERVICE}}
 	if [[ $(docker compose ps --services --status running | wc -w) -gt 0 ]]; then
 		echo "Detected running stack! Refreshing service {{SERVICE}} …"
-		docker compose create --build --force-recreate {{SERVICE}} && docker compose start {{SERVICE}}
+		docker compose create --force-recreate {{SERVICE}} && docker compose start {{SERVICE}}
 	fi
 
 # Build sdk container for backend without executing second stage
