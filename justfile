@@ -61,6 +61,7 @@ build-cli:
 # Build release container for service using spec from docker-compose.yml and refresh service if stack is running
 containerize SERVICE *ARGS:
 	#!/bin/bash
+	set -euxo pipefail
 	docker compose build {{ARGS}} {{SERVICE}}
 	if [[ $(docker compose ps --services --status running | wc -w) -gt 0 ]]; then
 		echo "Detected running stack! Refreshing service {{SERVICE}} …"
