@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -65,13 +65,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
                 .Where(x =>
-                    x.OwnerUid == subject && 
+                    x.OwnerUid == subject &&
                     x.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
                 .ToListAsync();
 
             foreach (var registration in activeRegistrations)
             {
-                registration.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, subject);
+                var stateChange = registration.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, subject);
+                _appDbContext.StateChangeRecord.Add(stateChange);
                 registration.Touch();
             }
             
@@ -97,10 +98,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.Touch();
 
             _appDbContext.TableRegistrations.Add(record);
+            await _appDbContext.SaveChangesAsync();
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
                 $"*New Request:* {record.OwnerUsername.EscapeMarkdown()} ({user.GetSubject().EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Location:* {record.Location.RemoveMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
-            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
