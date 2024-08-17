@@ -58,9 +58,14 @@ build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'): (_create_if_not_exi
 build-cli:
 	dotnet publish src/Eurofurence.App.Tools.CliToolBox/Eurofurence.App.Tools.CliToolBox.csproj --output "$(pwd)/artifacts" --configuration Release --sc -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:GenerateDocumentationFile=false
 
-# Build release container using spec from docker-compose.yml
-containerize *ARGS:
-	docker compose build {{ARGS}}
+# Build release container for service using spec from docker-compose.yml and refresh service if stack is running
+containerize SERVICE *ARGS:
+	#!/bin/bash
+	docker compose build {{ARGS}} {{SERVICE}}
+	if [[ $(docker compose ps --services --status running | wc -w) -gt 0 ]]; then
+		echo "Detected running stack! Refreshing service {{SERVICE}} …"
+		docker compose create --build --force-recreate {{SERVICE}} && docker compose start {{SERVICE}}
+	fi
 
 # Build sdk container for backend without executing second stage
 containerize-dev:
