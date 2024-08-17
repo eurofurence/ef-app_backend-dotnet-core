@@ -1,11 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -14,10 +18,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ArtistsAlleyController : BaseController
     {
         private readonly ITableRegistrationService _tableRegistrationService;
+        private readonly IImageService _imageService;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService)
         {
             _tableRegistrationService = tableRegistrationService;
+            _imageService = imageService;
         }
 
         /// <summary>
@@ -50,9 +56,21 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromBody]TableRegistrationRequest request)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, IFormFile requestImageFile)
         {
-            await _tableRegistrationService.RegisterTableAsync(User, request);
+            ImageRecord image = null;
+            if (requestImageFile is IFormFile imageFile)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    await imageFile.CopyToAsync(ms);
+                    image = await _imageService.InsertImageAsync(imageFile.FileName, ms, 1500, 1500);
+                }
+            }
+
+            if (!Uri.TryCreate(request.WebsiteUrl, UriKind.Absolute, out _)) return BadRequest("Invalid website URL!");
+
+            await _tableRegistrationService.RegisterTableAsync(User, request, image);
             return NoContent();
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -31,7 +32,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
             ArtistAlleyConfiguration configuration,
-            ITelegramMessageSender telegramMessageSender, 
+            ITelegramMessageSender telegramMessageSender,
             IPrivateMessageService privateMessageService,
             IImageService imageService) : base(context, storageServiceFactory)
         {
@@ -60,7 +61,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
-        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
+        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null)
         {
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
@@ -75,10 +76,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 _appDbContext.StateChangeRecord.Add(stateChange);
                 registration.Touch();
             }
-            
-            var image = await _imageService.FindOneAsync(request.ImageId);
-
-            await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
@@ -90,7 +87,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 ShortDescription = request.ShortDescription,
                 TelegramHandle = request.TelegramHandle,
                 Location = request.Location,
-                ImageId = request.ImageId,
+                ImageId = image?.Id,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
             };
 
@@ -144,7 +141,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
             {
-                telegramMessageBuilder.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}"); 
+                telegramMessageBuilder.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
             }
             if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
             {
