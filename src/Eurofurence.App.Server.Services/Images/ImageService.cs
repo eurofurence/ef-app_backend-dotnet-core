@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.Utility;
@@ -166,14 +166,6 @@ namespace Eurofurence.App.Server.Services.Images
                 ? existingRecord.Id + "." + imageFormat.FileExtensions.FirstOrDefault("png")
                 : existingRecord.Id + ".png";
 
-            await UploadFileToMinIoAsync(
-                _minIoConfiguration.Bucket,
-                existingRecord.InternalFileName,
-                imageFormat?.DefaultMimeType,
-                stream,
-                cancellationToken
-            );
-
             existingRecord.InternalFileName = fileName;
             existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}";
             existingRecord.InternalReference = internalReference;
@@ -181,6 +173,14 @@ namespace Eurofurence.App.Server.Services.Images
             existingRecord.Width = image.Width;
             existingRecord.Height = image.Height;
             existingRecord.SizeInBytes = stream.Length;
+
+            await UploadFileToMinIoAsync(
+                _minIoConfiguration.Bucket,
+                existingRecord.InternalFileName,
+                imageFormat?.DefaultMimeType,
+                stream,
+                cancellationToken
+            );
 
             await base.ReplaceOneAsync(existingRecord, cancellationToken);
             return existingRecord;
