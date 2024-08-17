@@ -62,6 +62,20 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
         {
+            var subject = user.GetSubject();
+            var activeRegistrations = await _appDbContext.TableRegistrations
+                .Where(x =>
+                    x.OwnerUid == subject && 
+                    x.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
+                .AsNoTracking()
+                .ToListAsync();
+
+            foreach (var registration in activeRegistrations)
+            {
+                registration.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, subject);
+                registration.Touch();
+            }
+            
             var image = await _imageService.FindOneAsync(request.ImageId);
 
             await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
