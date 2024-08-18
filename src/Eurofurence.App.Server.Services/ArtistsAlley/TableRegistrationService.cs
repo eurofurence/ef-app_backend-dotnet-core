@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -29,6 +29,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly IHttpUriSanitizer _uriSanitizer;
+        private readonly IHtmlSanitizer _htmlSanitizer;
 
         public TableRegistrationService(
             AppDbContext context,
@@ -38,6 +39,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             IPrivateMessageService privateMessageService,
             IImageService imageService,
             IHttpUriSanitizer uriSanitizer,
+            IHtmlSanitizer htmlSanitizer) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
             _configuration = configuration;
@@ -45,6 +47,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _privateMessageService = privateMessageService;
             _imageService = imageService;
             _uriSanitizer = uriSanitizer;
+            _htmlSanitizer = htmlSanitizer;
         }
 
         public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
@@ -92,9 +95,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 OwnerUid = user.GetSubject(),
                 OwnerUsername = user.Identity?.Name,
                 CreatedDateTimeUtc = DateTime.UtcNow,
-                DisplayName = request.DisplayName,
+                DisplayName = _htmlSanitizer.Sanitize(request.DisplayName),
                 WebsiteUrl = request.WebsiteUrl,
-                ShortDescription = request.ShortDescription,
+                ShortDescription = _htmlSanitizer.Sanitize(request.ShortDescription),
                 TelegramHandle = request.TelegramHandle,
                 Location = request.Location,
                 ImageId = image?.Id,

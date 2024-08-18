@@ -7,6 +7,7 @@ using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Knowledge
@@ -15,15 +16,18 @@ namespace Eurofurence.App.Server.Services.Knowledge
     {
         private readonly AppDbContext _appDbContext;
         private readonly IStorageService _storageService;
+        private readonly IHtmlSanitizer _htmlSanitizer;
 
         public KnowledgeEntryService(
             AppDbContext appDbContext,
-            IStorageServiceFactory storageServiceFactory
+            IStorageServiceFactory storageServiceFactory,
+            IHtmlSanitizer htmlSanitizer
         )
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
             _storageService = storageServiceFactory.CreateStorageService<KnowledgeEntryRecord>();
+            _htmlSanitizer = htmlSanitizer;
         }
         public override async Task<KnowledgeEntryRecord> FindOneAsync(
             Guid id,
@@ -64,8 +68,8 @@ namespace Eurofurence.App.Server.Services.Knowledge
             {
                 Id = request.Id,
                 KnowledgeGroupId = request.KnowledgeGroupId,
-                Title = request.Title,
-                Text = request.Text,
+                Title = _htmlSanitizer.Sanitize(request.Title),
+                Text = _htmlSanitizer.Sanitize(request.Text),
                 Order = request.Order,
                 Links = request.Links,
                 IsDeleted = 0
@@ -91,8 +95,8 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 .FirstOrDefaultAsync(ke => ke.Id == id, cancellationToken);
 
             existingEntity.KnowledgeGroupId = request.KnowledgeGroupId;
-            existingEntity.Title = request.Title;
-            existingEntity.Text = request.Text;
+            existingEntity.Title = _htmlSanitizer.Sanitize(request.Title);
+            existingEntity.Text = _htmlSanitizer.Sanitize(request.Text);
             existingEntity.Order = request.Order;
 
             foreach (var existingLink in existingEntity.Links)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Autofac;
 using Autofac.Core;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -110,6 +110,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<IFirebaseChannelManager>()
                 .SingleInstance();
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
+            builder.RegisterType<GanssHtmlSanitizer>().As<IHtmlSanitizer>();
             builder.RegisterType<ImageService>().As<IImageService>();
             builder.RegisterType<ItemActivityService>().As<IItemActivityService>();
             builder.RegisterType<KnowledgeEntryService>().As<IKnowledgeEntryService>();

@@ -12,7 +12,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
-    <ProjectReference Include="..\Eurofurence.App.Infrastructure.EntityFramework\Eurofurence.App.Infrastructure.EntityFramework.csproj" />
+    <ProjectReference
+      Include="..\Eurofurence.App.Infrastructure.EntityFramework\Eurofurence.App.Infrastructure.EntityFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac" Version="8.0.0" />
@@ -29,6 +30,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+    <PackageReference Include="HtmlSanitizer" Version="8.1.870" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
