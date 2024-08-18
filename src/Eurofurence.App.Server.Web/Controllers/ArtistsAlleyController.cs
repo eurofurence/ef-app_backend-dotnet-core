@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -14,10 +18,35 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class ArtistsAlleyController : BaseController
     {
         private readonly ITableRegistrationService _tableRegistrationService;
+        private readonly IImageService _imageService;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService)
         {
             _tableRegistrationService = tableRegistrationService;
+            _imageService = imageService;
+        }
+
+        [HttpPut("{id}/:status")]
+        public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull] [FromRoute] Guid id,
+            [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
+        {
+            TableRegistrationRecord record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+
+            if (record == null)
+            {
+                return NotFound();
+            }
+
+            if (state == TableRegistrationRecord.RegistrationStateEnum.Rejected)
+            {
+                _tableRegistrationService.RejectByIdAsync(id, "API:" + User.Identity.Name);
+            }
+            else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
+            {
+                _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
+            }
+
+            return NoContent();
         }
 
         /// <summary>
@@ -42,7 +71,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<TableRegistrationRecord> GetTableRegistrationAsync(
-            [EnsureNotNull][FromRoute] Guid id
+            [EnsureNotNull] [FromRoute] Guid id
         )
         {
             return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
@@ -50,7 +79,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromBody]TableRegistrationRequest request)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync(
+            [EnsureNotNull] [FromBody] TableRegistrationRequest request)
         {
             await _tableRegistrationService.RegisterTableAsync(User, request);
             return NoContent();
@@ -73,14 +103,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull][FromRoute] Guid id)
+        public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull] [FromRoute] Guid id)
         {
-            var exists = await _tableRegistrationService.HasOneAsync(id);
-            if (!exists) return NotFound();
+            var tableRegistration = await _tableRegistrationService.FindOneAsync(id);
+            if (tableRegistration == null) return NotFound();
 
             await _tableRegistrationService.DeleteOneAsync(id);
+
+            if (tableRegistration.ImageId is Guid imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }
     }
-} 
+}

@@ -1,0 +1,108 @@
+@page "/artistAlleyModeration"
+@using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.ArtistsAlley
+@using Microsoft.AspNetCore.Authorization
+@using Color = MudBlazor.Color
+
+@attribute [Authorize(Roles = "ArtistAlleyModerator")]
+
+@inject IArtistAlleyService TableRegService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+
+<MudToolBar>
+    <MudText Typo="Typo.h6">Artist Alley Moderation</MudText>
+    <MudSpacer/>
+    <MudSpacer/>
+    <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
+</MudToolBar>
+@*
+Table showing the basic informations for each application.
+
+More data of the applicant shall be visble an extra dialog TODO: Needs to be done
+ *@
+<MudDataGrid T="TableRegistrationRecord" ServerData="@GetRegistrations" FilterMode="@_filterMode">
+    <Columns>
+        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername"/>
+        <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName"/>
+        <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location"/>
+        <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription"/>
+        <PropertyColumn Property="arg => arg.DisplayName"/>
+        <TemplateColumn Title="Status" SortBy="@(x => x.State)" Sortable="true" Filterable="true">
+            <CellTemplate>
+                @switch (context.Item.State)
+                {
+                    case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                        <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="() => TryChangeRegistrationStatus(context.Item, false)">Approve</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="() => TryChangeRegistrationStatus(context.Item, true)">Reject</MudButton>
+                        break;
+                    case TableRegistrationRecord.RegistrationStateEnum.Accepted:
+                        <MudAlert Severity="Severity.Success">Accepted</MudAlert>
+                        break;
+                    case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                        <MudAlert Severity="Severity.Error">Rejected</MudAlert>
+                        break;
+                    case TableRegistrationRecord.RegistrationStateEnum.Published:
+                        break;
+                }
+
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+
+@code {
+
+    private string? _imageSearch;
+
+    private DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
+
+    /// <summary>
+    /// Attempt to change the status of a table registration
+    /// </summary>
+    /// <param name="registrationRecord"></param>
+    /// <param name="reject"></param>
+    private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            { x => x.ContentText, $"Are you sure, that you want to {(reject ? "Reject" : "Approve")} this application" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult result = await dialogRef.Result;
+
+        if (!result.Canceled)
+        {
+            TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            Snackbar.Add($"Application was {(reject ? "Rejected" : "Approved")}");
+        }
+    }
+
+
+    private async Task<GridData<TableRegistrationRecord>> GetRegistrations(GridState<TableRegistrationRecord> gridState)
+    {
+        IList<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
+
+        // Show pending applications fist.
+        // Sorting may be changed by the user in the UI.
+        registrations = registrations
+            .Select(x => x)
+            .OrderBy(x => x.State)
+            .ToList();
+
+        GridData<TableRegistrationRecord> result = new();
+        result.Items = registrations;
+        result.TotalItems = registrations.Count;
+        return result;
+    }
+
+    private void Search(string searchString)
+    {
+        _imageSearch = searchString;
+    }
+}

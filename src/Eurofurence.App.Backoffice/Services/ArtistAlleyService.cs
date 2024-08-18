@@ -13,5 +13,12 @@ namespace Eurofurence.App.Backoffice.Services
             options.Converters.Add(new JsonStringEnumConverter());
             return (await http.GetFromJsonAsync<TableRegistrationRecord[]>("ArtistsAlley", options))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
+
+        public async Task PutTableRegistrationStatusAsync(TableRegistrationRecord record,
+            TableRegistrationRecord.RegistrationStateEnum state)
+        {
+            JsonContent content = JsonContent.Create(state);
+            HttpResponseMessage res = await http.PutAsync($"ArtistsAlley/{record.Id}/:status", content);
+        }
     }
 }
