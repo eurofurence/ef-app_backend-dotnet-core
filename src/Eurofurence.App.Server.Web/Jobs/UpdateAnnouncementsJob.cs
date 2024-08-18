@@ -18,6 +18,7 @@ using Quartz;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
+    [DisallowConcurrentExecution]
     public class UpdateAnnouncementsJob : IJob
     {
         private readonly IAnnouncementService _announcementService;

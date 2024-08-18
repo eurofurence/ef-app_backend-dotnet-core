@@ -8,6 +8,7 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
+    [DisallowConcurrentExecution]
     public class UpdateEventsJob : IJob
     {
         private readonly IEventService _eventService;
