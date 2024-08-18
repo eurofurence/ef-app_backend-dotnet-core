@@ -24,7 +24,11 @@ Table showing the basic informations for each application.
 
 More data of the applicant shall be visble an extra dialog TODO: Needs to be done
  *@
-<MudDataGrid T="TableRegistrationRecord" ServerData="@GetRegistrations" FilterMode="@_filterMode">
+<MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" ServerData="@GetRegistrations" FilterMode="@_filterMode">
+    <ToolBarContent>
+        <MudTextField @bind-Value="_imageSearch" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
     <Columns>
         <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername"/>
         <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName"/>
@@ -52,13 +56,18 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
             </CellTemplate>
         </TemplateColumn>
     </Columns>
+    <PagerContent>
+        <MudDataGridPager T="TableRegistrationRecord" />
+    </PagerContent>
 </MudDataGrid>
 
 @code {
+    private MudDataGrid<TableRegistrationRecord>? _dataGrid;
 
     private string? _imageSearch;
 
     private DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
+
 
     /// <summary>
     /// Attempt to change the status of a table registration
@@ -83,10 +92,18 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
         }
     }
 
+    /// <summary>
+    /// Filter
+    /// </summary>
+    /// <param name="entries"></param>
+    /// <returns></returns>
+    private IEnumerable<TableRegistrationRecord> Filter(IEnumerable<TableRegistrationRecord> entries) =>
+        string.IsNullOrEmpty(_imageSearch) ? entries : entries.Where(x => x.DisplayName.Contains(_imageSearch, StringComparison.OrdinalIgnoreCase));
+
 
     private async Task<GridData<TableRegistrationRecord>> GetRegistrations(GridState<TableRegistrationRecord> gridState)
     {
-        IList<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
+        IEnumerable<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
 
         // Show pending applications fist.
         // Sorting may be changed by the user in the UI.
@@ -95,14 +112,19 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
             .OrderBy(x => x.State)
             .ToList();
 
+        registrations = Filter(registrations);
+
         GridData<TableRegistrationRecord> result = new();
         result.Items = registrations;
-        result.TotalItems = registrations.Count;
+        //result.TotalItems = registrations.Count;
         return result;
     }
 
     private void Search(string searchString)
     {
         _imageSearch = searchString;
+        _dataGrid.ReloadServerData();
+
     }
+
 }

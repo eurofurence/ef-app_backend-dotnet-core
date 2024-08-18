@@ -59,7 +59,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         public RegistrationStateEnum State { get; set; }
 
         [JsonIgnore]
-        public IList<StateChangeRecord> StateChangeLog { get; set; }
+        public virtual IList<StateChangeRecord> StateChangeLog { get; set; }
 
         public TableRegistrationRecord()
         {
@@ -68,13 +68,13 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 
         public void ChangeState(RegistrationStateEnum newState, string uid)
         {
-            StateChangeLog.Add(new StateChangeRecord()
-            {
-                ChangedByUid = uid,
-                ChangedDateTimeUtc = DateTime.UtcNow,
-                NewState = newState,
-                OldState = State
-            });
+            // StateChangeLog.Add(new StateChangeRecord()
+            // {
+            //     ChangedByUid = uid,
+            //     ChangedDateTimeUtc = DateTime.UtcNow,
+            //     NewState = newState,
+            //     OldState = State
+            // });
 
             State = newState;
         }

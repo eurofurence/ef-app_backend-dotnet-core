@@ -39,11 +39,11 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             if (state == TableRegistrationRecord.RegistrationStateEnum.Rejected)
             {
-                _tableRegistrationService.RejectByIdAsync(id, "API:" + User.Identity.Name);
+                await _tableRegistrationService.RejectByIdAsync(id, "API:" + User.Identity.Name);
             }
             else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
             {
-                _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
+                await _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
             }
 
             return NoContent();
