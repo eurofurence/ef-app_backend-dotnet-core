@@ -18,6 +18,7 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
@@ -33,6 +34,7 @@ using Eurofurence.App.Server.Services.Lassie;
 using Eurofurence.App.Server.Services.LostAndFound;
 using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
+using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Validation;
@@ -129,6 +131,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<ITelegramMessageBroker>()
                 .As<ITelegramMessageSender>()
                 .SingleInstance();
+            builder.RegisterType<UriSanitizer>().As<IUriSanitizer>();
             builder.RegisterType<UserManager>().As<IUserManager>();
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
             builder.RegisterType<DeviceIdentityService>().As<IDeviceIdentityService>();

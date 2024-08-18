@@ -17,6 +17,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using File = System.IO.File;
@@ -30,6 +31,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         private readonly IDealerApiClient _dealerApiClient;
         private readonly ConventionSettings _conventionSettings;
         private readonly IImageService _imageService;
+        private readonly IUriSanitizer _urlSanitizer;
         private readonly ILogger _logger;
         private static SemaphoreSlim _semaphore = new(1, 1);
 
@@ -39,6 +41,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             IDealerApiClient dealerApiClient,
             ConventionSettings conventionSettings,
             IImageService imageService,
+            IUriSanitizer urlSanitizer,
             ILoggerFactory loggerFactory
         )
             : base(appDbContext, storageServiceFactory)
@@ -47,6 +50,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             _dealerApiClient = dealerApiClient;
             _conventionSettings = conventionSettings;
             _imageService = imageService;
+            _urlSanitizer = urlSanitizer;
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
@@ -345,13 +349,10 @@ namespace Eurofurence.App.Server.Services.Dealers
                 var assumedUri = part;
                 if (part.Length < 10) continue;
 
-                if (!assumedUri.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) &&
-                    !assumedUri.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
-                    assumedUri = $"http://{part}";
-
-                if (Uri.IsWellFormedUriString(assumedUri, UriKind.Absolute))
-                {
-                }
+                if (_urlSanitizer.Sanitize(assumedUri) is Uri sanitizedUrl)
+                    assumedUri = sanitizedUrl.ToString();
+                else
+                    continue;
 
                 linkFragments.Add(new LinkFragment()
                 {

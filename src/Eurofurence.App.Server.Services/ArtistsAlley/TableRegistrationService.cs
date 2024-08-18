@@ -14,6 +14,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly ITelegramMessageSender _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly IUriSanitizer _urlSanitizer;
 
         public TableRegistrationService(
             AppDbContext context,
@@ -34,13 +36,15 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             ArtistAlleyConfiguration configuration,
             ITelegramMessageSender telegramMessageSender,
             IPrivateMessageService privateMessageService,
-            IImageService imageService) : base(context, storageServiceFactory)
+            IImageService imageService,
+            IUriSanitizer urlSanitizer) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
             _configuration = configuration;
             _telegramMessageSender = telegramMessageSender;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
+            _urlSanitizer = urlSanitizer;
         }
 
         public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
@@ -63,6 +67,11 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null)
         {
+            if (_urlSanitizer.Sanitize(request.WebsiteUrl) is Uri sanitizedUrl)
+                request.WebsiteUrl = sanitizedUrl.ToString();
+            else
+                throw new ArgumentException("Invalid website URL");
+
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
                 .Where(x =>
