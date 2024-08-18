@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         private readonly IDealerApiClient _dealerApiClient;
         private readonly ConventionSettings _conventionSettings;
         private readonly IImageService _imageService;
-        private readonly IUriSanitizer _urlSanitizer;
+        private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly ILogger _logger;
         private static SemaphoreSlim _semaphore = new(1, 1);
 
@@ -41,7 +41,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             IDealerApiClient dealerApiClient,
             ConventionSettings conventionSettings,
             IImageService imageService,
-            IUriSanitizer urlSanitizer,
+            IHttpUriSanitizer uriSanitizer,
             ILoggerFactory loggerFactory
         )
             : base(appDbContext, storageServiceFactory)
@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             _dealerApiClient = dealerApiClient;
             _conventionSettings = conventionSettings;
             _imageService = imageService;
-            _urlSanitizer = urlSanitizer;
+            _uriSanitizer = uriSanitizer;
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
@@ -349,8 +349,8 @@ namespace Eurofurence.App.Server.Services.Dealers
                 var assumedUri = part;
                 if (part.Length < 10) continue;
 
-                if (_urlSanitizer.Sanitize(assumedUri) is Uri sanitizedUrl)
-                    assumedUri = sanitizedUrl.ToString();
+                if (_uriSanitizer.Sanitize(assumedUri) is string sanitizedUrl and not null)
+                    assumedUri = sanitizedUrl;
                 else
                     continue;
 

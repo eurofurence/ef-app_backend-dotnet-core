@@ -1,11 +1,17 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 
 namespace Eurofurence.App.Server.Services.Sanitization
 {
-    public class UriSanitizer : IUriSanitizer
+    public class HttpUriSanitizer : IHttpUriSanitizer
     {
-        public Uri Sanitize(string uri, bool fixPrefix = true)
+        private readonly Regex _uriMatcher;
+        public HttpUriSanitizer()
+        {
+            _uriMatcher = new Regex(@"^http(s?):\/\/[^\/\.]+\.[^\/]+");
+        }
+        public string Sanitize(string uri, bool fixPrefix = true)
         {
             if (string.IsNullOrWhiteSpace(uri)) return null;
 
@@ -16,12 +22,10 @@ namespace Eurofurence.App.Server.Services.Sanitization
                 else
                     return null;
 
-            Uri sanitizedUri;
-
-            if (!Uri.TryCreate(uri, UriKind.Absolute, out sanitizedUri))
+            if (_uriMatcher.IsMatch(uri) && Uri.IsWellFormedUriString(uri, UriKind.Absolute))
+                return uri;
+            else
                 return null;
-
-            return sanitizedUri;
         }
     }
 }

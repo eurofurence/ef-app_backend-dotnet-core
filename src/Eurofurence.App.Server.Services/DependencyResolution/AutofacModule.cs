@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Autofac;
 using Autofac.Core;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -131,7 +131,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
                 .As<ITelegramMessageBroker>()
                 .As<ITelegramMessageSender>()
                 .SingleInstance();
-            builder.RegisterType<UriSanitizer>().As<IUriSanitizer>();
+            builder.RegisterType<HttpUriSanitizer>().As<IHttpUriSanitizer>();
             builder.RegisterType<UserManager>().As<IUserManager>();
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
             builder.RegisterType<DeviceIdentityService>().As<IDeviceIdentityService>();

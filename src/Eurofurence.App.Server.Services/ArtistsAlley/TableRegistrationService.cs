@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly ITelegramMessageSender _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
-        private readonly IUriSanitizer _urlSanitizer;
+        private readonly IHttpUriSanitizer _uriSanitizer;
 
         public TableRegistrationService(
             AppDbContext context,
@@ -37,14 +37,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             ITelegramMessageSender telegramMessageSender,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
-            IUriSanitizer urlSanitizer) : base(context, storageServiceFactory)
+            IHttpUriSanitizer uriSanitizer,
         {
             _appDbContext = context;
             _configuration = configuration;
             _telegramMessageSender = telegramMessageSender;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
-            _urlSanitizer = urlSanitizer;
+            _uriSanitizer = uriSanitizer;
         }
 
         public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
@@ -67,10 +67,11 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null)
         {
-            if (_urlSanitizer.Sanitize(request.WebsiteUrl) is Uri sanitizedUrl)
-                request.WebsiteUrl = sanitizedUrl.ToString();
-            else
-                throw new ArgumentException("Invalid website URL");
+            if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
+                if (_uriSanitizer.Sanitize(request.WebsiteUrl) is string sanitizedUrl and not null)
+                    request.WebsiteUrl = sanitizedUrl;
+                else
+                    throw new ArgumentException("Invalid website URL");
 
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
