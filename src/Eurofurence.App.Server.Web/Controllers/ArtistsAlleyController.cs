@@ -27,11 +27,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPut("{id}/:status")]
+        [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull] [FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
-            TableRegistrationRecord record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-
+            TableRegistrationRecord record =
+                await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+            // Return 404 if the passed id does not exist
             if (record == null)
             {
                 return NotFound();

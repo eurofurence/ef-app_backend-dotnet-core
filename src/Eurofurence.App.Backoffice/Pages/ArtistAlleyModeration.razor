@@ -27,14 +27,35 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
 <MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" ServerData="@GetRegistrations" FilterMode="@_filterMode">
     <ToolBarContent>
         <MudTextField @bind-Value="_imageSearch" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0">
+        </MudTextField>
     </ToolBarContent>
     <Columns>
+        <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(@context.Item.Image.Url))
+                {
+                    <MudLink Href="@context.Item.Image.Url">
+                        <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain"
+                                  Src="@context.Item.Image.Url"/>
+                    </MudLink>
+                }
+                else
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                }
+            </CellTemplate>
+        </TemplateColumn>
         <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername"/>
         <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName"/>
         <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location"/>
         <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription"/>
         <PropertyColumn Property="arg => arg.DisplayName"/>
+        <TemplateColumn>
+            <CellTemplate>
+                <MudButton OnClick="() => OpenMore(context.Item)">More</MudButton>
+            </CellTemplate>
+        </TemplateColumn>
         <TemplateColumn Title="Status" SortBy="@(x => x.State)" Sortable="true" Filterable="true">
             <CellTemplate>
                 @switch (context.Item.State)
@@ -50,6 +71,7 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
                         <MudAlert Severity="Severity.Error">Rejected</MudAlert>
                         break;
                     case TableRegistrationRecord.RegistrationStateEnum.Published:
+                        <MudAlert Severity="Severity.Success">Published</MudAlert>
                         break;
                 }
 
@@ -57,17 +79,21 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="TableRegistrationRecord" />
+        <MudDataGridPager T="TableRegistrationRecord"/>
     </PagerContent>
 </MudDataGrid>
 
 @code {
+
+    #region Attributes
+
     private MudDataGrid<TableRegistrationRecord>? _dataGrid;
 
     private string? _imageSearch;
 
     private DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
 
+    #endregion
 
     /// <summary>
     /// Attempt to change the status of a table registration
@@ -87,10 +113,25 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
 
         if (!result.Canceled)
         {
-            TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            await _dataGrid.ReloadServerData();
             Snackbar.Add($"Application was {(reject ? "Rejected" : "Approved")}");
         }
     }
+
+
+    private async Task OpenMore(TableRegistrationRecord contextItem)
+    {
+        var dialog = new DialogParameters<ArtistAlleyApplicationDialog>()
+        {
+            { x => x.Record, contextItem }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true,CloseButton = true};
+
+        DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", dialog, options);
+    }
+
 
     /// <summary>
     /// Filter
@@ -101,6 +142,11 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
         string.IsNullOrEmpty(_imageSearch) ? entries : entries.Where(x => x.DisplayName.Contains(_imageSearch, StringComparison.OrdinalIgnoreCase));
 
 
+    /// <summary>
+    /// Requests the table registrations from <see cref="IArtistAlleyService"/>
+    /// </summary>
+    /// <param name="gridState"></param>
+    /// <returns></returns>
     private async Task<GridData<TableRegistrationRecord>> GetRegistrations(GridState<TableRegistrationRecord> gridState)
     {
         IEnumerable<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
@@ -124,7 +170,7 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
     {
         _imageSearch = searchString;
         _dataGrid.ReloadServerData();
-
     }
+
 
 }

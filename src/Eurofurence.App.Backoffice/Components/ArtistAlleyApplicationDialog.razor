@@ -1,0 +1,81 @@
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.ArtistsAlley
+
+@inject IArtistAlleyService TableRegService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="overflow-scroll pr-4">
+            <MudGrid>
+                <MudItem>
+                    <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Image.Url">
+                        @if (string.IsNullOrEmpty(@Record.Image.Url))
+                        {
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                        }
+                    </MudImage>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID"/>
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username"/>
+                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website"/>
+                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description"/>
+                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle"/>
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location"/>
+                    @switch (Record.State)
+                    {
+                        case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                            <MudAlert Severity="Severity.Info">Pending</MudAlert>
+                            <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="() => TryChangeRegistrationStatus(Record, false)">Approve</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="() => TryChangeRegistrationStatus(Record, true)">Reject</MudButton>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Accepted:
+                            <MudAlert Severity="Severity.Success">Accepted</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                            <MudAlert Severity="Severity.Error">Rejected</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Published:
+                            <MudAlert Severity="Severity.Success">Published</MudAlert>
+                            break;
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [Parameter] public TableRegistrationRecord Record { get; set; }
+
+    /// <summary>
+    /// Attempt to change the status of a table registration
+    /// </summary>
+    /// <param name="registrationRecord"></param>
+    /// <param name="reject"></param>
+    private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            { x => x.ContentText, $"Are you sure, that you want to {(reject ? "Reject" : "Approve")} this application" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult result = await dialogRef.Result;
+
+        if (!result.Canceled)
+        {
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+
+            Snackbar.Add($"Application was {(reject ? "Rejected" : "Approved")}");
+        }
+    }
+
+}
