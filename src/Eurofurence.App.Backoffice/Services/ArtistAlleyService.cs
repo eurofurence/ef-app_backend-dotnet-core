@@ -20,5 +20,10 @@ namespace Eurofurence.App.Backoffice.Services
             JsonContent content = JsonContent.Create(state);
             HttpResponseMessage res = await http.PutAsync($"ArtistsAlley/{record.Id}/:status", content);
         }
+
+        public async Task DeleteTableRegistrationAsync(TableRegistrationRecord record)
+        {
+            await http.DeleteAsync($"ArtistsAlley/{record.Id}");
+        }
     }
 }

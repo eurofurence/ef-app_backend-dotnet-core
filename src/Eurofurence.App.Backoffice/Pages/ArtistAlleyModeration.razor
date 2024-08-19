@@ -22,7 +22,7 @@
 @*
 Table showing the basic informations for each application.
 
-More data of the applicant shall be visble an extra dialog TODO: Needs to be done
+More data of the applicant shall be visble an extra dialog
  *@
 <MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" ServerData="@GetRegistrations" FilterMode="@_filterMode">
     <ToolBarContent>
@@ -33,7 +33,7 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
     <Columns>
         <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
             <CellTemplate>
-                @if (!string.IsNullOrEmpty(@context.Item.Image.Url))
+                @if (context.Item.Image != null &&  !string.IsNullOrEmpty(context.Item.Image.Url))
                 {
                     <MudLink Href="@context.Item.Image.Url">
                         <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain"
@@ -53,16 +53,22 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
         <PropertyColumn Property="arg => arg.DisplayName"/>
         <TemplateColumn>
             <CellTemplate>
-                <MudButton OnClick="() => OpenMore(context.Item)">More</MudButton>
+                <MudButton OnClick="() => OpenMoreDialog(context.Item)">More</MudButton>
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn Title="Status" SortBy="@(x => x.State)" Sortable="true" Filterable="true">
-            <CellTemplate>
-                @switch (context.Item.State)
+        <TemplateColumn Title="Status" Context="context2" SortBy="@(x => x.State)" Sortable="true" Filterable="true">
+            <CellTemplate >
+                @switch (context2.Item.State)
                 {
                     case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                        <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="() => TryChangeRegistrationStatus(context.Item, false)">Approve</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="() => TryChangeRegistrationStatus(context.Item, true)">Reject</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
+                        @*Show the delete button only for admins*@
+                        <AuthorizeView Roles="Admin">
+                            <Authorized>
+                                <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
+                            </Authorized>
+                        </AuthorizeView>
                         break;
                     case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                         <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -93,13 +99,36 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
 
     private DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
 
+    private Dictionary<TableRegistrationRecord, bool> RecordToOperationState = new();
+
     #endregion
+
+    #region Methods
+
+    private async Task DeleteRegistration(TableRegistrationRecord registrationRecord)
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            { x => x.ContentText, $"Are you sure, that you want to delete this application" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult result = await dialogRef.Result;
+
+        if (!result.Canceled)
+        {
+            await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
+            await _dataGrid.ReloadServerData();
+            Snackbar.Add("Application Deleted", Severity.Success);
+        }
+    }
 
     /// <summary>
     /// Attempt to change the status of a table registration
     /// </summary>
     /// <param name="registrationRecord"></param>
-    /// <param name="reject"></param>
+    /// <param name="reject">True if the application should be rejected and false if it should be accepted</param>
     private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
     {
         DialogParameters<ConfirmDialog> dialog = new()
@@ -115,19 +144,22 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
         {
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
             await _dataGrid.ReloadServerData();
-            Snackbar.Add($"Application was {(reject ? "Rejected" : "Approved")}");
+            Snackbar.Add($"Application was {(reject ? "Rejected" : "Approved")}", Severity.Success);
         }
     }
 
-
-    private async Task OpenMore(TableRegistrationRecord contextItem)
+    /// <summary>
+    /// Opens a dialog
+    /// </summary>
+    /// <param name="contextItem"></param>
+    private async Task OpenMoreDialog(TableRegistrationRecord contextItem)
     {
         var dialog = new DialogParameters<ArtistAlleyApplicationDialog>()
         {
             { x => x.Record, contextItem }
         };
 
-        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true,CloseButton = true};
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
 
         DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", dialog, options);
     }
@@ -172,5 +204,6 @@ More data of the applicant shall be visble an extra dialog TODO: Needs to be don
         _dataGrid.ReloadServerData();
     }
 
+    #endregion
 
 }

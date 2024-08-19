@@ -17,5 +17,12 @@ namespace Eurofurence.App.Backoffice.Services
         /// <param name="state"></param>
         /// <returns></returns>
         public Task PutTableRegistrationStatusAsync(TableRegistrationRecord record, TableRegistrationRecord.RegistrationStateEnum state);
+
+        /// <summary>
+        /// Deletes a given <see cref="TableRegistrationRecord"/>
+        /// </summary>
+        /// <param name="record">The record to delete</param>
+        /// <returns></returns>
+        public Task DeleteTableRegistrationAsync(TableRegistrationRecord record);
     }
 }
