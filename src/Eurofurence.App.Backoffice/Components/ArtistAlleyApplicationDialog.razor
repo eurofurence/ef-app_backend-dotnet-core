@@ -33,6 +33,12 @@
                             <MudAlert Severity="Severity.Info">Pending</MudAlert>
                             <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="() => TryChangeRegistrationStatus(Record, false)">Approve</MudButton>
                             <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="() => TryChangeRegistrationStatus(Record, true)">Reject</MudButton>
+                            @*Show the delete button only for admins*@
+                            <AuthorizeView Roles="Admin">
+                                <Authorized>
+                                    <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">Delete</MudButton>
+                                </Authorized>
+                            </AuthorizeView>
                             break;
                         case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                             <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -53,6 +59,25 @@
 @code {
 
     [Parameter] public TableRegistrationRecord Record { get; set; }
+
+
+    private async Task DeleteRegistration()
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            { x => x.ContentText, $"Are you sure, that you want to delete this application" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult result = await dialogRef.Result;
+
+        if (!result.Canceled)
+        {
+            await TableRegService.DeleteTableRegistrationAsync(Record);
+            Snackbar.Add("Application Deleted", Severity.Success);
+        }
+    }
 
     /// <summary>
     /// Attempt to change the status of a table registration
