@@ -59,13 +59,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, IFormFile requestImageFile)
         {
             ImageRecord image = null;
-            if (requestImageFile is IFormFile imageFile)
+            if (requestImageFile != null)
             {
-                using (var ms = new MemoryStream())
-                {
-                    await imageFile.CopyToAsync(ms);
-                    image = await _imageService.InsertImageAsync(imageFile.FileName, ms, 1500, 1500);
-                }
+                using var ms = new MemoryStream();
+                await requestImageFile.CopyToAsync(ms);
+                image = await _imageService.InsertImageAsync(requestImageFile.FileName, ms, 1500, 1500);
             }
 
             if (!Uri.TryCreate(request.WebsiteUrl, UriKind.Absolute, out _)) return BadRequest("Invalid website URL!");
@@ -98,7 +96,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             await _tableRegistrationService.DeleteOneAsync(id);
 
-            if (tableRegistration.ImageId is Guid imageId) await _imageService.DeleteOneAsync(imageId);
+            if (tableRegistration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }
