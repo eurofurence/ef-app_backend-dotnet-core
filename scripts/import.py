@@ -194,7 +194,7 @@ def processImages(
 			image_id_new = json.loads(image_post_response.data)["Id"]
 			image_ids_new.append(image_id_new)
 			logger.info(
-				f"Successfully uploaded image {image_id} ({image_meta_data["InternalReference"]}) to {image_source} with new ID {image_id_new}."
+				f"Successfully uploaded image {image_id} ({image_meta_data["InternalReference"]}) to {api.host} with new ID {image_id_new}."
 			)
 		else:
 			logger.warning(
@@ -239,7 +239,7 @@ def processData(
 			continue
 
 		if image_source is not None and item["ImageIds"] is not None and len(item["ImageIds"]) > 0:
-			if api.request("GET", f"{api_base}/{types[type_name]["path"]}/{item["Id"]}").status != 404:
+			if api.request("GET", f"{api_base}{types[type_name]["path"]}/{item["Id"]}").status != 404:
 				logger.warning(f"{type_name} with ID {item["Id"]} seems to already exist, skipping image upload…")
 				continue
 			else:
@@ -251,7 +251,7 @@ def processData(
 					continue
 
 		try:
-			api_response = api.request("POST", f"{api_base}/{types[type_name]["path"]}", json=item)
+			api_response = api.request("POST", f"{api_base}{types[type_name]["path"]}", json=item)
 
 			if api_response.status != 200 and api_response.status != 204:
 				logger.error(
@@ -277,7 +277,7 @@ def main():
 		urllib3.connection_from_url(args.api, headers={"Authorization": f"Bearer {args.token}"}) as api,
 		urllib3.PoolManager() as http,
 	):
-		api_base = urllib3.util.parse_url(args.api).request_uri
+		api_base = urllib3.util.parse_url(args.api).request_uri.removeprefix("/")
 		schemas, types = loadSchemas(api, api_base)
 
 		if args.list:

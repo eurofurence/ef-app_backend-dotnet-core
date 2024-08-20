@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -31,7 +32,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
             ArtistAlleyConfiguration configuration,
-            ITelegramMessageSender telegramMessageSender, 
+            ITelegramMessageSender telegramMessageSender,
             IPrivateMessageService privateMessageService,
             IImageService imageService) : base(context, storageServiceFactory)
         {
@@ -60,24 +61,21 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
-        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request)
+        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null)
         {
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
                 .Where(x =>
-                    x.OwnerUid == subject && 
+                    x.OwnerUid == subject &&
                     x.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
                 .ToListAsync();
 
             foreach (var registration in activeRegistrations)
             {
-                registration.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, subject);
+                var stateChange = registration.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, subject);
+                _appDbContext.StateChangeRecord.Add(stateChange);
                 registration.Touch();
             }
-            
-            var image = await _imageService.FindOneAsync(request.ImageId);
-
-            await _imageService.EnforceMaximumDimensionsAsync(image, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
@@ -89,7 +87,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 ShortDescription = request.ShortDescription,
                 TelegramHandle = request.TelegramHandle,
                 Location = request.Location,
-                ImageId = request.ImageId,
+                ImageId = image?.Id,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
             };
 
@@ -97,10 +95,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.Touch();
 
             _appDbContext.TableRegistrations.Add(record);
+            await _appDbContext.SaveChangesAsync();
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                 _configuration.TelegramAdminGroupChatId,
                 $"*New Request:* {record.OwnerUsername.EscapeMarkdown()} ({user.GetSubject().EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Location:* {record.Location.RemoveMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
-            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
@@ -143,7 +141,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
             {
-                telegramMessageBuilder.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}"); 
+                telegramMessageBuilder.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
             }
             if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
             {

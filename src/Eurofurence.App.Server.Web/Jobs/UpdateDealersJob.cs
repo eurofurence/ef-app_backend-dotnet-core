@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
+    [DisallowConcurrentExecution]
     public class UpdateDealersJob : IJob
     {
         private readonly IDealerService _dealerService;
