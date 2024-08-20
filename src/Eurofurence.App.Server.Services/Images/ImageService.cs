@@ -63,7 +63,7 @@ namespace Eurofurence.App.Server.Services.Images
                 cancellationToken
             );
 
-            await base.DeleteOneAsync(id);
+            await base.DeleteOneAsync(id, cancellationToken);
         }
 
         public override async Task DeleteAllAsync(CancellationToken cancellationToken = default)
@@ -78,24 +78,28 @@ namespace Eurofurence.App.Server.Services.Images
                 cancellationToken
             );
 
-            await base.DeleteAllAsync();
+            await base.DeleteAllAsync(cancellationToken);
         }
 
         public async Task<ImageRecord> InsertImageAsync(
             string internalReference,
             Stream stream,
+            int? width = null,
+            int? height = null,
             CancellationToken cancellationToken = default)
         {
-            string hash;
-            Image image;
-            using (MemoryStream ms = new())
+            await using MemoryStream ms = new(), resizedImageStream = new();
+            if (width is { } w && height is { } h)
             {
-                stream.Position = 0;
-                await stream.CopyToAsync(ms, cancellationToken);
-                var byteArray = ms.ToArray();
-                hash = Hashing.ComputeHashSha1(byteArray);
-                image = Image.Load(byteArray);
+                await ResizeToMaximumDimensionsAsync(stream, resizedImageStream, w, h, cancellationToken);
+                stream = resizedImageStream;
             }
+
+            stream.Position = 0;
+            await stream.CopyToAsync(ms, cancellationToken);
+            var byteArray = ms.ToArray();
+            var hash = Hashing.ComputeHashSha1(byteArray);
+            var image = Image.Load(byteArray);
 
             var imageFormat = image.Metadata.DecodedImageFormat;
 
@@ -138,16 +142,22 @@ namespace Eurofurence.App.Server.Services.Images
             Guid id,
             string internalReference,
             Stream stream,
+            int? width = null,
+            int? height = null,
             CancellationToken cancellationToken = default)
         {
-            Image image;
-            using (MemoryStream ms = new())
+            await using MemoryStream ms = new(), resizedImageStream = new();
+            if (width is { } w && height is { } h)
             {
-                stream.Position = 0;
-                await stream.CopyToAsync(ms, cancellationToken);
-                var byteArray = ms.ToArray();
-                image = Image.Load(byteArray);
+                await ResizeToMaximumDimensionsAsync(stream, resizedImageStream, w, h, cancellationToken);
+                stream = resizedImageStream;
             }
+
+            stream.Position = 0;
+            await stream.CopyToAsync(ms, cancellationToken);
+            var byteArray = ms.ToArray();
+            var hash = Hashing.ComputeHashSha1(byteArray);
+            var image = Image.Load(byteArray);
 
             var imageFormat = image.Metadata.DecodedImageFormat;
 
@@ -155,6 +165,11 @@ namespace Eurofurence.App.Server.Services.Images
                 _appDbContext.Images
                     .AsNoTracking()
                     .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+
+            if (existingRecord.ContentHashSha1 == hash)
+            {
+                return existingRecord;
+            }
 
             await DeleteFileFromMinIoAsync(
                 _minIoConfiguration.Bucket,
@@ -166,14 +181,6 @@ namespace Eurofurence.App.Server.Services.Images
                 ? existingRecord.Id + "." + imageFormat.FileExtensions.FirstOrDefault("png")
                 : existingRecord.Id + ".png";
 
-            await UploadFileToMinIoAsync(
-                _minIoConfiguration.Bucket,
-                existingRecord.InternalFileName,
-                imageFormat?.DefaultMimeType,
-                stream,
-                cancellationToken
-            );
-
             existingRecord.InternalFileName = fileName;
             existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}";
             existingRecord.InternalReference = internalReference;
@@ -181,7 +188,15 @@ namespace Eurofurence.App.Server.Services.Images
             existingRecord.Width = image.Width;
             existingRecord.Height = image.Height;
             existingRecord.SizeInBytes = stream.Length;
+            existingRecord.ContentHashSha1 = hash;
 
+            await UploadFileToMinIoAsync(
+                _minIoConfiguration.Bucket,
+                existingRecord.InternalFileName,
+                imageFormat?.DefaultMimeType,
+                stream,
+                cancellationToken
+            );
             await base.ReplaceOneAsync(existingRecord, cancellationToken);
             return existingRecord;
         }
@@ -227,21 +242,42 @@ namespace Eurofurence.App.Server.Services.Images
         {
             if (image == null) return null;
 
-            double scaling = Math.Min((double)width / image.Width, (double)height / image.Height);
+            var scaling = Math.Min((double)width / image.Width, (double)height / image.Height);
             if (scaling >= 1) return image;
 
-            var stream = await GetImageContentByImageIdAsync(image.Id, cancellationToken);
+            await using Stream resizedImageStream = new MemoryStream(),
+                stream = await GetImageContentByImageIdAsync(image.Id, cancellationToken);
+            await ResizeToMaximumDimensionsAsync(stream, resizedImageStream, height, width, cancellationToken);
+            var newImage = await ReplaceImageAsync(
+                image.Id,
+                image.InternalReference,
+                resizedImageStream,
+                cancellationToken: cancellationToken
+            );
+            return newImage;
+        }
+
+        private static async Task ResizeToMaximumDimensionsAsync(Stream inputStream, Stream outputStream, int width, int height, CancellationToken cancellationToken = default)
+        {
+            if (inputStream == null || outputStream == null) return;
 
             Image rawImage;
             using (MemoryStream ms = new())
             {
-                stream.Position = 0;
-                await stream.CopyToAsync(ms, cancellationToken);
+                inputStream.Position = 0;
+                await inputStream.CopyToAsync(ms, cancellationToken);
                 var byteArray = ms.ToArray();
                 rawImage = Image.Load(byteArray);
             }
 
-            await stream.DisposeAsync();
+            var scaling = Math.Min((double)width / rawImage.Width, (double)height / rawImage.Height);
+            if (scaling >= 1)
+            {
+                inputStream.Position = 0;
+                await inputStream.CopyToAsync(outputStream, cancellationToken);
+                return;
+            }
+
             rawImage.Mutate(ctx =>
                 ctx.Resize(new ResizeOptions()
                 {
@@ -251,17 +287,7 @@ namespace Eurofurence.App.Server.Services.Images
                 })
             );
 
-            using (MemoryStream resizedImageStream = new())
-            {
-                await rawImage.SaveAsJpegAsync(resizedImageStream, new JpegEncoder { Quality = 85 }, cancellationToken);
-                var newImage = await ReplaceImageAsync(
-                    image.Id,
-                    image.InternalReference,
-                    resizedImageStream,
-                    cancellationToken
-                );
-                return newImage;
-            }
+            await rawImage.SaveAsJpegAsync(outputStream, new JpegEncoder { Quality = 85 }, cancellationToken);
         }
 
         private async Task UploadFileToMinIoAsync(

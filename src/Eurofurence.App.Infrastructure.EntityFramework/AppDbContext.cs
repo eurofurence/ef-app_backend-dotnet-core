@@ -33,6 +33,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
 
         public virtual DbSet<AnnouncementRecord> Announcements { get; set; }
         public virtual DbSet<TableRegistrationRecord> TableRegistrations { get; set; }
+        // FIXME: Should be TableRegistrationRecordStateChangeRecords #EF29
+        public virtual DbSet<TableRegistrationRecord.StateChangeRecord> StateChangeRecord { get; set; }
         public virtual DbSet<AgentClosingResultRecord> AgentClosingResults { get; set; }
         public virtual DbSet<ItemActivityRecord> ItemActivitys { get; set; }
         public virtual DbSet<PrivateMessageRecord> PrivateMessages { get; set; }

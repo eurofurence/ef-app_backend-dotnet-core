@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Eurofurence.App.Backoffice;
 using Eurofurence.App.Backoffice.Authentication;
 using Eurofurence.App.Backoffice.Services;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
@@ -16,6 +18,7 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IArtistAlleyService, ArtistAlleyService>();
 builder.Services.AddScoped<IFursuitService, FursuitService>();
 builder.Services.AddScoped<IDealerService, DealerService>();
+builder.Services.AddScoped<IUsersService, UsersService>();
 
 builder.Services.AddScoped<TokenAuthorizationMessageHandler>();
 builder.Services.AddHttpClient("api", options =>
@@ -30,6 +33,16 @@ builder.Services.AddOidcAuthentication(options =>
     builder.Configuration.Bind("Oidc", options.ProviderOptions);
     options.ProviderOptions.ResponseType = "code";
     options.ProviderOptions.DefaultScopes.Add("profile");
-});
+}).AddAccountClaimsPrincipalFactory<RemoteAuthenticationState, RemoteUserAccount, BackendAccountClaimsFactory>();
+
+var authSettings = builder.Configuration.GetSection("Authorization").Get<AuthorizationSettings>() ?? new AuthorizationSettings();
+
+builder.Services.AddAuthorizationCore(config =>
+{
+    config.AddPolicy("RequireKnowledgeBaseEditor", policy =>
+        policy.RequireRole("KnowledgeBaseEditor")
+        );
+}
+);
 
 await builder.Build().RunAsync();

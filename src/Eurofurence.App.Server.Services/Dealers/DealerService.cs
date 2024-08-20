@@ -31,6 +31,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         private readonly ConventionSettings _conventionSettings;
         private readonly IImageService _imageService;
         private readonly ILogger _logger;
+        private static SemaphoreSlim _semaphore = new(1, 1);
 
         public DealerService(
             AppDbContext appDbContext,
@@ -140,146 +141,154 @@ namespace Eurofurence.App.Server.Services.Dealers
 
         public async Task RunImportAsync(CancellationToken cancellationToken = default)
         {
-            _logger.LogDebug(LogEvents.Import, "Starting dealers import.");
-
-            if (!Directory.Exists(_conventionSettings.WorkingDirectory))
+            try
             {
-                Directory.CreateDirectory(_conventionSettings.WorkingDirectory);
-            }
+                await _semaphore.WaitAsync();
+                _logger.LogDebug(LogEvents.Import, "Starting dealers import.");
 
-            var dealerPackagePath = Path.Combine(_conventionSettings.WorkingDirectory, "dealers.zip");
-            var newDealersExportDownloaded = await _dealerApiClient.DownloadDealersExportAsync(dealerPackagePath);
-
-            if (!newDealersExportDownloaded)
-            {
-                _logger.LogError(LogEvents.Import, $"Error downloading the dealers export csv.");
-                return;
-            }
-
-            var importRecords = new List<DealerRecord>();
-
-            await using (var fileStream = File.OpenRead(dealerPackagePath))
-            using (var archive = new ZipArchive(fileStream))
-            {
-                var csvEntry =
-                    archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase));
-
-                TextReader reader = new StreamReader(csvEntry.Open(), true);
-
-                var badData = new List<string>();
-
-                var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+                if (!Directory.Exists(_conventionSettings.WorkingDirectory))
                 {
-                    Delimiter = ";",
-                    HasHeaderRecord = true,
-                    TrimOptions = TrimOptions.Trim,
-                    NewLine = "\n",
-                    BadDataFound = arg => badData.Add(arg.Context.Parser.RawRecord)
-                };
+                    Directory.CreateDirectory(_conventionSettings.WorkingDirectory);
+                }
 
-                var csvReader = new CsvReader(reader, csvConfiguration);
-                csvReader.Context.RegisterClassMap<DealerImportRowClassMap>();
-                var csvRecords = csvReader.GetRecords<DealerImportRow>().ToList();
+                var dealerPackagePath = Path.Combine(_conventionSettings.WorkingDirectory, "dealers.zip");
+                var newDealersExportDownloaded = await _dealerApiClient.DownloadDealersExportAsync(dealerPackagePath);
 
-                _logger.LogDebug(LogEvents.Import, $"Parsed {csvRecords.Count} records from CSV");
-
-                for (var i = 0; i < csvRecords.Count; i++)
+                if (!newDealersExportDownloaded)
                 {
-                    var dealerRecord = new DealerRecord
+                    _logger.LogError(LogEvents.Import, $"Error downloading the dealers export csv.");
+                    return;
+                }
+
+                var importRecords = new List<DealerRecord>();
+
+                await using (var fileStream = File.OpenRead(dealerPackagePath))
+                using (var archive = new ZipArchive(fileStream))
+                {
+                    var csvEntry =
+                        archive.Entries.Single(a => a.Name.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase));
+
+                    TextReader reader = new StreamReader(csvEntry.Open(), true);
+
+                    var badData = new List<string>();
+
+                    var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
                     {
-                        RegistrationNumber = csvRecords[i].RegNo,
-                        AttendeeNickname = csvRecords[i].Nickname.Trim(),
-                        AboutTheArtistText = csvRecords[i].AboutTheArtist.Trim(),
-                        AboutTheArtText = csvRecords[i].AboutTheArt.Trim(),
-                        ArtPreviewCaption = csvRecords[i].ArtPreviewCaption.Trim(),
-                        DisplayName = csvRecords[i].DisplayName.Trim(),
-                        ShortDescription = csvRecords[i].ShortDescription.Trim(),
-                        Merchandise = csvRecords[i].Merchandise.Trim(),
-                        AttendsOnThursday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsThu),
-                        AttendsOnFriday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsFri),
-                        AttendsOnSaturday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsSat),
-                        TelegramHandle = csvRecords[i].Telegram.Trim(),
-                        TwitterHandle = csvRecords[i].Twitter.Trim(),
-                        DiscordHandle = csvRecords[i].Discord.Trim(),
-                        MastodonHandle = csvRecords[i].Mastodon.Trim(),
-                        BlueskyHandle = csvRecords[i].Bluesky.Trim(),
-                        IsAfterDark = !string.IsNullOrWhiteSpace(csvRecords[i].AfterDark),
-                        Keywords = csvRecords[i].GetKeywords(),
-                        Categories = csvRecords[i].GetCategories()
+                        Delimiter = ";",
+                        HasHeaderRecord = true,
+                        TrimOptions = TrimOptions.Trim,
+                        NewLine = "\n",
+                        BadDataFound = arg => badData.Add(arg.Context.Parser.RawRecord)
                     };
 
-                    dealerRecord.ArtistImageId = await GetImageIdAsync(
-                        archive,
-                        $"artist_{csvRecords[i].RegNo}.",
-                        $"dealer:artist:{csvRecords[i].RegNo}",
-                        cancellationToken
-                    );
-                    dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(
-                        archive,
-                        $"thumbnail_{csvRecords[i].RegNo}.",
-                        $"dealer:thumbnail:{csvRecords[i].RegNo}",
-                        cancellationToken
-                    );
-                    dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive,
-                        $"art_{csvRecords[i].RegNo}.",
-                        $"dealer:art:{csvRecords[i].RegNo}",
-                        cancellationToken
-                    );
+                    var csvReader = new CsvReader(reader, csvConfiguration);
+                    csvReader.Context.RegisterClassMap<DealerImportRowClassMap>();
+                    var csvRecords = csvReader.GetRecords<DealerImportRow>().ToList();
 
-                    ImportLinks(dealerRecord, csvRecords[i].Website);
-                    SanitizeFields(dealerRecord);
+                    _logger.LogDebug(LogEvents.Import, $"Parsed {csvRecords.Count} records from CSV");
 
-                    importRecords.Add(dealerRecord);
+                    for (var i = 0; i < csvRecords.Count; i++)
+                    {
+                        var dealerRecord = new DealerRecord
+                        {
+                            RegistrationNumber = csvRecords[i].RegNo,
+                            AttendeeNickname = csvRecords[i].Nickname.Trim(),
+                            AboutTheArtistText = csvRecords[i].AboutTheArtist.Trim(),
+                            AboutTheArtText = csvRecords[i].AboutTheArt.Trim(),
+                            ArtPreviewCaption = csvRecords[i].ArtPreviewCaption.Trim(),
+                            DisplayName = csvRecords[i].DisplayName.Trim(),
+                            ShortDescription = csvRecords[i].ShortDescription.Trim(),
+                            Merchandise = csvRecords[i].Merchandise.Trim(),
+                            AttendsOnThursday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsThu),
+                            AttendsOnFriday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsFri),
+                            AttendsOnSaturday = !string.IsNullOrWhiteSpace(csvRecords[i].AttendsSat),
+                            TelegramHandle = csvRecords[i].Telegram.Trim(),
+                            TwitterHandle = csvRecords[i].Twitter.Trim(),
+                            DiscordHandle = csvRecords[i].Discord.Trim(),
+                            MastodonHandle = csvRecords[i].Mastodon.Trim(),
+                            BlueskyHandle = csvRecords[i].Bluesky.Trim(),
+                            IsAfterDark = !string.IsNullOrWhiteSpace(csvRecords[i].AfterDark),
+                            Keywords = csvRecords[i].GetKeywords(),
+                            Categories = csvRecords[i].GetCategories()
+                        };
+
+                        dealerRecord.ArtistImageId = await GetImageIdAsync(
+                            archive,
+                            $"artist_{csvRecords[i].RegNo}.",
+                            $"dealer:artist:{csvRecords[i].RegNo}",
+                            cancellationToken
+                        );
+                        dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(
+                            archive,
+                            $"thumbnail_{csvRecords[i].RegNo}.",
+                            $"dealer:thumbnail:{csvRecords[i].RegNo}",
+                            cancellationToken
+                        );
+                        dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive,
+                            $"art_{csvRecords[i].RegNo}.",
+                            $"dealer:art:{csvRecords[i].RegNo}",
+                            cancellationToken
+                        );
+
+                        ImportLinks(dealerRecord, csvRecords[i].Website);
+                        SanitizeFields(dealerRecord);
+
+                        importRecords.Add(dealerRecord);
+                    }
+
+                    if (badData.Count > 0)
+                    {
+                        _logger.LogInformation($"Found {badData.Count} bad rows:\n{string.Join("\n", badData)}");
+                    }
                 }
 
-                if (badData.Count > 0)
-                {
-                    _logger.LogInformation($"Found {badData.Count} bad rows:\n{string.Join("\n", badData)}");
-                }
+                var existingRecords = FindAll();
+
+                var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) =>
+                    list.SingleOrDefault(a => a.RegistrationNumber == source.RegistrationNumber));
+
+                patch
+                    .Map(s => s.RegistrationNumber, t => t.RegistrationNumber)
+                    .Map(s => s.AttendeeNickname, t => t.AttendeeNickname)
+                    .Map(s => s.AboutTheArtistText, t => t.AboutTheArtistText)
+                    .Map(s => s.AboutTheArtText, t => t.AboutTheArtText)
+                    .Map(s => s.ArtPreviewCaption, t => t.ArtPreviewCaption)
+                    .Map(s => s.DisplayName, t => t.DisplayName)
+                    .Map(s => s.ShortDescription, t => t.ShortDescription)
+                    .Map(s => s.Merchandise, t => t.Merchandise)
+                    .Map(s => s.ArtistImageId, t => t.ArtistImageId)
+                    .Map(s => s.ArtistThumbnailImageId, t => t.ArtistThumbnailImageId)
+                    .Map(s => s.ArtPreviewImageId, t => t.ArtPreviewImageId)
+                    .Map(s => s.TelegramHandle, t => t.TelegramHandle)
+                    .Map(s => s.TwitterHandle, t => t.TwitterHandle)
+                    .Map(s => s.DiscordHandle, t => t.DiscordHandle)
+                    .Map(s => s.MastodonHandle, t => t.MastodonHandle)
+                    .Map(s => s.BlueskyHandle, t => t.BlueskyHandle)
+                    .Map(s => s.AttendsOnThursday, t => t.AttendsOnThursday)
+                    .Map(s => s.AttendsOnFriday, t => t.AttendsOnFriday)
+                    .Map(s => s.AttendsOnSaturday, t => t.AttendsOnSaturday)
+                    .Map(s => s.Categories, t => t.Categories)
+                    .Map(s => s.IsAfterDark, t => t.IsAfterDark)
+                    .Map(s => s.Links, t => t.Links)
+                    .Map(s => s.Keywords, t => t.Keywords);
+
+                var diff = patch.Patch(importRecords, existingRecords);
+                _appDbContext.ChangeTracker.Clear();
+                await ApplyPatchOperationAsync(diff, cancellationToken);
+
+                _logger.LogDebug(LogEvents.Import, $"Added: {diff.Count(a => a.Action == ActionEnum.Add)}");
+                _logger.LogDebug(LogEvents.Import, $"Deleted: {diff.Count(a => a.Action == ActionEnum.Delete)}");
+                _logger.LogDebug(LogEvents.Import, $"Updated: {diff.Count(a => a.Action == ActionEnum.Update)}");
+                _logger.LogDebug(LogEvents.Import, $"Not Modified: {diff.Count(a => a.Action == ActionEnum.NotModified)}");
+
+                File.Delete(dealerPackagePath);
+                _logger.LogInformation(LogEvents.Import,
+                    $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully.");
             }
-
-            var existingRecords = FindAll();
-
-            var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) =>
-                list.SingleOrDefault(a => a.RegistrationNumber == source.RegistrationNumber));
-
-            patch
-                .Map(s => s.RegistrationNumber, t => t.RegistrationNumber)
-                .Map(s => s.AttendeeNickname, t => t.AttendeeNickname)
-                .Map(s => s.AboutTheArtistText, t => t.AboutTheArtistText)
-                .Map(s => s.AboutTheArtText, t => t.AboutTheArtText)
-                .Map(s => s.ArtPreviewCaption, t => t.ArtPreviewCaption)
-                .Map(s => s.DisplayName, t => t.DisplayName)
-                .Map(s => s.ShortDescription, t => t.ShortDescription)
-                .Map(s => s.Merchandise, t => t.Merchandise)
-                .Map(s => s.ArtistImageId, t => t.ArtistImageId)
-                .Map(s => s.ArtistThumbnailImageId, t => t.ArtistThumbnailImageId)
-                .Map(s => s.ArtPreviewImageId, t => t.ArtPreviewImageId)
-                .Map(s => s.TelegramHandle, t => t.TelegramHandle)
-                .Map(s => s.TwitterHandle, t => t.TwitterHandle)
-                .Map(s => s.DiscordHandle, t => t.DiscordHandle)
-                .Map(s => s.MastodonHandle, t => t.MastodonHandle)
-                .Map(s => s.BlueskyHandle, t => t.BlueskyHandle)
-                .Map(s => s.AttendsOnThursday, t => t.AttendsOnThursday)
-                .Map(s => s.AttendsOnFriday, t => t.AttendsOnFriday)
-                .Map(s => s.AttendsOnSaturday, t => t.AttendsOnSaturday)
-                .Map(s => s.Categories, t => t.Categories)
-                .Map(s => s.IsAfterDark, t => t.IsAfterDark)
-                .Map(s => s.Links, t => t.Links)
-                .Map(s => s.Keywords, t => t.Keywords);
-
-            var diff = patch.Patch(importRecords, existingRecords);
-            _appDbContext.ChangeTracker.Clear();
-            await ApplyPatchOperationAsync(diff, cancellationToken);
-
-            _logger.LogDebug(LogEvents.Import, $"Added: {diff.Count(a => a.Action == ActionEnum.Add)}");
-            _logger.LogDebug(LogEvents.Import, $"Deleted: {diff.Count(a => a.Action == ActionEnum.Delete)}");
-            _logger.LogDebug(LogEvents.Import, $"Updated: {diff.Count(a => a.Action == ActionEnum.Update)}");
-            _logger.LogDebug(LogEvents.Import, $"Not Modified: {diff.Count(a => a.Action == ActionEnum.NotModified)}");
-
-            File.Delete(dealerPackagePath);
-            _logger.LogInformation(LogEvents.Import,
-                $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully.");
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         private void SanitizeFields(DealerRecord dealerRecord)
@@ -377,13 +386,13 @@ namespace Eurofurence.App.Server.Services.Dealers
             {
                 if (imageEntry.Length != existingImage.SizeInBytes)
                 {
-                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken);
+                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken: cancellationToken);
                 }
 
                 return existingImage.Id;
             }
 
-            var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken);
+            var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken: cancellationToken);
             return result?.Id;
         }
     }

@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using IdentityModel.Client;
@@ -74,6 +75,16 @@ public class RolesClaimsTransformation(
             {
                 roles.Add("Admin");
             }
+
+            if (authorizationOptions.Value.Attendee.Contains(claim.Value))
+            {
+                roles.Add("Attendee");
+            }
+
+            if (authorizationOptions.Value.AttendeeCheckedIn.Contains(claim.Value))
+            {
+                roles.Add("AttendeeCheckedIn");
+            }
         }
 
         foreach (var role in roles)
@@ -124,19 +135,33 @@ public class RolesClaimsTransformation(
 
     private async Task ReadRegSys(ClaimsIdentity identity, string token)
     {
+        var current = identityOptions.CurrentValue;
+
+        if (string.IsNullOrEmpty(current.RegSysUrl))
+        {
+            return;
+        }
+
         if (await cache.GetStringAsync($"{token}_regsys") is { Length: > 0 } cached)
         {
             identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
 
-            foreach (var value in JsonSerializer.Deserialize<List<string>>(cached))
+            var cachedRegistrations = JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
+
+            foreach (var registration in cachedRegistrations)
             {
-                identity.AddClaim(new Claim("RegSysId", value));
+                identity.AddClaim(new Claim(UserRegistrationClaims.Id, registration.Key));
+                identity.AddClaim(new Claim(UserRegistrationClaims.Status(registration.Key), registration.Value.ToString()));
+            }
+
+            if (cachedRegistrations.Any(registrationStatus => registrationStatus.Value == UserRegistrationStatus.CheckedIn))
+            {
+                identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
             }
 
             return;
         }
 
-        var current = identityOptions.CurrentValue;
         using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
         var request = new HttpRequestMessage(HttpMethod.Get,
@@ -151,23 +176,29 @@ public class RolesClaimsTransformation(
         }
 
         var json = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-        var ids = json.RootElement.TryGetStringArray("ids").ToList();
+        var registrations = (await Task.WhenAll(
+            json.RootElement.TryGetStringArray("ids").ToDictionary(id => id, async id =>
+            {
+                var status = await GetRegistrationStatus(current.RegSysUrl, token, id);
 
-        if (ids.Count == 0)
+                identity.AddClaim(new Claim(UserRegistrationClaims.Id, id));
+                identity.AddClaim(new Claim(UserRegistrationClaims.Status(id), status.ToString()));
+                return status;
+            }).Select(
+                async registration => new { Id = registration.Key, Status = await registration.Value }
+            )
+        )).ToDictionary(registration => registration.Id, registration => registration.Status);
+
+        if (registrations.Count == 0)
         {
             return;
         }
 
         identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
 
-        foreach (var id in ids)
-        {
-            identity.AddClaim(new Claim("RegSysId", id));
-        }
-
         if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId)
         {
-            await UpdateRegSysIdsInDb(ids, identityId);
+            await UpdateRegSysIdsInDb(registrations.Keys.ToList(), identityId);
         }
 
         var exp = identity.FindFirst(x => x.Type == "exp");
@@ -175,13 +206,32 @@ public class RolesClaimsTransformation(
         {
             await cache.SetStringAsync(
                 $"{token}_regsys",
-                JsonSerializer.Serialize(ids),
+                JsonSerializer.Serialize(registrations),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(seconds)
                 }
             );
         }
+    }
+
+    private async Task<UserRegistrationStatus> GetRegistrationStatus(string regSysUrl, string token, string id)
+    {
+        using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
+
+        var statusRequest = new HttpRequestMessage(HttpMethod.Get,
+                new Uri(new Uri(regSysUrl), $"attsrv/api/rest/v1/attendees/{id}/status"));
+        statusRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var statusResponse = await client.SendAsync(statusRequest);
+
+        if (statusResponse.IsSuccessStatusCode)
+        {
+            var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
+            Enum.TryParse(statusJson.RootElement.TryGetString("status"), true, out UserRegistrationStatus status);
+            return status;
+        }
+
+        return UserRegistrationStatus.Unknown;
     }
 
     private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId)

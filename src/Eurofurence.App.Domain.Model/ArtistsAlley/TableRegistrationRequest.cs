@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Eurofurence.App.Domain.Model.ArtistsAlley
+﻿namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     public class TableRegistrationRequest
     {
@@ -9,8 +7,6 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         public string WebsiteUrl { get; set; }
 
         public string ShortDescription { get; set; }
-
-        public Guid ImageId { get; set; }
 
         public string Location { get; set; }
 
