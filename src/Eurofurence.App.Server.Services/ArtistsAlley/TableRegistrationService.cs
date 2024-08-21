@@ -14,6 +14,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly ITelegramMessageSender _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly IHttpUriSanitizer _uriSanitizer;
+        private readonly IHtmlSanitizer _htmlSanitizer;
 
         public TableRegistrationService(
             AppDbContext context,
@@ -34,13 +37,17 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             ArtistAlleyConfiguration configuration,
             ITelegramMessageSender telegramMessageSender,
             IPrivateMessageService privateMessageService,
-            IImageService imageService) : base(context, storageServiceFactory)
+            IImageService imageService,
+            IHttpUriSanitizer uriSanitizer,
+            IHtmlSanitizer htmlSanitizer) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
             _configuration = configuration;
             _telegramMessageSender = telegramMessageSender;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
+            _uriSanitizer = uriSanitizer;
+            _htmlSanitizer = htmlSanitizer;
         }
 
         public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
@@ -63,6 +70,12 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null)
         {
+            if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
+                if (_uriSanitizer.Sanitize(request.WebsiteUrl) is string sanitizedUrl and not null)
+                    request.WebsiteUrl = sanitizedUrl;
+                else
+                    throw new ArgumentException("Invalid website URL");
+
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
                 .Where(x =>
@@ -82,9 +95,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 OwnerUid = user.GetSubject(),
                 OwnerUsername = user.Identity?.Name,
                 CreatedDateTimeUtc = DateTime.UtcNow,
-                DisplayName = request.DisplayName,
+                DisplayName = _htmlSanitizer.Sanitize(request.DisplayName),
                 WebsiteUrl = request.WebsiteUrl,
-                ShortDescription = request.ShortDescription,
+                ShortDescription = _htmlSanitizer.Sanitize(request.ShortDescription),
                 TelegramHandle = request.TelegramHandle,
                 Location = request.Location,
                 ImageId = image?.Id,
