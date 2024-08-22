@@ -2,7 +2,6 @@
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
-@using Ganss.Xss
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
@@ -28,24 +27,7 @@
                                 Label="Title" />
                             <MudNumericField @bind-Value="Record.Order" Required="true"
                                 RequiredError="Order number is required." Label="Order Number" />
-                            <MudGrid>
-                                <MudItem xs="6">
-                                    <MarkdownEditor @bind-Value="@Record.Text"
-                                        ValueHTMLChanged="@OnMarkdownValueHTMLChanged" />
-                                </MudItem>
-                                <MudItem xs="6">
-                                    <MudCard>
-                                        <MudCardHeader>
-                                            <CardHeaderContent>
-                                                <MudText Typo="Typo.h6">Preview</MudText>
-                                            </CardHeaderContent>
-                                        </MudCardHeader>
-                                        <MudCardContent>
-                                            <MudText>@((MarkupString)_htmlSanitizer.Sanitize(_markdownHtml))</MudText>
-                                        </MudCardContent>
-                                    </MudCard>
-                                </MudItem>
-                            </MudGrid>
+                            <TinyMarkdownEditor @bind-Value="@Record.Text" Title="Text"></TinyMarkdownEditor>
                         </MudForm>
                     </MudTabPanel>
                     <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
@@ -119,7 +101,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] private MudDialogInstance? MudDialog { get; set; }
 
     [Parameter] public KnowledgeEntryRecord? Record { get; set; }
 
@@ -130,10 +112,6 @@
 
     private bool _formIsValid;
     private MudForm? _form;
-
-    private HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
-
-    string _markdownHtml = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,9 +173,9 @@
         var dialog = await DialogService.ShowAsync<LinkFragmentDialog>("New link", parameters);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data != null)
+        if (!result?.Canceled ?? false && result.Data != null)
         {
-            var link = result.Data as LinkFragment;
+            var link = result?.Data as LinkFragment;
 
             Record?.Links.Add(link);
         }
@@ -208,7 +186,7 @@
         Record?.Links.Remove(Record.Links.FirstOrDefault(link => link.Id == id));
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private void Cancel() => MudDialog?.Cancel();
 
     private async void Save()
     {
@@ -262,13 +240,7 @@
             }
         }
 
-        MudDialog.Close(DialogResult.Ok(true));
-    }
-
-    Task OnMarkdownValueHTMLChanged(string value)
-    {
-        _markdownHtml = value;
-        return Task.CompletedTask;
+        MudDialog?.Close(DialogResult.Ok(true));
     }
 
     readonly Func<KnowledgeGroupRecord, string> _knowledgeGroupToNameConverter = kg => kg.Name;

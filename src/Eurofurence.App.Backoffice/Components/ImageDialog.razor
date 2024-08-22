@@ -14,30 +14,28 @@
                             <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Url">
                                 @if (string.IsNullOrEmpty(@Record.Url))
                                 {
-                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
                                 }
                             </MudImage>
                         </MudItem>
                         <MudItem xs="6">
                             <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
                                 <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled"
-                                               Color="Color.Primary"
-                                               StartIcon="@Icons.Material.Filled.CloudUpload"
-                                               Class="mb-2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                        StartIcon="@Icons.Material.Filled.CloudUpload" Class="mb-2">
                                         Upload Image
                                     </MudButton>
                                 </ActivatorContent>
                             </MudFileUpload>
-                            <MudTextField Value="Record.Id" Label="ID" ReadOnly="true"/>
-                            <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true"/>
-                            <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true"/>
-                            <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true"/>
+                            <MudTextField Value="Record.Id" Label="ID" ReadOnly="true" />
+                            <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true" />
+                            <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true" />
+                            <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true" />
                             <MudItem xs="3">
-                                <MudTextField Value="Record.Width" Label="Width" ReadOnly="true"/>
+                                <MudTextField Value="Record.Width" Label="Width" ReadOnly="true" />
                             </MudItem>
                             <MudItem xs="3">
-                                <MudTextField Value="Record.Height" Label="Height" ReadOnly="true"/>
+                                <MudTextField Value="Record.Height" Label="Height" ReadOnly="true" />
                             </MudItem>
                         </MudItem>
                     </MudGrid>
@@ -51,7 +49,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] private MudDialogInstance? MudDialog { get; set; }
 
     [Parameter] public ImageWithRelationsResponse? Record { get; set; }
 
@@ -68,7 +66,7 @@
             Update = true;
         }
     }
-    
+
     private async Task UploadImage(IBrowserFile? file)
     {
         if (file == null || Record == null)
@@ -118,7 +116,7 @@
 
     private void Close()
     {
-        MudDialog.Close(DialogResult.Ok(true));
+        MudDialog?.Close(DialogResult.Ok(true));
     }
 
 }
