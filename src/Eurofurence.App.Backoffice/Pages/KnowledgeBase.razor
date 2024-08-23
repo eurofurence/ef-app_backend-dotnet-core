@@ -29,10 +29,8 @@
                             <MudText Typo="Typo.h6">Show All</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
-                    <MudCardActions>
-                    </MudCardActions>
                     <MudCardContent>
-                        <MudText>Show all entries</MudText>
+                        <MudText>Select group below to filter.</MudText>
                     </MudCardContent>
                 </MudCard>
             </MudListItem>
@@ -40,7 +38,7 @@
             {
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
             }
-            @foreach (var knowledgeGroup in _knowledgeGroups)
+            @foreach (var knowledgeGroup in _knowledgeGroups.Values)
             {
                 <MudListItem @onclick="() => _selectedGroup = knowledgeGroup">
                     <MudCard Style="background-color: transparent">
@@ -58,8 +56,6 @@
                                     @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
                             </CardHeaderActions>
                         </MudCardHeader>
-                        <MudCardActions>
-                        </MudCardActions>
                         <MudCardContent>
                             <MudText>@knowledgeGroup.Description</MudText>
                         </MudCardContent>
@@ -97,6 +93,7 @@
                 <MudCard Class="mt-4">
                     <MudCardHeader>
                         <CardHeaderContent>
+                            <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
                             <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
@@ -130,13 +127,13 @@
     public bool Loading = true;
     private string? _knowledgeEntrySearch;
     private KnowledgeGroupRecord? _selectedGroup;
-    private List<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
+    private Dictionary<Guid, KnowledgeGroupRecord> _knowledgeGroups = new Dictionary<Guid, KnowledgeGroupRecord>();
     private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadKnowledgeEntries();
         await LoadKnowledgeGroups();
+        await LoadKnowledgeEntries();
     }
 
     private async Task LoadKnowledgeEntries()
@@ -151,6 +148,7 @@
                 {
                     Id = response.Id,
                     KnowledgeGroupId = response.KnowledgeGroupId,
+                    KnowledgeGroup = _knowledgeGroups[response.KnowledgeGroupId],
                     Title = response.Title,
                     Text = response.Text,
                     Order = response.Order,
@@ -188,7 +186,7 @@
     private async Task LoadKnowledgeGroups()
     {
         Loading = true;
-        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToList();
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToDictionary(kg => kg.Id);
         Loading = false;
     }
 
