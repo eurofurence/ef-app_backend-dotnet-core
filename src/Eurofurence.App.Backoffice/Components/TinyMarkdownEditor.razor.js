@@ -32,7 +32,9 @@ var TinyMarkdownEditorInterop = {
 		editor.addEventListener('change', e => {
 			dotNetObjectReference.invokeMethodAsync("OnValueChanged", e.content);
 		});
-		editor.setContent(value);
+		if (value) {
+			editor.setContent(value);
+		}
 	},
 
 	destroy: function (elementId) {
