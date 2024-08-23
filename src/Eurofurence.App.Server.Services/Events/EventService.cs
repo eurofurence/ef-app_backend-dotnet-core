@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper.Configuration;
 using CsvHelper;
@@ -25,6 +26,7 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly EventConfiguration _configuration;
+        private static SemaphoreSlim _semaphore = new(1, 1);
 
         private TimeSpan DateTimeOffset { get; set; }
 
@@ -52,7 +54,7 @@ namespace Eurofurence.App.Server.Services.Events
             var queryConflictEndTime = conflictEndTime + tolerance;
             var queryConflictStartTime = conflictStartTime - tolerance;
 
-            return FindAll().Where(e => 
+            return FindAll().Where(e =>
                 e.IsDeleted == 0 &&
                 e.StartDateTimeUtc <= queryConflictEndTime &&
                 e.EndDateTimeUtc >= queryConflictStartTime);
@@ -60,48 +62,56 @@ namespace Eurofurence.App.Server.Services.Events
 
         public async Task RunImportAsync()
         {
-            _logger.LogDebug(LogEvents.Import, "Starting event import.");
+            try
+            {
+                await _semaphore.WaitAsync();
+                _logger.LogDebug(LogEvents.Import, "Starting event import.");
 
-            var httpClient = new HttpClient();
-            var fileStream = await httpClient.GetStreamAsync(_configuration.Url);
-            TextReader reader = new StreamReader(fileStream);
+                var httpClient = new HttpClient();
+                var fileStream = await httpClient.GetStreamAsync(_configuration.Url);
+                TextReader reader = new StreamReader(fileStream);
 
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
-            csv.Context.RegisterClassMap<EventImportRowClassMap>();
-            var csvRecords = csv.GetRecords<EventImportRow>().ToList();
-            csvRecords = csvRecords
-                .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
+                csv.Context.RegisterClassMap<EventImportRowClassMap>();
+                var csvRecords = csv.GetRecords<EventImportRow>().ToList();
+                csvRecords = csvRecords
+                    .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
-            if (csvRecords.Count == 0) return;
+                if (csvRecords.Count == 0) return;
 
-            foreach (var record in csvRecords)
-                record.ConferenceDayName = record.ConferenceDayName.Contains(" - ")
-                    ? record.ConferenceDayName.Split(new[] { " - " }, StringSplitOptions.None)[1].Trim()
-                    : record.ConferenceDayName.Trim();
+                foreach (var record in csvRecords)
+                    record.ConferenceDayName = record.ConferenceDayName.Contains(" - ")
+                        ? record.ConferenceDayName.Split(new[] { " - " }, StringSplitOptions.None)[1].Trim()
+                        : record.ConferenceDayName.Trim();
 
-            var conferenceTracks = csvRecords.Select(a => a.ConferenceTrack)
-                .Distinct().OrderBy(a => a).ToList();
+                var conferenceTracks = csvRecords.Select(a => a.ConferenceTrack)
+                    .Distinct().OrderBy(a => a).ToList();
 
-            var conferenceRooms = csvRecords.Select(a => a.ConferenceRoom)
-                .Distinct().OrderBy(a => a).ToList();
+                var conferenceRooms = csvRecords.Select(a => a.ConferenceRoom)
+                    .Distinct().OrderBy(a => a).ToList();
 
-            var conferenceDays = csvRecords.Select(a =>
-                    new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture), DateTimeKind.Utc),
-                        a.ConferenceDayName))
-                .Distinct().OrderBy(a => a).ToList();
+                var conferenceDays = csvRecords.Select(a =>
+                        new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture), DateTimeKind.Utc),
+                            a.ConferenceDayName))
+                    .Distinct().OrderBy(a => a).ToList();
 
-            int modifiedRecords = 0;
+                int modifiedRecords = 0;
 
-            var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
-            var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
-            var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, ref modifiedRecords);
-            UpdateEventEntries(csvRecords,
-                eventConferenceTracks,
-                eventConferenceRooms,
-                eventConferenceDays,
-                ref modifiedRecords);
+                var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
+                var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
+                var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, ref modifiedRecords);
+                UpdateEventEntries(csvRecords,
+                    eventConferenceTracks,
+                    eventConferenceRooms,
+                    eventConferenceDays,
+                    ref modifiedRecords);
 
-            _logger.LogInformation(LogEvents.Import, $"Event import finished successfully modifying {modifiedRecords} record(s).");
+                _logger.LogInformation(LogEvents.Import, $"Event import finished successfully modifying {modifiedRecords} record(s).");
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         private List<EventConferenceDayRecord> UpdateEventConferenceDays(
@@ -162,7 +172,8 @@ namespace Eurofurence.App.Server.Services.Events
 
             patch
                 .Map(s => s, t => t.Name)
-                .Map(s => {
+                .Map(s =>
+                {
                     if (roomShortNameRegex.IsMatch(s))
                     {
                         var matches = roomShortNameRegex.Matches(s);
@@ -170,7 +181,7 @@ namespace Eurofurence.App.Server.Services.Events
                     }
                     else
                         return s;
-                    },
+                },
                     t => t.ShortName);
 
             var diff = patch.Patch(importConferenceRooms, eventConferenceRoomRecords);

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
 {
@@ -10,7 +11,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
         IEntityServiceOperations<TableRegistrationRecord>,
         IPatchOperationProcessor<TableRegistrationRecord>
     {
-        Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request);
+        Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null);
         IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state);
         Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid);
 

@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
+    [DisallowConcurrentExecution]
     public class UpdateFursuitCollectionGameParticipationJob : IJob
     {
         private readonly ICollectingGameService _collectingGameService;

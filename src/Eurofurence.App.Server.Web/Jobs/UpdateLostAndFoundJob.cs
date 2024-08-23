@@ -4,9 +4,11 @@ using System;
 using System.Threading.Tasks;
 using Quartz;
 using Eurofurence.App.Server.Services.Abstractions;
+using System.Threading;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
+    [DisallowConcurrentExecution]
     public class UpdateLostAndFoundJob : IJob
     {
         private readonly ILostAndFoundLassieImporter _lostAndFoundLassieImporter;

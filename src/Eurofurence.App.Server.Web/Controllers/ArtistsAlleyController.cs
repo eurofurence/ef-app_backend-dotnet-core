@@ -73,7 +73,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<TableRegistrationRecord> GetTableRegistrationAsync(
-            [EnsureNotNull] [FromRoute] Guid id
+            [EnsureNotNull][FromRoute] Guid id
         )
         {
             return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
@@ -81,10 +81,19 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync(
-            [EnsureNotNull] [FromBody] TableRegistrationRequest request)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, IFormFile requestImageFile)
         {
-            await _tableRegistrationService.RegisterTableAsync(User, request);
+            ImageRecord image = null;
+            if (requestImageFile != null)
+            {
+                using var ms = new MemoryStream();
+                await requestImageFile.CopyToAsync(ms);
+                image = await _imageService.InsertImageAsync(requestImageFile.FileName, ms, 1500, 1500);
+            }
+
+            if (!Uri.TryCreate(request.WebsiteUrl, UriKind.Absolute, out _)) return BadRequest("Invalid website URL!");
+
+            await _tableRegistrationService.RegisterTableAsync(User, request, image);
             return NoContent();
         }
 
@@ -105,14 +114,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull] [FromRoute] Guid id)
+        public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull][FromRoute] Guid id)
         {
             var tableRegistration = await _tableRegistrationService.FindOneAsync(id);
             if (tableRegistration == null) return NotFound();
 
             await _tableRegistrationService.DeleteOneAsync(id);
 
-            if (tableRegistration.ImageId is Guid imageId) await _imageService.DeleteOneAsync(imageId);
+            if (tableRegistration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }

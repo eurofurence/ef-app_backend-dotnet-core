@@ -11,12 +11,16 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
         Task<ImageRecord> InsertImageAsync(
             string internalReference,
             Stream stream,
+            int? width = null,
+            int? height = null,
             CancellationToken cancellationToken = default);
 
         Task<ImageRecord> ReplaceImageAsync(
             Guid id,
             string internalReference,
             Stream stream,
+            int? width = null,
+            int? height = null,
             CancellationToken cancellationToken = default);
 
         Task<Stream> GetImageContentByImageIdAsync(
@@ -25,6 +29,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
 
         Stream GeneratePlaceholderImage();
 
+        [Obsolete("Use InsertImageAsync or ReplaceImageAsync with dimensions instead.")]
         Task<ImageRecord> EnforceMaximumDimensionsAsync(
             ImageRecord image,
             int width,

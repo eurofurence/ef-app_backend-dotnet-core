@@ -6,6 +6,7 @@ using Quartz;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
+    [DisallowConcurrentExecution]
     public class FlushPrivateMessageNotificationsJob : IJob
     {
         private readonly ILogger _logger;
