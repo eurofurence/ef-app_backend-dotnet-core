@@ -11,12 +11,17 @@
         {
             <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
                 <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
-                <MudTextField T="string" @bind-Value="Record.Name" Required="true" RequiredError="Name is required." Label="Name" />
-                <MudNumericField @bind-Value="Record.Order" Required="true" RequiredError="Order number is required." Label="Order Number" />
-                <MudCheckBox Color="Color.Primary" @bind-Value="Record.ShowInHamburgerMenu" Label="Show in hamburger menu" />
-                <MudTextField Adornment="Adornment.Start" AdornmentIcon="@("fas fa-" + Record.FontAwesomeIconName)" T="string" @bind-Value="Record.FontAwesomeIconName" Label="FontAwesome Icon Name" />
+                <MudTextField T="string" @bind-Value="Record.Name" Required="true" RequiredError="Name is required."
+                    Label="Name" />
+                <MudNumericField @bind-Value="Record.Order" Required="true" RequiredError="Order number is required."
+                    Label="Order Number" />
+                <MudCheckBox Color="Color.Primary" @bind-Value="Record.ShowInHamburgerMenu"
+                    Label="Show in hamburger menu" />
+                <MudTextField Adornment="Adornment.Start" AdornmentIcon="@("fas fa-" + Record.FontAwesomeIconName)"
+                    T="string" @bind-Value="Record.FontAwesomeIconName" Label="FontAwesome Icon Name" />
                 <MudLink Href="https://fontawesome.com/search?m=free&o=r">Icon Reference</MudLink>
-                <MudTextField T="string" Lines="8" @bind-Value="Record.Description" Required="true" RequiredError="Description is required." Label="Description" />
+                <MudTextField T="string" Lines="8" @bind-Value="Record.Description" Required="true"
+                    RequiredError="Description is required." Label="Description" />
             </MudForm>
         }
     </DialogContent>
@@ -27,7 +32,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] private MudDialogInstance? MudDialog { get; set; }
 
     [Parameter] public KnowledgeGroupRecord? Record { get; set; }
 
@@ -51,7 +56,7 @@
         }
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private void Cancel() => MudDialog?.Cancel();
 
     private async void Save()
     {
@@ -93,6 +98,6 @@
             }
         }
 
-        MudDialog.Close(DialogResult.Ok(true));
+        MudDialog?.Close(DialogResult.Ok(true));
     }
 }
