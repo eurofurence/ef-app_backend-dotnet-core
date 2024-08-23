@@ -107,7 +107,7 @@
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText Class="mb-4">@((MarkupString)Markdown.ToHtml(knowledgeEntry.Text))</MudText>
+                        <MarkdownRenderer Text="@knowledgeEntry.Text"></MarkdownRenderer>
 
                         @foreach (var image in knowledgeEntry.Images)
                         {
