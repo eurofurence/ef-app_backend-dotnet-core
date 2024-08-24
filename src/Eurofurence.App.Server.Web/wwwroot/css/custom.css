@@ -1,171 +1,171 @@
 .button {
-	padding: 0px;
+    padding: 0px;
 }
 
 .button.button-white {
-	background-color: white;
-	color: black;
+    background-color: white;
+    color: black;
 }
 
 .section {
-	text-align: center;
+    text-align: center;
 }
 
 .section.tester-disclaimer {
-	padding: 2rem;
-	padding-bottom: 0.5rem;
-	color: white;
+    padding: 2rem;
+    padding-bottom: 0.5rem;
+    color: white;
 
-	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#037aa9+0,026890+44,004f6e+100 */
-	background: #037aa9;
-	/* Old browsers */
-	background: -moz-linear-gradient(top, #037aa9 0%, #026890 44%, #004f6e 100%);
-	/* FF3.6-15 */
-	background: -webkit-linear-gradient(top, #037aa9 0%, #026890 44%, #004f6e 100%);
-	/* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(to bottom, #037aa9 0%, #026890 44%, #004f6e 100%);
-	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#037aa9', endColorstr='#004f6e', GradientType=0);
-	/* IE6-9 */
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#037aa9+0,026890+44,004f6e+100 */
+    background: #037aa9;
+    /* Old browsers */
+    background: -moz-linear-gradient(top, #037aa9 0%, #026890 44%, #004f6e 100%);
+    /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #037aa9 0%, #026890 44%, #004f6e 100%);
+    /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #037aa9 0%, #026890 44%, #004f6e 100%);
+    /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#037aa9', endColorstr='#004f6e', GradientType=0);
+    /* IE6-9 */
 }
 
 
 .section.tester-disclaimer a {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 .section.main {
-	padding: 4rem 0 7rem;
+    padding: 4rem 0 7rem;
 }
 
 .section-heading,
 .section-description {
-	margin-bottom: 1.2rem;
+    margin-bottom: 1.2rem;
 }
 
 i.brand-logo {
-	font-size: 10rem;
-	line-height: 0.8em;
-	margin-bottom: 0.4em;
-	display: block;
-	color: #E0E0E0;
+    font-size: 10rem;
+    line-height: 0.8em;
+    margin-bottom: 0.4em;
+    display: block;
+    color: #E0E0E0;
 }
 
 .brand h4 {
-	margin-bottom: 0rem;
+    margin-bottom: 0rem;
 }
 
 .brand h6 {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 .qrcode img {
-	max-width: 16rem;
-	margin-bottom: 2rem;
+    max-width: 16rem;
+    margin-bottom: 2rem;
 }
 
 @media (max-width: 550px) {
-	.desktopOnly {
-		display: none !important;
-	}
+    .desktopOnly {
+        display: none !important;
+    }
 
-	i.brand-logo {
-		font-size: 8rem;
-	}
+    i.brand-logo {
+        font-size: 8rem;
+    }
 
-	.brand {
-		margin-bottom: 1rem;
-	}
+    .brand {
+        margin-bottom: 1rem;
+    }
 
-	.brand h6 {
-		margin-bottom: 0.5rem;
-	}
+    .brand h6 {
+        margin-bottom: 0.5rem;
+    }
 }
 
 @media (min-width: 550px) {
-	.mobileOnly {
-		display: none !important;
-	}
+    .mobileOnly {
+        display: none !important;
+    }
 
-	.brand i.apple {
-		color: #a8b1b8;
-	}
+    .brand i.apple {
+        color: #a8b1b8;
+    }
 
-	.brand i.microsoft {
-		color: #00adef;
-	}
+    .brand i.microsoft {
+        color: #00adef;
+    }
 
-	.brand i.android {
-		color: #94c147;
-	}
+    .brand i.android {
+        color: #94c147;
+    }
 }
 
 .notice {
-	text-align: left;
-	background-color: #EAEAEA;
-	padding: 15px;
-	padding-bottom: 1px;
-	border-radius: 10px;
+    text-align: left;
+    background-color: #EAEAEA;
+    padding: 15px;
+    padding-bottom: 1px;
+    border-radius: 10px;
 
 
-	margin-bottom: 45px;
-	margin-top: 20px;
+    margin-bottom: 45px;
+    margin-top: 20px;
 
-	-webkit-box-shadow: 5px 5px 3px 0px rgba(0, 102, 0, 0.23);
-	-moz-box-shadow: 5px 5px 3px 0px rgba(0, 102, 0, 0.23);
-	box-shadow: 5px 5px 3px 0px rgba(0, 102, 0, 0.23);
+    -webkit-box-shadow: 5px 5px 3px 0px rgba(0, 102, 0, 0.23);
+    -moz-box-shadow: 5px 5px 3px 0px rgba(0, 102, 0, 0.23);
+    box-shadow: 5px 5px 3px 0px rgba(0, 102, 0, 0.23);
 
 }
 
 .notice,
 .green {
-	color: #005500;
+    color: #005500;
 
-	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#9dd53a+0,a1d54f+56,80c217+93,7cbc0a+100 */
-	background: #9dd53a;
-	/* Old browsers */
-	background: -moz-linear-gradient(-45deg, #9dd53a 0%, #a1d54f 56%, #80c217 93%, #7cbc0a 100%);
-	/* FF3.6-15 */
-	background: -webkit-linear-gradient(-45deg, #9dd53a 0%, #a1d54f 56%, #80c217 93%, #7cbc0a 100%);
-	/* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(135deg, #9dd53a 0%, #a1d54f 56%, #80c217 93%, #7cbc0a 100%);
-	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#9dd53a', endColorstr='#7cbc0a', GradientType=1);
-	/* IE6-9 fallback on horizontal gradient */
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#9dd53a+0,a1d54f+56,80c217+93,7cbc0a+100 */
+    background: #9dd53a;
+    /* Old browsers */
+    background: -moz-linear-gradient(-45deg, #9dd53a 0%, #a1d54f 56%, #80c217 93%, #7cbc0a 100%);
+    /* FF3.6-15 */
+    background: -webkit-linear-gradient(-45deg, #9dd53a 0%, #a1d54f 56%, #80c217 93%, #7cbc0a 100%);
+    /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(135deg, #9dd53a 0%, #a1d54f 56%, #80c217 93%, #7cbc0a 100%);
+    /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#9dd53a', endColorstr='#7cbc0a', GradientType=1);
+    /* IE6-9 fallback on horizontal gradient */
 }
 
 .green {
-	border-color: #9dd53a;
-	color: white;
+    border-color: #9dd53a;
+    color: white;
 }
 
 .green:hover {
-	color: white;
-	background: #7cbc0a;
-	border-color: #9dd53a;
+    color: white;
+    background: #7cbc0a;
+    border-color: #9dd53a;
 }
 
 .notice h4 {
-	text-align: center;
-	font-size: 1.5em;
+    text-align: center;
+    font-size: 1.5em;
 }
 
 .notice a {
-	color: #004400;
-	font-weight: bold;
+    color: #004400;
+    font-weight: bold;
 }
 
 .legal {
-	font-size: 0.8em;
-	margin-top: 20px;
+    font-size: 0.8em;
+    margin-top: 20px;
 }
 
 .ef-logo {
-	background: url("../images/ef-app-logo.png") no-repeat;
-	background-size: contain;
-	border-radius: 10px;
-	border: 1px solid lightgrey;
-	height: 200px;
-	width: 200px;
-	margin: auto auto 2rem;
+    background: url("../images/ef-app-logo.png") no-repeat;
+    background-size: contain;
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+    height: 200px;
+    width: 200px;
+    margin: auto auto 2rem;
 }
