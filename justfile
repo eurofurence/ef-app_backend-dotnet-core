@@ -59,7 +59,7 @@ build-cli:
 	dotnet publish src/Eurofurence.App.Tools.CliToolBox/Eurofurence.App.Tools.CliToolBox.csproj --output "$(pwd)/artifacts" --configuration Release --sc -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:GenerateDocumentationFile=false
 
 # Build release container for service using spec from docker-compose.yml and refresh service if stack is running
-containerize SERVICE *ARGS:
+containerize SERVICE="" *ARGS="":
 	#!/bin/bash
 	set -euxo pipefail
 	docker compose build {{ARGS}} {{SERVICE}}
