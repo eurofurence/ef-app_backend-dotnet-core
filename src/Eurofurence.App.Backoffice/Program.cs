@@ -35,8 +35,6 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.DefaultScopes.Add("profile");
 }).AddAccountClaimsPrincipalFactory<RemoteAuthenticationState, RemoteUserAccount, BackendAccountClaimsFactory>();
 
-var authSettings = builder.Configuration.GetSection("Authorization").Get<AuthorizationSettings>() ?? new AuthorizationSettings();
-
 builder.Services.AddAuthorizationCore(config =>
 {
     config.AddPolicy("RequireKnowledgeBaseEditor", policy =>
