@@ -1,27 +1,34 @@
-﻿using System.Security.Authentication;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
-namespace Eurofurence.App.Backoffice.Authentication
+public class TokenAuthorizationMessageHandler : DelegatingHandler
 {
-    public class TokenAuthorizationMessageHandler : AuthorizationMessageHandler
-    {
-        public TokenAuthorizationMessageHandler(IAccessTokenProvider provider, NavigationManager navigation, IConfiguration configuration) : base(provider, navigation)
-        {
-            ConfigureHandler(new[] { configuration.GetValue<string>("ApiUrl") ?? string.Empty });
-        }
+    private readonly IAccessTokenProvider _tokenProvider;
+    private readonly NavigationManager _navigation;
 
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    public TokenAuthorizationMessageHandler(IAccessTokenProvider tokenProvider, NavigationManager navigation)
+    {
+        _tokenProvider = tokenProvider;
+        _navigation = navigation;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var result = await _tokenProvider.RequestAccessToken();
+
+        if (result.TryGetToken(out var token))
         {
-            try
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Value);
+            return await base.SendAsync(request, cancellationToken);
+        }
+        else
+        {
+            // Redirect to login page if the token is not available
+            if (!_navigation.Uri.Contains("authentication/login"))
             {
-                return await base.SendAsync(request, cancellationToken);
+                _navigation.NavigateTo("authentication/login");
             }
-            catch (AccessTokenNotAvailableException ex)
-            {
-                ex.Redirect();
-                throw new AuthenticationException("Authentication has expired. Redirecting to login...");
-            }
+            throw new AccessTokenNotAvailableException(_navigation, result, null);
         }
     }
 }

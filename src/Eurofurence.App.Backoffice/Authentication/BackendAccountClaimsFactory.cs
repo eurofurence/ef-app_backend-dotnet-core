@@ -25,13 +25,21 @@ namespace Eurofurence.App.Backoffice.Authentication
 
 			if (userAccount.Identity is ClaimsIdentity identity)
 			{
-				var usersService = _serviceProvider.GetRequiredService<IUsersService>();
-				var userRecord = await usersService.GetUserSelf();
-				foreach (var role in userRecord.Roles)
-				{
-					identity.AddClaim(new Claim(identity.RoleClaimType, role));
-				}
-			}
+				var usersService = _serviceProvider.GetRequiredService<IUserService>();
+                try
+                {
+                    var userRecord = await usersService.GetUserSelf();
+                    foreach (var role in userRecord.Roles)
+                    {
+                        identity.AddClaim(new Claim(identity.RoleClaimType, role));
+                    }
+                }
+				catch (AccessTokenNotAvailableException)
+                {
+                    // No token, no user record
+                    // AccessTokenNotAvailableException is ignored here because it will be handled by the TokenAuthorizationMessageHandler
+                }
+            }
 
 			return userAccount;
 
