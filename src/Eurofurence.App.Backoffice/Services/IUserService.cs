@@ -2,7 +2,7 @@
 
 namespace Eurofurence.App.Backoffice.Services
 {
-    public interface IUsersService
+    public interface IUserService
     {
         public Task<UserRecord> GetUserSelf();
     }
