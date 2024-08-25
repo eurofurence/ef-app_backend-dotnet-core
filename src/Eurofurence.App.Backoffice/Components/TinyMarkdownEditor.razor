@@ -1,0 +1,17 @@
+@namespace Eurofurence.App.Backoffice.Components
+@implements IDisposable
+@inject IJSRuntime JS
+
+<CascadingValue Value="@this" IsFixed="true">
+    <div>
+        <label style="width: 100%;" for="@_elementId">@Title
+            <div style="font-size: 80%">Only basic Markdown is supported as shown in the toolbar of the editor. No
+                embedded images or HTML.
+            </div>
+            <div id="@_elementId-commandbar"></div>
+            <div style="overflow-y:scroll; border:1px solid #c0c0c0">
+                <textarea id="@_elementId" rows="20"></textarea>
+            </div>
+        </label>
+    </div>
+</CascadingValue>

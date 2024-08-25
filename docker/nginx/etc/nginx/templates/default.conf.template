@@ -1,27 +1,27 @@
 server {
-	http2 on;
-	listen 8080;
+    http2 on;
+    listen 8080;
 
-	# Support SSL via self-signed cert in development
-	listen 8443 ssl default_server;
-	listen [::]:443 ssl default_server;
-	ssl_certificate /etc/ssl/certs/nginx.crt;
-	ssl_certificate_key /etc/ssl/private/nginx.key;
+    # Support SSL via self-signed cert in development
+    listen 8443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    ssl_certificate /etc/ssl/certs/nginx.crt;
+    ssl_certificate_key /etc/ssl/private/nginx.key;
 
-	rewrite ^${BACKOFFICE_BASE_PATH}($|/.*$) /$1 last;
+    rewrite ^${BACKOFFICE_BASE_PATH}($|/.*$) /$1 last;
 
-	location / {
-		# Configuration required for Blazor WASM stand-alone app
-		root      /usr/share/nginx/html;
-		try_files $uri $uri/ /index.html =404;
+    location / {
+        # Configuration required for Blazor WASM stand-alone app
+        root      /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html =404;
 
-		include /etc/nginx/mime.types;
-		default_type application/octet-stream;
-	}
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+    }
 
-	# Serve appsettings.json with correct MIME type
-	location /appsettings.json {
-		root /usr/share/nginx/html;
-		add_header Content-Type application/json;
-	}
+    # Serve appsettings.json with correct MIME type
+    location /appsettings.json {
+        root /usr/share/nginx/html;
+        add_header Content-Type application/json;
+    }
 }

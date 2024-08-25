@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@EFMudTheme" />
 <MudDialogProvider />
@@ -8,7 +8,7 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudImage Src="images/ef-logo.svg" Alt="Eurofurence Logo" Height="50" />
+        <MudImage Src="img/ef-logo.svg" Alt="Eurofurence Logo" Height="50" />
         <MudText Typo="Typo.h5" Class="ml-3">Backoffice</MudText>
         <MudSpacer />
         <LoginDisplay />

@@ -2,388 +2,388 @@
 <html lang="en">
 
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="icon" href="../images/favicon.ico" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../images/favicon.ico" />
 
-	<!-- https://code.jquery.com/jquery-3.2.1.min.js -->
-	<script src="../scripts/jquery.min.js"></script>
-	<!-- https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js -->
-	<script src="../scripts/knockout.min.js"></script>
-	<!-- https://github.com/giotiskl/filterizr/blob/master/dist/jquery.filterizr.min.js -->
-	<script src="../scripts/jquery.filterizr.min.js"></script>
-	<link href="../css/fontawesome-all.min.css" rel="stylesheet">
-	<title data-bind="text: conventionIdentifier + ' – Dealers Listing'">Dealers Listing</title>
-	<style type="text/css">
-		body {
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-			background-color: silver;
-		}
+    <!-- https://code.jquery.com/jquery-3.2.1.min.js -->
+    <script src="../scripts/jquery.min.js"></script>
+    <!-- https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js -->
+    <script src="../scripts/knockout.min.js"></script>
+    <!-- https://github.com/giotiskl/filterizr/blob/master/dist/jquery.filterizr.min.js -->
+    <script src="../scripts/jquery.filterizr.min.js"></script>
+    <link href="../css/fontawesome-all.min.css" rel="stylesheet">
+    <title data-bind="text: conventionIdentifier + ' – Dealers Listing'">Dealers Listing</title>
+    <style type="text/css">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: silver;
+        }
 
-		ul.dealerCards {
-			list-style-type: none;
-			padding: 0px;
-		}
+        ul.dealerCards {
+            list-style-type: none;
+            padding: 0px;
+        }
 
-		ul.dealerCards>li {
-			display: block;
-			border: 1px solid #006357;
-			background-color: white;
-			padding: 15px;
-			width: 400px;
-			margin: 10px;
-			border-radius: 10px;
-			-webkit-box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.3);
-			-moz-box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.3);
-			box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.3);
-		}
+        ul.dealerCards>li {
+            display: block;
+            border: 1px solid #006357;
+            background-color: white;
+            padding: 15px;
+            width: 400px;
+            margin: 10px;
+            border-radius: 10px;
+            -webkit-box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.3);
+            -moz-box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.3);
+            box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.3);
+        }
 
-		img.artistThumbnail {
-			width: 50px;
-			height: 50px;
-		}
+        img.artistThumbnail {
+            width: 50px;
+            height: 50px;
+        }
 
-		.cardContent {
-			padding-left: 70px;
-			font-size: 0.9em;
-		}
+        .cardContent {
+            padding-left: 70px;
+            font-size: 0.9em;
+        }
 
-		.cardContent>div {
-			margin-top: 15px;
-		}
+        .cardContent>div {
+            margin-top: 15px;
+        }
 
-		h4 {
-			font-size: 1em;
-			margin: 0;
-			border-bottom: 1px solid silver;
-		}
+        h4 {
+            font-size: 1em;
+            margin: 0;
+            border-bottom: 1px solid silver;
+        }
 
-		.displayName {
-			font-size: 1.5em;
-			font-weight: bold;
-			display: block;
-			margin-bottom: 10px;
-			background-color: #006357;
-			color: white;
-			margin: -15px;
-			padding: 15px;
-			margin-left: -85px;
-			padding-left: 85px;
-			margin-bottom: 10px;
-			border-radius: 7px 7px 0px 0px;
-		}
+        .displayName {
+            font-size: 1.5em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            background-color: #006357;
+            color: white;
+            margin: -15px;
+            padding: 15px;
+            margin-left: -85px;
+            padding-left: 85px;
+            margin-bottom: 10px;
+            border-radius: 7px 7px 0px 0px;
+        }
 
-		.small {
-			font-size: 0.9em;
-		}
+        .small {
+            font-size: 0.9em;
+        }
 
-		.progressWrap {
-			border: 1px solid silver;
-			height: 10px;
-			border-radius: 5px;
-		}
+        .progressWrap {
+            border: 1px solid silver;
+            height: 10px;
+            border-radius: 5px;
+        }
 
-		.progressCont {
-			background: gray;
-			height: 100%;
-			border-radius: 4px;
-		}
+        .progressCont {
+            background: gray;
+            height: 100%;
+            border-radius: 4px;
+        }
 
-		.button,
-		.headerButton {
-			display: block;
-			font-size: 1.3em;
-			text-decoration: none;
-			text-align: center;
-		}
+        .button,
+        .headerButton {
+            display: block;
+            font-size: 1.3em;
+            text-decoration: none;
+            text-align: center;
+        }
 
-		.button {
-			padding: 10px;
-			color: silver;
-		}
+        .button {
+            padding: 10px;
+            color: silver;
+        }
 
-		.headerButton {
-			color: black;
-			padding: 5px;
-			margin: -5px;
+        .headerButton {
+            color: black;
+            padding: 5px;
+            margin: -5px;
 
-			background-color: silver;
-			border: 1px solid black;
-			border-radius: 5px;
-			box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, 0.3);
-		}
+            background-color: silver;
+            border: 1px solid black;
+            border-radius: 5px;
+            box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, 0.3);
+        }
 
-		.headerButton:hover {
-			background-color: white;
-		}
+        .headerButton:hover {
+            background-color: white;
+        }
 
-		.button:hover {
-			color: #006357;
-		}
+        .button:hover {
+            color: #006357;
+        }
 
-		button.active {
-			background-color: #006357;
-			color: white;
-		}
-	</style>
+        button.active {
+            background-color: #006357;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
 
-	<script>
-		console.log("Fetching data from API…");
+    <script>
+        console.log("Fetching data from API…");
 
-		let baseUrl = document.location.href.match(/^(.+)\/tools\/.*/)[1];
-		let conventionIdentifier = baseUrl.match(/^https?:\/\/[^\/]+\/([^\/]+)$/)?.[1] || 'Current Con';
-		let filterizr = null;
+        let baseUrl = document.location.href.match(/^(.+)\/tools\/.*/)[1];
+        let conventionIdentifier = baseUrl.match(/^https?:\/\/[^\/]+\/([^\/]+)$/)?.[1] || 'Current Con';
+        let filterizr = null;
 
-		let filterSettings = {
-			sortBy: getQueryVariable(window.location.hash, "sortBy", "name"),
-			sortAscending: getQueryVariable(window.location.hash, "sortAscending", "true") == "true",
-			filter: getQueryVariable(window.location.hash, "filter", "complete")
-		};
+        let filterSettings = {
+            sortBy: getQueryVariable(window.location.hash, "sortBy", "name"),
+            sortAscending: getQueryVariable(window.location.hash, "sortAscending", "true") == "true",
+            filter: getQueryVariable(window.location.hash, "filter", "complete")
+        };
 
-		$.get(baseUrl + "/Api/Dealers", function (data) {
+        $.get(baseUrl + "/Api/Dealers", function (data) {
 
-			data = data.map(function (o) {
-				o.DisplayName = (o.DisplayName != "") ? o.DisplayName : o.AttendeeNickname;
-				o.DisplayNameSort = o.DisplayName.toLowerCase();
-
-
-				o.Progress = 5;
-				o.Issues = [];
-
-				if (o.ShortDescription != "") { o.Progress += 15; } else { o.Issues.push("Short Description"); }
-				if (o.AboutTheArtistText != "") { o.Progress += 20; } else { o.Issues.push("About The Artist Text"); }
-				if (o.ArtistThumbnailImageId != null) { o.Progress += 15; } else { o.Issues.push("Artist ThumbnailImage"); }
-				if (o.ArtistImageId != null) { o.Progress += 10; } else { o.Issues.push("Artist Image"); }
-				if (o.AboutTheArtText != "") { o.Progress += 15; } else { o.Issues.push("About The Art Text"); }
-				if (o.ArtPreviewImageId != null) { o.Progress += 15; } else { o.Issues.push("Art Preview Image"); }
-				if (o.ArtPreviewCaption != "") { o.Progress += 5; } else { o.Issues.push("Art Preview Caption"); }
+            data = data.map(function (o) {
+                o.DisplayName = (o.DisplayName != "") ? o.DisplayName : o.AttendeeNickname;
+                o.DisplayNameSort = o.DisplayName.toLowerCase();
 
 
-				styles = (o.Progress >= 80) ? "complete" : "incomplete";
+                o.Progress = 5;
+                o.Issues = [];
 
-				o.status = styles;
-
-				o.ProgressColor = "#d84315";
-				if (o.Progress > 20) o.ProgressColor = "#ef6c0";
-				if (o.Progress > 40) o.ProgressColor = "#f9a825";
-				if (o.Progress > 60) o.ProgressColor = "#9e9d24";
-				if (o.Progress > 80) o.ProgressColor = "#558b2f";
-				if (o.Progress == 100) o.ProgressColor = "#2e7d32";
-
-				return o;
-			});
-
-			data = data.sort(function (a, b) {
-				if (a.DisplayName < b.DisplayName) return -1;
-				if (a.DisplayName > b.DisplayName) return 1;
-				return 0;
-			});
+                if (o.ShortDescription != "") { o.Progress += 15; } else { o.Issues.push("Short Description"); }
+                if (o.AboutTheArtistText != "") { o.Progress += 20; } else { o.Issues.push("About The Artist Text"); }
+                if (o.ArtistThumbnailImageId != null) { o.Progress += 15; } else { o.Issues.push("Artist ThumbnailImage"); }
+                if (o.ArtistImageId != null) { o.Progress += 10; } else { o.Issues.push("Artist Image"); }
+                if (o.AboutTheArtText != "") { o.Progress += 15; } else { o.Issues.push("About The Art Text"); }
+                if (o.ArtPreviewImageId != null) { o.Progress += 15; } else { o.Issues.push("Art Preview Image"); }
+                if (o.ArtPreviewCaption != "") { o.Progress += 5; } else { o.Issues.push("Art Preview Caption"); }
 
 
-			var ViewModel = function () {
-				this.dealers = ko.observableArray(data);
-			}.bind(this);
-			ko.applyBindings(new ViewModel());
+                styles = (o.Progress >= 80) ? "complete" : "incomplete";
+
+                o.status = styles;
+
+                o.ProgressColor = "#d84315";
+                if (o.Progress > 20) o.ProgressColor = "#ef6c0";
+                if (o.Progress > 40) o.ProgressColor = "#f9a825";
+                if (o.Progress > 60) o.ProgressColor = "#9e9d24";
+                if (o.Progress > 80) o.ProgressColor = "#558b2f";
+                if (o.Progress == 100) o.ProgressColor = "#2e7d32";
+
+                return o;
+            });
+
+            data = data.sort(function (a, b) {
+                if (a.DisplayName < b.DisplayName) return -1;
+                if (a.DisplayName > b.DisplayName) return 1;
+                return 0;
+            });
 
 
-			const filterizrOptions = {
-				//controlsSelector: '.fltr-controls',
-				gutterPixels: 5,
-				callbacks: {
-					onInit: function () {
-						$("#filters button").each(function () {
-							if ($(this).attr('data-filter') == filterSettings.filter) {
-								$(this).addClass("active");
-							} else {
-								$(this).removeClass("active");
-							}
-						});
-
-						$("button.sort-btn").each(function () {
-							if (($(this).attr('data-sortDesc') === undefined) === filterSettings.sortAscending) {
-								$(this).addClass("active");
-							} else {
-								$(this).removeClass("active");
-							}
-						});
-
-						$("select.fltr-controls[data-sortOrder]").val(filterSettings.sortBy);
-
-						filterizr.filterizr('filter', filterSettings.filter);
-						filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
-					},
-				}
-			};
-			filterizr = $("#grid").filterizr(filterizrOptions);
-
-			$("#filters button").each(function () {
-				$(this).on('click', function () {
-					$("#filters button").removeClass('active');
-					$(this).addClass('active');
-					filterSettings.filter = $(this).attr('data-filter');
-					window.location.hash = serialize(filterSettings);
-				})
-			});
-
-			$("button.sort-btn").each(function () {
-				$(this).on('click', function () {
-					$("button.sort-btn").removeClass('active');
-					$(this).addClass('active');
-					filterSettings.sortAscending = $(this).attr('data-sortDesc') === undefined
-					window.location.hash = serialize(filterSettings);
-				})
-			});
-
-			$("select.fltr-controls[data-sortOrder]").on('change', function () {
-				filterSettings.sortBy = $(this).val();
-				filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
-				window.location.hash = serialize(filterSettings);
-			});
-		});
-
-		function serialize(obj) {
-			var str = [];
-			for (var p in obj)
-				if (obj.hasOwnProperty(p)) {
-					str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-				}
-			return str.join("&");
-		}
-
-		function getQueryVariable(query, variable, defaultValue) {
-			if (query[0] == "#") query = query.substring(1);
-
-			var vars = query.split('&');
-			for (var i = 0; i < vars.length; i++) {
-				var pair = vars[i].split('=');
-				if (decodeURIComponent(pair[0]) == variable) {
-					return decodeURIComponent(pair[1]);
-				}
-			}
-
-			return defaultValue;
-		}
-
-		function format(str) {
-			str = str.replace(/<(?:.|\n)*?>/gm, '').replace(/(?:\r\n|\r|\n)/g, '<br>');
-			return str;
-		}
-	</script>
+            var ViewModel = function () {
+                this.dealers = ko.observableArray(data);
+            }.bind(this);
+            ko.applyBindings(new ViewModel());
 
 
-	Filter:
-	<span id="filters">
-		<button class="fltr-controls active" data-filter="all">All</button>
-		<button class="fltr-controls" data-filter="complete">Complete (80%+)</button>
-		<button class="fltr-controls" data-filter="incomplete">Incomplete</button>
-	</span>
+            const filterizrOptions = {
+                //controlsSelector: '.fltr-controls',
+                gutterPixels: 5,
+                callbacks: {
+                    onInit: function () {
+                        $("#filters button").each(function () {
+                            if ($(this).attr('data-filter') == filterSettings.filter) {
+                                $(this).addClass("active");
+                            } else {
+                                $(this).removeClass("active");
+                            }
+                        });
 
-	Sort by:
-	<select class="fltr-controls" data-sortOrder>
-		<option value="name">Name</option>
-		<option value="progress">Completeness</option>
-	</select>
-	<button class="fltr-controls sort-btn active" data-sortAsc>Ascending</button>
-	<button class="fltr-controls sort-btn" data-sortDesc>Descending</button>
+                        $("button.sort-btn").each(function () {
+                            if (($(this).attr('data-sortDesc') === undefined) === filterSettings.sortAscending) {
+                                $(this).addClass("active");
+                            } else {
+                                $(this).removeClass("active");
+                            }
+                        });
+
+                        $("select.fltr-controls[data-sortOrder]").val(filterSettings.sortBy);
+
+                        filterizr.filterizr('filter', filterSettings.filter);
+                        filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
+                    },
+                }
+            };
+            filterizr = $("#grid").filterizr(filterizrOptions);
+
+            $("#filters button").each(function () {
+                $(this).on('click', function () {
+                    $("#filters button").removeClass('active');
+                    $(this).addClass('active');
+                    filterSettings.filter = $(this).attr('data-filter');
+                    window.location.hash = serialize(filterSettings);
+                })
+            });
+
+            $("button.sort-btn").each(function () {
+                $(this).on('click', function () {
+                    $("button.sort-btn").removeClass('active');
+                    $(this).addClass('active');
+                    filterSettings.sortAscending = $(this).attr('data-sortDesc') === undefined
+                    window.location.hash = serialize(filterSettings);
+                })
+            });
+
+            $("select.fltr-controls[data-sortOrder]").on('change', function () {
+                filterSettings.sortBy = $(this).val();
+                filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
+                window.location.hash = serialize(filterSettings);
+            });
+        });
+
+        function serialize(obj) {
+            var str = [];
+            for (var p in obj)
+                if (obj.hasOwnProperty(p)) {
+                    str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                }
+            return str.join("&");
+        }
+
+        function getQueryVariable(query, variable, defaultValue) {
+            if (query[0] == "#") query = query.substring(1);
+
+            var vars = query.split('&');
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split('=');
+                if (decodeURIComponent(pair[0]) == variable) {
+                    return decodeURIComponent(pair[1]);
+                }
+            }
+
+            return defaultValue;
+        }
+
+        function format(str) {
+            str = str.replace(/<(?:.|\n)*?>/gm, '').replace(/(?:\r\n|\r|\n)/g, '<br>');
+            return str;
+        }
+    </script>
 
 
-	<div style="margin-top: 5px;">
-		<small>
-			Clicking the <i class="fa fa-share-alt-square"></i> button opens a <b>shareable URL</b> for the
-			corresponding dealer - this can get posted on platforms such as Telegram/Twitter (and will produce nice
-			previews), and <b>will open directly in the <span data-bind="text: conventionIdentifier"></span> app</b> if
-			opened on an Android/iOS phone if the app
-			installed.
-		</small>
-	</div>
+    Filter:
+    <span id="filters">
+        <button class="fltr-controls active" data-filter="all">All</button>
+        <button class="fltr-controls" data-filter="complete">Complete (80%+)</button>
+        <button class="fltr-controls" data-filter="incomplete">Incomplete</button>
+    </span>
 
-	<div style="display: none;" data-bind="visible: true;">
-		<ul id="grid" class="dealerCards" data-bind="foreach: dealers">
-			<li class="card filtr-item"
-				data-bind="css: status, attr: { 'data-category': status, 'data-name': DisplayNameSort, 'data-progress' : Progress }">
-				<div style="float: left;">
-					<span data-bind="if: (ArtistThumbnailImageId != null)">
-						<img class="artistThumbnail"
-							data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtistThumbnailImageId + '/Content' }"></img>
-					</span>
-					<span data-bind="if: (ArtistThumbnailImageId == null)">
-						<div style="width: 50px; height: 50px;"></div>
-					</span>
-					<div>
-						<div data-bind="if: (Links != null && Links[0] != null)">
-							<a class="button fa fa-globe" data-bind="attr: {  href: Links[0].Target }"
-								target="_blank"></a>
-						</div>
-						<div data-bind="if: (TwitterHandle != '')">
-							<a class="button fa-brands fa-twitter"
-								data-bind="attr: {  href: 'https://twitter.com/' + TwitterHandle }" target="_blank"></a>
-						</div>
-						<div data-bind="if: (TelegramHandle != '')">
-							<a class="button fa-brands fa-telegram"
-								data-bind="attr: {  href: 'https://telegram.me/' + TelegramHandle }"
-								target="_blank"></a>
-						</div>
-					</div>
-				</div>
-				<div class="cardContent">
-					<span class="shareLink" style="float: right;">
-						<a class="headerButton fa fa-share-alt"
-							data-bind="attr: { href: baseUrl + '/Web/Dealers/' + Id }" target="_blank">
-						</a>
-					</span>
+    Sort by:
+    <select class="fltr-controls" data-sortOrder>
+        <option value="name">Name</option>
+        <option value="progress">Completeness</option>
+    </select>
+    <button class="fltr-controls sort-btn active" data-sortAsc>Ascending</button>
+    <button class="fltr-controls sort-btn" data-sortDesc>Descending</button>
 
 
-					<span class="displayName" data-bind="text: DisplayName"> </span>
+    <div style="margin-top: 5px;">
+        <small>
+            Clicking the <i class="fa fa-share-alt-square"></i> button opens a <b>shareable URL</b> for the
+            corresponding dealer - this can get posted on platforms such as Telegram/Twitter (and will produce nice
+            previews), and <b>will open directly in the <span data-bind="text: conventionIdentifier"></span> app</b> if
+            opened on an Android/iOS phone if the app
+            installed.
+        </small>
+    </div>
 
-					<span data-bind="if: (ArtistImageId != null)">
-						<img data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtistImageId + '/Content' }"
-							style="max-width: 100px;"></img>
-					</span>
+    <div style="display: none;" data-bind="visible: true;">
+        <ul id="grid" class="dealerCards" data-bind="foreach: dealers">
+            <li class="card filtr-item"
+                data-bind="css: status, attr: { 'data-category': status, 'data-name': DisplayNameSort, 'data-progress' : Progress }">
+                <div style="float: left;">
+                    <span data-bind="if: (ArtistThumbnailImageId != null)">
+                        <img class="artistThumbnail"
+                            data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtistThumbnailImageId + '/Content' }"></img>
+                    </span>
+                    <span data-bind="if: (ArtistThumbnailImageId == null)">
+                        <div style="width: 50px; height: 50px;"></div>
+                    </span>
+                    <div>
+                        <div data-bind="if: (Links != null && Links[0] != null)">
+                            <a class="button fa fa-globe" data-bind="attr: {  href: Links[0].Target }"
+                                target="_blank"></a>
+                        </div>
+                        <div data-bind="if: (TwitterHandle != '')">
+                            <a class="button fa-brands fa-twitter"
+                                data-bind="attr: {  href: 'https://twitter.com/' + TwitterHandle }" target="_blank"></a>
+                        </div>
+                        <div data-bind="if: (TelegramHandle != '')">
+                            <a class="button fa-brands fa-telegram"
+                                data-bind="attr: {  href: 'https://telegram.me/' + TelegramHandle }"
+                                target="_blank"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="cardContent">
+                    <span class="shareLink" style="float: right;">
+                        <a class="headerButton fa fa-share-alt"
+                            data-bind="attr: { href: baseUrl + '/Web/Dealers/' + Id }" target="_blank">
+                        </a>
+                    </span>
 
 
-					<div>
-						<div class="progressWrap">
-							<div class="progressCont"
-								data-bind="style: { width: Progress + '%', backgroundColor: ProgressColor }">
-							</div>
-						</div>
-						<span class="small" data-bind="text: 'Profile ' + Progress + '% complete.'"></span>
+                    <span class="displayName" data-bind="text: DisplayName"> </span>
 
-						<span data-bind="if: (Issues.length > 0)" class="small">
-							Missing:
-							<ul class="small" data-bind="foreach: Issues">
-								<li data-bind="text: $data"></li>
-							</ul>
-						</span>
-					</div>
+                    <span data-bind="if: (ArtistImageId != null)">
+                        <img data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtistImageId + '/Content' }"
+                            style="max-width: 100px;"></img>
+                    </span>
 
-					<div data-bind="if: ShortDescription != ''">
-						<h4>Short Description:</h4>
-						<span data-bind="html: format(ShortDescription)"></span>
-					</div>
 
-					<div data-bind="if: AboutTheArtistText != ''">
-						<h4>About the Artist:</h4>
-						<span data-bind="html: format(AboutTheArtistText)"></span>
-					</div>
+                    <div>
+                        <div class="progressWrap">
+                            <div class="progressCont"
+                                data-bind="style: { width: Progress + '%', backgroundColor: ProgressColor }">
+                            </div>
+                        </div>
+                        <span class="small" data-bind="text: 'Profile ' + Progress + '% complete.'"></span>
 
-					<div data-bind="if: AboutTheArtText != ''">
-						<h4>About the Art:</h4>
-						<span data-bind="html: format(AboutTheArtText)"></span>
-					</div>
+                        <span data-bind="if: (Issues.length > 0)" class="small">
+                            Missing:
+                            <ul class="small" data-bind="foreach: Issues">
+                                <li data-bind="text: $data"></li>
+                            </ul>
+                        </span>
+                    </div>
 
-					<div data-bind="if: ArtPreviewImageId != null">
-						<img data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtPreviewImageId + '/Content' }"
-							style="max-width: 100%; max-height: 350px;"></img>
-						<div class="small" data-bind="text: ArtPreviewCaption"></div>
-					</div>
-				</div>
-			</li>
-		</ul>
-	</div>
+                    <div data-bind="if: ShortDescription != ''">
+                        <h4>Short Description:</h4>
+                        <span data-bind="html: format(ShortDescription)"></span>
+                    </div>
+
+                    <div data-bind="if: AboutTheArtistText != ''">
+                        <h4>About the Artist:</h4>
+                        <span data-bind="html: format(AboutTheArtistText)"></span>
+                    </div>
+
+                    <div data-bind="if: AboutTheArtText != ''">
+                        <h4>About the Art:</h4>
+                        <span data-bind="html: format(AboutTheArtText)"></span>
+                    </div>
+
+                    <div data-bind="if: ArtPreviewImageId != null">
+                        <img data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtPreviewImageId + '/Content' }"
+                            style="max-width: 100%; max-height: 350px;"></img>
+                        <div class="small" data-bind="text: ArtPreviewCaption"></div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
 </body>
 
 </html>

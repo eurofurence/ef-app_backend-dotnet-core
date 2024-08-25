@@ -5,7 +5,6 @@
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
 @using Eurofurence.App.Domain.Model.Images
-@using Ganss.Xss
 @using Markdig
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
@@ -18,8 +17,9 @@
     <MudItem xs="3">
         <MudToolBar>
             <MudText Typo="Typo.h6">Groups</MudText>
-            <MudSpacer/>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeGroup">New Group</MudButton>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                @onclick="AddKnowledgeGroup">New Group</MudButton>
         </MudToolBar>
         <MudList T="string" Clickable="true">
             <MudListItem @onclick="() => _selectedGroup = null">
@@ -29,18 +29,16 @@
                             <MudText Typo="Typo.h6">Show All</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
-                    <MudCardActions>
-                    </MudCardActions>
                     <MudCardContent>
-                        <MudText>Show all entries</MudText>
+                        <MudText>Select group below to filter.</MudText>
                     </MudCardContent>
                 </MudCard>
             </MudListItem>
             @if (Loading)
             {
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
             }
-            @foreach (var knowledgeGroup in _knowledgeGroups)
+            @foreach (var knowledgeGroup in _knowledgeGroups.Values)
             {
                 <MudListItem @onclick="() => _selectedGroup = knowledgeGroup">
                     <MudCard Style="background-color: transparent">
@@ -52,12 +50,12 @@
                                 <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
                             </CardHeaderContent>
                             <CardHeaderActions>
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)"></MudIconButton>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                    @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)"></MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                    @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
                             </CardHeaderActions>
                         </MudCardHeader>
-                        <MudCardActions>
-                        </MudCardActions>
                         <MudCardContent>
                             <MudText>@knowledgeGroup.Description</MudText>
                         </MudCardContent>
@@ -77,14 +75,17 @@
             {
                 <MudText Typo="Typo.h6">All Entries</MudText>
             }
-            <MudSpacer/>
-            <MudSpacer/>
-            <MudTextField @bind-Value="_knowledgeEntrySearch" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
-            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeEntry">New entry</MudButton>
+            <MudSpacer />
+            <MudSpacer />
+            <MudTextField @bind-Value="_knowledgeEntrySearch" Label="Search" Variant="Variant.Outlined"
+                Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                AdornmentColor="Color.Secondary" />
+            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary"
+                StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeEntry">New entry</MudButton>
         </MudToolBar>
         @if (Loading)
         {
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
         }
         <MudContainer>
             @foreach (var knowledgeEntry in GetKnowledgeEntities())
@@ -92,15 +93,18 @@
                 <MudCard Class="mt-4">
                     <MudCardHeader>
                         <CardHeaderContent>
+                            <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
                             <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)"/>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)" />
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText Class="mb-4">@((MarkupString)_htmlSanitizer.Sanitize(Markdown.ToHtml(knowledgeEntry.Text)))</MudText>
+                        <MarkdownRenderer Text="@knowledgeEntry.Text"></MarkdownRenderer>
 
                         @foreach (var image in knowledgeEntry.Images)
                         {
@@ -123,15 +127,13 @@
     public bool Loading = true;
     private string? _knowledgeEntrySearch;
     private KnowledgeGroupRecord? _selectedGroup;
-    private List<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
+    private Dictionary<Guid, KnowledgeGroupRecord> _knowledgeGroups = new Dictionary<Guid, KnowledgeGroupRecord>();
     private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
 
-    private HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
-    
     protected override async Task OnInitializedAsync()
     {
-        await LoadKnowledgeEntries();
         await LoadKnowledgeGroups();
+        await LoadKnowledgeEntries();
     }
 
     private async Task LoadKnowledgeEntries()
@@ -143,34 +145,35 @@
         foreach (var response in responses)
         {
             var record = new KnowledgeEntryRecord()
-            {
-                Id = response.Id,
-                KnowledgeGroupId = response.KnowledgeGroupId,
-                Title = response.Title,
-                Text = response.Text,
-                Order = response.Order,
-                LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
-                IsDeleted = response.IsDeleted,
-                Links = response.Links
-            };
+                {
+                    Id = response.Id,
+                    KnowledgeGroupId = response.KnowledgeGroupId,
+                    KnowledgeGroup = _knowledgeGroups[response.KnowledgeGroupId],
+                    Title = response.Title,
+                    Text = response.Text,
+                    Order = response.Order,
+                    LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
+                    IsDeleted = response.IsDeleted,
+                    Links = response.Links
+                };
             foreach (var imageId in response.ImageIds)
             {
                 var image = await ImageService.GetImageAsync(imageId);
                 if (image != null)
                 {
                     record.Images.Add(new ImageRecord()
-                    {
-                        Id = image.Id,
-                        Url = image.Url,
-                        Height = image.Height,
-                        Width = image.Width,
-                        ContentHashSha1 = image.ContentHashSha1,
-                        InternalReference = image.InternalReference,
-                        MimeType = image.MimeType,
-                        SizeInBytes = image.SizeInBytes,
-                        LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
-                        IsDeleted = image.IsDeleted
-                    });
+                        {
+                            Id = image.Id,
+                            Url = image.Url,
+                            Height = image.Height,
+                            Width = image.Width,
+                            ContentHashSha1 = image.ContentHashSha1,
+                            InternalReference = image.InternalReference,
+                            MimeType = image.MimeType,
+                            SizeInBytes = image.SizeInBytes,
+                            LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                            IsDeleted = image.IsDeleted
+                        });
                 }
             }
 
@@ -183,7 +186,7 @@
     private async Task LoadKnowledgeGroups()
     {
         Loading = true;
-        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToList();
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToDictionary(kg => kg.Id);
         Loading = false;
     }
 
@@ -194,12 +197,15 @@
             return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch);
         }
 
-        return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch).Where(ke => ke.KnowledgeGroupId == _selectedGroup.Id);
+        return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch).Where(ke => ke.KnowledgeGroupId ==
+        _selectedGroup.Id);
     }
 
-    private IEnumerable<KnowledgeEntryRecord> FilterKnowledgeEntries(IEnumerable<KnowledgeEntryRecord> entries, string? searchString)
+    private IEnumerable<KnowledgeEntryRecord> FilterKnowledgeEntries(IEnumerable<KnowledgeEntryRecord> entries, string?
+    searchString)
     {
-        return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry => entry.Title.ToLower().Contains(searchString.ToLower()) || entry.Text.ToLower().Contains(searchString.ToLower()));
+        return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry =>
+        entry.Title.ToLower().Contains(searchString.ToLower()) || entry.Text.ToLower().Contains(searchString.ToLower()));
     }
 
 
@@ -252,7 +258,7 @@
         var dialog = await DialogService.ShowAsync<KnowledgeGroupDialog>("New knowledge base group", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result?.Canceled ?? false)
         {
             Loading = true;
             await LoadKnowledgeGroups();

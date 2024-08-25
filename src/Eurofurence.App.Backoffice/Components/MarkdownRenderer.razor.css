@@ -1,0 +1,34 @@
+div.md-renderer ::deep * {
+    box-sizing: border-box;
+}
+
+div.md-renderer ::deep p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+
+div.md-renderer ::deep hr {
+    display: block;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    border-style: inset;
+    border-width: 1px
+}
+
+
+div.md-renderer ::deep ul,
+div.md-renderer ::deep ol {
+    padding-inline-start: 40px;
+}
+
+div.md-renderer ::deep ul {
+    list-style: disc;
+}
+
+div.md-renderer ::deep ol {
+    list-style: decimal;
+}

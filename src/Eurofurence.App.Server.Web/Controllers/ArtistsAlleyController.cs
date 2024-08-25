@@ -68,7 +68,14 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             if (!Uri.TryCreate(request.WebsiteUrl, UriKind.Absolute, out _)) return BadRequest("Invalid website URL!");
 
-            await _tableRegistrationService.RegisterTableAsync(User, request, image);
+            try
+            {
+                await _tableRegistrationService.RegisterTableAsync(User, request, image);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
             return NoContent();
         }
 

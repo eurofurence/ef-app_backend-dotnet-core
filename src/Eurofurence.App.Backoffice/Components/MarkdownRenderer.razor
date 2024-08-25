@@ -1,0 +1,13 @@
+@namespace Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Domain.Model.Knowledge
+@using Markdig
+
+<div class="md-renderer">
+    @((MarkupString)Markdown.ToHtml(Text ?? ""))
+</div>
+
+@code {
+
+    [Parameter] public string? Text { get; set; }
+
+}

@@ -7,38 +7,38 @@
 
 @if (claims != null && claims.Any())
 {
-	<ul>
-	@foreach (var claim in claims)
-		{
-			<li>@claim.Type: @claim.Value</li>
-		}
-	</ul>
+    <ul>
+    @foreach (var claim in claims)
+        {
+            <li>@claim.Type: @claim.Value</li>
+        }
+    </ul>
 }
 else
 {
-	<p>No claims found or user is not authenticated.</p>
+    <p>No claims found or user is not authenticated.</p>
 }
 
 @code {
-	private IEnumerable<Claim> claims = new List<Claim>();
+    private IEnumerable<Claim> claims = new List<Claim>();
 
-	protected override async Task OnInitializedAsync()
-	{
-		// Get the authentication state
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the authentication state
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-		// Check if the user is authenticated
-		if (user?.Identity?.IsAuthenticated ?? false)
-		{
-			// Retrieve and print all claims
-			claims = user.Claims;
+        // Check if the user is authenticated
+        if (user?.Identity?.IsAuthenticated ?? false)
+        {
+            // Retrieve and print all claims
+            claims = user.Claims;
 
-			// Log claims to the console (for browser console)
-			foreach (var claim in claims)
-			{
-				Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-			}
-		}
-	}
+            // Log claims to the console (for browser console)
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+        }
+    }
 }
