@@ -176,16 +176,28 @@
 
     private async Task DeleteImage(Guid id)
     {
-        var result = await ImageService.DeleteImageAsync(id);
-        if (result)
+        DialogParameters<ConfirmDialog> dialog = new()
         {
-            Snackbar.Add("Image deleted.", Severity.Success);
-            await LoadImagesAsync();
-            _dataGrid?.ReloadServerData();
-        }
-        else
+            { x => x.ContentText, $"Are you sure you want to delete this ímage?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult dialogResult = await dialogRef.Result;
+
+        if (!dialogResult.Canceled)
         {
-            Snackbar.Add("Error deleting image.", Severity.Error);
+            var result = await ImageService.DeleteImageAsync(id);
+            if (result)
+            {
+                Snackbar.Add("Image deleted.", Severity.Success);
+                await LoadImagesAsync();
+                _dataGrid?.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add("Error deleting image.", Severity.Error);
+            }
         }
     }
 

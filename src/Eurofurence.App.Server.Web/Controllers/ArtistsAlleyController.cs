@@ -26,6 +26,31 @@ namespace Eurofurence.App.Server.Web.Controllers
             _imageService = imageService;
         }
 
+        [HttpPut("{id}/:status")]
+        [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
+        public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull] [FromRoute] Guid id,
+            [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
+        {
+            TableRegistrationRecord record =
+                await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+            // Return 404 if the passed id does not exist
+            if (record == null)
+            {
+                return NotFound();
+            }
+
+            if (state == TableRegistrationRecord.RegistrationStateEnum.Rejected)
+            {
+                await _tableRegistrationService.RejectByIdAsync(id, "API:" + User.Identity.Name);
+            }
+            else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
+            {
+                await _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
+            }
+
+            return NoContent();
+        }
+
         /// <summary>
         ///     Retrieves a list of all table registrations.
         /// </summary>

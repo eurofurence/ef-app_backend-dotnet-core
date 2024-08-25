@@ -118,7 +118,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                                                                            && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
+            var stateChange =record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
+            _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
@@ -189,7 +190,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                 && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
 
-            record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
+            var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
+            _appDbContext.StateChangeRecord.Add(stateChange);
+
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,

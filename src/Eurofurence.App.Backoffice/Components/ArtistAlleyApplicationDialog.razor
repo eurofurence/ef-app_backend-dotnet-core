@@ -1,0 +1,110 @@
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.ArtistsAlley
+
+@inject IArtistAlleyService TableRegService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="overflow-scroll pr-4">
+            <MudGrid>
+                @if (Record.Image != null && !string.IsNullOrEmpty(Record.Image.Url))
+                {
+                    <MudItem xs="6">
+                        <MudLink Href="@Record.Image.Url">
+                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Image.Url"/>
+                        </MudLink>
+                    </MudItem>
+                }
+                <MudItem xs="6">
+                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID"/>
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username"/>
+                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website"/>
+                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description"/>
+                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle"/>
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mb-4"/>
+                    @switch (Record.State)
+                    {
+                        case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                            <MudAlert Severity="Severity.Info">Pending</MudAlert>
+                            <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="() => TryChangeRegistrationStatus(Record, false)">Approve</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="() => TryChangeRegistrationStatus(Record, true)">Reject</MudButton>
+                            @*Show the delete button only for admins*@
+                            <AuthorizeView Roles="Admin">
+                                <Authorized>
+                                    <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">Delete</MudButton>
+                                </Authorized>
+                            </AuthorizeView>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Accepted:
+                            <MudAlert Severity="Severity.Success">Accepted</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                            <MudAlert Severity="Severity.Error">Rejected</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Published:
+                            <MudAlert Severity="Severity.Success">Published</MudAlert>
+                            break;
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [Parameter] public TableRegistrationRecord Record { get; set; }
+
+
+    private async Task DeleteRegistration()
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            { x => x.ContentText, $"Are you sure you want to delete this application?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult result = await dialogRef.Result;
+
+        if (!result.Canceled)
+        {
+            await TableRegService.DeleteTableRegistrationAsync(Record);
+            Snackbar.Add("Application Deleted", Severity.Success);
+        }
+    }
+
+    /// <summary>
+    /// Attempt to change the status of a table registration
+    /// </summary>
+    /// <param name="registrationRecord"></param>
+    /// <param name="reject"></param>
+    private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult result = await dialogRef.Result;
+
+        if (!result.Canceled)
+        {
+            var state = reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted;
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, state);
+
+            Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.");
+
+            Record.State = state;
+
+            StateHasChanged();
+        }
+    }
+
+}
