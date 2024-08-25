@@ -27,7 +27,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPut("{id}/:status")]
-        [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
+        [Authorize(Roles = "Admin, ArtistAlleyAdmin, ArtistAlleyModerator")]
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
@@ -80,7 +80,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
-        [Authorize(Roles = "Attendee")]
+        [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, IFormFile requestImageFile)
         {
@@ -105,7 +105,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Attendee")]
+        [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpGet("TableRegistration/:my-latest")]
         public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
         {

@@ -1,5 +1,5 @@
 ﻿@page "/images"
-@attribute [Authorize(Policy = "RequireKnowledgeBaseEditor")]
+@attribute [Authorize(Roles = "Admin")]
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Images
@@ -147,10 +147,10 @@
     searchString)
     {
         return string.IsNullOrEmpty(searchString)
-        ? entries
-        : entries.Where(entry =>
-        entry.InternalReference.ToLower().Contains(searchString.ToLower())
-        || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
+            ? entries
+            : entries.Where(entry =>
+                entry.InternalReference.ToLower().Contains(searchString.ToLower())
+                || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
     }
 
     private async Task AddImage()
@@ -189,9 +189,9 @@
         };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult dialogResult = await dialogRef.Result;
+        DialogResult? dialogResult = await dialogRef.Result;
 
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             var result = await ImageService.DeleteImageAsync(id);
             if (result)

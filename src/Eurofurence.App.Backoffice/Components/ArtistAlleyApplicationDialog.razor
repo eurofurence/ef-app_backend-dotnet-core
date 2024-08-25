@@ -13,29 +13,33 @@
                 {
                     <MudItem xs="6">
                         <MudLink Href="@Record.Image.Url">
-                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Image.Url"/>
+                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2"
+                                Src="@Record.Image.Url" />
                         </MudLink>
                     </MudItem>
                 }
                 <MudItem xs="6">
-                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID"/>
-                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at"/>
-                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID"/>
-                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username"/>
-                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website"/>
-                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description"/>
-                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle"/>
-                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mb-4"/>
+                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz" />
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID" />
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username" />
+                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website" />
+                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description" />
+                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle" />
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mb-4" />
                     @switch (Record.State)
                     {
                         case TableRegistrationRecord.RegistrationStateEnum.Pending:
                             <MudAlert Severity="Severity.Info">Pending</MudAlert>
-                            <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="() => TryChangeRegistrationStatus(Record, false)">Approve</MudButton>
-                            <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="() => TryChangeRegistrationStatus(Record, true)">Reject</MudButton>
+                            <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                                @onclick="() => TryChangeRegistrationStatus(Record, false)">Approve</MudButton>
+                            <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                @onclick="() => TryChangeRegistrationStatus(Record, true)">Reject</MudButton>
                             @*Show the delete button only for admins*@
-                            <AuthorizeView Roles="Admin">
+                            <AuthorizeView Policy="RequireArtistAlleyAdmin">
                                 <Authorized>
-                                    <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">Delete</MudButton>
+                                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">
+                                        Delete</MudButton>
                                 </Authorized>
                             </AuthorizeView>
                             break;
@@ -57,7 +61,7 @@
 
 @code {
 
-    [Parameter] public TableRegistrationRecord Record { get; set; }
+    [Parameter] public TableRegistrationRecord? Record { get; set; }
 
 
     private async Task DeleteRegistration()
@@ -69,9 +73,9 @@
         };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult result = await dialogRef.Result;
+        DialogResult? result = await dialogRef.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false } && Record != null)
         {
             await TableRegService.DeleteTableRegistrationAsync(Record);
             Snackbar.Add("Application Deleted", Severity.Success);
@@ -92,11 +96,12 @@
         };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult result = await dialogRef.Result;
+        DialogResult? result = await dialogRef.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false } && Record != null)
         {
-            var state = reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted;
+            var state = reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected :
+                TableRegistrationRecord.RegistrationStateEnum.Accepted;
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, state);
 
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.");
