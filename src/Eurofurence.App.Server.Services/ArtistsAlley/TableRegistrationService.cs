@@ -85,9 +85,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             foreach (var registration in activeRegistrations)
             {
-                var stateChange = registration.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, subject);
-                _appDbContext.StateChangeRecord.Add(stateChange);
-                registration.Touch();
+                if (registration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
+                await DeleteOneAsync(registration.Id);
             }
 
             var record = new TableRegistrationRecord()
@@ -118,7 +117,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
                                                                            && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
-            var stateChange =record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
+            var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
 
