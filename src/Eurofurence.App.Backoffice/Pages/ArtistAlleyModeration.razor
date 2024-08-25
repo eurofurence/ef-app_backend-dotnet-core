@@ -17,7 +17,7 @@
     <MudSpacer />
     <MudSpacer />
     <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
-        Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 @*
 Table showing the basic informations for each application.
@@ -33,7 +33,7 @@ More data of the applicant shall be visble an extra dialog
                 {
                     <MudLink Href="@context.Item.Image.Url">
                         <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain"
-                            Src="@context.Item.Image.Url" />
+                                  Src="@context.Item.Image.Url" />
                     </MudLink>
                 }
             </CellTemplate>
@@ -117,15 +117,15 @@ More data of the applicant shall be visble an extra dialog
     private async Task DeleteRegistration(TableRegistrationRecord registrationRecord)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to delete this application?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
+        {
+            { x => x.ContentText, $"Are you sure you want to delete this application?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult result = await dialogRef.Result;
+        DialogResult? result = await dialogRef.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
             _items = await GetRegistrationsAsync();
@@ -142,18 +142,18 @@ More data of the applicant shall be visble an extra dialog
     private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
+        {
+            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult result = await dialogRef.Result;
+        DialogResult? result = await dialogRef.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ?
-            TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+                TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
             _items = await GetRegistrationsAsync();
             StateHasChanged();
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
@@ -166,10 +166,9 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="contextItem"></param>
     private async Task OpenMoreDialog(TableRegistrationRecord contextItem)
     {
-        var parameters = new DialogParameters<ArtistAlleyApplicationDialog>()
-{
-{ x => x.Record, contextItem }
-};
+        var parameters = new DialogParameters<ArtistAlleyApplicationDialog>() {
+            { x => x.Record, contextItem }
+        };
 
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
 
@@ -188,11 +187,10 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="entries"></param>
     /// <returns></returns>
     private IEnumerable<TableRegistrationRecord> Filter(IEnumerable<TableRegistrationRecord> entries) =>
-    string.IsNullOrEmpty(_search) ? entries : entries.Where(x => x.DisplayName.Contains(_search,
-    StringComparison.OrdinalIgnoreCase)
-    || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
-    || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
-    || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
+        string.IsNullOrEmpty(_search) ? entries : entries.Where(x => x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
 
 
     /// <summary>
@@ -206,9 +204,9 @@ More data of the applicant shall be visble an extra dialog
         // Show pending applications fist.
         // Sorting may be changed by the user in the UI.
         registrations = registrations
-        .Select(x => x)
-        .OrderBy(x => x.State)
-        .ToList();
+            .Select(x => x)
+            .OrderBy(x => x.State)
+            .ToList();
 
         registrations = Filter(registrations);
 

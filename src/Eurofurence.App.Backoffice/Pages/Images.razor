@@ -141,10 +141,10 @@
     searchString)
     {
         return string.IsNullOrEmpty(searchString)
-        ? entries
-        : entries.Where(entry =>
-        entry.InternalReference.ToLower().Contains(searchString.ToLower())
-        || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
+            ? entries
+            : entries.Where(entry =>
+                entry.InternalReference.ToLower().Contains(searchString.ToLower())
+                || entry.Id.ToString().ToLower().Contains(searchString.ToLower()));
     }
 
     private async Task AddImage()
@@ -177,15 +177,15 @@
     private async Task DeleteImage(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to delete this ímage?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
+        {
+            { x => x.ContentText, $"Are you sure you want to delete this ímage?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult dialogResult = await dialogRef.Result;
+        DialogResult? dialogResult = await dialogRef.Result;
 
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             var result = await ImageService.DeleteImageAsync(id);
             if (result)

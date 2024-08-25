@@ -61,21 +61,21 @@
 
 @code {
 
-    [Parameter] public TableRegistrationRecord Record { get; set; }
+    [Parameter] public TableRegistrationRecord? Record { get; set; }
 
 
     private async Task DeleteRegistration()
     {
         DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to delete this application?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
+        {
+            { x => x.ContentText, $"Are you sure you want to delete this application?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult result = await dialogRef.Result;
+        DialogResult? result = await dialogRef.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false } && Record != null)
         {
             await TableRegService.DeleteTableRegistrationAsync(Record);
             Snackbar.Add("Application Deleted", Severity.Success);
@@ -90,18 +90,18 @@
     private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
+        {
+            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult result = await dialogRef.Result;
+        DialogResult? result = await dialogRef.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false } && Record != null)
         {
             var state = reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected :
-            TableRegistrationRecord.RegistrationStateEnum.Accepted;
+                TableRegistrationRecord.RegistrationStateEnum.Accepted;
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, state);
 
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.");
