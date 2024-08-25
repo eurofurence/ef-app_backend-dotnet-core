@@ -3,9 +3,12 @@
     <AuthorizeView Policy="RequireKnowledgeBaseEditor">
         <MudNavLink Href="knowledgebase" Icon="@Icons.Material.Outlined.Info" Match="NavLinkMatch.Prefix">Knowledge Base
         </MudNavLink>
+    </AuthorizeView>
+    <AuthorizeView Roles="Admin">
         <MudNavLink Href="images" Icon="@Icons.Material.Outlined.Image" Match="NavLinkMatch.Prefix">Images</MudNavLink>
     </AuthorizeView>
-    <AuthorizeView Roles="ArtistAlleyModerator">
-        <MudNavLink Href="artistAlleyModeration" Icon="@Icons.Material.Outlined.AddModerator">Artist Alley Moderation</MudNavLink>
+    <AuthorizeView Policy="RequireArtistAlleyModerator">
+        <MudNavLink Href="artistAlleyModeration" Icon="@Icons.Material.Outlined.AddModerator">Artist Alley Moderation
+        </MudNavLink>
     </AuthorizeView>
 </MudNavMenu>

@@ -9,5 +9,6 @@
         "editor.insertSpaces": true,
         "editor.indentSize": "tabSize",
         "editor.tabSize": 4,
+        "editor.formatOnSave": false,
     }
 }
