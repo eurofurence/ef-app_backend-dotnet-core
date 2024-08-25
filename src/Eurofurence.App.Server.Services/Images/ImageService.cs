@@ -84,6 +84,7 @@ namespace Eurofurence.App.Server.Services.Images
         public async Task<ImageRecord> InsertImageAsync(
             string internalReference,
             Stream stream,
+            bool isRestricted = false,
             int? width = null,
             int? height = null,
             CancellationToken cancellationToken = default)
@@ -114,6 +115,7 @@ namespace Eurofurence.App.Server.Services.Images
                 Id = guid,
                 InternalFileName = fileName,
                 Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}",
+                IsRestricted = isRestricted,
                 InternalReference = internalReference,
                 IsDeleted = 0,
                 MimeType = imageFormat?.DefaultMimeType,
@@ -142,6 +144,7 @@ namespace Eurofurence.App.Server.Services.Images
             Guid id,
             string internalReference,
             Stream stream,
+            bool isRestricted = false,
             int? width = null,
             int? height = null,
             CancellationToken cancellationToken = default)
@@ -183,6 +186,7 @@ namespace Eurofurence.App.Server.Services.Images
 
             existingRecord.InternalFileName = fileName;
             existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}";
+            existingRecord.IsRestricted = isRestricted;
             existingRecord.InternalReference = internalReference;
             existingRecord.MimeType = imageFormat?.DefaultMimeType;
             existingRecord.Width = image.Width;
@@ -365,6 +369,18 @@ namespace Eurofurence.App.Server.Services.Images
                 .WithBucket(bucketName)
                 .WithObjects(objectNames);
             await _minIoClient.RemoveObjectsAsync(removeObjectsArgs, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<ImageRecord> SetRestricted(Guid id, bool isRestricted,
+            CancellationToken cancellationToken = default)
+        {
+            var record = await _appDbContext.Images.FirstOrDefaultAsync(i => i.Id == id);
+            if (record == null)
+            {
+                record.IsRestricted = isRestricted;
+                await _appDbContext.SaveChangesAsync(cancellationToken);
+            }
+            return record;
         }
     }
 }

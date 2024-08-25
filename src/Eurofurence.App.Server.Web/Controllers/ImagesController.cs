@@ -36,6 +36,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
         public IEnumerable<ImageRecord> GetImagesAsync()
         {
+            return _imageService.FindAll().Where(i => !i.IsRestricted);
+        }
+
+        /// <summary>
+        ///     Retrieves a list of all images including restricted ones.
+        /// </summary>
+        /// <returns>All images.</returns>
+        [Authorize(Roles = "Admin")]
+        [HttpGet(":all")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
+        public IEnumerable<ImageRecord> GetAllImagesAsync()
+        {
             return _imageService.FindAll();
         }
 
@@ -43,6 +56,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all images with related IDs.
         /// </summary>
         /// <returns>All images with related IDs.</returns>
+        [Authorize(Roles = "Admin")]
         [HttpGet("with-relations")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<ImageWithRelationsResponse>), 200)]
