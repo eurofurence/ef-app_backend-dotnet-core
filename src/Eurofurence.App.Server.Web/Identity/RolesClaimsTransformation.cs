@@ -86,6 +86,11 @@ public class RolesClaimsTransformation(
                 roles.Add("AttendeeCheckedIn");
             }
 
+            if (authorizationOptions.Value.ArtistAlleyAdmin.Contains(claim.Value))
+            {
+                roles.Add("ArtistAlleyAdmin");
+            }
+
             if (authorizationOptions.Value.ArtistAlleyModerator.Contains(claim.Value))
             {
                 roles.Add("ArtistAlleyModerator");

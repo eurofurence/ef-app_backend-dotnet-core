@@ -38,7 +38,13 @@ builder.Services.AddOidcAuthentication(options =>
 builder.Services.AddAuthorizationCore(config =>
 {
     config.AddPolicy("RequireKnowledgeBaseEditor", policy =>
-        policy.RequireRole("KnowledgeBaseEditor")
+        policy.RequireRole(["KnowledgeBaseEditor", "Admin"])
+        );
+    config.AddPolicy("RequireArtistAlleyModerator", policy =>
+        policy.RequireRole(["ArtistAlleyModerator", "ArtistAlleyAdmin", "Admin"])
+        );
+    config.AddPolicy("RequireArtistAlleyAdmin", policy =>
+        policy.RequireRole(["ArtistAlleyAdmin", "Admin"])
         );
 }
 );

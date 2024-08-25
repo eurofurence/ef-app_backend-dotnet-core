@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Color = MudBlazor.Color
 
-@attribute [Authorize(Roles = "ArtistAlleyModerator")]
+@attribute [Authorize(Policy = "RequireArtistAlleyModerator")]
 
 @inject IArtistAlleyService TableRegService
 @inject IDialogService DialogService
@@ -14,30 +14,31 @@
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Artist Alley Moderation</MudText>
-    <MudSpacer/>
-    <MudSpacer/>
+    <MudSpacer />
+    <MudSpacer />
     <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
-                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
+        Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 @*
 Table showing the basic informations for each application.
 
 More data of the applicant shall be visble an extra dialog
- *@
-<MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" Items="_items" Filterable="true" FilterMode="@DataGridFilterMode.ColumnFilterMenu">
+*@
+<MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" Items="_items" Filterable="true"
+    FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
         <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
             <CellTemplate>
-                @if (context.Item.Image != null &&  !string.IsNullOrEmpty(context.Item.Image.Url))
+                @if (context.Item.Image != null && !string.IsNullOrEmpty(context.Item.Image.Url))
                 {
                     <MudLink Href="@context.Item.Image.Url">
                         <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain"
-                                  Src="@context.Item.Image.Url"/>
+                            Src="@context.Item.Image.Url" />
                     </MudLink>
                 }
             </CellTemplate>
         </TemplateColumn>
-        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false"/>
+        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false" />
         <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName" Filterable="false" />
         <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location" Filterable="false" />
         <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription" Filterable="false" />
@@ -51,12 +52,15 @@ More data of the applicant shall be visble an extra dialog
                             @switch (context2.Item?.State)
                             {
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                                    <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
-                                    <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
+                                    <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"
+                                        OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
+                                    <MudButton StartIcon="@Icons.Material.Filled.Cancel"
+                                        OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
                                     @*Show the delete button only for admins*@
-                                    <AuthorizeView Roles="Admin">
+                                    <AuthorizeView Policy="RequireArtistAlleyAdmin">
                                         <Authorized>
-                                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
+                                            <MudButton StartIcon="@Icons.Material.Filled.Delete"
+                                                OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
                                         </Authorized>
                                     </AuthorizeView>
                                     break;
@@ -72,7 +76,8 @@ More data of the applicant shall be visble an extra dialog
                             }
                         </MudItem>
                         <MudItem xs="2">
-                            <MudButton StartIcon="@Icons.Material.Filled.Menu" OnClick="() => OpenMoreDialog(context2.Item)">More...</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Menu"
+                                OnClick="() => OpenMoreDialog(context2.Item)">More...</MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudContainer>
@@ -80,7 +85,7 @@ More data of the applicant shall be visble an extra dialog
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="TableRegistrationRecord"/>
+        <MudDataGridPager T="TableRegistrationRecord" />
     </PagerContent>
 </MudDataGrid>
 
@@ -109,14 +114,14 @@ More data of the applicant shall be visble an extra dialog
             _dataGrid?.SetSortAsync(nameof(TableRegistrationRecord.State), SortDirection.Ascending, x => x.State);
         }
     }
-    
+
     private async Task DeleteRegistration(TableRegistrationRecord registrationRecord)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to delete this application?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to delete this application?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult result = await dialogRef.Result;
@@ -138,17 +143,18 @@ More data of the applicant shall be visble an extra dialog
     private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult result = await dialogRef.Result;
 
         if (!result.Canceled)
         {
-            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ?
+            TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
             _items = await GetRegistrationsAsync();
             StateHasChanged();
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
@@ -162,9 +168,9 @@ More data of the applicant shall be visble an extra dialog
     private async Task OpenMoreDialog(TableRegistrationRecord contextItem)
     {
         var parameters = new DialogParameters<ArtistAlleyApplicationDialog>()
-        {
-            { x => x.Record, contextItem }
-        };
+{
+{ x => x.Record, contextItem }
+};
 
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
 
@@ -183,10 +189,11 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="entries"></param>
     /// <returns></returns>
     private IEnumerable<TableRegistrationRecord> Filter(IEnumerable<TableRegistrationRecord> entries) =>
-        string.IsNullOrEmpty(_search) ? entries : entries.Where(x => x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
+    string.IsNullOrEmpty(_search) ? entries : entries.Where(x => x.DisplayName.Contains(_search,
+    StringComparison.OrdinalIgnoreCase)
+    || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
+    || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
+    || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
 
 
     /// <summary>
@@ -200,9 +207,9 @@ More data of the applicant shall be visble an extra dialog
         // Show pending applications fist.
         // Sorting may be changed by the user in the UI.
         registrations = registrations
-            .Select(x => x)
-            .OrderBy(x => x.State)
-            .ToList();
+        .Select(x => x)
+        .OrderBy(x => x.State)
+        .ToList();
 
         registrations = Filter(registrations);
 

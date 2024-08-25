@@ -27,8 +27,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPut("{id}/:status")]
-        [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
-        public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull] [FromRoute] Guid id,
+        [Authorize(Roles = "Admin, ArtistAlleyAdmin, ArtistAlleyModerator")]
+        public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
             TableRegistrationRecord record =
