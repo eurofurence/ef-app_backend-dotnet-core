@@ -35,10 +35,6 @@ More data of the applicant shall be visble an extra dialog
                                   Src="@context.Item.Image.Url"/>
                     </MudLink>
                 }
-                else
-                {
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-                }
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false"/>
@@ -49,30 +45,37 @@ More data of the applicant shall be visble an extra dialog
         </PropertyColumn>
         <TemplateColumn Context="context2">
             <CellTemplate>
-                @switch (context2.Item.State)
-                {
-                    case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                        <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
-                        @*Show the delete button only for admins*@
-                        <AuthorizeView Roles="Admin">
-                            <Authorized>
-                                <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
-                            </Authorized>
-                        </AuthorizeView>
-                        <MudButton StartIcon="@Icons.Material.Filled.Menu" OnClick="() => OpenMoreDialog(context2.Item)">More...</MudButton>
-                        break;
-                    case TableRegistrationRecord.RegistrationStateEnum.Accepted:
-                        <MudAlert Severity="Severity.Success">Accepted</MudAlert>
-                        break;
-                    case TableRegistrationRecord.RegistrationStateEnum.Rejected:
-                        <MudAlert Severity="Severity.Error">Rejected</MudAlert>
-                        break;
-                    case TableRegistrationRecord.RegistrationStateEnum.Published:
-                        <MudAlert Severity="Severity.Success">Published</MudAlert>
-                        break;
-                }
-
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudGrid>
+                        <MudItem xs="10">
+                            @switch (context2.Item?.State)
+                            {
+                                case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                                    <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
+                                    <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
+                                    @*Show the delete button only for admins*@
+                                    <AuthorizeView Roles="Admin">
+                                        <Authorized>
+                                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    break;
+                                case TableRegistrationRecord.RegistrationStateEnum.Accepted:
+                                    <MudAlert Severity="Severity.Success">Accepted</MudAlert>
+                                    break;
+                                case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                                    <MudAlert Severity="Severity.Error">Rejected</MudAlert>
+                                    break;
+                                case TableRegistrationRecord.RegistrationStateEnum.Published:
+                                    <MudAlert Severity="Severity.Success">Published</MudAlert>
+                                    break;
+                            }
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudButton StartIcon="@Icons.Material.Filled.Menu" OnClick="() => OpenMoreDialog(context2.Item)">More...</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
             </CellTemplate>
         </TemplateColumn>
     </Columns>
@@ -94,7 +97,7 @@ More data of the applicant shall be visble an extra dialog
 
     protected override async Task OnInitializedAsync()
     {
-        _items = await GetRegistrations();
+        _items = await GetRegistrationsAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -145,7 +148,8 @@ More data of the applicant shall be visble an extra dialog
         if (!result.Canceled)
         {
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
-            await _dataGrid.ReloadServerData();
+            _items = await GetRegistrationsAsync();
+            StateHasChanged();
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
         }
     }
@@ -156,14 +160,19 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="contextItem"></param>
     private async Task OpenMoreDialog(TableRegistrationRecord contextItem)
     {
-        var dialog = new DialogParameters<ArtistAlleyApplicationDialog>()
+        var parameters = new DialogParameters<ArtistAlleyApplicationDialog>()
         {
             { x => x.Record, contextItem }
         };
 
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
 
-        await DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", dialog, options);
+        var dialog = await DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", parameters, options);
+
+        await dialog.Result;
+
+        _items = await GetRegistrationsAsync();
+        StateHasChanged();
     }
 
 
@@ -183,7 +192,7 @@ More data of the applicant shall be visble an extra dialog
     /// Requests the table registrations from <see cref="IArtistAlleyService"/>
     /// </summary>
     /// <returns></returns>
-    private async Task<IEnumerable<TableRegistrationRecord>> GetRegistrations()
+    private async Task<IEnumerable<TableRegistrationRecord>> GetRegistrationsAsync()
     {
         IEnumerable<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
 
@@ -202,7 +211,7 @@ More data of the applicant shall be visble an extra dialog
     private async void Search(string searchString)
     {
         _search = searchString;
-        _items = await GetRegistrations();
+        _items = await GetRegistrationsAsync();
     }
 
     #endregion

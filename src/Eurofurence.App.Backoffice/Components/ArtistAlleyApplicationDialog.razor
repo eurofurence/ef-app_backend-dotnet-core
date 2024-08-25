@@ -9,15 +9,14 @@
     <DialogContent>
         <MudContainer Class="overflow-scroll pr-4">
             <MudGrid>
-                <MudItem>
-                    <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Image.Url">
-                        @if (string.IsNullOrEmpty(@Record.Image.Url))
-                        {
-                            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-                        }
-                    </MudImage>
-                </MudItem>
-
+                @if (Record.Image != null && !string.IsNullOrEmpty(Record.Image.Url))
+                {
+                    <MudItem xs="6">
+                        <MudLink Href="@Record.Image.Url">
+                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Image.Url"/>
+                        </MudLink>
+                    </MudItem>
+                }
                 <MudItem xs="6">
                     <MudTextField ReadOnly="true" Value="Record.Id" Label="ID"/>
                     <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at"/>
@@ -26,7 +25,7 @@
                     <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website"/>
                     <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description"/>
                     <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle"/>
-                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location"/>
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mb-4"/>
                     @switch (Record.State)
                     {
                         case TableRegistrationRecord.RegistrationStateEnum.Pending:
@@ -88,7 +87,7 @@
     {
         DialogParameters<ConfirmDialog> dialog = new()
         {
-            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?m" },
+            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
             { x => x.ActionButtonText, "Confirm" }
         };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
@@ -97,9 +96,15 @@
 
         if (!result.Canceled)
         {
-            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            var state = reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted;
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, state);
 
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.");
+
+            Record.State = state;
+
+            StateHasChanged();
         }
     }
+
 }
