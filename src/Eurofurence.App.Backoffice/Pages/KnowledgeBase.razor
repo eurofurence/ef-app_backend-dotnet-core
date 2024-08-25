@@ -232,16 +232,28 @@
 
     private async Task DeleteKnowledgeEntry(Guid id)
     {
-        var result = await KnowledgeService.DeleteKnowledgeEntryAsync(id);
-        if (result)
+        DialogParameters<ConfirmDialog> dialog = new()
         {
-            Snackbar.Add("Knowledge entry deleted.", Severity.Success);
-        }
-        else
+            { x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult dialogResult = await dialogRef.Result;
+
+        if (!dialogResult.Canceled)
         {
-            Snackbar.Add("Error deleting knowledge entry.", Severity.Error);
+            var result = await KnowledgeService.DeleteKnowledgeEntryAsync(id);
+            if (result)
+            {
+                Snackbar.Add("Knowledge entry deleted.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error deleting knowledge entry.", Severity.Error);
+            }
+            await LoadKnowledgeEntries();
         }
-        await LoadKnowledgeEntries();
     }
 
     private async Task AddKnowledgeGroup()
@@ -276,17 +288,29 @@
 
     private async Task DeleteKnowledgeGroup(Guid id)
     {
-        var result = await KnowledgeService.DeleteKnowledgeGroupAsync(id);
-        if (result)
+        DialogParameters<ConfirmDialog> dialog = new()
         {
-            Snackbar.Add("Knowledge group deleted.", Severity.Success);
-        }
-        else
+            { x => x.ContentText, $"Are you sure you want to delete this knowledge base group?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult dialogResult = await dialogRef.Result;
+
+        if (!dialogResult.Canceled)
         {
-            Snackbar.Add("Error deleting knowledge group.", Severity.Error);
+            var result = await KnowledgeService.DeleteKnowledgeGroupAsync(id);
+            if (result)
+            {
+                Snackbar.Add("Knowledge group deleted.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Error deleting knowledge group.", Severity.Error);
+            }
+            await LoadKnowledgeGroups();
+            await LoadKnowledgeEntries();
         }
-        await LoadKnowledgeGroups();
-        await LoadKnowledgeEntries();
     }
 
 }

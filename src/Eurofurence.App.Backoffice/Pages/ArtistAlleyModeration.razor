@@ -124,7 +124,8 @@ More data of the applicant shall be visble an extra dialog
         if (!result.Canceled)
         {
             await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
-            await _dataGrid.ReloadServerData();
+            _items = await GetRegistrationsAsync();
+            StateHasChanged();
             Snackbar.Add("Application Deleted", Severity.Success);
         }
     }
