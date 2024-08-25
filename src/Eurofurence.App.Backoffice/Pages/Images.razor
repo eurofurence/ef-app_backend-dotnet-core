@@ -84,6 +84,12 @@
                         <MudIcon Icon="@Icons.Material.Outlined.Announcement"></MudIcon>
                     </MudTooltip>
                 }
+                @if (context.Item is { IsRestricted: true })
+                {
+                    <MudTooltip Text="Restricted">
+                        <MudIcon Icon="@Icons.Material.Outlined.Block"></MudIcon>
+                    </MudTooltip>
+                }
             </CellTemplate>
         </TemplateColumn>
         <TemplateColumn>
