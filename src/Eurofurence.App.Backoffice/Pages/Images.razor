@@ -1,5 +1,5 @@
 ﻿@page "/images"
-@attribute [Authorize(Policy = "RequireKnowledgeBaseEditor")]
+@attribute [Authorize(Roles = "Admin")]
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Images
@@ -177,10 +177,10 @@
     private async Task DeleteImage(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to delete this ímage?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to delete this ímage?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult dialogResult = await dialogRef.Result;
