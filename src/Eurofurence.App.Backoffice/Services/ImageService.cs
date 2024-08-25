@@ -16,7 +16,7 @@ namespace Eurofurence.App.Backoffice.Services
 
         public async Task<ImageRecord[]> GetImagesAsync()
         {
-            return (await http.GetFromJsonAsync<ImageRecord[]>("images"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<ImageRecord[]>("images/:all"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
         }
 
         public async Task<ImageWithRelationsResponse[]> GetImagesWithRelationsAsync()

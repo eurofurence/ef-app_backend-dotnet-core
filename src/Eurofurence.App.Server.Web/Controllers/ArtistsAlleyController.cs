@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpPut("{id}/:status")]
         [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
-        public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull] [FromRoute] Guid id,
+        public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
             TableRegistrationRecord record =
@@ -46,6 +46,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
             {
                 await _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
+                if (record.ImageId is { } imageId) await _imageService.SetRestricted(imageId, false);
             }
 
             return NoContent();
@@ -88,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 using var ms = new MemoryStream();
                 await requestImageFile.CopyToAsync(ms);
-                image = await _imageService.InsertImageAsync(requestImageFile.FileName, ms, 1500, 1500);
+                image = await _imageService.InsertImageAsync(requestImageFile.FileName, ms, true, 1500, 1500);
             }
 
             if (!Uri.TryCreate(request.WebsiteUrl, UriKind.Absolute, out _)) return BadRequest("Invalid website URL!");

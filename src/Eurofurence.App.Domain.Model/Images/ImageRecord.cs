@@ -44,6 +44,10 @@ namespace Eurofurence.App.Domain.Model.Images
         public string Url { get; set; }
 
         [Required]
+        [DataMember]
+        public bool IsRestricted { get; set; }
+
+        [Required]
         [JsonIgnore]
         public string InternalFileName { get; set; }
 

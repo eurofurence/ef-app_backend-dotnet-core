@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Css.Dom;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Images
@@ -11,6 +12,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
         Task<ImageRecord> InsertImageAsync(
             string internalReference,
             Stream stream,
+            bool isRestricted = false,
             int? width = null,
             int? height = null,
             CancellationToken cancellationToken = default);
@@ -19,6 +21,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
             Guid id,
             string internalReference,
             Stream stream,
+            bool isRestricted = false,
             int? width = null,
             int? height = null,
             CancellationToken cancellationToken = default);
@@ -34,6 +37,9 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
             ImageRecord image,
             int width,
             int height,
+            CancellationToken cancellationToken = default);
+
+        Task<ImageRecord> SetRestricted(Guid id, bool isRestricted,
             CancellationToken cancellationToken = default);
     }
 }
