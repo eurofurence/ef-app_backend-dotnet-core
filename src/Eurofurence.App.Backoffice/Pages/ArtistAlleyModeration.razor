@@ -24,12 +24,7 @@ Table showing the basic informations for each application.
 
 More data of the applicant shall be visble an extra dialog
  *@
-<MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" ServerData="@GetRegistrations" FilterMode="@_filterMode">
-    <ToolBarContent>
-        <MudTextField @bind-Value="_imageSearch" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0">
-        </MudTextField>
-    </ToolBarContent>
+<MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" Items="_items" Filterable="true" FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
         <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
             <CellTemplate>
@@ -46,18 +41,14 @@ More data of the applicant shall be visble an extra dialog
                 }
             </CellTemplate>
         </TemplateColumn>
-        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername"/>
-        <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName"/>
-        <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location"/>
-        <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription"/>
-        <PropertyColumn Property="arg => arg.DisplayName"/>
-        <TemplateColumn>
+        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false"/>
+        <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName" Filterable="false" />
+        <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location" Filterable="false" />
+        <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription" Filterable="false" />
+        <PropertyColumn Title="Status" Property="arg => arg.State" Filterable="true">
+        </PropertyColumn>
+        <TemplateColumn Context="context2">
             <CellTemplate>
-                <MudButton OnClick="() => OpenMoreDialog(context.Item)">More</MudButton>
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Title="Status" Context="context2" SortBy="@(x => x.State)" Sortable="true" Filterable="true">
-            <CellTemplate >
                 @switch (context2.Item.State)
                 {
                     case TableRegistrationRecord.RegistrationStateEnum.Pending:
@@ -69,6 +60,7 @@ More data of the applicant shall be visble an extra dialog
                                 <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
                             </Authorized>
                         </AuthorizeView>
+                        <MudButton StartIcon="@Icons.Material.Filled.Menu" OnClick="() => OpenMoreDialog(context2.Item)">More...</MudButton>
                         break;
                     case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                         <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -94,17 +86,27 @@ More data of the applicant shall be visble an extra dialog
     #region Attributes
 
     private MudDataGrid<TableRegistrationRecord>? _dataGrid;
-
-    private string? _imageSearch;
-
-    private DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
-
-    private Dictionary<TableRegistrationRecord, bool> RecordToOperationState = new();
-
+    private IEnumerable<TableRegistrationRecord> _items = new List<TableRegistrationRecord>();
+    private string? _search;
     #endregion
 
     #region Methods
 
+    protected override async Task OnInitializedAsync()
+    {
+        _items = await GetRegistrations();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            _dataGrid?.SetSortAsync(nameof(TableRegistrationRecord.State), SortDirection.Ascending, x => x.State);
+        }
+    }
+    
     private async Task DeleteRegistration(TableRegistrationRecord registrationRecord)
     {
         DialogParameters<ConfirmDialog> dialog = new()
@@ -161,7 +163,7 @@ More data of the applicant shall be visble an extra dialog
 
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
 
-        DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", dialog, options);
+        await DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", dialog, options);
     }
 
 
@@ -171,15 +173,17 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="entries"></param>
     /// <returns></returns>
     private IEnumerable<TableRegistrationRecord> Filter(IEnumerable<TableRegistrationRecord> entries) =>
-        string.IsNullOrEmpty(_imageSearch) ? entries : entries.Where(x => x.DisplayName.Contains(_imageSearch, StringComparison.OrdinalIgnoreCase));
+        string.IsNullOrEmpty(_search) ? entries : entries.Where(x => x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
 
 
     /// <summary>
     /// Requests the table registrations from <see cref="IArtistAlleyService"/>
     /// </summary>
-    /// <param name="gridState"></param>
     /// <returns></returns>
-    private async Task<GridData<TableRegistrationRecord>> GetRegistrations(GridState<TableRegistrationRecord> gridState)
+    private async Task<IEnumerable<TableRegistrationRecord>> GetRegistrations()
     {
         IEnumerable<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
 
@@ -192,16 +196,13 @@ More data of the applicant shall be visble an extra dialog
 
         registrations = Filter(registrations);
 
-        GridData<TableRegistrationRecord> result = new();
-        result.Items = registrations;
-        //result.TotalItems = registrations.Count;
-        return result;
+        return registrations;
     }
 
-    private void Search(string searchString)
+    private async void Search(string searchString)
     {
-        _imageSearch = searchString;
-        _dataGrid.ReloadServerData();
+        _search = searchString;
+        _items = await GetRegistrations();
     }
 
     #endregion

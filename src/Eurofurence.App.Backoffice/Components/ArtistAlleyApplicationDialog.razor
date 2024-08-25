@@ -65,7 +65,7 @@
     {
         DialogParameters<ConfirmDialog> dialog = new()
         {
-            { x => x.ContentText, $"Are you sure, that you want to delete this application" },
+            { x => x.ContentText, $"Are you sure you want to delete this application?" },
             { x => x.ActionButtonText, "Confirm" }
         };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
@@ -88,7 +88,7 @@
     {
         DialogParameters<ConfirmDialog> dialog = new()
         {
-            { x => x.ContentText, $"Are you sure, that you want to {(reject ? "Reject" : "Approve")} this application" },
+            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?m" },
             { x => x.ActionButtonText, "Confirm" }
         };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
@@ -99,8 +99,7 @@
         {
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
 
-            Snackbar.Add($"Application was {(reject ? "Rejected" : "Approved")}");
+            Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.");
         }
     }
-
 }
