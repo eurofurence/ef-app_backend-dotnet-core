@@ -27,7 +27,7 @@ More data of the applicant shall be visble an extra dialog
 <MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" Items="_items" Filterable="true"
     FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
-        <TemplateColumn Title="Preview" CellClass="d-flex justify-center">
+        <TemplateColumn Title="Preview" CellClass="justify-center">
             <CellTemplate>
                 @if (context.Item.Image != null && !string.IsNullOrEmpty(context.Item.Image.Url))
                 {
@@ -41,28 +41,29 @@ More data of the applicant shall be visble an extra dialog
         <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false" />
         <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName" Filterable="false" />
         <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location" Filterable="false" />
-        <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription" Filterable="false" />
-        <PropertyColumn Title="Status" Property="arg => arg.State" Filterable="true">
+        <PropertyColumn Title="Submitted" Property="arg => arg.CreatedDateTimeUtc" Filterable="true"  Format="yyyy-MM-dd HH:mm:ss zzz">
         </PropertyColumn>
-        <TemplateColumn Context="context2">
+        <TemplateColumn Title="Status" Context="context2" CellClass="justify-center" Sortable="true" SortBy="@(x => $"{x.State} - {x.CreatedDateTimeUtc.ToString("yyyy-MM-dd HH:mm:ss zzz")}")">
             <CellTemplate>
                 <MudContainer MaxWidth="MaxWidth.Small">
-                    <MudGrid>
-                        <MudItem xs="10">
+                    <MudGrid Class="justify-center">
+                        <MudItem xs="10" Style="text-align: center;">
                             @switch (context2.Item?.State)
                             {
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                                    <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"
-                                        OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
-                                    <MudButton StartIcon="@Icons.Material.Filled.Cancel"
-                                        OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
-                                    @*Show the delete button only for admins*@
-                                    <AuthorizeView Policy="RequireArtistAlleyAdmin">
-                                        <Authorized>
-                                            <MudButton StartIcon="@Icons.Material.Filled.Delete"
-                                                OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
-                                        </Authorized>
-                                    </AuthorizeView>
+                                    <MudButtonGroup OverrideStyles="false" Vertical="true">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"
+                                            OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                            OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
+                                        @*Show the delete button only for admins*@
+                                        <AuthorizeView Policy="RequireArtistAlleyAdmin">
+                                            <Authorized>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                                                    OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                    </MudButtonGroup>
                                     break;
                                 case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                                     <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -74,10 +75,8 @@ More data of the applicant shall be visble an extra dialog
                                     <MudAlert Severity="Severity.Success">Published</MudAlert>
                                     break;
                             }
-                        </MudItem>
-                        <MudItem xs="2">
                             <MudButton StartIcon="@Icons.Material.Filled.Menu"
-                                OnClick="() => OpenMoreDialog(context2.Item)">More...</MudButton>
+                                OnClick="() => OpenMoreDialog(context2.Item)">Details</MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudContainer>

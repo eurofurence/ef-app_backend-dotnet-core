@@ -20,7 +20,7 @@
                 }
                 <MudItem xs="6">
                     <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
-                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" />
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz" />
                     <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID" />
                     <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username" />
                     <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website" />
@@ -31,14 +31,14 @@
                     {
                         case TableRegistrationRecord.RegistrationStateEnum.Pending:
                             <MudAlert Severity="Severity.Info">Pending</MudAlert>
-                            <MudButton StartIcon="@Icons.Material.Filled.CheckCircle"
+                            <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
                                 @onclick="() => TryChangeRegistrationStatus(Record, false)">Approve</MudButton>
-                            <MudButton StartIcon="@Icons.Material.Filled.Cancel"
+                            <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
                                 @onclick="() => TryChangeRegistrationStatus(Record, true)">Reject</MudButton>
                             @*Show the delete button only for admins*@
                             <AuthorizeView Policy="RequireArtistAlleyAdmin">
                                 <Authorized>
-                                    <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">
+                                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">
                                         Delete</MudButton>
                                 </Authorized>
                             </AuthorizeView>
