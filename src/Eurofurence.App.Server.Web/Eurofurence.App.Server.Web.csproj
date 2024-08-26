@@ -16,7 +16,7 @@
     <PackageReference Include="IdentityModel.AspNetCore.OAuth2Introspection" Version="6.2.0" />
     <PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
     <PackageReference Include="Markdig" Version="0.37.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
