@@ -41,9 +41,26 @@ More data of the applicant shall be visble an extra dialog
         <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false" />
         <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName" Filterable="false" />
         <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location" Filterable="false" />
-        <PropertyColumn Title="Submitted" Property="arg => arg.CreatedDateTimeUtc" Filterable="true"  Format="yyyy-MM-dd HH:mm:ss zzz">
-        </PropertyColumn>
-        <TemplateColumn Title="Status" Context="context2" CellClass="justify-center" Sortable="true" SortBy="@(x => $"{x.State} - {x.CreatedDateTimeUtc.ToString("yyyy-MM-dd HH:mm:ss zzz")}")">
+        <PropertyColumn Title="Applicant's Descriptions" Property="arg => arg.ShortDescription" Filterable="false" />
+        <TemplateColumn Context="context2" Title="Status" Filterable="true" ShowFilterIcon="true">
+            <FilterTemplate>
+                <MudIconButton OnClick="@OpenFilter" Icon="@_icon" Size="@Size.Small" />
+                <MudOverlay Visible="@_filterOpen" OnClick="@(() => _filterOpen = false)" />
+                <MudPopover Open="@_filterOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter"
+                            Style="width:150px">
+                    <MudStack Spacing="0">
+                        <MudStack Spacing="0" Style="overflow-y:auto;max-height:250px">
+                            @foreach (var item in Enum.GetValues(typeof(TableRegistrationRecord.RegistrationStateEnum)).Cast<TableRegistrationRecord.RegistrationStateEnum>())
+                            {
+                            <MudCheckBox T="bool" Label="@($"{item.ToString()}")" Size="@Size.Small" Value="@(_selectedItems.Contains(item))"
+                                         ValueChanged="@((value) => SelectedChanged(value, item, context2))" />
+                            }
+                        </MudStack>
+                        <MudStack Row="true">
+                        </MudStack>
+                    </MudStack>
+                </MudPopover>
+            </FilterTemplate>
             <CellTemplate>
                 <MudContainer MaxWidth="MaxWidth.Small">
                     <MudGrid Class="justify-center">
@@ -94,13 +111,48 @@ More data of the applicant shall be visble an extra dialog
 
     private MudDataGrid<TableRegistrationRecord>? _dataGrid;
     private IEnumerable<TableRegistrationRecord> _items = new List<TableRegistrationRecord>();
+
     private string? _search;
+
+    HashSet<TableRegistrationRecord.RegistrationStateEnum> _selectedItems = new();
+
+    FilterDefinition<TableRegistrationRecord> _filterDefinition;
+
+    string _icon = Icons.Material.Outlined.FilterAlt;
+
+
+    bool _filterOpen = false;
+
     #endregion
 
     #region Methods
 
+
+    private async void SelectedChanged(bool value, TableRegistrationRecord.RegistrationStateEnum item, FilterContext<TableRegistrationRecord> context)
+    {
+        if (value)
+            _selectedItems.Add(item);
+        else
+            _selectedItems.Remove(item);
+
+        await context.Actions.ApplyFilterAsync(_filterDefinition);
+
+        _icon = !_selectedItems.Any() ? Icons.Material.Outlined.FilterAlt : Icons.Material.Filled.FilterAlt;
+
+    }
+
+    void OpenFilter()
+    {
+        _filterOpen = true;
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        _filterDefinition = new FilterDefinition<TableRegistrationRecord>
+        {
+            FilterFunction = x => _selectedItems.Contains(x.State) || !_selectedItems.Any()
+        };
+
         _items = await GetRegistrationsAsync();
     }
 
