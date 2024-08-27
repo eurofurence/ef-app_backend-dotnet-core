@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -68,8 +69,8 @@ namespace Eurofurence.App.Server.Services.Knowledge
             {
                 Id = request.Id,
                 KnowledgeGroupId = request.KnowledgeGroupId,
-                Title = _htmlSanitizer.Sanitize(request.Title),
-                Text = _htmlSanitizer.Sanitize(request.Text),
+                Title = request.Title,
+                Text = HttpUtility.HtmlDecode(_htmlSanitizer.Sanitize(request.Text)),
                 Order = request.Order,
                 Links = request.Links,
                 IsDeleted = 0
@@ -95,8 +96,8 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 .FirstOrDefaultAsync(ke => ke.Id == id, cancellationToken);
 
             existingEntity.KnowledgeGroupId = request.KnowledgeGroupId;
-            existingEntity.Title = _htmlSanitizer.Sanitize(request.Title);
-            existingEntity.Text = _htmlSanitizer.Sanitize(request.Text);
+            existingEntity.Title = request.Title;
+            existingEntity.Text = HttpUtility.HtmlDecode(_htmlSanitizer.Sanitize(request.Text));
             existingEntity.Order = request.Order;
 
             foreach (var existingLink in existingEntity.Links)
