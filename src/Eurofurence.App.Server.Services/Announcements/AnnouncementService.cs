@@ -10,9 +10,10 @@ namespace Eurofurence.App.Server.Services.Announcements
     {
         public AnnouncementService(
             AppDbContext appDbContext,
-            IStorageServiceFactory storageServiceFactory
+            IStorageServiceFactory storageServiceFactory,
+            bool useSoftDelete = true
         )
-            : base(appDbContext, storageServiceFactory)
+            : base(appDbContext, storageServiceFactory, useSoftDelete)
         {
         }
     }
