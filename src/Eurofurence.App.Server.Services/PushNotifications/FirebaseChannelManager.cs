@@ -21,7 +21,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
     {
         private readonly IDeviceIdentityService _deviceService;
         private readonly IRegistrationIdentityService _registrationService;
-        private readonly AppDbContext _db;
+        private readonly AppDbContext _appDbContext;
         private readonly FirebaseConfiguration _configuration;
         private readonly ConventionSettings _conventionSettings;
         private readonly FirebaseApp _firebaseApp;
@@ -30,13 +30,13 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public FirebaseChannelManager(
             IDeviceIdentityService deviceService,
             IRegistrationIdentityService registrationService,
-            AppDbContext db,
+            AppDbContext appDbContext,
             FirebaseConfiguration configuration,
             ConventionSettings conventionSettings)
         {
             _deviceService = deviceService;
             _registrationService = registrationService;
-            _db = db;
+            _appDbContext = appDbContext;
             _configuration = configuration;
             _conventionSettings = conventionSettings;
 
@@ -210,7 +210,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             DeviceType type,
             CancellationToken cancellationToken = default)
         {
-            var existing = await _db.DeviceIdentities
+            var existing = await _appDbContext.DeviceIdentities
                 .Where(x => x.DeviceToken == deviceToken)
                 .ToListAsync(cancellationToken);
 
@@ -222,7 +222,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     identity.Touch();
                 }
 
-                await _db.SaveChangesAsync(cancellationToken);
+                await _appDbContext.SaveChangesAsync(cancellationToken);
             }
             else
             {
