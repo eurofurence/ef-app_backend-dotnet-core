@@ -206,17 +206,27 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             DeviceType type,
             CancellationToken cancellationToken = default)
         {
-            if (await _deviceService.FindAll(a => a.DeviceToken == deviceToken).AnyAsync(cancellationToken))
-            {
-                return;
-            }
+            var existing = await _deviceService
+                .FindAll(a => a.DeviceToken == deviceToken)
+                .AsTracking()
+                .ToListAsync(cancellationToken);
 
-            await _deviceService.InsertOneAsync(new DeviceIdentityRecord
+            if (existing.Count > 0)
             {
-                IdentityId = identityId,
-                DeviceToken = deviceToken,
-                DeviceType = type
-            }, cancellationToken);
+                foreach (var identity in existing)
+                {
+                    identity.IdentityId = identityId;
+                }
+            }
+            else
+            {
+                await _deviceService.InsertOneAsync(new DeviceIdentityRecord
+                {
+                    IdentityId = identityId,
+                    DeviceToken = deviceToken,
+                    DeviceType = type
+                }, cancellationToken);
+            }
 
             var set = new HashSet<string>(regSysIds);
 

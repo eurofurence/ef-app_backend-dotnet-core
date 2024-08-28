@@ -5,7 +5,6 @@ namespace Eurofurence.App.Domain.Model.PushNotifications;
 
 public class DeviceIdentityRecord : EntityBase
 {
-    [Required]
     [DataMember]
     public string IdentityId { get; set; }
 
