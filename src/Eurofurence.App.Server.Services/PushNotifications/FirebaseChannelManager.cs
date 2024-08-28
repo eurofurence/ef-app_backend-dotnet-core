@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
@@ -20,6 +21,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
     {
         private readonly IDeviceIdentityService _deviceService;
         private readonly IRegistrationIdentityService _registrationService;
+        private readonly AppDbContext _appDbContext;
         private readonly FirebaseConfiguration _configuration;
         private readonly ConventionSettings _conventionSettings;
         private readonly FirebaseApp _firebaseApp;
@@ -28,11 +30,13 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public FirebaseChannelManager(
             IDeviceIdentityService deviceService,
             IRegistrationIdentityService registrationService,
+            AppDbContext appDbContext,
             FirebaseConfiguration configuration,
             ConventionSettings conventionSettings)
         {
             _deviceService = deviceService;
             _registrationService = registrationService;
+            _appDbContext = appDbContext;
             _configuration = configuration;
             _conventionSettings = conventionSettings;
 
@@ -206,17 +210,34 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             DeviceType type,
             CancellationToken cancellationToken = default)
         {
-            if (await _deviceService.FindAll(a => a.DeviceToken == deviceToken).AnyAsync(cancellationToken))
+            var existing = await _appDbContext.DeviceIdentities
+                .Where(x => x.DeviceToken == deviceToken)
+                .ToListAsync(cancellationToken);
+
+            if (existing.Count > 0)
+            {
+                foreach (var identity in existing)
+                {
+                    identity.IdentityId = identityId;
+                    identity.Touch();
+                }
+
+                await _appDbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                await _deviceService.InsertOneAsync(new DeviceIdentityRecord
+                {
+                    IdentityId = identityId,
+                    DeviceToken = deviceToken,
+                    DeviceType = type
+                }, cancellationToken);
+            }
+
+            if (regSysIds.Length == 0)
             {
                 return;
             }
-
-            await _deviceService.InsertOneAsync(new DeviceIdentityRecord
-            {
-                IdentityId = identityId,
-                DeviceToken = deviceToken,
-                DeviceType = type
-            }, cancellationToken);
 
             var set = new HashSet<string>(regSysIds);
 
