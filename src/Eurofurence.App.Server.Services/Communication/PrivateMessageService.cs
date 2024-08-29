@@ -18,8 +18,7 @@ namespace Eurofurence.App.Server.Services.Communication
         private readonly AppDbContext _appDbContext;
         private readonly IFirebaseChannelManager _firebaseChannelManager;
 
-        private readonly ConcurrentQueue<QueuedNotificationParameters> _notificationQueue =
-            new ConcurrentQueue<QueuedNotificationParameters>();
+        private readonly ConcurrentQueue<QueuedNotificationParameters> _notificationQueue = new();
 
         public PrivateMessageService(
             AppDbContext appDbContext,
@@ -37,7 +36,7 @@ namespace Eurofurence.App.Server.Services.Communication
             string identityId,
             CancellationToken cancellationToken = default)
         {
-            var messages = await _appDbContext.PrivateMessages.AsNoTracking()
+            var messages = await _appDbContext.PrivateMessages
                 .Where(msg =>
                     (regSysIds.Contains(msg.RecipientRegSysId) || msg.RecipientIdentityId == identityId) &&
                     msg.IsDeleted == 0)
@@ -51,10 +50,11 @@ namespace Eurofurence.App.Server.Services.Communication
             foreach (var message in messages.Where(a => !a.ReceivedDateTimeUtc.HasValue))
             {
                 message.ReceivedDateTimeUtc = DateTime.UtcNow;
+                message.Touch();
             }
 
-            await ReplaceMultipleAsync(messages, cancellationToken);
-
+            await _appDbContext.SaveChangesAsync(cancellationToken);
+            
             return messages;
         }
 
@@ -185,6 +185,7 @@ namespace Eurofurence.App.Server.Services.Communication
             CancellationToken cancellationToken = default)
         {
             return await _appDbContext.PrivateMessages
+                .AsNoTracking()
                 .Where(a => a.SenderUid == senderUid)
                 .ToListAsync(cancellationToken);
         }

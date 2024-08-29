@@ -173,7 +173,7 @@ namespace Eurofurence.App.Server.Web
 
             services.Configure<LoggerFilterOptions>(options => { options.MinLevel = LogLevel.Trace; });
 
-            services.AddDbContextPool<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>(options =>
             {
                 var connectionString = Configuration.GetConnectionString("Eurofurence");
 
