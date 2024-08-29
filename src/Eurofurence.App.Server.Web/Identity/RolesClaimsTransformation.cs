@@ -249,6 +249,7 @@ public class RolesClaimsTransformation(
         var newIds = new HashSet<string>(ids);
 
         var existingIds = await db.RegistrationIdentities
+            .AsNoTracking()
             .Where(x => newIds.Contains(x.RegSysId))
             .Select(x => x.RegSysId)
             .ToListAsync();
