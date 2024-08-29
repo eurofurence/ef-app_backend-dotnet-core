@@ -104,7 +104,7 @@
                 TableRegistrationRecord.RegistrationStateEnum.Accepted;
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, state);
 
-            Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.");
+            Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
 
             Record.State = state;
 
