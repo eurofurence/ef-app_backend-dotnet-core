@@ -88,52 +88,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _imageService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
-        /// <summary>
-        ///     Retrieve a single image content.
-        /// </summary>
-        /// <param name="id">id of the requested entity</param>
-        [HttpGet("{id}/Content")]
-        [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(byte[]), 200)]
-        [Obsolete("Deprecated. Please use the 'Url' property of the image to stream the image from there instead.")]
-        public async Task<ActionResult> GetImageContentAsync([FromRoute] Guid id)
-        {
-            var record = await _imageService.FindOneAsync(id);
-            if (record == null) return NotFound();
-
-            var content = await _imageService.GetImageContentByImageIdAsync(id);
-            return File(content, record.MimeType);
-        }
-
-        /// <summary>
-        ///     Retrieve a single image content using hash code (preferred, as it allows caching).
-        /// </summary>
-        /// <param name="id">id of the requested entity</param>
-        /// <param name="contentHashBase64Encoded">Base64 Encoded ContentHashSha1 of the requested entity</param>
-        [HttpGet("{id}/Content/with-hash:{contentHashBase64Encoded}")]
-        [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(byte[]), 200)]
-        [ResponseCache(Duration = 60 * 60 * 24, Location = ResponseCacheLocation.Any)]
-        [Obsolete("Deprecated. Please use the 'Url' property of the image to stream the image from there instead.")]
-        public async Task<ActionResult> GetImageWithHashContentAsync(
-            [EnsureNotNull][FromRoute] Guid id,
-            [EnsureNotNull][FromRoute] string contentHashBase64Encoded)
-        {
-            var record = await _imageService.FindOneAsync(id);
-            if (record == null) return NotFound();
-
-            var contentHash =
-                Encoding.Default.GetString(Convert.FromBase64String(contentHashBase64Encoded));
-
-            if (record.ContentHashSha1 != contentHash)
-            {
-                return Redirect($"./with-hash:{Convert.ToBase64String(Encoding.Default.GetBytes(record.ContentHashSha1))}");
-            }
-
-            var content = await _imageService.GetImageContentByImageIdAsync(id);
-            return File(content, record.MimeType);
-        }
-
         [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
         [HttpPost]
         public async Task<ActionResult> PostImageAsync(IFormFile file)
@@ -143,12 +97,10 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return BadRequest();
             }
 
-            using (var ms = new MemoryStream())
-            {
-                await file.CopyToAsync(ms);
-                var result = await _imageService.InsertImageAsync(file.FileName, ms);
-                return Ok(result);
-            }
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var result = await _imageService.InsertImageAsync(file.FileName, ms);
+            return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
@@ -158,12 +110,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             var record = await _imageService.FindOneAsync(id);
             if (record == null) return NotFound();
 
-            using (var ms = new MemoryStream())
-            {
-                await file.CopyToAsync(ms);
-                var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
-                return Ok(result);
-            }
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
+            return Ok(result);
         }
 
         /// <summary>
