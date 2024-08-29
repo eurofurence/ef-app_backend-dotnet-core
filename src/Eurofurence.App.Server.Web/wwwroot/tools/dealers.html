@@ -140,107 +140,124 @@
         let filterSettings = {
             sortBy: getQueryVariable(window.location.hash, "sortBy", "name"),
             sortAscending: getQueryVariable(window.location.hash, "sortAscending", "true") == "true",
-            filter: getQueryVariable(window.location.hash, "filter", "complete")
+            filter: getQueryVariable(window.location.hash, "filter", "all")
         };
 
-        $.get(baseUrl + "/Api/Dealers", function (data) {
+        $.get(baseUrl + "/Api/Images", function (imagesData) {
+            const imagesById = imagesData.reduce(function (_imagesById, _image) {
+                _imagesById[_image.Id] = _image;
+                return _imagesById;
+            }, {});
 
-            data = data.map(function (o) {
-                o.DisplayName = (o.DisplayName != "") ? o.DisplayName : o.AttendeeNickname;
-                o.DisplayNameSort = o.DisplayName.toLowerCase();
+            $.get(baseUrl + "/Api/Dealers", function (dealersData) {
 
-
-                o.Progress = 5;
-                o.Issues = [];
-
-                if (o.ShortDescription != "") { o.Progress += 15; } else { o.Issues.push("Short Description"); }
-                if (o.AboutTheArtistText != "") { o.Progress += 20; } else { o.Issues.push("About The Artist Text"); }
-                if (o.ArtistThumbnailImageId != null) { o.Progress += 15; } else { o.Issues.push("Artist ThumbnailImage"); }
-                if (o.ArtistImageId != null) { o.Progress += 10; } else { o.Issues.push("Artist Image"); }
-                if (o.AboutTheArtText != "") { o.Progress += 15; } else { o.Issues.push("About The Art Text"); }
-                if (o.ArtPreviewImageId != null) { o.Progress += 15; } else { o.Issues.push("Art Preview Image"); }
-                if (o.ArtPreviewCaption != "") { o.Progress += 5; } else { o.Issues.push("Art Preview Caption"); }
+                dealersData = dealersData.map(function (o) {
+                    o.DisplayName = (o.DisplayName != "") ? o.DisplayName : o.AttendeeNickname;
+                    o.DisplayNameSort = o.DisplayName.toLowerCase();
 
 
-                styles = (o.Progress >= 80) ? "complete" : "incomplete";
+                    o.Progress = 5;
+                    o.Issues = [];
 
-                o.status = styles;
-
-                o.ProgressColor = "#d84315";
-                if (o.Progress > 20) o.ProgressColor = "#ef6c0";
-                if (o.Progress > 40) o.ProgressColor = "#f9a825";
-                if (o.Progress > 60) o.ProgressColor = "#9e9d24";
-                if (o.Progress > 80) o.ProgressColor = "#558b2f";
-                if (o.Progress == 100) o.ProgressColor = "#2e7d32";
-
-                return o;
-            });
-
-            data = data.sort(function (a, b) {
-                if (a.DisplayName < b.DisplayName) return -1;
-                if (a.DisplayName > b.DisplayName) return 1;
-                return 0;
-            });
-
-
-            var ViewModel = function () {
-                this.dealers = ko.observableArray(data);
-            }.bind(this);
-            ko.applyBindings(new ViewModel());
+                    if (o.ShortDescription != "") { o.Progress += 15; } else { o.Issues.push("Short Description"); }
+                    if (o.AboutTheArtistText != "") { o.Progress += 20; } else { o.Issues.push("About The Artist Text"); }
+                    if (o.ArtistThumbnailImageId != null) {
+                        o.ArtistThumbnailImage = imagesById[o.ArtistThumbnailImageId];
+                        o.Progress += 15;
+                    } else { o.Issues.push("Artist ThumbnailImage"); }
+                    if (o.ArtistImageId != null) {
+                        o.ArtistImage = imagesById[o.ArtistImageId];
+                        o.Progress += 10;
+                    } else { o.Issues.push("Artist Image"); }
+                    if (o.AboutTheArtText != "") { o.Progress += 15; } else { o.Issues.push("About The Art Text"); }
+                    if (o.ArtPreviewImageId != null) {
+                        o.ArtPreviewImage = imagesById[o.ArtPreviewImageId];
+                        o.Progress += 15;
+                    } else { o.Issues.push("Art Preview Image"); }
+                    if (o.ArtPreviewCaption != "") { o.Progress += 5; } else { o.Issues.push("Art Preview Caption"); }
 
 
-            const filterizrOptions = {
-                //controlsSelector: '.fltr-controls',
-                gutterPixels: 5,
-                callbacks: {
-                    onInit: function () {
-                        $("#filters button").each(function () {
-                            if ($(this).attr('data-filter') == filterSettings.filter) {
-                                $(this).addClass("active");
-                            } else {
-                                $(this).removeClass("active");
-                            }
-                        });
+                    styles = (o.Progress >= 80) ? "complete" : "incomplete";
 
-                        $("button.sort-btn").each(function () {
-                            if (($(this).attr('data-sortDesc') === undefined) === filterSettings.sortAscending) {
-                                $(this).addClass("active");
-                            } else {
-                                $(this).removeClass("active");
-                            }
-                        });
+                    o.status = styles;
 
-                        $("select.fltr-controls[data-sortOrder]").val(filterSettings.sortBy);
+                    o.ProgressColor = "#d84315";
+                    if (o.Progress > 20) o.ProgressColor = "#ef6c0";
+                    if (o.Progress > 40) o.ProgressColor = "#f9a825";
+                    if (o.Progress > 60) o.ProgressColor = "#9e9d24";
+                    if (o.Progress > 80) o.ProgressColor = "#558b2f";
+                    if (o.Progress == 100) o.ProgressColor = "#2e7d32";
 
-                        filterizr.filterizr('filter', filterSettings.filter);
-                        filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
-                    },
-                }
-            };
-            filterizr = $("#grid").filterizr(filterizrOptions);
+                    return o;
+                });
 
-            $("#filters button").each(function () {
-                $(this).on('click', function () {
-                    $("#filters button").removeClass('active');
-                    $(this).addClass('active');
-                    filterSettings.filter = $(this).attr('data-filter');
+                dealersData = dealersData.sort(function (a, b) {
+                    if (a.DisplayName < b.DisplayName) return -1;
+                    if (a.DisplayName > b.DisplayName) return 1;
+                    return 0;
+                });
+
+
+                var ViewModel = function () {
+                    this.dealers = ko.observableArray(dealersData);
+                }.bind(this);
+                ko.applyBindings(new ViewModel());
+
+
+                const filterizrOptions = {
+                    //controlsSelector: '.fltr-controls',
+                    gutterPixels: 5,
+                    layout: 'sameWidth',
+                    callbacks: {
+                        onInit: function () {
+                            $("#filters button").each(function () {
+                                if ($(this).attr('data-filter') == filterSettings.filter) {
+                                    $(this).addClass("active");
+                                } else {
+                                    $(this).removeClass("active");
+                                }
+                            });
+
+                            $("button.sort-btn").each(function () {
+                                if (($(this).attr('data-sortDesc') === undefined) === filterSettings.sortAscending) {
+                                    $(this).addClass("active");
+                                } else {
+                                    $(this).removeClass("active");
+                                }
+                            });
+
+                            $("select.fltr-controls[data-sortOrder]").val(filterSettings.sortBy);
+
+                            filterizr.filterizr('filter', filterSettings.filter);
+                            filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
+                        },
+                    }
+                };
+                filterizr = $("#grid").filterizr(filterizrOptions);
+
+                $("#filters button").each(function () {
+                    $(this).on('click', function () {
+                        $("#filters button").removeClass('active');
+                        $(this).addClass('active');
+                        filterSettings.filter = $(this).attr('data-filter');
+                        window.location.hash = serialize(filterSettings);
+                    })
+                });
+
+                $("button.sort-btn").each(function () {
+                    $(this).on('click', function () {
+                        $("button.sort-btn").removeClass('active');
+                        $(this).addClass('active');
+                        filterSettings.sortAscending = $(this).attr('data-sortDesc') === undefined
+                        window.location.hash = serialize(filterSettings);
+                    })
+                });
+
+                $("select.fltr-controls[data-sortOrder]").on('change', function () {
+                    filterSettings.sortBy = $(this).val();
+                    filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
                     window.location.hash = serialize(filterSettings);
-                })
-            });
-
-            $("button.sort-btn").each(function () {
-                $(this).on('click', function () {
-                    $("button.sort-btn").removeClass('active');
-                    $(this).addClass('active');
-                    filterSettings.sortAscending = $(this).attr('data-sortDesc') === undefined
-                    window.location.hash = serialize(filterSettings);
-                })
-            });
-
-            $("select.fltr-controls[data-sortOrder]").on('change', function () {
-                filterSettings.sortBy = $(this).val();
-                filterizr.filterizr('sort', filterSettings.sortBy, filterSettings.sortAscending ? 'asc' : 'desc');
-                window.location.hash = serialize(filterSettings);
+                });
             });
         });
 
@@ -306,8 +323,7 @@
                 data-bind="css: status, attr: { 'data-category': status, 'data-name': DisplayNameSort, 'data-progress' : Progress }">
                 <div style="float: left;">
                     <span data-bind="if: (ArtistThumbnailImageId != null)">
-                        <img class="artistThumbnail"
-                            data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtistThumbnailImageId + '/Content' }"></img>
+                        <img class="artistThumbnail" data-bind="attr : { src: ArtistThumbnailImage.Url }"></img>
                     </span>
                     <span data-bind="if: (ArtistThumbnailImageId == null)">
                         <div style="width: 50px; height: 50px;"></div>
@@ -339,8 +355,7 @@
                     <span class="displayName" data-bind="text: DisplayName"> </span>
 
                     <span data-bind="if: (ArtistImageId != null)">
-                        <img data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtistImageId + '/Content' }"
-                            style="max-width: 100px;"></img>
+                        <img data-bind="attr : { src: ArtistImage.Url }" style="max-width: 100px;"></img>
                     </span>
 
 
@@ -376,7 +391,7 @@
                     </div>
 
                     <div data-bind="if: ArtPreviewImageId != null">
-                        <img data-bind="attr : { src: baseUrl + '/Api/Images/' + ArtPreviewImageId + '/Content' }"
+                        <img data-bind="attr : { src: ArtPreviewImage.Url }"
                             style="max-width: 100%; max-height: 350px;"></img>
                         <div class="small" data-bind="text: ArtPreviewCaption"></div>
                     </div>
