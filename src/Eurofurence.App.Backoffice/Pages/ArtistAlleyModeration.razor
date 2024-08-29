@@ -14,10 +14,10 @@
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Artist Alley Moderation</MudText>
-    <MudSpacer />
-    <MudSpacer />
+    <MudSpacer/>
+    <MudSpacer/>
     <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
-                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
 </MudToolBar>
 @*
 Table showing the basic informations for each application.
@@ -25,7 +25,7 @@ Table showing the basic informations for each application.
 More data of the applicant shall be visble an extra dialog
 *@
 <MudDataGrid T="TableRegistrationRecord" @ref="_dataGrid" Items="_items" Filterable="true"
-    FilterMode="@DataGridFilterMode.ColumnFilterMenu">
+             FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
         <TemplateColumn Title="Preview" CellClass="justify-center">
             <CellTemplate>
@@ -33,34 +33,57 @@ More data of the applicant shall be visble an extra dialog
                 {
                     <MudLink Href="@context.Item.Image.Url">
                         <MudImage Class="ml-2" Width="100" Height="100" ObjectFit="ObjectFit.Contain"
-                                  Src="@context.Item.Image.Url" />
+                                  Src="@context.Item.Image.Url"/>
                     </MudLink>
                 }
             </CellTemplate>
         </TemplateColumn>
-        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false" />
-        <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName" Filterable="false" />
-        <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location" Filterable="false" />
-        <PropertyColumn Title="Submitted" Property="arg => arg.CreatedDateTimeUtc" Filterable="true"  Format="yyyy-MM-dd HH:mm:ss zzz">
-        </PropertyColumn>
-        <TemplateColumn Title="Status" Context="context2" CellClass="justify-center" Sortable="true" SortBy="@(x => $"{x.State} - {x.CreatedDateTimeUtc.ToString("yyyy-MM-dd HH:mm:ss zzz")}")">
+        <PropertyColumn Title="Applicant's Username" Property="arg => arg.OwnerUsername" Filterable="false"/>
+        <PropertyColumn Title="Applicant's Name" Property="arg => arg.DisplayName" Filterable="false"/>
+        <PropertyColumn Title="Applicant's Location" Property="arg => arg.Location" Filterable="false"/>
+        <PropertyColumn Title="Submitted" Property="arg => arg.CreatedDateTimeUtc" Filterable="true" Format="yyyy-MM-dd HH:mm:ss zzz"/>
+        <TemplateColumn Context="context2" Title="Status" Filterable="true" ShowFilterIcon="true">
+            <FilterTemplate>
+                @* <MudIconButton OnClick="@OpenFilter" Icon="@_icon" Size="@Size.Small" /> *@
+                @* <MudOverlay Visible="@_filterOpen" OnClick="@(() => _filterOpen = false)" /> *@
+                <MudPopover Open="true" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter"
+                            Style="width:150px">
+                    <MudStack Spacing="0">
+                        <MudStack Spacing="0" Style="overflow-y:auto;max-height:250px">
+                            @foreach (var item in Enum.GetValues(typeof(TableRegistrationRecord.RegistrationStateEnum)).Cast<TableRegistrationRecord.RegistrationStateEnum>())
+                            {
+                                <MudCheckBox T="bool" Label="@($"{item.ToString()}")" Size="@Size.Small" Value="@(_selectedStatusFilterItems.Contains(item))"
+                                             ValueChanged="@((value) => OnSelectStatusFilter(value, item, context2))"/>
+                            }
+                        </MudStack>
+                        <MudStack Row="true">
+                        </MudStack>
+                    </MudStack>
+                </MudPopover>
+            </FilterTemplate>
             <CellTemplate>
                 <MudContainer MaxWidth="MaxWidth.Small">
                     <MudGrid Class="justify-center">
-                        <MudItem xs="10" Style="text-align: center;">
+                        <MudItem xs="12" Style="text-align: center;">
                             @switch (context2.Item?.State)
                             {
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
                                     <MudButtonGroup OverrideStyles="false" Vertical="true">
-                                        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" Context="bttn" ref="appBtn"
-                                            OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">Approve</MudButton>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
+                                                   OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">
+                                            Approve
+                                        </MudButton>
                                         <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                            OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">Reject</MudButton>
+                                                   OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">
+                                            Reject
+                                        </MudButton>
                                         @*Show the delete button only for admins*@
                                         <AuthorizeView Policy="RequireArtistAlleyAdmin">
                                             <Authorized>
                                                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
-                                                    OnClick="args => DeleteRegistration(context2.Item)">Delete</MudButton>
+                                                           OnClick="args => DeleteRegistration(context2.Item)">
+                                                    Delete
+                                                </MudButton>
                                             </Authorized>
                                         </AuthorizeView>
                                     </MudButtonGroup>
@@ -76,7 +99,9 @@ More data of the applicant shall be visble an extra dialog
                                     break;
                             }
                             <MudButton StartIcon="@Icons.Material.Filled.Menu"
-                                OnClick="() => OpenMoreDialog(context2.Item)">Details</MudButton>
+                                       OnClick="() => OpenMoreDialog(context2.Item)">
+                                Details
+                            </MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudContainer>
@@ -84,23 +109,50 @@ More data of the applicant shall be visble an extra dialog
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="TableRegistrationRecord" />
+        <MudDataGridPager T="TableRegistrationRecord"/>
     </PagerContent>
 </MudDataGrid>
 
 @code {
 
     #region Attributes
-
+    /// <summary>
+    /// Instance of the data grid
+    /// </summary>
     private MudDataGrid<TableRegistrationRecord>? _dataGrid;
     private IEnumerable<TableRegistrationRecord> _items = new List<TableRegistrationRecord>();
+
     private string? _search;
+
+    /// <summary>
+    /// A list of all selected status filter options
+    /// </summary>
+    HashSet<TableRegistrationRecord.RegistrationStateEnum> _selectedStatusFilterItems = new();
+
+
+    private FilterDefinition<TableRegistrationRecord> _statusFilterDefinition;
+
     #endregion
 
     #region Methods
 
+    private async void OnSelectStatusFilter(bool value, TableRegistrationRecord.RegistrationStateEnum item, FilterContext<TableRegistrationRecord> context)
+    {
+        if (value)
+            _selectedStatusFilterItems.Add(item);
+        else
+            _selectedStatusFilterItems.Remove(item);
+
+        await context.Actions.ApplyFilterAsync(_statusFilterDefinition);
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        _statusFilterDefinition = new FilterDefinition<TableRegistrationRecord>
+        {
+            FilterFunction = x => _selectedStatusFilterItems.Contains(x.State) || !_selectedStatusFilterItems.Any()
+        };
+
         _items = await GetRegistrationsAsync();
     }
 
@@ -146,14 +198,13 @@ More data of the applicant shall be visble an extra dialog
             { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
             { x => x.ActionButtonText, "Confirm" }
         };
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult? result = await dialogRef.Result;
 
         if (result is { Canceled: false })
         {
-            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ?
-                TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
             _items = await GetRegistrationsAsync();
             StateHasChanged();
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
@@ -166,7 +217,8 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="contextItem"></param>
     private async Task OpenMoreDialog(TableRegistrationRecord contextItem)
     {
-        var parameters = new DialogParameters<ArtistAlleyApplicationDialog>() {
+        var parameters = new DialogParameters<ArtistAlleyApplicationDialog>()
+        {
             { x => x.Record, contextItem }
         };
 
@@ -187,10 +239,12 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="entries"></param>
     /// <returns></returns>
     private IEnumerable<TableRegistrationRecord> Filter(IEnumerable<TableRegistrationRecord> entries) =>
-        string.IsNullOrEmpty(_search) ? entries : entries.Where(x => x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
+        string.IsNullOrEmpty(_search)
+            ? entries
+            : entries.Where(x => x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || x.OwnerUsername.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || x.Location.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || x.ShortDescription.Contains(_search, StringComparison.OrdinalIgnoreCase));
 
 
     /// <summary>
