@@ -54,7 +54,7 @@ namespace Eurofurence.App.Server.Services.Communication
             }
 
             await _appDbContext.SaveChangesAsync(cancellationToken);
-            
+
             return messages;
         }
 
@@ -64,28 +64,18 @@ namespace Eurofurence.App.Server.Services.Communication
             string identityId = null,
             CancellationToken cancellationToken = default)
         {
-            var message = await FindOneAsync(messageId, cancellationToken);
+            var message = await _appDbContext.PrivateMessages
+                .Where(pm => pm.Id == messageId && pm.ReadDateTimeUtc == null
+                    // Message sent to RegSysId
+                    && (string.IsNullOrWhiteSpace(pm.RecipientRegSysId) || (regSysIds != null && regSysIds.Contains(pm.RecipientRegSysId)))
+                    // Message sent to IdentityId
+                    && (string.IsNullOrWhiteSpace(pm.RecipientIdentityId) || identityId == pm.RecipientIdentityId)
+                ).FirstOrDefaultAsync(cancellationToken);
             if (message == null) return null;
 
-            if ((
-                    // Message sent to RegSysId
-                    !string.IsNullOrWhiteSpace(message.RecipientRegSysId)
-                    && regSysIds is not null
-                    && regSysIds.Contains(message.RecipientRegSysId)
-                ) || (
-                    // Message sent to IdentityId
-                    !string.IsNullOrWhiteSpace(message.RecipientIdentityId)
-                    && identityId == message.RecipientIdentityId
-                ))
-            {
-                message.ReadDateTimeUtc = DateTime.UtcNow;
-                await ReplaceOneAsync(message, cancellationToken);
-                return message.ReadDateTimeUtc;
-            }
-            else
-            {
-                return null;
-            }
+            message.ReadDateTimeUtc = DateTime.UtcNow;
+            await _appDbContext.SaveChangesAsync(cancellationToken);
+            return message.ReadDateTimeUtc;
         }
 
 
