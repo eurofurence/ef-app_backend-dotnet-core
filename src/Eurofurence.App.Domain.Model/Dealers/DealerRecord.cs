@@ -24,6 +24,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         /// </summary>
         [Required]
         [DataMember]
+        [JsonIgnore]
         public int RegistrationNumber { get; set; }
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         /// </summary>
         [Required]
         [DataMember]
+        [JsonIgnore]
         public string AttendeeNickname { get; set; }
 
         /// <summary>
