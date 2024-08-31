@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
@@ -30,6 +31,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly IPrivateMessageService _privateMessageService;
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly IHtmlSanitizer _htmlSanitizer;
+
+        private readonly Regex _telegramHandleRegex = new Regex("^@?[0-9a-z_]{5,32}$");
 
         public TableRegistrationService(
             AppDbContext context,
@@ -68,13 +71,33 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
-        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null)
+        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream)
         {
             if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
                 if (_uriSanitizer.Sanitize(request.WebsiteUrl) is string sanitizedUrl and not null)
                     request.WebsiteUrl = sanitizedUrl;
                 else
-                    throw new ArgumentException("Invalid website URL");
+                    throw new ArgumentException("Invalid website URL.");
+
+            if (!string.IsNullOrWhiteSpace(request.TelegramHandle) && !_telegramHandleRegex.IsMatch(request.TelegramHandle))
+            {
+                throw new ArgumentException("Invalid Telegram handle.");
+            }
+
+            if (!int.TryParse(request.Location, out var locationInt) || locationInt <= 0)
+            {
+                throw new ArgumentException("Invalid location, table number must be greater than 0.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.DisplayName))
+            {
+                throw new ArgumentException("Display name is required.");
+            }
+
+            if (imageStream == null)
+            {
+                throw new ArgumentException("Registrations must include an image.");
+            }
 
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
@@ -89,6 +112,12 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 await DeleteOneAsync(registration.Id);
             }
 
+            ImageRecord image = null;
+            if (imageStream != null)
+            {
+                image = await _imageService.InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
+            }
+
             var record = new TableRegistrationRecord()
             {
                 OwnerUid = user.GetSubject(),
@@ -97,7 +126,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 DisplayName = _htmlSanitizer.Sanitize(request.DisplayName),
                 WebsiteUrl = request.WebsiteUrl,
                 ShortDescription = _htmlSanitizer.Sanitize(request.ShortDescription),
-                TelegramHandle = request.TelegramHandle,
+                TelegramHandle = request.TelegramHandle.TrimStart('@'),
                 Location = request.Location,
                 ImageId = image?.Id,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
