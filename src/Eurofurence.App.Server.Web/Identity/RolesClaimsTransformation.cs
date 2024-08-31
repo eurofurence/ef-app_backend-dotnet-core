@@ -206,6 +206,11 @@ public class RolesClaimsTransformation(
 
         identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
 
+        if (registrations.Any(registration => registration.Value == UserRegistrationStatus.CheckedIn))
+        {
+            identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
+        }
+
         if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId)
         {
             await UpdateRegSysIdsInDb(registrations.Keys.ToList(), identityId);
@@ -237,7 +242,7 @@ public class RolesClaimsTransformation(
         if (statusResponse.IsSuccessStatusCode)
         {
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
-            Enum.TryParse(statusJson.RootElement.TryGetString("status"), true, out UserRegistrationStatus status);
+            Enum.TryParse(statusJson.RootElement.TryGetString("status")?.Replace(" ", ""), true, out UserRegistrationStatus status);
             return status;
         }
 
