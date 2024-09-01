@@ -22,16 +22,20 @@ namespace Eurofurence.App.Domain.Model.Dealers
         /// <summary>
         /// Registration number (as on badge) of the attendee that acts on behalf/represents this dealer.
         /// </summary>
+        // TODO: Remove entirely for EF29
         [Required]
         [DataMember]
-        public int RegistrationNumber { get; set; }
+        [JsonIgnore]
+        public int RegistrationNumber { get; set; } = -1;
 
         /// <summary>
         /// Nickname number (as on badge) of the attendee that acts on behalf/represents this dealer.
         /// </summary>
+        // TODO: Remove entirely for EF29
         [Required]
         [DataMember]
-        public string AttendeeNickname { get; set; }
+        [JsonIgnore]
+        public string AttendeeNickname { get; set; } = "";
 
         /// <summary>
         /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand. 
@@ -172,6 +176,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [DataMember]
         public Dictionary<string, string[]> Keywords { get; set; }
 
+        // TODO: Remove entirely for EF29 (superseded by making DisplayName Required and using it exclusively)
         public string DisplayNameOrAttendeeNickname =>
             !string.IsNullOrWhiteSpace(DisplayName) ? DisplayName : AttendeeNickname;
     }
