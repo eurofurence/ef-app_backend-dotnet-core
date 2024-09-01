@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
@@ -80,23 +81,21 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
+        /// <summary>
+        ///     Submits a new table registration for review in the name of the currently signed in user.
+        /// </summary>
+        /// <param name="request">details of the table registration</param>
+        /// <param name="requestImageFile">mandatory image to be attached to the registration</param>
         [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, IFormFile requestImageFile)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
-            ImageRecord image = null;
-            if (requestImageFile != null)
-            {
-                using var ms = new MemoryStream();
-                await requestImageFile.CopyToAsync(ms);
-                image = await _imageService.InsertImageAsync(requestImageFile.FileName, ms, true, 1500, 1500);
-            }
-
-            if (!Uri.TryCreate(request.WebsiteUrl, UriKind.Absolute, out _)) return BadRequest("Invalid website URL!");
-
             try
             {
-                await _tableRegistrationService.RegisterTableAsync(User, request, image);
+                using var imageStream = new MemoryStream();
+                if (requestImageFile != null)
+                    await requestImageFile.CopyToAsync(imageStream);
+                await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
             }
             catch (ArgumentException ex)
             {

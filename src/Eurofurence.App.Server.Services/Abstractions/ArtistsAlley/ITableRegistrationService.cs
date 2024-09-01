@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
         IEntityServiceOperations<TableRegistrationRecord>,
         IPatchOperationProcessor<TableRegistrationRecord>
     {
-        Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, ImageRecord image = null);
+        Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream);
         IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state);
         Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid);
 
