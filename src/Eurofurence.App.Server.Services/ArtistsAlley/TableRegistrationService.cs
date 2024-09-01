@@ -126,7 +126,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 DisplayName = _htmlSanitizer.Sanitize(request.DisplayName),
                 WebsiteUrl = request.WebsiteUrl,
                 ShortDescription = _htmlSanitizer.Sanitize(request.ShortDescription),
-                TelegramHandle = request.TelegramHandle.TrimStart('@'),
+                TelegramHandle = request.TelegramHandle?.TrimStart('@'),
                 Location = request.Location,
                 ImageId = image?.Id,
                 State = TableRegistrationRecord.RegistrationStateEnum.Pending
