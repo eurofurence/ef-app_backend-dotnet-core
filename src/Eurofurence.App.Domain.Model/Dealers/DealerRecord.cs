@@ -26,7 +26,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [Required]
         [DataMember]
         [JsonIgnore]
-        public int RegistrationNumber { get; set; }
+        public int RegistrationNumber { get; set; } = -1;
 
         /// <summary>
         /// Nickname number (as on badge) of the attendee that acts on behalf/represents this dealer.
@@ -35,7 +35,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
         [Required]
         [DataMember]
         [JsonIgnore]
-        public string AttendeeNickname { get; set; }
+        public string AttendeeNickname { get; set; } = "";
 
         /// <summary>
         /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand. 
