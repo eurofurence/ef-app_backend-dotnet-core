@@ -64,7 +64,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
             builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
             builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
-            builder.RegisterInstance(TelegramConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(LassieConfiguration.FromConfiguration(_configuration));
@@ -98,7 +97,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
             builder.RegisterType<AgentClosingResultService>().As<IAgentClosingResultService>();
             builder.RegisterType<AnnouncementService>().As<IAnnouncementService>();
-            builder.RegisterType<BotManager>().As<BotManager>();
             builder.RegisterType<CollectingGameService>().As<ICollectingGameService>();
             builder.RegisterType<DealerService>().As<IDealerService>();
             builder.RegisterType<EventConferenceDayService>().As<IEventConferenceDayService>();

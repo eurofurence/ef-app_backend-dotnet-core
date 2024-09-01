@@ -32,8 +32,13 @@ using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Eurofurence.App.Server.Services.Telegram;
+using Eurofurence.App.Server.Web.Telegram;
 using Mapster;
 using MapsterMapper;
+using Microsoft.Extensions.Options;
+using Telegram.Bot;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -170,6 +175,16 @@ namespace Eurofurence.App.Server.Web
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
+
+            if (Configuration.GetSection("Telegram").GetSection("AccessToken").Get<string>() is { Length: > 0 })
+            {
+                services.Configure<TelegramConfiguration>(Configuration.GetSection("Telegram"));
+                services.AddHostedService<BotService>();
+                services.AddSingleton<ITelegramBotClient>(sp => new TelegramBotClient(
+                    sp.GetRequiredService<IOptions<TelegramConfiguration>>().Value.AccessToken
+                ));
+                services.AddTransient<AdminConversation>();
+            }
 
             services.Configure<LoggerFilterOptions>(options => { options.MinLevel = LogLevel.Trace; });
 
