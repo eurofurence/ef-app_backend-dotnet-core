@@ -16,7 +16,7 @@
       Include="..\Eurofurence.App.Infrastructure.EntityFramework\Eurofurence.App.Infrastructure.EntityFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="8.0.0" />
+    <PackageReference Include="Autofac" Version="8.1.0" />
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="FirebaseAdmin" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
