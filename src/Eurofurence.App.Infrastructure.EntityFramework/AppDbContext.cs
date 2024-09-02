@@ -60,6 +60,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<LinkFragment> LinkFragments { get; set; }
         public virtual DbSet<DeviceIdentityRecord> DeviceIdentities { get; set; }
         public virtual DbSet<RegistrationIdentityRecord> RegistrationIdentities { get; set; }
+        
+        public virtual DbSet<ArtistAlleyUserStatusRecord> ArtistAlleyUserStatusRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
