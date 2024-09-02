@@ -23,7 +23,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<TokenAuthorizationMessageHandler>();
 builder.Services.AddHttpClient("api", options =>
 {
-    options.BaseAddress = new Uri(builder.Configuration.GetValue<string>("ApiUrl") ?? string.Empty);
+    options.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("BackendBaseUrl")?.TrimEnd('/') ?? string.Empty}/Api/");
 }).AddHttpMessageHandler<TokenAuthorizationMessageHandler>();
 
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("api"));
