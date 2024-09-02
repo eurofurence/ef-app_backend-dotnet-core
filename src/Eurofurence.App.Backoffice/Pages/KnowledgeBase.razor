@@ -4,6 +4,7 @@
 @using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
 @using Markdig
 @inject ISnackbar Snackbar
@@ -114,7 +115,14 @@
                     <MudCardActions>
                         @foreach (var link in knowledgeEntry.Links)
                         {
-                            <MudButton Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                            @if (link.FragmentType == LinkFragment.FragmentTypeEnum.WebExternal)
+                            {
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@link.Target">@link.Name</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Disabled="true" Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                            }
                         }
                     </MudCardActions>
                 </MudCard>
