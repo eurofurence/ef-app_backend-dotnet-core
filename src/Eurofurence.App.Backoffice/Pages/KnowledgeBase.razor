@@ -4,6 +4,7 @@
 @using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
 @using Markdig
 @inject ISnackbar Snackbar
@@ -114,7 +115,15 @@
                     <MudCardActions>
                         @foreach (var link in knowledgeEntry.Links)
                         {
-                            <MudButton Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                            @if (link.FragmentType == LinkFragment.FragmentTypeEnum.WebExternal)
+                            {
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@link.Target" Target="_blank">
+                                    @link.Name</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Disabled="true" Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                            }
                         }
                     </MudCardActions>
                 </MudCard>
@@ -239,10 +248,10 @@
     private async Task DeleteKnowledgeEntry(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult dialogResult = await dialogRef.Result;
@@ -295,10 +304,10 @@
     private async Task DeleteKnowledgeGroup(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to delete this knowledge base group?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to delete this knowledge base group?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult dialogResult = await dialogRef.Result;
