@@ -8,7 +8,9 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +22,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
+        private readonly IArtistAlleyUserStatusService _artistAlleyUserStatusService;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService, IArtistAlleyUserStatusService artistAlleyUserStatusService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
+            _artistAlleyUserStatusService = artistAlleyUserStatusService;
         }
 
         [HttpPut("{id}/:status")]
@@ -47,7 +51,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
             {
                 await _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
-                if (record.ImageId is { } imageId) await _imageService.SetRestricted(imageId, false);
+                if (record.ImageId is {} imageId) await _imageService.SetRestricted(imageId, false);
             }
 
             return NoContent();
@@ -90,6 +94,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
+            if (await _artistAlleyUserStatusService.GetUserStatusAsync(User.GetSubject()) == ArtistAlleyUserStatusRecord.UserStatus.BANNED)
+            {
+                return StatusCode(403, "User was banned from the artist alley");
+            }
+
             try
             {
                 using var imageStream = new MemoryStream();
@@ -128,7 +137,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             await _tableRegistrationService.DeleteOneAsync(id);
 
-            if (tableRegistration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
+            if (tableRegistration.ImageId is {} imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }

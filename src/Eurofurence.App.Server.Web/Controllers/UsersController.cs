@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,9 +18,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
 
         private readonly ITableRegistrationService _tableRegistrationService;
-        public UsersController(ITableRegistrationService tableRegistrationService)
+
+        private readonly IArtistAlleyUserStatusService _artistAlleyUserStatusService;
+        public UsersController(ITableRegistrationService tableRegistrationService, IArtistAlleyUserStatusService artistAlleyUserStatusService)
         {
             _tableRegistrationService = tableRegistrationService;
+            _artistAlleyUserStatusService = artistAlleyUserStatusService;
         }
 
         [Authorize]
@@ -47,13 +51,23 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpPut("{id}/:artist_alley_status")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PutTableRegistrationUserStatusAsync([EnsureNotNull][FromRoute] Guid id,
-            [FromBody][Required] ArtistAlleyUserStatusRecord.UserStatus state)
+        public async Task<ActionResult> PutTableRegistrationUserStatusAsync([EnsureNotNull][FromRoute] string id,
+            [Required][EnsureNotNull][FromBody] ArtistAlleyUserStatusChangeRequest changeRequest)
         {
-            await _tableRegistrationService.SetUserStatusAsync(id, state);
-            
+            await _artistAlleyUserStatusService.SetUserStatusAsync(id, User, changeRequest.Status, changeRequest.Reason);
+
             return NoContent();
         }
+
+
+        [HttpGet("{id}/:artist_alley_status")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ArtistAlleyUserStatusRecord.UserStatus> GetTableRegistrationUserStatusAsync([EnsureNotNull][FromRoute] string id)
+        {
+
+            return await _artistAlleyUserStatusService.GetUserStatusAsync(id);
+        }
+
     }
 
 

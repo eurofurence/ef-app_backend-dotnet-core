@@ -242,23 +242,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await _appDbContext.SaveChangesAsync();
         }
-        public async Task SetUserStatusAsync(Guid id, ArtistAlleyUserStatusRecord.UserStatus status)
-        {
-            var response = await _appDbContext.ArtistAlleyUserStatusRecords
-                .Where(x => x.UserId == id.ToString())
-                .FirstOrDefaultAsync();
-
-            if (response is null)
-            {
-                response = new ArtistAlleyUserStatusRecord(){UserId = id.ToString()};
-                response.NewId();
-                response.Touch();
-                await _appDbContext.ArtistAlleyUserStatusRecords.AddAsync(response);
-            }
-            response.Status = status;
-            await _appDbContext.SaveChangesAsync();
-        }
-
         public async Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid)
         {
             var request = await _appDbContext.TableRegistrations

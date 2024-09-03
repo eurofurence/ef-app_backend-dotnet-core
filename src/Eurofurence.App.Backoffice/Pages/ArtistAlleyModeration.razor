@@ -3,13 +3,14 @@
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.ArtistsAlley
 @using Microsoft.AspNetCore.Authorization
-@using Color = MudBlazor.Color
+@using Color=MudBlazor.Color
 
 @attribute [Authorize(Policy = "RequireArtistAlleyModerator")]
 
 @inject IArtistAlleyService TableRegService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IUserService UserService
 
 
 <MudToolBar>
@@ -70,20 +71,30 @@ More data of the applicant shall be visble an extra dialog
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
                                     <MudButtonGroup OverrideStyles="false" Vertical="true">
                                         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
-                                                   OnClick="args => TryChangeRegistrationStatus(context2.Item, false)">
+                                                   OnClick="args => TryChangeRegistrationStatus(context2.Item, false, false)">
                                             Approve
                                         </MudButton>
-                                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                                   OnClick="args => TryChangeRegistrationStatus(context2.Item, true)">
-                                            Reject
-                                        </MudButton>
+                                        <MudButtonGroup Variant="Variant.Outlined" Color="Color.Warning">
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                                       OnClick="args => TryChangeRegistrationStatus(context2.Item, true, false)">
+                                                Reject
+                                            </MudButton>
+                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+                                                <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Outlined.BackHand" OnClick="args => TryChangeRegistrationStatus(context2.Item, true, true)">Reject and Ban user </MudButton>
+                                            </MudMenu>
+                                        </MudButtonGroup>
+
                                         @*Show the delete button only for admins*@
                                         <AuthorizeView Policy="RequireArtistAlleyAdmin">
                                             <Authorized>
-                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
-                                                           OnClick="args => DeleteRegistration(context2.Item)">
-                                                    Delete
-                                                </MudButton>
+                                                <MudButtonGroup Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
+                                                    <MudButton StartIcon="@Icons.Material.Outlined.Delete" OnClick="args => DeleteRegistration(context2.Item, false)">
+                                                        Delete
+                                                    </MudButton>
+                                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+                                                        <MudButton Color="Color.Error" StartIcon="@Icons.Material.Outlined.BackHand" OnClick="args => DeleteRegistration(context2.Item, true)">Delete and Ban user</MudButton>
+                                                    </MudMenu>
+                                                </MudButtonGroup>
                                             </Authorized>
                                         </AuthorizeView>
                                     </MudButtonGroup>
@@ -116,6 +127,7 @@ More data of the applicant shall be visble an extra dialog
 @code {
 
     #region Attributes
+
     /// <summary>
     /// Instance of the data grid
     /// </summary>
@@ -136,6 +148,10 @@ More data of the applicant shall be visble an extra dialog
 
     #region Methods
 
+    private void OpenBannedUsersDialog()
+    {
+        
+    }
     private async void OnSelectStatusFilter(bool value, TableRegistrationRecord.RegistrationStateEnum item, FilterContext<TableRegistrationRecord> context)
     {
         if (value)
@@ -166,20 +182,37 @@ More data of the applicant shall be visble an extra dialog
         }
     }
 
-    private async Task DeleteRegistration(TableRegistrationRecord registrationRecord)
+    /// <summary>
+    /// Deletes a registration
+    /// </summary>
+    /// <param name="registrationRecord">The registration to delete</param>
+    /// <param name="banUser">True if the user should also be banned in the future</param>
+    private async Task DeleteRegistration(TableRegistrationRecord registrationRecord, bool banUser)
     {
         DialogParameters<ConfirmDialog> dialog = new()
         {
-            { x => x.ContentText, $"Are you sure you want to delete this application?" },
-            { x => x.ActionButtonText, "Confirm" }
+            {
+                x => x.ContentText, $"Are you sure you want to delete this application?"
+            },
+            {
+                x => x.ActionButtonText, "Confirm"
+            }
         };
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var options = new DialogOptions()
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult? result = await dialogRef.Result;
 
         if (result is { Canceled: false })
         {
             await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
+            if (banUser)
+            {
+                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, ArtistAlleyUserStatusRecord.UserStatus.BANNED);
+            }
             _items = await GetRegistrationsAsync();
             StateHasChanged();
             Snackbar.Add("Application Deleted", Severity.Success);
@@ -191,20 +224,33 @@ More data of the applicant shall be visble an extra dialog
     /// </summary>
     /// <param name="registrationRecord"></param>
     /// <param name="reject">True if the application should be rejected and false if it should be accepted</param>
-    private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject)
+    /// <param name="banUser">True if the applicant should be banned for the future</param>
+    private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject, bool banUser)
     {
         DialogParameters<ConfirmDialog> dialog = new()
         {
-            { x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?" },
-            { x => x.ActionButtonText, "Confirm" }
+            {
+                x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?"
+            },
+            {
+                x => x.ActionButtonText, "Confirm"
+            }
         };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult? result = await dialogRef.Result;
 
         if (result is { Canceled: false })
         {
             await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            if (banUser)
+            {
+                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, ArtistAlleyUserStatusRecord.UserStatus.BANNED);
+            }
             _items = await GetRegistrationsAsync();
             StateHasChanged();
             Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
@@ -219,10 +265,17 @@ More data of the applicant shall be visble an extra dialog
     {
         var parameters = new DialogParameters<ArtistAlleyApplicationDialog>()
         {
-            { x => x.Record, contextItem }
+            {
+                x => x.Record, contextItem
+            }
         };
 
-        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseButton = true
+        };
 
         var dialog = await DialogService.ShowAsync<ArtistAlleyApplicationDialog>("Application Details", parameters, options);
 
@@ -274,5 +327,6 @@ More data of the applicant shall be visble an extra dialog
     }
 
     #endregion
+
 
 }

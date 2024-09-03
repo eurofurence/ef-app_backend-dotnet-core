@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Users;
 
 namespace Eurofurence.App.Backoffice.Services
@@ -12,6 +13,11 @@ namespace Eurofurence.App.Backoffice.Services
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
             return await http.GetFromJsonAsync<UserRecord>("Users/:self", options) ?? new UserRecord();
+        }
+        public async Task PutUserArtistAlleyStatusAsync(String userID, ArtistAlleyUserStatusRecord.UserStatus status)
+        {
+            JsonContent content = JsonContent.Create(status);
+            await http.PutAsync($"Users/{userID}/:artist_alley_status", content);
         }
     }
 }
