@@ -24,5 +24,9 @@ namespace Eurofurence.App.Backoffice.Services
         /// <param name="record">The record to delete</param>
         /// <returns></returns>
         public Task DeleteTableRegistrationAsync(TableRegistrationRecord record);
+
+        public Task PutArtistAllaySystemStatus(ArtistAlleySystemStatus status);
+        
+        public Task<ArtistAlleySystemStatus> GetArtistAllaySystemStatus();
     }
 }

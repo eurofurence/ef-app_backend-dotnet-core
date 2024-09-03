@@ -17,6 +17,7 @@
     <MudText Typo="Typo.h6">Artist Alley Moderation</MudText>
     <MudSpacer/>
     <MudSpacer/>
+    <MudSwitch T="bool" Color="Color.Primary" ValueChanged="b => OnChangedAASystemStatus(b)" Value="@_registrationsEnables" Label=@("Registrations " + (_registrationsEnables ? "enabled" : "disabled"))/>
     <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary"/>
 </MudToolBar>
@@ -127,6 +128,12 @@ More data of the applicant shall be visble an extra dialog
 @code {
 
     #region Attributes
+    
+    private bool _registrationsEnables
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Instance of the data grid
@@ -147,11 +154,7 @@ More data of the applicant shall be visble an extra dialog
     #endregion
 
     #region Methods
-
-    private void OpenBannedUsersDialog()
-    {
-        
-    }
+    
     private async void OnSelectStatusFilter(bool value, TableRegistrationRecord.RegistrationStateEnum item, FilterContext<TableRegistrationRecord> context)
     {
         if (value)
@@ -170,6 +173,9 @@ More data of the applicant shall be visble an extra dialog
         };
 
         _items = await GetRegistrationsAsync();
+
+        _registrationsEnables = await TableRegService.GetArtistAllaySystemStatus() == ArtistAlleySystemStatus.OPEN;
+
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -329,4 +335,31 @@ More data of the applicant shall be visble an extra dialog
     #endregion
 
 
+    private async Task OnChangedAASystemStatus(Boolean b)
+    {
+
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            {
+                x => x.ContentText, $"Are you sure you want to {(b ? "enable" : "disable")} artist alley registrations?"
+            }
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult? result = await dialogRef.Result;
+
+        if (result is { Canceled: false })
+        {
+            _registrationsEnables = b;
+            TableRegService.PutArtistAllaySystemStatus(b ? ArtistAlleySystemStatus.OPEN : ArtistAlleySystemStatus.REG_CLOSED);
+        }
+        else
+        { 
+            _registrationsEnables = !b;
+        }
+    }
 }

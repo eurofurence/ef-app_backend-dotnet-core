@@ -4,16 +4,15 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
-using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -24,11 +23,55 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IImageService _imageService;
         private readonly IArtistAlleyUserStatusService _artistAlleyUserStatusService;
 
+        private const string ArtistAlleyDisabledFilePath = ".ArtistAlleyDisabled";
+
         public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService, IArtistAlleyUserStatusService artistAlleyUserStatusService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
             _artistAlleyUserStatusService = artistAlleyUserStatusService;
+        }
+
+        /// <summary>
+        /// Returns the current system status of the artist alley
+        /// </summary>
+        /// <returns>The current status of the artist alley system</returns>
+        [HttpGet("SystemStatus")]
+        [ProducesResponseType(typeof(ArtistAlleySystemStatus), 200)]
+        [Authorize]
+        public ArtistAlleySystemStatus GetArtistAlleyStatus()
+        {
+            if (System.IO.File.Exists(ArtistAlleyDisabledFilePath))
+            {
+                return ArtistAlleySystemStatus.REG_CLOSED;
+            }
+            return ArtistAlleySystemStatus.OPEN;
+        }
+
+        /// <summary>
+        /// Changes the system status of the artist alley system
+        /// </summary>
+        /// <param name="status">To new status of the artist alley system</param>
+        /// <returns></returns>
+        [HttpPut("SystemStatus")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult PutArtistAlleyStatus([FromBody][Required] ArtistAlleySystemStatus status)
+        {
+            if (status == ArtistAlleySystemStatus.OPEN)
+            {
+                if (System.IO.File.Exists(ArtistAlleyDisabledFilePath))
+                {
+                    System.IO.File.Delete(ArtistAlleyDisabledFilePath);
+                }
+            }
+            else
+            {
+                if (!System.IO.File.Exists(ArtistAlleyDisabledFilePath))
+                {
+                    System.IO.File.Create(ArtistAlleyDisabledFilePath);
+                }
+            }
+            return Ok();
         }
 
         [HttpPut("{id}/:status")]
@@ -94,6 +137,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
+            if (GetArtistAlleyStatus() == ArtistAlleySystemStatus.REG_CLOSED)
+            {
+                return StatusCode(403, "Table registration is temporally closed");
+            }
+            
             if (await _artistAlleyUserStatusService.GetUserStatusAsync(User.GetSubject()) == ArtistAlleyUserStatusRecord.UserStatus.BANNED)
             {
                 return StatusCode(403, "User was banned from the artist alley");
