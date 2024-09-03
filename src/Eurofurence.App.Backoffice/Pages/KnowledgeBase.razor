@@ -48,13 +48,21 @@
                                 <MudIcon Icon="@("fas fa-" + knowledgeGroup.FontAwesomeIconName)"></MudIcon>
                             </CardHeaderAvatar>
                             <CardHeaderContent>
-                                <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
+                                <MudGrid>
+                                    <MudItem>
+                                        <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
+                                    </MudItem>
+                                    <MudSpacer></MudSpacer>
+                                    <MudItem>
+                                        <MudText Class="mb-4 mr-4" Typo="Typo.h6" Color="Color.Tertiary">#@knowledgeGroup.Order</MudText>
+                                    </MudItem>
+                                </MudGrid>
                             </CardHeaderContent>
                             <CardHeaderActions>
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                    @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)"></MudIconButton>
+                                               @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)"></MudIconButton>
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                    @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
+                                               @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
                             </CardHeaderActions>
                         </MudCardHeader>
                         <MudCardContent>
@@ -94,14 +102,22 @@
                 <MudCard Class="mt-4">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
-                            <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
+                            <MudGrid>
+                                <MudItem>
+                                    <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
+                                    <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
+                                </MudItem>
+                                <MudSpacer></MudSpacer>
+                                <MudItem>
+                                    <MudText Class="mr-4" Typo="Typo.h6" Color="Color.Tertiary">#@knowledgeEntry.Order</MudText>
+                                </MudItem>
+                            </MudGrid>
                         </CardHeaderContent>
                         <CardHeaderActions>
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)" />
+                                           @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)"/>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)" />
+                                           @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)"/>
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
@@ -150,7 +166,8 @@
         Loading = true;
         _knowledgeEntries = [];
 
-        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
+        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => _knowledgeGroups.FirstOrDefault(kg => kg.Key == ke.KnowledgeGroupId).Value.Order).ThenBy(ke => ke.Order);
+        
         foreach (var response in responses)
         {
             var record = new KnowledgeEntryRecord()
@@ -283,6 +300,7 @@
         {
             Loading = true;
             await LoadKnowledgeGroups();
+            await LoadKnowledgeEntries();
         }
     }
 
@@ -298,6 +316,7 @@
         {
             Loading = true;
             await LoadKnowledgeGroups();
+            await LoadKnowledgeEntries();
         }
     }
 
