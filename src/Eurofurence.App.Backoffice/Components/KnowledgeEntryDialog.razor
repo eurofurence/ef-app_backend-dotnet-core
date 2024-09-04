@@ -82,8 +82,10 @@
                                     <PropertyColumn Title="Target" Property="link => link.Target" />
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                           OnClick="@(() => UpdateLink(context.Item))" />
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                OnClick="@(() => DeleteLink(@context.Item.Id))" />
+                                                           OnClick="@(() => DeleteLink(@context.Item.Id))"/>
                                         </CellTemplate>
                                     </TemplateColumn>
                                 </Columns>
@@ -168,16 +170,36 @@
 
     private async Task AddLink()
     {
-        var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, null } };
+        var parameters = new DialogParameters<LinkFragmentDialog> { { x => x.Record, null } };
 
         var dialog = await DialogService.ShowAsync<LinkFragmentDialog>("New link", parameters);
         var result = await dialog.Result;
 
-        if (!result?.Canceled ?? false && result.Data != null)
+        if (result is { Canceled: false })
         {
-            var link = result?.Data as LinkFragment;
+            var link = result.Data as LinkFragment;
 
             Record?.Links.Add(link);
+        }
+    }
+
+    private async Task UpdateLink(LinkFragment record)
+    {
+        var parameters = new DialogParameters<LinkFragmentDialog> { { x => x.Record, record } };
+
+        var dialog = await DialogService.ShowAsync<LinkFragmentDialog>("New link", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var link = result.Data as LinkFragment;
+
+            var currentLinkIndex = Record?.Links.FindIndex(l => l.Id == link?.Id);
+
+            if (Record != null && currentLinkIndex != null)
+            {
+                Record.Links[(int)currentLinkIndex] = link;
+            }
         }
     }
 
