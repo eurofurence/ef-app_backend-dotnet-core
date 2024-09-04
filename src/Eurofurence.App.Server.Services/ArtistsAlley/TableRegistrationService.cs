@@ -32,7 +32,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly IHtmlSanitizer _htmlSanitizer;
 
-        private readonly Regex _telegramHandleRegex = new Regex("^@?[0-9a-z_]{5,32}$");
+        private readonly Regex _telegramHandleRegex = new Regex("^@?[0-9A-Za-z_]{5,32}$");
 
         public TableRegistrationService(
             AppDbContext context,
