@@ -1,13 +1,18 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Eurofurence.App.Common.ExtensionMethods;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Telegram;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +24,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Eurofurence.App.Server.Web.Telegram;
 
@@ -31,8 +37,11 @@ public class BotService : BackgroundService, IUpdateHandler
     private readonly IEventConferenceRoomService _eventConferenceRoomService;
     private readonly ConventionSettings _conventionSettings;
     private readonly IDealerService _dealerService;
+    private readonly IImageService _imageService;
+    private readonly ITableRegistrationService _tableRegistrationService;
     private readonly Dictionary<long, IConversation> _conversations = new();
     private readonly Dictionary<long, DateTime> _answeredQueries = new();
+    private readonly Dictionary<long, Guid> _tableRegistrations = new();
 
     public BotService(
         ILogger<BotService> logger,
@@ -42,7 +51,9 @@ public class BotService : BackgroundService, IUpdateHandler
         IEventConferenceRoomService eventConferenceRoomService,
         ConventionSettings conventionSettings,
         IDealerService dealerService,
-        ITelegramMessageBroker telegramMessageBroker)
+        ITelegramMessageBroker telegramMessageBroker,
+        IImageService imageService,
+        ITableRegistrationService tableRegistrationService)
     {
         _logger = logger;
         _client = client;
@@ -51,9 +62,12 @@ public class BotService : BackgroundService, IUpdateHandler
         _eventConferenceRoomService = eventConferenceRoomService;
         _conventionSettings = conventionSettings;
         _dealerService = dealerService;
+        _imageService = imageService;
+        _tableRegistrationService = tableRegistrationService;
 
         telegramMessageBroker.OnSendMarkdownMessageToChatAsync += OnSendMarkdownMessageToChatAsync;
         telegramMessageBroker.OnSendImageToChatAsync += OnSendImageToChatAsync;
+        telegramMessageBroker.OnTableRegistrationAsync += OnTableRegistrationAsync;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -102,6 +116,37 @@ public class BotService : BackgroundService, IUpdateHandler
             caption: message,
             parseMode: ParseMode.Markdown
         );
+    }
+    
+    private async Task OnTableRegistrationAsync(string chatId, TableRegistrationRecord record)
+    {
+        var message = await _client.SendTextMessageAsync(
+            chatId,
+            $@"*New Request:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()})
+
+*Display Name:* {record.DisplayName.EscapeMarkdown()}
+*Location:* {record.Location.RemoveMarkdown()}
+*Description:* {record.ShortDescription.EscapeMarkdown()}",
+            parseMode: ParseMode.Markdown,
+            replyMarkup: new InlineKeyboardMarkup([
+                InlineKeyboardButton.WithCallbackData("Approve"),
+                InlineKeyboardButton.WithCallbackData("Reject")
+            ])
+        );
+
+        if (record.Image is { } image)
+        {
+            await using var stream = await _imageService.GetImageContentByImageIdAsync(image.Id);
+            await _client.SendPhotoAsync(
+                chatId,
+                new InputFileStream(stream)
+            );
+        }
+
+        lock (_tableRegistrations)
+        {
+            _tableRegistrations.Add(message.MessageId, record.Id);
+        }
     }
 
     private async Task BotClientOnInlineQuery(InlineQuery inlineQuery, CancellationToken cancellationToken)
@@ -161,7 +206,20 @@ public class BotService : BackgroundService, IUpdateHandler
 
             _answeredQueries.Add(callbackQuery.Message.MessageId, DateTime.UtcNow);
 
-            await GetOrCreateConversation(callbackQuery.From.Id).OnCallbackQueryAsync(callbackQuery);
+            Guid record;
+            lock (_tableRegistrations)
+            {
+                _tableRegistrations.TryGetValue(callbackQuery.Message.MessageId, out record);
+            }
+
+            if (record == Guid.Empty)
+            {
+                await GetOrCreateConversation(callbackQuery.From.Id).OnCallbackQueryAsync(callbackQuery);   
+            }
+            else
+            {
+                await HandleTableRegistrationQueryAsync(record, callbackQuery, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
@@ -282,5 +340,90 @@ public class BotService : BackgroundService, IUpdateHandler
                     ParseMode = ParseMode.Markdown
                 }))
             .ToArray();
+    }
+
+    private async Task HandleTableRegistrationQueryAsync(
+        Guid recordId,
+        CallbackQuery callbackQuery,
+        CancellationToken cancellationToken)
+    {
+        var record = await _tableRegistrationService.FindOneAsync(recordId, cancellationToken);
+        if (record is null)
+        {
+            await _client.EditMessageReplyMarkupAsync(
+                callbackQuery.Message.Chat.Id,
+                callbackQuery.Message.MessageId,
+                null,
+                cancellationToken
+            );
+            
+            lock (_tableRegistrations)
+            {
+                _tableRegistrations.Remove(callbackQuery.Message.MessageId);
+            }
+            
+            return;
+        }
+        
+        switch (record.State)
+        {
+            case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                if (callbackQuery.Data == "Approve")
+                {
+                    await _tableRegistrationService.ApproveByIdAsync(
+                        recordId,
+                        $"Telegram:@{callbackQuery.From.Username}"
+                    );
+                }
+                else if (callbackQuery.Data == "Reject")
+                {
+                    await _tableRegistrationService.RejectByIdAsync(
+                        recordId,
+                        $"Telegram:@{callbackQuery.From.Username}"
+                    );
+
+                    await _client.EditMessageReplyMarkupAsync(
+                        callbackQuery.Message.Chat.Id,
+                        callbackQuery.Message.MessageId,
+                        new InlineKeyboardMarkup(
+                            InlineKeyboardButton.WithCallbackData("Delete")
+                        ),
+                        cancellationToken
+                    );
+                    
+                    return;
+                }
+                break;
+            
+            case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                if (callbackQuery.Data == "Delete")
+                {
+                    if (record.Image is { } image)
+                    {
+                        await _imageService.DeleteOneAsync(
+                            image.Id,
+                            cancellationToken
+                        );
+                    }
+                    
+                    await _tableRegistrationService.DeleteOneAsync(
+                        recordId,
+                        cancellationToken
+                    );
+                }
+                break;
+        }
+        
+        await _client.EditMessageReplyMarkupAsync(
+            callbackQuery.Message.Chat.Id,
+            callbackQuery.Message.MessageId,
+            null,
+            cancellationToken
+        );
+        
+        lock (_tableRegistrations)
+        {
+            _tableRegistrations.Remove(callbackQuery.Message.MessageId);
+        }
     }
 }

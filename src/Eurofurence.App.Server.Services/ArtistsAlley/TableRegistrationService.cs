@@ -137,9 +137,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
-            await _telegramMessageSender.SendMarkdownMessageToChatAsync(
+            await _telegramMessageSender.SendTableRegistrationAsync(
                 _configuration.TelegramAdminGroupChatId,
-                $"*New Request:* {record.OwnerUsername.EscapeMarkdown()} ({user.GetSubject().EscapeMarkdown()})\n\n*Display Name:* {record.DisplayName.EscapeMarkdown()}\n*Location:* {record.Location.RemoveMarkdown()}\n*Description:* {record.ShortDescription.EscapeMarkdown()}");
+                record
+            );
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
