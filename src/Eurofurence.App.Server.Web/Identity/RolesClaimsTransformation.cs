@@ -175,7 +175,7 @@ public class RolesClaimsTransformation(
         using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
         var request = new HttpRequestMessage(HttpMethod.Get,
-            new Uri(new Uri(current.RegSysUrl), "attsrv/api/rest/v1/attendees"));
+            new Uri(new Uri($"{current.RegSysUrl.TrimEnd('/')}/"), "attsrv/api/rest/v1/attendees"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         using var response = await client.SendAsync(request);
@@ -235,7 +235,7 @@ public class RolesClaimsTransformation(
         using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
         var statusRequest = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(new Uri(regSysUrl), $"attsrv/api/rest/v1/attendees/{id}/status"));
+                new Uri(new Uri($"{regSysUrl.TrimEnd('/')}/"), $"attsrv/api/rest/v1/attendees/{id}/status"));
         statusRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         using var statusResponse = await client.SendAsync(statusRequest);
 
