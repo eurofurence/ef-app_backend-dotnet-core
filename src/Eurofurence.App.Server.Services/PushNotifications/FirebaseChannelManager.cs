@@ -46,7 +46,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             {
                 FirebaseApp.Create(new AppOptions { Credential = googleCredential });
             }
-                
+
             _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
         }
 
@@ -227,6 +227,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
             else
             {
+                switch (type)
+                {
+                    case DeviceType.Android:
+                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_conventionSettings.ConventionIdentifier}-android");
+                    break;
+                    case DeviceType.Ios:
+                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_conventionSettings.ConventionIdentifier}-ios");
+                    break;
+                }
                 await _deviceService.InsertOneAsync(new DeviceIdentityRecord
                 {
                     IdentityId = identityId,
