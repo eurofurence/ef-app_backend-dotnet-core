@@ -52,7 +52,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPut("{id}/:artist_alley_status")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> PutTableRegistrationUserStatusAsync([EnsureNotNull][FromRoute] string id,
-            [Required][EnsureNotNull][FromBody] ArtistAlleyUserStatusChangeRequest changeRequest)
+            [Required][FromBody] ArtistAlleyUserStatusChangeRequest changeRequest)
         {
             await _artistAlleyUserStatusService.SetUserStatusAsync(id, User, changeRequest.Status, changeRequest.Reason);
 

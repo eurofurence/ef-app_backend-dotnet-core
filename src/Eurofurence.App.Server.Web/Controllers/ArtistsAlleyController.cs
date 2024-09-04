@@ -139,7 +139,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (GetArtistAlleyStatus() == ArtistAlleySystemStatus.REG_CLOSED)
             {
-                return StatusCode(403, "Table registration is temporally closed");
+                return StatusCode(403, "Table registrations are temporally closed");
             }
             
             if (await _artistAlleyUserStatusService.GetUserStatusAsync(User.GetSubject()) == ArtistAlleyUserStatusRecord.UserStatus.BANNED)

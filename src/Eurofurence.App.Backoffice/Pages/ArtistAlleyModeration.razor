@@ -72,16 +72,16 @@ More data of the applicant shall be visble an extra dialog
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
                                     <MudButtonGroup OverrideStyles="false" Vertical="true">
                                         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
-                                                   OnClick="args => TryChangeRegistrationStatus(context2.Item, false, false)">
+                                                   OnClick="args => AcceptRegistration(context2.Item)">
                                             Approve
                                         </MudButton>
                                         <MudButtonGroup Variant="Variant.Outlined" Color="Color.Warning">
                                             <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                                       OnClick="args => TryChangeRegistrationStatus(context2.Item, true, false)">
+                                                       OnClick="args => RejectRegistration(context2.Item, false)">
                                                 Reject
                                             </MudButton>
                                             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-                                                <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Outlined.BackHand" OnClick="args => TryChangeRegistrationStatus(context2.Item, true, true)">Reject and Ban user </MudButton>
+                                                <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Outlined.BackHand" OnClick="args => RejectRegistration(context2.Item, true)">Reject and Ban user </MudButton>
                                             </MudMenu>
                                         </MudButtonGroup>
 
@@ -128,7 +128,7 @@ More data of the applicant shall be visble an extra dialog
 @code {
 
     #region Attributes
-    
+
     private bool _registrationsEnables
     {
         get;
@@ -150,11 +150,12 @@ More data of the applicant shall be visble an extra dialog
 
 
     private FilterDefinition<TableRegistrationRecord> _statusFilterDefinition;
+    private IDialogReference _confirmTextDialog;
 
     #endregion
 
     #region Methods
-    
+
     private async void OnSelectStatusFilter(bool value, TableRegistrationRecord.RegistrationStateEnum item, FilterContext<TableRegistrationRecord> context)
     {
         if (value)
@@ -195,48 +196,98 @@ More data of the applicant shall be visble an extra dialog
     /// <param name="banUser">True if the user should also be banned in the future</param>
     private async Task DeleteRegistration(TableRegistrationRecord registrationRecord, bool banUser)
     {
-        DialogParameters<ConfirmDialog> dialog = new()
+        if (banUser)
         {
+            var dialogResult = await PromtConfirmTextDialog("Are you sure you want to delete this application and also ban the user?", "Reason");
+            if (dialogResult.Item1)
             {
-                x => x.ContentText, $"Are you sure you want to delete this application?"
-            },
-            {
-                x => x.ActionButtonText, "Confirm"
+                await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
+                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, new ArtistAlleyUserStatusChangeRequest()
+                {
+                    Status = ArtistAlleyUserStatusRecord.UserStatus.BANNED,
+                    Reason = dialogResult.Item2
+                });
+                ReloadDataAndSendSnackbar("Application was deleted and user banned");
             }
-        };
-        var options = new DialogOptions()
-        {
-            CloseButton = true,
-            MaxWidth = MaxWidth.ExtraSmall
-        };
-        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult? result = await dialogRef.Result;
-
-        if (result is { Canceled: false })
-        {
-            await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
-            if (banUser)
-            {
-                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, ArtistAlleyUserStatusRecord.UserStatus.BANNED);
-            }
-            _items = await GetRegistrationsAsync();
-            StateHasChanged();
-            Snackbar.Add("Application Deleted", Severity.Success);
         }
+        else
+        {
+            if (await PromptConfirmDialog($"Are you sure you want to delete this application?"))
+            {
+                await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
+                ReloadDataAndSendSnackbar("Application was deleted");
+            }
+
+        }
+
+    }
+
+    private async void ReloadDataAndSendSnackbar(string snackbarText)
+    {
+        _items = await GetRegistrationsAsync();
+        StateHasChanged();
+        Snackbar.Add(snackbarText, Severity.Success);
     }
 
     /// <summary>
-    /// Attempt to change the status of a table registration
+    /// Rejects a given registration
+    ///
+    /// If <paramref name="banUser"/> is set to true a additional dialog will be shown.
     /// </summary>
-    /// <param name="registrationRecord"></param>
-    /// <param name="reject">True if the application should be rejected and false if it should be accepted</param>
-    /// <param name="banUser">True if the applicant should be banned for the future</param>
-    private async void TryChangeRegistrationStatus(TableRegistrationRecord registrationRecord, bool reject, bool banUser)
+    /// <param name="registrationRecord">The registration that should be rejected</param>
+    /// <param name="banUser">True if the user should also be banned</param>
+    private async void RejectRegistration(TableRegistrationRecord registrationRecord, bool banUser)
+    {
+        if (banUser)
+        {
+            var dialogResult = await PromtConfirmTextDialog("Are you sure you want to reject this application and also ban the user?", "Reason");
+            if (dialogResult.Item1)
+            {
+                await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, TableRegistrationRecord.RegistrationStateEnum.Rejected);
+                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, new ArtistAlleyUserStatusChangeRequest()
+                {
+                    Status = ArtistAlleyUserStatusRecord.UserStatus.BANNED,
+                    Reason = dialogResult.Item2
+                });
+                ReloadDataAndSendSnackbar("Application was rejected and user banned");
+            }
+        }
+        else
+        {
+            if (await PromptConfirmDialog($"Are you sure you want to reject this application?"))
+            {
+                await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, TableRegistrationRecord.RegistrationStateEnum.Rejected);
+                ReloadDataAndSendSnackbar("Application was rejected");
+            }
+
+        }
+
+    }
+    /// <summary>
+    /// Accepts a given registration
+    /// </summary>
+    /// <param name="registrationRecord">The registration that should be accepted</param>
+    private async void AcceptRegistration(TableRegistrationRecord registrationRecord)
+    {
+        if (await PromptConfirmDialog("Are you sure you want to accept this application?"))
+        {
+            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            ReloadDataAndSendSnackbar("Application was accepted");
+        }
+    }
+
+
+    /// <summary>
+    /// Prompts a confirmation dialog to the user
+    /// </summary>
+    /// <param name="dialogText">The text that should be displayed</param>
+    /// <returns>True if the user clicks on the confirm button</returns>
+    private async Task<bool> PromptConfirmDialog(string dialogText)
     {
         DialogParameters<ConfirmDialog> dialog = new()
         {
             {
-                x => x.ContentText, $"Are you sure you want to {(reject ? "reject" : "approve")} this application?"
+                x => x.ContentText, dialogText
             },
             {
                 x => x.ActionButtonText, "Confirm"
@@ -247,21 +298,47 @@ More data of the applicant shall be visble an extra dialog
             CloseButton = true,
             MaxWidth = MaxWidth.ExtraSmall
         };
+
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult? result = await dialogRef.Result;
 
-        if (result is { Canceled: false })
-        {
-            await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, reject ? TableRegistrationRecord.RegistrationStateEnum.Rejected : TableRegistrationRecord.RegistrationStateEnum.Accepted);
-            if (banUser)
-            {
-                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, ArtistAlleyUserStatusRecord.UserStatus.BANNED);
-            }
-            _items = await GetRegistrationsAsync();
-            StateHasChanged();
-            Snackbar.Add($"Application was {(reject ? "rejected" : "approved")}.", Severity.Success);
-        }
+        return result is { Canceled: false };
     }
+
+    /// <summary>
+    /// Prompts a <see cref="ConfirmDialogWithTextInput"/> to the user
+    /// </summary>
+    /// <param name="dialogText">The text that should be displayed</param>
+    /// <param name="textFiledText">The label of the text field</param>
+    /// <returns>True if the user clicks on the confirm button</returns>
+    private async Task<(bool, string)> PromtConfirmTextDialog(string dialogText, string textFiledText)
+    {
+
+        DialogParameters<ConfirmDialogWithTextInput> dialogUserban = new()
+        {
+            {
+                x => x.ContentText, dialogText
+            },
+            {
+                x => x.ActionButtonText, "Confirm"
+            },
+            {
+                x => x.TextFieldLabel, textFiledText
+            }
+        };
+
+        var optionsUserBan = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
+
+        IDialogReference dialogRefBan = await DialogService.ShowAsync<ConfirmDialogWithTextInput>("Confirm", dialogUserban, optionsUserBan);
+        DialogResult? resultBan = await dialogRefBan.Result;
+
+        return (!resultBan.Canceled, resultBan.Data as string ?? string.Empty);
+    }
+
 
     /// <summary>
     /// Opens a dialog
@@ -358,7 +435,7 @@ More data of the applicant shall be visble an extra dialog
             TableRegService.PutArtistAllaySystemStatus(b ? ArtistAlleySystemStatus.OPEN : ArtistAlleySystemStatus.REG_CLOSED);
         }
         else
-        { 
+        {
             _registrationsEnables = !b;
         }
     }

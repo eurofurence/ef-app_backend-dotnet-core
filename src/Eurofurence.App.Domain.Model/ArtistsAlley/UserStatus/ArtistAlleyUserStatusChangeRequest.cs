@@ -7,11 +7,12 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
     public class ArtistAlleyUserStatusChangeRequest
     {
         
+        
         [DataMember]
         [Required]
         public ArtistAlleyUserStatusRecord.UserStatus Status { get; set; }
-        
+
         [DataMember]
-        public string Reason { get; set; }
+        public string Reason { get; set; } = "";
     }
 }
