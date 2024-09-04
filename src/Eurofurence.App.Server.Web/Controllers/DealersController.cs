@@ -13,7 +13,6 @@ using MapsterMapper;
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/[controller]")]
-    [AllowAnonymous]
     public class DealersController : BaseController
     {
         private readonly IDealerService _dealerService;

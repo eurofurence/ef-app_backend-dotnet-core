@@ -106,7 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet]
         public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
         {
@@ -119,7 +119,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(TableRegistrationRecord), 200)]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet("{id}")]
         public async Task<TableRegistrationRecord> GetTableRegistrationAsync(
             [EnsureNotNull][FromRoute] Guid id

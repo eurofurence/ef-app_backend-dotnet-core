@@ -46,7 +46,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _firebaseChannelManager.RegisterDeviceAsync(
                 request.DeviceId,
                 User.GetSubject(),
-                ids,
+            ids,
                 request.DeviceType,
                 cancellationToken
             );

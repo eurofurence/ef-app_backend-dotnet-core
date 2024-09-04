@@ -108,9 +108,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<EventConferenceTrackService>().As<IEventConferenceTrackService>();
             builder.RegisterType<EventFeedbackService>().As<IEventFeedbackService>();
             builder.RegisterType<EventService>().As<IEventService>();
-            builder.RegisterType<FirebaseChannelManager>()
-                .As<IFirebaseChannelManager>()
-                .SingleInstance();
+            builder.RegisterType<FirebaseChannelManager>().As<IFirebaseChannelManager>();
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
             builder.RegisterType<GanssHtmlSanitizer>().As<IHtmlSanitizer>();
             builder.RegisterType<ImageService>().As<IImageService>();
@@ -122,11 +120,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<LostAndFoundService>().As<ILostAndFoundService>();
             builder.RegisterType<LostAndFoundLassieImporter>().As<ILostAndFoundLassieImporter>();
             builder.RegisterType<MapService>().As<IMapService>();
-            builder.RegisterType<PrivateMessageService>()
-                .As<IPrivateMessageService>()
-                .SingleInstance();
-            builder.RegisterType<PushNotificationChannelStatisticsService>()
-                .As<IPushNotificationChannelStatisticsService>();
+            builder.RegisterType<PrivateMessageService>().As<IPrivateMessageService>();
+            builder.RegisterType<PushNotificationChannelStatisticsService>().As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<QrCodeService>().As<IQrCodeService>();
             builder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
             builder.RegisterType<TableRegistrationService>().As<ITableRegistrationService>();

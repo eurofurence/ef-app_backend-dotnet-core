@@ -70,41 +70,7 @@ More data of the applicant shall be visble an extra dialog
                             @switch (context2.Item?.State)
                             {
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                                    <MudButtonGroup OverrideStyles="false" Vertical="true">
-                                        <MudButton Variant="Variant.Outlined" Class="ma-1" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
-                                                   OnClick="args => AcceptRegistration(context2.Item)">
-                                            Approve
-                                        </MudButton>
-                                        <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Warning">
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                                       OnClick="args => RejectRegistration(context2.Item, false)">
-                                                Reject
-                                            </MudButton>
-                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
-                                                <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Filled.Cancel"
-                                                             OnClick="args => RejectRegistration(context2.Item, true)">Reject </MudMenuItem>
-                                                <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
-                                                             OnClick="args => RejectRegistration(context2.Item, true)">Reject and Ban user </MudMenuItem>
-                                            </MudMenu>
-                                        </MudButtonGroup>
-
-                                        @*Show the delete button only for admins*@
-                                        <AuthorizeView Policy="RequireArtistAlleyAdmin">
-                                            <Authorized>
-                                                <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
-                                                    <MudButton StartIcon="@Icons.Material.Outlined.Delete" OnClick="args => DeleteRegistration(context2.Item, false)">
-                                                        Delete
-                                                    </MudButton>
-                                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
-                                                        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.Delete"
-                                                                     OnClick="args => DeleteRegistration(context2.Item, false)">Delete </MudMenuItem>
-                                                        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
-                                                                     OnClick="args => DeleteRegistration(context2.Item, true)">Delete and Ban user </MudMenuItem>
-                                                    </MudMenu>
-                                                </MudButtonGroup>
-                                            </Authorized>
-                                        </AuthorizeView>
-                                    </MudButtonGroup>
+                                    <MudAlert Severity="Severity.Info">Pending</MudAlert>
                                     break;
                                 case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                                     <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -116,6 +82,43 @@ More data of the applicant shall be visble an extra dialog
                                     <MudAlert Severity="Severity.Success">Published</MudAlert>
                                     break;
                             }
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudButtonGroup OverrideStyles="false" Vertical="true">
+                                <MudButton Variant="Variant.Outlined" Class="ma-1" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
+                                           OnClick="args => AcceptRegistration(context2.Item)">
+                                    Approve
+                                </MudButton>
+                                <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Warning">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                               OnClick="args => RejectRegistration(context2.Item, false)">
+                                        Reject
+                                    </MudButton>
+                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
+                                        <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Filled.Cancel"
+                                                     OnClick="args => RejectRegistration(context2.Item, true)">Reject </MudMenuItem>
+                                        <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
+                                                     OnClick="args => RejectRegistration(context2.Item, true)">Reject and Ban user </MudMenuItem>
+                                    </MudMenu>
+                                </MudButtonGroup>
+
+                                @*Show the delete button only for admins*@
+                                <AuthorizeView Policy="RequireArtistAlleyAdmin">
+                                    <Authorized>
+                                        <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
+                                            <MudButton StartIcon="@Icons.Material.Outlined.Delete" OnClick="args => DeleteRegistration(context2.Item, false)">
+                                                Delete
+                                            </MudButton>
+                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
+                                                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.Delete"
+                                                             OnClick="args => DeleteRegistration(context2.Item, false)">Delete </MudMenuItem>
+                                                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
+                                                             OnClick="args => DeleteRegistration(context2.Item, true)">Delete and Ban user </MudMenuItem>
+                                            </MudMenu>
+                                        </MudButtonGroup>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </MudButtonGroup>
                         </MudItem>
                         <MudItem xs="6" Style="align-content: center;">
                             <MudButton StartIcon="@Icons.Material.Filled.Menu"

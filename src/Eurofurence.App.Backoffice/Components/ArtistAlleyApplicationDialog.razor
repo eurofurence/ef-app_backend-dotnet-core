@@ -31,27 +31,6 @@
                     {
                         case TableRegistrationRecord.RegistrationStateEnum.Pending:
                             <MudAlert Severity="Severity.Info">Pending</MudAlert>
-                            <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
-                                       @onclick="() => TryChangeRegistrationStatus(Record, false)">
-                                Approve
-                            </MudButton>
-                            <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                       @onclick="() => TryChangeRegistrationStatus(Record, true)">
-                                Reject
-                            </MudButton>
-                            @*Show the delete button only for admins*@
-                            <AuthorizeView Policy="RequireArtistAlleyAdmin">
-                                <Authorized>
-                                    <MudButtonGroup Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
-                                        <MudButton OnClick="args => DeleteRegistration()">
-                                            Delete
-                                        </MudButton>
-                                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-                                            <MudMenuItem Color="Color.Error" StartIcon="@Icons.Material.Outlined.BackHand">Delete and Ban user</MudMenuItem>
-                                        </MudMenu>
-                                    </MudButtonGroup>
-                                </Authorized>
-                            </AuthorizeView>
                             break;
                         case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                             <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -63,6 +42,26 @@
                             <MudAlert Severity="Severity.Success">Published</MudAlert>
                             break;
                     }
+                    @if (Record.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
+                    {
+
+                        <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                                   @onclick="() => TryChangeRegistrationStatus(Record, false)">
+                            Approve
+                        </MudButton>
+                        <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                   @onclick="() => TryChangeRegistrationStatus(Record, true)">
+                            Reject
+                        </MudButton>
+                    }
+                    @*Show the delete button only for admins*@
+                    <AuthorizeView Policy="RequireArtistAlleyAdmin">
+                        <Authorized>
+                            <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration()">
+                                Delete
+                            </MudButton>
+                        </Authorized>
+                    </AuthorizeView>
                 </MudItem>
             </MudGrid>
         </MudContainer>

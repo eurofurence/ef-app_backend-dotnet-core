@@ -24,7 +24,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly AppDbContext _appDbContext;
         private readonly FirebaseConfiguration _configuration;
         private readonly ConventionSettings _conventionSettings;
-        private readonly FirebaseApp _firebaseApp;
         private readonly FirebaseMessaging _firebaseMessaging;
 
         public FirebaseChannelManager(
@@ -40,13 +39,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _configuration = configuration;
             _conventionSettings = conventionSettings;
 
-            if (_configuration.GoogleServiceCredentialKeyFile is { Length: > 0 } file)
-            {
-                var googleCredential = GoogleCredential.FromFile(file);
+            if (_configuration.GoogleServiceCredentialKeyFile is not { Length: > 0 } file) return;
 
-                _firebaseApp = FirebaseApp.Create(new AppOptions { Credential = googleCredential });
-                _firebaseMessaging = FirebaseMessaging.GetMessaging(_firebaseApp);
+            var googleCredential = GoogleCredential.FromFile(file);
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                FirebaseApp.Create(new AppOptions { Credential = googleCredential });
             }
+                
+            _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
         }
 
         public Task PushAnnouncementNotificationAsync(
