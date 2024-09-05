@@ -61,9 +61,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<DeviceIdentityRecord> DeviceIdentities { get; set; }
         public virtual DbSet<RegistrationIdentityRecord> RegistrationIdentities { get; set; }
 
-        public virtual DbSet<ArtistAlleyUserStatusRecord> ArtistAlleyUserStatus{ get; set; }
+        public virtual DbSet<ArtistAlleyUserPenaltyRecord> ArtistAlleyUserPenalties{ get; set; }
 
-        public virtual DbSet<ArtistAlleyUserStatusChangedRecord> ArtistAlleyUserStatusChanged { get; set; }
+        public virtual DbSet<ArtistAlleyUserPenaltyChangedRecord> ArtistAlleyUserPenaltiesChanges { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

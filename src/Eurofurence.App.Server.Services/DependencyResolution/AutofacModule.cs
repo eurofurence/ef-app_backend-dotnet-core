@@ -134,7 +134,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
             builder.RegisterType<DeviceIdentityService>().As<IDeviceIdentityService>();
             builder.RegisterType<RegistrationIdentityService>().As<IRegistrationIdentityService>();
-            builder.RegisterType<ArtistAlleyUserStatusService>().As<IArtistAlleyUserStatusService>();
+            builder.RegisterType<ArtistAlleyUserPenaltyService>().As<IArtistAlleyUserPenaltyService>();
         }
     }
 }

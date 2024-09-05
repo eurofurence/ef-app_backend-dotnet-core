@@ -21,15 +21,15 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
-        private readonly IArtistAlleyUserStatusService _artistAlleyUserStatusService;
+        private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
 
         private const string ArtistAlleyDisabledFilePath = ".ArtistAlleyDisabled";
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService, IArtistAlleyUserStatusService artistAlleyUserStatusService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
-            _artistAlleyUserStatusService = artistAlleyUserStatusService;
+            _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
         }
 
         /// <summary>
@@ -73,7 +73,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
             return Ok();
         }
-
+        
+        
         [HttpPut("{id}/:status")]
         [Authorize(Roles = "Admin, ArtistAlleyAdmin, ArtistAlleyModerator")]
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
@@ -97,7 +98,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 if (record.ImageId is {} imageId) await _imageService.SetRestricted(imageId, false);
             }
 
-            return NoContent();
+            return Ok();
         }
 
         /// <summary>
@@ -142,7 +143,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return StatusCode(403, "Table registrations are temporally closed");
             }
             
-            if (await _artistAlleyUserStatusService.GetUserStatusAsync(User.GetSubject()) == ArtistAlleyUserStatusRecord.UserStatus.BANNED)
+            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.UserPenalties.BANNED)
             {
                 return StatusCode(403, "User was banned from the artist alley");
             }

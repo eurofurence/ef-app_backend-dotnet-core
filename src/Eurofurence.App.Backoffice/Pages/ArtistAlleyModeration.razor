@@ -70,7 +70,7 @@ More data of the applicant shall be visble an extra dialog
                             @switch (context2.Item?.State)
                             {
                                 case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                                    <MudAlert Severity="Severity.Info">Pending</MudAlert>
+                                    <MudAlert Icon="@Icons.Material.Outlined.AccessTime" Severity="Severity.Info">Pending</MudAlert>
                                     break;
                                 case TableRegistrationRecord.RegistrationStateEnum.Accepted:
                                     <MudAlert Severity="Severity.Success">Accepted</MudAlert>
@@ -82,25 +82,36 @@ More data of the applicant shall be visble an extra dialog
                                     <MudAlert Severity="Severity.Success">Published</MudAlert>
                                     break;
                             }
+                            <MudButton StartIcon="@Icons.Material.Filled.Menu"
+                                       OnClick="() => OpenMoreDialog(context2.Item)">
+                                Details
+                            </MudButton>
                         </MudItem>
                         <MudItem xs="6">
                             <MudButtonGroup OverrideStyles="false" Vertical="true">
-                                <MudButton Variant="Variant.Outlined" Class="ma-1" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
-                                           OnClick="args => AcceptRegistration(context2.Item)">
-                                    Approve
-                                </MudButton>
-                                <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Warning">
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                               OnClick="args => RejectRegistration(context2.Item, false)">
-                                        Reject
+                                @if (context2.Item.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Class="ma-1" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" ref="appBtn"
+                                               OnClick="args => AcceptRegistration(context2.Item)">
+                                        Approve
                                     </MudButton>
-                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
-                                        <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Filled.Cancel"
-                                                     OnClick="args => RejectRegistration(context2.Item, true)">Reject </MudMenuItem>
-                                        <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
-                                                     OnClick="args => RejectRegistration(context2.Item, true)">Reject and Ban user </MudMenuItem>
-                                    </MudMenu>
-                                </MudButtonGroup>
+                                    <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Warning">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                                   OnClick="args => RejectRegistration(context2.Item, false)">
+                                            Reject
+                                        </MudButton>
+                                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
+                                            <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Filled.Cancel"
+                                                         OnClick="args => RejectRegistration(context2.Item, true)">
+                                                Reject
+                                            </MudMenuItem>
+                                            <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
+                                                         OnClick="args => RejectRegistration(context2.Item, true)">
+                                                Reject and Ban user
+                                            </MudMenuItem>
+                                        </MudMenu>
+                                    </MudButtonGroup>
+                                }
 
                                 @*Show the delete button only for admins*@
                                 <AuthorizeView Policy="RequireArtistAlleyAdmin">
@@ -111,21 +122,22 @@ More data of the applicant shall be visble an extra dialog
                                             </MudButton>
                                             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
                                                 <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.Delete"
-                                                             OnClick="args => DeleteRegistration(context2.Item, false)">Delete </MudMenuItem>
+                                                             OnClick="args => DeleteRegistration(context2.Item, false)">
+                                                    Delete
+                                                </MudMenuItem>
                                                 <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
-                                                             OnClick="args => DeleteRegistration(context2.Item, true)">Delete and Ban user </MudMenuItem>
+                                                             OnClick="args => DeleteRegistration(context2.Item, true)">
+                                                    Delete and Ban user
+                                                </MudMenuItem>
                                             </MudMenu>
                                         </MudButtonGroup>
                                     </Authorized>
                                 </AuthorizeView>
                             </MudButtonGroup>
                         </MudItem>
-                        <MudItem xs="6" Style="align-content: center;">
-                            <MudButton StartIcon="@Icons.Material.Filled.Menu"
-                                       OnClick="() => OpenMoreDialog(context2.Item)">
-                                Details
-                            </MudButton>
-                        </MudItem>
+                        @* <MudItem xs="6" Style="align-content: center;"> *@
+                       
+                        @* </MudItem> *@
                     </MudGrid>
                 </MudContainer>
             </CellTemplate>
@@ -149,7 +161,7 @@ More data of the applicant shall be visble an extra dialog
     /// <summary>
     /// Instance of the data grid
     /// </summary>
-    private MudDataGrid<TableRegistrationRecord>? _dataGrid;
+    private MudDataGrid<TableRegistrationRecord> _dataGrid;
     private IEnumerable<TableRegistrationRecord> _items = new List<TableRegistrationRecord>();
 
     private string? _search;
@@ -184,19 +196,29 @@ More data of the applicant shall be visble an extra dialog
             FilterFunction = x => _selectedStatusFilterItems.Contains(x.State) || !_selectedStatusFilterItems.Any()
         };
 
-        _items = await GetRegistrationsAsync();
 
-        _registrationsEnables = await TableRegService.GetArtistAllaySystemStatus() == ArtistAlleySystemStatus.OPEN;
 
     }
+    
+    
+    
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-
+        
         if (firstRender)
         {
+            _dataGrid.Loading = true;
+            StateHasChanged();
+            
+            _items = await GetRegistrationsAsync();
+
+            _registrationsEnables = await TableRegService.GetArtistAllaySystemStatus() == ArtistAlleySystemStatus.OPEN;
+            
             _dataGrid?.SetSortAsync(nameof(TableRegistrationRecord.State), SortDirection.Ascending, x => x.State);
+            StateHasChanged();
         }
     }
 
@@ -213,9 +235,9 @@ More data of the applicant shall be visble an extra dialog
             if (dialogResult.Item1)
             {
                 await TableRegService.DeleteTableRegistrationAsync(registrationRecord);
-                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, new ArtistAlleyUserStatusChangeRequest()
+                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, new ArtistAlleyUserPenaltyChangeRequest()
                 {
-                    Status = ArtistAlleyUserStatusRecord.UserStatus.BANNED,
+                    Penalties = ArtistAlleyUserPenaltyRecord.UserPenalties.BANNED,
                     Reason = dialogResult.Item2
                 });
                 ReloadDataAndSendSnackbar("Application was deleted and user banned");
@@ -255,9 +277,9 @@ More data of the applicant shall be visble an extra dialog
             if (dialogResult.Item1)
             {
                 await TableRegService.PutTableRegistrationStatusAsync(registrationRecord, TableRegistrationRecord.RegistrationStateEnum.Rejected);
-                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, new ArtistAlleyUserStatusChangeRequest()
+                await UserService.PutUserArtistAlleyStatusAsync(registrationRecord.OwnerUid, new ArtistAlleyUserPenaltyChangeRequest()
                 {
-                    Status = ArtistAlleyUserStatusRecord.UserStatus.BANNED,
+                    Penalties = ArtistAlleyUserPenaltyRecord.UserPenalties.BANNED,
                     Reason = dialogResult.Item2
                 });
                 ReloadDataAndSendSnackbar("Application was rejected and user banned");
@@ -400,6 +422,7 @@ More data of the applicant shall be visble an extra dialog
     /// <returns></returns>
     private async Task<IEnumerable<TableRegistrationRecord>> GetRegistrationsAsync()
     {
+        _dataGrid.Loading = true;
         IEnumerable<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
 
         // Show pending applications fist.
@@ -410,7 +433,7 @@ More data of the applicant shall be visble an extra dialog
             .ToList();
 
         registrations = Filter(registrations);
-
+        _dataGrid.Loading = false;
         return registrations;
     }
 

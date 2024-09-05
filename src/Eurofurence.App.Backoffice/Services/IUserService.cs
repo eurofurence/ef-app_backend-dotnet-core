@@ -15,7 +15,7 @@ namespace Eurofurence.App.Backoffice.Services
         /// <param name="userID">The id of the user</param>
         /// <param name="changeRequest"></param>
         /// <returns></returns>
-        public Task PutUserArtistAlleyStatusAsync(string userID, ArtistAlleyUserStatusChangeRequest changeRequest);
+        public Task PutUserArtistAlleyStatusAsync(string userID, ArtistAlleyUserPenaltyChangeRequest changeRequest);
         
     }
 }

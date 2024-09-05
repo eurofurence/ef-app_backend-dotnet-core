@@ -7,18 +7,18 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
     /// <summary>
     /// Record for storing
     /// </summary>
-    public class ArtistAlleyUserStatusRecord : EntityBase
+    public class ArtistAlleyUserPenaltyRecord : EntityBase
     {
 
-        public ArtistAlleyUserStatusRecord()
+        public ArtistAlleyUserPenaltyRecord()
         {
-            Status = UserStatus.OK;
+            Penalties = UserPenalties.OK;
         }
 
         /// <summary>
-        /// Possible status of an user
+        /// Possible penalties of a user
         /// </summary>
-        public enum UserStatus
+        public enum UserPenalties
         {
             BANNED = 0,
             OK = 1
@@ -32,10 +32,10 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         /// <summary>
         /// The current status of the user
         /// </summary>
-        public UserStatus Status { get; set; } = UserStatus.OK;
+        public UserPenalties Penalties { get; set; }
 
 
-        public virtual List<ArtistAlleyUserStatusChangedRecord> AuditLog { get; set; } = new();
+        public virtual List<ArtistAlleyUserPenaltyChangedRecord> AuditLog { get; set; } = new();
 
     }
 }

@@ -16,14 +16,10 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/[controller]")]
     public class UsersController : BaseController
     {
-
-        private readonly ITableRegistrationService _tableRegistrationService;
-
-        private readonly IArtistAlleyUserStatusService _artistAlleyUserStatusService;
-        public UsersController(ITableRegistrationService tableRegistrationService, IArtistAlleyUserStatusService artistAlleyUserStatusService)
+        private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
+        public UsersController( IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
-            _tableRegistrationService = tableRegistrationService;
-            _artistAlleyUserStatusService = artistAlleyUserStatusService;
+            _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
         }
 
         [Authorize]
@@ -49,23 +45,34 @@ namespace Eurofurence.App.Server.Web.Controllers
             return result;
         }
 
-        [HttpPut("{id}/:artist_alley_status")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PutTableRegistrationUserStatusAsync([EnsureNotNull][FromRoute] string id,
-            [Required][FromBody] ArtistAlleyUserStatusChangeRequest changeRequest)
+        /// <summary>
+        /// Sets (or unsets) a penalty for the artist alley for a given user
+        /// </summary>
+        /// <param name="id">The ID of the user</param>
+        /// <param name="changeRequest"></param>
+        /// <returns></returns>
+        [HttpPut("{id}/:artist_alley_penalty")]
+        [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
+        public async Task<ActionResult> PutArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id,
+            [Required][FromBody] ArtistAlleyUserPenaltyChangeRequest changeRequest)
         {
-            await _artistAlleyUserStatusService.SetUserStatusAsync(id, User, changeRequest.Status, changeRequest.Reason);
+            await _artistAlleyUserPenaltyService.SetUserPenaltyAsync(id, User, changeRequest.Penalties, changeRequest.Reason);
 
-            return NoContent();
+            return Ok();
         }
 
-
-        [HttpGet("{id}/:artist_alley_status")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ArtistAlleyUserStatusRecord.UserStatus> GetTableRegistrationUserStatusAsync([EnsureNotNull][FromRoute] string id)
+        /// <summary>
+        /// Returns (if existing) a penalty status for a user.
+        ///
+        /// Note that if no record can be found under the passed user id <paramref name="id"/> the status OK (<see cref="ArtistAlleyUserPenaltyRecord.UserPenalties.OK"/>) will be returned.
+        /// </summary>
+        /// <param name="id">The ID of the user</param>
+        /// <returns>The penalty status as a string</returns>
+        [HttpGet("{id}/:artist_alley_penalty")]
+        [Authorize(Roles = "Admin, ArtistAlleyAdmin")]
+        public async Task<ArtistAlleyUserPenaltyRecord.UserPenalties> GetArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id)
         {
-
-            return await _artistAlleyUserStatusService.GetUserStatusAsync(id);
+            return await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(id);
         }
 
     }

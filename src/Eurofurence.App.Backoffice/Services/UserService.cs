@@ -14,7 +14,8 @@ namespace Eurofurence.App.Backoffice.Services
             options.Converters.Add(new JsonStringEnumConverter());
             return await http.GetFromJsonAsync<UserRecord>("Users/:self", options) ?? new UserRecord();
         }
-        public async Task PutUserArtistAlleyStatusAsync(String userID, ArtistAlleyUserStatusChangeRequest changeRequest)
+
+        public async Task PutUserArtistAlleyStatusAsync(String userID, ArtistAlleyUserPenaltyChangeRequest changeRequest)
         {
             JsonContent content = JsonContent.Create(changeRequest);
 

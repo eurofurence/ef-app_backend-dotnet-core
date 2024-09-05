@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     [DataContract]
-    public class ArtistAlleyUserStatusChangedRecord : EntityBase
+    public class ArtistAlleyUserPenaltyChangedRecord : EntityBase
     {
         [DataMember]
         [Required]
@@ -18,19 +18,19 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 
         [DataMember]
         [Required]
-        public ArtistAlleyUserStatusRecord.UserStatus OldStatus { get; set; }
+        public ArtistAlleyUserPenaltyRecord.UserPenalties OldPenalties { get; set; }
 
         [DataMember]
         [Required]
-        public ArtistAlleyUserStatusRecord.UserStatus NewStatus { get; set; }
+        public ArtistAlleyUserPenaltyRecord.UserPenalties NewPenalties { get; set; }
         
         [DataMember]
         public string Reason { get; set; }
 
         [DataMember]
-        public Guid UserStatusRecordID { get; set; }
+        public Guid UserPenaltyRecordId { get; set; }
 
         [JsonIgnore]
-        public ArtistAlleyUserStatusRecord UserStatusRecord { get; set; }
+        public ArtistAlleyUserPenaltyRecord UserPenaltyRecord { get; set; }
     }
 }
