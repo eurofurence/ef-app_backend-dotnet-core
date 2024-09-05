@@ -17,7 +17,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
-    public class FirebaseChannelManager : IFirebaseChannelManager
+    public class FirebaseChannelManager : IPushNotificationChannelManager
     {
         private readonly IDeviceIdentityService _deviceService;
         private readonly IRegistrationIdentityService _registrationService;

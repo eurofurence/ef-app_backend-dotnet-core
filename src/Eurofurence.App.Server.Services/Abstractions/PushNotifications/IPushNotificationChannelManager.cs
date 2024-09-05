@@ -6,7 +6,7 @@ using Eurofurence.App.Domain.Model.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 {
-    public interface IFirebaseChannelManager
+    public interface IPushNotificationChannelManager
     {
         Task RegisterDeviceAsync(
             string deviceToken,
