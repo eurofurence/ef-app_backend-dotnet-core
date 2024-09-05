@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
+    /// <summary>
+    /// An API request for changing the global status of the artist alley
+    /// </summary>
     [DataContract]
     public class ArtistAlleyUserPenaltyChangeRequest
     {
