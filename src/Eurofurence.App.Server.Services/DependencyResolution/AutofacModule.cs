@@ -65,6 +65,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
             builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ApnsConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(ExpoConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(TelegramConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));

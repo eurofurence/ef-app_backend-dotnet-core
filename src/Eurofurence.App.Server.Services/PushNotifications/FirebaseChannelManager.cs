@@ -23,6 +23,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly IRegistrationIdentityService _registrationService;
         private readonly AppDbContext _appDbContext;
         private readonly FirebaseConfiguration _configuration;
+        private readonly ExpoConfiguration _expoConfiguration;
         private readonly ConventionSettings _conventionSettings;
         private readonly FirebaseMessaging _firebaseMessaging;
 
@@ -31,12 +32,14 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             IRegistrationIdentityService registrationService,
             AppDbContext appDbContext,
             FirebaseConfiguration configuration,
+            ExpoConfiguration expoConfiguration,
             ConventionSettings conventionSettings)
         {
             _deviceService = deviceService;
             _registrationService = registrationService;
             _appDbContext = appDbContext;
             _configuration = configuration;
+            _expoConfiguration = expoConfiguration;
             _conventionSettings = conventionSettings;
 
             if (_configuration.GoogleServiceCredentialKeyFile is not { Length: > 0 } file) return;
@@ -79,8 +82,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "CID", _conventionSettings.ConventionIdentifier },
 
                     // For Expo / React Native
-                    { "experienceId", _configuration.ExpoExperienceId },
-                    { "scopeKey", _configuration.ExpoScopeKey },
+                    { "experienceId", _expoConfiguration.ExperienceId },
+                    { "scopeKey", _expoConfiguration.ScopeKey },
                 }
             };
 
@@ -166,8 +169,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "CID", _conventionSettings.ConventionIdentifier },
 
                     // For Expo / React Native
-                    { "experienceId", _configuration.ExpoExperienceId },
-                    { "scopeKey", _configuration.ExpoScopeKey },
+                    { "experienceId", _expoConfiguration.ExperienceId },
+                    { "scopeKey", _expoConfiguration.ScopeKey },
                     {
                         "body", JsonSerializer.Serialize(new
                             {
@@ -303,8 +306,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                                 { "CID", _conventionSettings.ConventionIdentifier },
 
                                 // For Expo / React Native
-                                { "experienceId", _configuration.ExpoExperienceId },
-                                { "scopeKey", _configuration.ExpoScopeKey }
+                                { "experienceId", _expoConfiguration.ExperienceId },
+                                { "scopeKey", _expoConfiguration.ScopeKey }
                             }
                         });
                         break;
