@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -46,8 +47,15 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
+        /// <summary>
+        /// Deletes a single announcement
+        /// </summary>
+        /// <param name="id">ID of the announcement to be deleted</param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
@@ -59,23 +67,43 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
 
+        /// <summary>
+        /// Creates a new announcement and push it to all registered devices.
+        /// </summary>
+        /// <param name="record">New announcement to be pushed</param>
+        /// <returns></returns>
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PostAnnouncementAsync([FromBody] AnnouncementRecord record)
+        [ProducesResponseType(typeof(Guid), 200)]
+        [ProducesResponseType(typeof(string), 409)]
+        public async Task<ActionResult> PostAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRecord record)
         {
-            record.Touch();
-            record.NewId();
+            try {
+                await _announcementService.InsertOneAsync(record);
+                await _pushNotificationChannelManager.PushSyncRequestAsync();
+                await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
 
-            await _announcementService.InsertOneAsync(record);
-            await _pushNotificationChannelManager.PushSyncRequestAsync();
-            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
-
-            return Ok();
+                return Ok(record.Id);
+            }
+            catch (DbUpdateException e) {
+                if ((e.InnerException as MySqlConnector.MySqlException)?.ErrorCode == MySqlConnector.MySqlErrorCode.DuplicateKeyEntry)
+                {
+                    return Conflict($"Record with id {record.Id} already exists.");
+                }
+                return BadRequest();
+            }
         }
 
+        /// <summary>
+        /// Updates and existing announcement and requests all devices to sync their data.
+        /// </summary>
+        /// <param name="record">Updated announcement record</param>
+        /// <returns></returns>
         [HttpPut]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PutAnnouncementAsync([FromBody] AnnouncementRecord record)
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(string), 404)]
+        public async Task<ActionResult> PutAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRecord record)
         {
             if (record == null) return BadRequest("Error parsing Record");
             if (record.Id == Guid.Empty) return BadRequest("Error parsing Record.Id");
@@ -91,6 +119,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// !DANGER! – Deletes all announcements from the database!
+        /// </summary>
+        /// <returns></returns>
         [HttpDelete]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> ClearAnnouncementAsync()
