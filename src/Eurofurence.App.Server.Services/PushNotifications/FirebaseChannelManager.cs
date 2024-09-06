@@ -119,8 +119,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushPrivateMessageNotificationToIdentityIdAsync(
             string identityId,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
@@ -129,8 +129,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
             await PushPrivateMessageNotificationAsync(devices,
-                toastTitle,
-                toastMessage,
+                title,
+                message,
                 relatedId,
                 cancellationToken
             );
@@ -138,8 +138,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushPrivateMessageNotificationToRegSysIdAsync(
             string regSysId,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
@@ -148,8 +148,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
             await PushPrivateMessageNotificationAsync(devices,
-                toastTitle,
-                toastMessage,
+                title,
+                message,
                 relatedId,
                 cancellationToken
             );
@@ -271,8 +271,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private async Task PushPrivateMessageNotificationAsync(
             List<DeviceIdentityRecord> devices,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
@@ -290,8 +290,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             {
                                 Notification = new AndroidNotification()
                                 {
-                                    Title = toastTitle,
-                                    Body = toastMessage,
+                                    Title = title,
+                                    Body = message,
                                     Icon = "notification_icon",
                                     Color = "#006459"
                                 }
@@ -300,8 +300,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             {
                                 // For Legacy Native Android App
                                 { "Event", "Notification" },
-                                { "Title", toastTitle },
-                                { "Message", toastMessage },
+                                { "Title", title },
+                                { "Message", message },
                                 { "RelatedId", relatedId.ToString() },
                                 { "CID", _conventionSettings.ConventionIdentifier },
 
@@ -323,8 +323,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             },
                             Notification = new Notification()
                             {
-                                Title = toastTitle,
-                                Body = toastMessage,
+                                Title = title,
+                                Body = message,
                             },
                             Apns = new ApnsConfig()
                             {

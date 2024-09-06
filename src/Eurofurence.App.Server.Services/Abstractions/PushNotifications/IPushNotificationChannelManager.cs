@@ -23,15 +23,15 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 
         Task PushPrivateMessageNotificationToIdentityIdAsync(
             string identityId,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default);
 
         Task PushPrivateMessageNotificationToRegSysIdAsync(
             string regSysId,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default);
     }
