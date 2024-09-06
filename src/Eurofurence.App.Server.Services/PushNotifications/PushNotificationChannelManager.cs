@@ -67,10 +67,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             if (_apnsConfiguration.IsConfigured)
             {
                 _logger.LogInformation("Configuring Apple Push Notification service (APNs)…");
+                if (_apnsConfiguration.UseDevelopmentServer)
+                    _logger.LogInformation("Using APNs development servers!");
                 _apnsJwtOptions = new ApnsJwtOptions()
                 {
                     BundleId = apnsConfiguration.BundleId,
-                    //CertFilePath = apnsConfiguration.CertFilePath,
                     CertContent = apnsConfiguration.CertContent,
                     KeyId = apnsConfiguration.KeyId,
                     TeamId = apnsConfiguration.TeamId,
@@ -206,9 +207,10 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             {
                 var apnsDeviceIdentities = await _deviceService.FindAll(d => d.DeviceType == DeviceType.Ios).ToArrayAsync();
 
-                _logger.LogInformation($"Pushing sync request to {apnsDeviceIdentities.Count()} devices on APNs…");
-
                 var apnsTasks = apnsDeviceIdentities.Select(pushSyncApnsAsync);
+
+                _logger.LogInformation($"Pushing sync request to {apnsTasks.Count()} devices on APNs…");
+
                 var apnsResults = await Task.WhenAll(apnsTasks);
                 await pruneInvalidApnsDevicesAsync(apnsResults);
             }
@@ -382,28 +384,38 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private async Task<ApnsResult> pushAlertApnsAsync(DeviceIdentityRecord deviceIdentity, string title, string message, Guid messageId, string messageIdType, string eventType)
         {
-            return new ApnsResult()
-            {
-                DeviceIdentity = deviceIdentity,
-                ApnsResponse = await _apnsService.SendPush(new ApplePush(ApplePushType.Alert)
+            var applePush = new ApplePush(ApplePushType.Alert)
                         .AddAlert(title, message)
                         .AddCustomProperty($"{messageIdType}_id", messageId.ToString())
                         .AddCustomProperty("event", eventType)
                         .SetPriority(5)
-                        .AddToken(deviceIdentity.DeviceToken), _apnsJwtOptions)
+                        .AddToken(deviceIdentity.DeviceToken);
+
+            if (_apnsConfiguration.UseDevelopmentServer)
+                applePush.SendToDevelopmentServer();
+
+            return new ApnsResult()
+            {
+                DeviceIdentity = deviceIdentity,
+                ApnsResponse = await _apnsService.SendPush(applePush, _apnsJwtOptions)
             };
         }
 
         private async Task<ApnsResult> pushSyncApnsAsync(DeviceIdentityRecord deviceIdentity)
         {
-            return new ApnsResult()
-            {
-                DeviceIdentity = deviceIdentity,
-                ApnsResponse = await _apnsService.SendPush(new ApplePush(ApplePushType.Background)
+            var applePush = new ApplePush(ApplePushType.Background)
                         .AddCustomProperty("event", "Sync")
                         .AddContentAvailable()
                         .SetPriority(5)
-                        .AddToken(deviceIdentity.DeviceToken), _apnsJwtOptions)
+                        .AddToken(deviceIdentity.DeviceToken);
+
+            if (_apnsConfiguration.UseDevelopmentServer)
+                applePush.SendToDevelopmentServer();
+
+            return new ApnsResult()
+            {
+                DeviceIdentity = deviceIdentity,
+                ApnsResponse = await _apnsService.SendPush(applePush, _apnsJwtOptions)
             };
         }
     }

@@ -10,6 +10,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
         public string CertContent { get; set; }
         public string KeyId { get; set; }
         public string TeamId { get; set; }
+        public bool UseDevelopmentServer { get; set; }
 
         public static ApnsConfiguration FromConfiguration(IConfiguration configuration)
              => new ApnsConfiguration
@@ -18,6 +19,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
                 CertContent = configuration["push:apns:certContent"],
                 KeyId = configuration["push:apns:keyId"],
                 TeamId = configuration["push:apns:teamId"],
+                UseDevelopmentServer = bool.TryParse(configuration["push:apns:useDevelopmentServer"], out bool shouldUseDevelopmentServer) ? shouldUseDevelopmentServer : true,
              };
     }
 }
