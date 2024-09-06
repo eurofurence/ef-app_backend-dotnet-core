@@ -100,11 +100,7 @@ More data of the applicant shall be visble an extra dialog
                                                    OnClick="args => RejectRegistration(context2.Item, false)">
                                             Reject
                                         </MudButton>
-                                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
-                                            <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Filled.Cancel"
-                                                         OnClick="args => RejectRegistration(context2.Item, true)">
-                                                Reject
-                                            </MudMenuItem>
+                                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" TransformOrigin="Origin.TopCenter" Dense="true">
                                             <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
                                                          OnClick="args => RejectRegistration(context2.Item, true)">
                                                 Reject and Ban user
@@ -120,11 +116,7 @@ More data of the applicant shall be visble an extra dialog
                                             <MudButton StartIcon="@Icons.Material.Outlined.Delete" OnClick="args => DeleteRegistration(context2.Item, false)">
                                                 Delete
                                             </MudButton>
-                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Dense="true">
-                                                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.Delete"
-                                                             OnClick="args => DeleteRegistration(context2.Item, false)">
-                                                    Delete
-                                                </MudMenuItem>
+                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"  Dense="true">
                                                 <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
                                                              OnClick="args => DeleteRegistration(context2.Item, true)">
                                                     Delete and Ban user
@@ -136,7 +128,7 @@ More data of the applicant shall be visble an extra dialog
                             </MudButtonGroup>
                         </MudItem>
                         @* <MudItem xs="6" Style="align-content: center;"> *@
-                       
+
                         @* </MudItem> *@
                     </MudGrid>
                 </MudContainer>
@@ -197,26 +189,18 @@ More data of the applicant shall be visble an extra dialog
         };
 
 
-
     }
-    
-    
-    
-    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-        
+
         if (firstRender)
         {
-            _dataGrid.Loading = true;
-            StateHasChanged();
-            
             _items = await GetRegistrationsAsync();
 
             _registrationsEnables = await TableRegService.GetArtistAllaySystemStatus() == ArtistAlleySystemStatus.OPEN;
-            
+
             _dataGrid?.SetSortAsync(nameof(TableRegistrationRecord.State), SortDirection.Ascending, x => x.State);
             StateHasChanged();
         }
@@ -422,6 +406,8 @@ More data of the applicant shall be visble an extra dialog
     /// <returns></returns>
     private async Task<IEnumerable<TableRegistrationRecord>> GetRegistrationsAsync()
     {
+
+        StateHasChanged();
         _dataGrid.Loading = true;
         IEnumerable<TableRegistrationRecord> registrations = await TableRegService.GetTableRegistrationsAsync();
 
@@ -434,6 +420,7 @@ More data of the applicant shall be visble an extra dialog
 
         registrations = Filter(registrations);
         _dataGrid.Loading = false;
+        StateHasChanged();
         return registrations;
     }
 
