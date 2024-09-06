@@ -14,12 +14,12 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class AnnouncementsController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
-        private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IFirebaseChannelManager firebaseChannelManager)
+        public AnnouncementsController(IAnnouncementService announcementService, IPushNotificationChannelManager pushNotificationChannelManager)
         {
             _announcementService = announcementService;
-            _firebaseChannelManager = firebaseChannelManager;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (await _announcementService.FindOneAsync(id) == null) return NotFound();
 
             await _announcementService.DeleteOneAsync(id);
-            await _firebaseChannelManager.PushSyncRequestAsync();
+            await _pushNotificationChannelManager.PushSyncRequestAsync();
 
             return Ok();
         }
@@ -67,8 +67,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             record.NewId();
 
             await _announcementService.InsertOneAsync(record);
-            await _firebaseChannelManager.PushSyncRequestAsync();
-            await _firebaseChannelManager.PushAnnouncementNotificationAsync(record);
+            await _pushNotificationChannelManager.PushSyncRequestAsync();
+            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
 
             return Ok();
         }
@@ -86,7 +86,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             record.Touch();
 
             await _announcementService.ReplaceOneAsync(record);
-            await _firebaseChannelManager.PushSyncRequestAsync();
+            await _pushNotificationChannelManager.PushSyncRequestAsync();
 
             return NoContent();
         }
@@ -96,7 +96,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> ClearAnnouncementAsync()
         {
             await _announcementService.DeleteAllAsync();
-            await _firebaseChannelManager.PushSyncRequestAsync();
+            await _pushNotificationChannelManager.PushSyncRequestAsync();
 
             return Ok();
         }

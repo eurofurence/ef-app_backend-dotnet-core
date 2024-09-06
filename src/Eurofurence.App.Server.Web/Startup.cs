@@ -32,6 +32,7 @@ using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Mapster;
 using MapsterMapper;
+using dotAPNS.AspNetCore;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -192,6 +193,8 @@ namespace Eurofurence.App.Server.Web
             {
                 builder.AddConsole();
             });
+
+            services.AddApns();
 
             ILogger logger = loggerFactory.CreateLogger<Startup>();
 
