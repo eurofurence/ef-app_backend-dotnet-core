@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
@@ -7,12 +8,13 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
     /// <summary>
     /// Record for storing
     /// </summary>
+    [Table("ArtistAlleyUserPenalties")]
     public class ArtistAlleyUserPenaltyRecord : EntityBase
     {
 
         public ArtistAlleyUserPenaltyRecord()
         {
-            Penalties = UserPenalties.OK;
+            Penalty = UserPenalties.OK;
         }
 
         /// <summary>
@@ -27,12 +29,14 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         /// <summary>
         /// Id of the user from the reg system
         /// </summary>
+        [Column("UserId")]
         public string UserId { get; set; }
         
         /// <summary>
         /// The current status of the user
         /// </summary>
-        public UserPenalties Penalties { get; set; }
+        [Column("Penalty")]
+        public UserPenalties Penalty { get; set; }
 
 
         public virtual List<ArtistAlleyUserPenaltyChangedRecord> AuditLog { get; set; } = new();

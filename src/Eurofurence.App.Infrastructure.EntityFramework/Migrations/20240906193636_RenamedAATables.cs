@@ -24,7 +24,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     UserId = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Status = table.Column<int>(type: "int", nullable: false),
+                    Penalty = table.Column<int>(type: "int", nullable: false),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)
                 },
@@ -42,8 +42,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     ChangedDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ChangedBy = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OldStatus = table.Column<int>(type: "int", nullable: false),
-                    NewStatus = table.Column<int>(type: "int", nullable: false),
+                    OldPenalties = table.Column<int>(type: "int", nullable: false),
+                    NewPenalties = table.Column<int>(type: "int", nullable: false),
                     Reason = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     UserPenaltyRecordId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),

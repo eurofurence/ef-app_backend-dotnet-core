@@ -19,7 +19,7 @@ namespace Eurofurence.App.Backoffice.Services
         {
             JsonContent content = JsonContent.Create(changeRequest);
 
-            await http.PutAsync($"Users/{userID}/:artist_alley_status", content);
+            await http.PutAsync($"Users/{userID}/:artist_alley_penalty", content);
         }
     }
 }

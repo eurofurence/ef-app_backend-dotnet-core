@@ -185,10 +185,10 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("NewStatus")
+                    b.Property<int>("NewPenalties")
                         .HasColumnType("int");
 
-                    b.Property<int>("OldStatus")
+                    b.Property<int>("OldPenalties")
                         .HasColumnType("int");
 
                     b.Property<string>("Reason")
@@ -216,7 +216,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("Status")
+                    b.Property<int>("Penalty")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")

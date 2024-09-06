@@ -35,7 +35,7 @@ namespace Eurofurence.App.Server.Services.Users
             }
             else
             {
-                oldStatus = response.Penalties;
+                oldStatus = response.Penalty;
             }
 
             ArtistAlleyUserPenaltyChangedRecord log = new()
@@ -49,7 +49,7 @@ namespace Eurofurence.App.Server.Services.Users
             };
             _appDbContext.ArtistAlleyUserPenaltiesChanges.Add(log);
             
-            response.Penalties = penalties;
+            response.Penalty = penalties;
             await _appDbContext.SaveChangesAsync();
         }
         public async Task<ArtistAlleyUserPenaltyRecord.UserPenalties> GetUserPenaltyAsync(string id)
@@ -61,7 +61,7 @@ namespace Eurofurence.App.Server.Services.Users
             {
                 return ArtistAlleyUserPenaltyRecord.UserPenalties.OK;
             }
-            return result.Penalties;
+            return result.Penalty;
         }
 
     }
