@@ -17,17 +17,17 @@ namespace Eurofurence.App.Server.Services.Abstractions.Users
         /// <param name="penalties">The penalty status that should be set</param>
         /// <param name="reason">A reason why the penalty was issued</param>
         /// <returns></returns>
-        Task SetUserPenaltyAsync(string id, ClaimsPrincipal user, ArtistAlleyUserPenaltyRecord.UserPenalties penalties, string reason);
+        Task SetUserPenaltyAsync(string id, ClaimsPrincipal user, ArtistAlleyUserPenaltyRecord.PenaltyStatus penalties, string reason);
 
         /// <summary>
         /// Returns an existing penalty of an user.
         /// 
-        /// If the user has no record in the database it is assumed that their status is OK (<see cref="ArtistAlleyUserPenaltyRecord.UserPenalties.OK"/>).
+        /// If the user has no record in the database it is assumed that their status is OK (<see cref="ArtistAlleyUserPenaltyRecord.PenaltyStatus.OK"/>).
         /// TODO: maybe change this, to automatically create a status entry when submitting an application 
         /// </summary>
         /// <param name="id">The Guid of the user</param>
         /// <returns>The status of the user</returns>
-        Task<ArtistAlleyUserPenaltyRecord.UserPenalties> GetUserPenaltyAsync(string id);
+        Task<ArtistAlleyUserPenaltyRecord.PenaltyStatus> GetUserPenaltyAsync(string id);
 
     }
 }

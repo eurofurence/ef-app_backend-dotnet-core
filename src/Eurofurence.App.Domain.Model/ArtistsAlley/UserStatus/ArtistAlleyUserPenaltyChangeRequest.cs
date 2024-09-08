@@ -15,7 +15,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         /// </summary>
         [DataMember]
         [Required]
-        public ArtistAlleyUserPenaltyRecord.UserPenalties Penalties { get; set; }
+        public ArtistAlleyUserPenaltyRecord.PenaltyStatus Penalties { get; set; }
 
         /// <summary>
         /// An optional reason why the penalty was issued or revoked.

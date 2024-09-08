@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240906193636_RenamedAATables")]
-    partial class RenamedAATables
+    [Migration("20240908144911_BanningArtistAlleyUsers")]
+    partial class BanningArtistAlleyUsers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -169,7 +169,32 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("ItemActivitys");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyChangedRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("IdentityId")
+                        .HasColumnType("longtext")
+                        .HasColumnName("IdentityId");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("Status");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ArtistAlleyUserPenalties");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord+StateChangeRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -177,10 +202,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.Property<string>("ChangedBy")
                         .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("ChangedDateTimeUtc")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("longtext")
+                        .HasColumnName("ChangedBy");
 
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
@@ -188,46 +211,23 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("NewPenalties")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OldPenalties")
-                        .HasColumnType("int");
+                    b.Property<int>("PenaltyStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("PenaltyStatus");
 
                     b.Property<string>("Reason")
-                        .HasColumnType("longtext");
+                        .HasColumnType("longtext")
+                        .HasColumnName("Reason");
 
                     b.Property<Guid>("UserPenaltyRecordId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("char(36)")
+                        .HasColumnName("UserPenaltyRecordId");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserPenaltyRecordId");
 
-                    b.ToTable("ArtistAlleyUserPenaltiesChanges");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<int>("IsDeleted")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastChangeDateTimeUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Penalty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ArtistAlleyUserPenalties");
+                    b.ToTable("ArtistAlleyUserPenaltyChangeRecord");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.TableRegistrationRecord", b =>
@@ -1194,7 +1194,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("Image");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyChangedRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord+StateChangeRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord", "UserPenaltyRecord")
                         .WithMany("AuditLog")

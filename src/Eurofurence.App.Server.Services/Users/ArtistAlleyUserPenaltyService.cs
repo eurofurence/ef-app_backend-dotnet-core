@@ -19,49 +19,47 @@ namespace Eurofurence.App.Server.Services.Users
             _appDbContext = appDbContext;
         }
 
-        public async Task SetUserPenaltyAsync(String id, ClaimsPrincipal user, ArtistAlleyUserPenaltyRecord.UserPenalties penalties, String reason)
+        public async Task SetUserPenaltyAsync(String id, ClaimsPrincipal user, ArtistAlleyUserPenaltyRecord.PenaltyStatus penalties, String reason)
         {
             var response = await _appDbContext.ArtistAlleyUserPenalties
                 .Include(x => x.AuditLog)
-                .FirstOrDefaultAsync(x => x.UserId == id);
+                .FirstOrDefaultAsync(x => x.IdentityId == id);
 
-            var oldStatus = ArtistAlleyUserPenaltyRecord.UserPenalties.OK;
+            var oldStatus = ArtistAlleyUserPenaltyRecord.PenaltyStatus.OK;
 
             if (response is null)
             {
                 response = new ArtistAlleyUserPenaltyRecord();
-                response.UserId = id;
+                response.IdentityId = id;
                 _appDbContext.ArtistAlleyUserPenalties.Add(response);
             }
             else
             {
-                oldStatus = response.Penalty;
+                oldStatus = response.Status;
             }
 
-            ArtistAlleyUserPenaltyChangedRecord log = new()
+            ArtistAlleyUserPenaltyRecord.StateChangeRecord log = new()
             {
                 ChangedBy = user.Identity?.Name,
-                ChangedDateTimeUtc = DateTime.UtcNow,
                 UserPenaltyRecordId = response.Id,
-                NewPenalties = penalties,
-                OldPenalties = oldStatus,
+                PenaltyStatus = penalties,
                 Reason = reason
             };
-            _appDbContext.ArtistAlleyUserPenaltiesChanges.Add(log);
+            _appDbContext.ArtistAlleyUserPenaltyChanges.Add(log);
             
-            response.Penalty = penalties;
+            response.Status = penalties;
             await _appDbContext.SaveChangesAsync();
         }
-        public async Task<ArtistAlleyUserPenaltyRecord.UserPenalties> GetUserPenaltyAsync(string id)
+        public async Task<ArtistAlleyUserPenaltyRecord.PenaltyStatus> GetUserPenaltyAsync(string id)
         {
             ArtistAlleyUserPenaltyRecord result = await _appDbContext.ArtistAlleyUserPenalties.AsNoTracking()
-                .Where(x => x.UserId == id.ToString())
+                .Where(x => x.IdentityId == id.ToString())
                 .FirstOrDefaultAsync();
             if (result == null)
             {
-                return ArtistAlleyUserPenaltyRecord.UserPenalties.OK;
+                return ArtistAlleyUserPenaltyRecord.PenaltyStatus.OK;
             }
-            return result.Penalty;
+            return result.Status;
         }
 
     }

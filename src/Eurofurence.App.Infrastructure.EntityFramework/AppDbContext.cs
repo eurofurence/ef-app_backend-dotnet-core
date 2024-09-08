@@ -63,7 +63,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
 
         public virtual DbSet<ArtistAlleyUserPenaltyRecord> ArtistAlleyUserPenalties{ get; set; }
 
-        public virtual DbSet<ArtistAlleyUserPenaltyChangedRecord> ArtistAlleyUserPenaltiesChanges { get; set; }
+        public virtual DbSet<ArtistAlleyUserPenaltyRecord.StateChangeRecord> ArtistAlleyUserPenaltyChanges { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

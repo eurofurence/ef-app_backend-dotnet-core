@@ -157,6 +157,7 @@ namespace Eurofurence.App.Server.Web
 
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
+
             services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
 
             services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();

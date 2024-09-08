@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -22,56 +23,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
+        private readonly ArtistAlleyConfiguration _configuration;
+        private IOptionsSnapshot<AuthorizationOptions> authorizationOptions;
 
         private const string ArtistAlleyDisabledFilePath = ".ArtistAlleyDisabled";
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,ArtistAlleyConfiguration _configuration, IOptionsSnapshot<AuthorizationOptions> authorizationOptions, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
-        }
-
-        /// <summary>
-        /// Returns the current system status of the artist alley
-        /// </summary>
-        /// <returns>The current status of the artist alley system</returns>
-        [HttpGet("SystemStatus")]
-        [ProducesResponseType(typeof(ArtistAlleySystemStatus), 200)]
-        [Authorize]
-        public ArtistAlleySystemStatus GetArtistAlleyStatus()
-        {
-            if (System.IO.File.Exists(ArtistAlleyDisabledFilePath))
-            {
-                return ArtistAlleySystemStatus.REG_CLOSED;
-            }
-            return ArtistAlleySystemStatus.OPEN;
-        }
-
-        /// <summary>
-        /// Changes the system status of the artist alley system
-        /// </summary>
-        /// <param name="status">To new status of the artist alley system</param>
-        /// <returns></returns>
-        [HttpPut("SystemStatus")]
-        [Authorize(Roles = "Admin")]
-        public ActionResult PutArtistAlleyStatus([FromBody][Required] ArtistAlleySystemStatus status)
-        {
-            if (status == ArtistAlleySystemStatus.OPEN)
-            {
-                if (System.IO.File.Exists(ArtistAlleyDisabledFilePath))
-                {
-                    System.IO.File.Delete(ArtistAlleyDisabledFilePath);
-                }
-            }
-            else
-            {
-                if (!System.IO.File.Exists(ArtistAlleyDisabledFilePath))
-                {
-                    System.IO.File.Create(ArtistAlleyDisabledFilePath);
-                }
-            }
-            return Ok();
+            this.authorizationOptions = authorizationOptions;
+            this._configuration = _configuration;
         }
         
         
@@ -98,7 +61,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 if (record.ImageId is {} imageId) await _imageService.SetRestricted(imageId, false);
             }
 
-            return Ok();
+            return NoContent();
         }
 
         /// <summary>
@@ -138,14 +101,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
-            if (GetArtistAlleyStatus() == ArtistAlleySystemStatus.REG_CLOSED)
+            if (!_configuration.ArtistAlleyEnabled)
             {
-                return StatusCode(403, "Table registrations are temporally closed");
+                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
             
-            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.UserPenalties.BANNED)
+            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
             {
-                return StatusCode(403, "User was banned from the artist alley");
+                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
             try
