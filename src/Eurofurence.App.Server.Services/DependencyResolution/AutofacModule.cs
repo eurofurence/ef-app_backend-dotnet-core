@@ -20,6 +20,7 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.ArtistsAlley;
@@ -37,6 +38,7 @@ using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
+using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -135,6 +137,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
             builder.RegisterType<DeviceIdentityService>().As<IDeviceIdentityService>();
             builder.RegisterType<RegistrationIdentityService>().As<IRegistrationIdentityService>();
+            builder.RegisterType<ArtistAlleyUserPenaltyService>().As<IArtistAlleyUserPenaltyService>();
         }
     }
 }

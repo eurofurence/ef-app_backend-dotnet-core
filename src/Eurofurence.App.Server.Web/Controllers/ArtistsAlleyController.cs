@@ -4,14 +4,16 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
-using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -20,13 +22,20 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
+        private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
+        private readonly ArtistAlleyConfiguration _configuration;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IImageService imageService)
+        private const string ArtistAlleyDisabledFilePath = ".ArtistAlleyDisabled";
+
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,ArtistAlleyConfiguration _configuration, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
+            _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
+            this._configuration = _configuration;
         }
-
+        
+        
         [HttpPut("{id}/:status")]
         [Authorize(Roles = "Admin, ArtistAlleyAdmin, ArtistAlleyModerator")]
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
@@ -47,7 +56,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
             {
                 await _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
-                if (record.ImageId is { } imageId) await _imageService.SetRestricted(imageId, false);
+                if (record.ImageId is {} imageId) await _imageService.SetRestricted(imageId, false);
             }
 
             return NoContent();
@@ -90,6 +99,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
+            if (!_configuration.RegistrationEnabled)
+            {
+                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
+            }
+            
+            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
+            {
+                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
+            }
+
             try
             {
                 using var imageStream = new MemoryStream();
@@ -128,7 +147,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             await _tableRegistrationService.DeleteOneAsync(id);
 
-            if (tableRegistration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
+            if (tableRegistration.ImageId is {} imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }

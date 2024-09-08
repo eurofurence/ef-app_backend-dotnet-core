@@ -1,0 +1,221 @@
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.ArtistsAlley
+
+@inject IArtistAlleyService TableRegService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IUserService UserService
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="overflow-scroll pr-4">
+            <MudGrid>
+                @if (Record.Image != null && !string.IsNullOrEmpty(Record.Image.Url))
+                {
+                    <MudItem xs="6">
+                        <MudLink Href="@Record.Image.Url">
+                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2"
+                                      Src="@Record.Image.Url"/>
+                        </MudLink>
+                    </MudItem>
+                }
+
+                <MudItem xs="6">
+                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID"/>
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username"/>
+                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website"/>
+                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description"/>
+                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle"/>
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mb-4"/>
+                    @switch (Record.State)
+                    {
+                        case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                            <MudAlert Severity="Severity.Info">Pending</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Accepted:
+                            <MudAlert Severity="Severity.Success">Accepted</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                            <MudAlert Severity="Severity.Error">Rejected</MudAlert>
+                            break;
+                        case TableRegistrationRecord.RegistrationStateEnum.Published:
+                            <MudAlert Severity="Severity.Success">Published</MudAlert>
+                            break;
+                    }
+                    @if (Record.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
+                    {
+
+                        <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                                   @onclick="() => ApproveRegistration()">
+                            Approve
+                        </MudButton>
+                        <AuthorizeView Policy="RequireArtistAlleyModerator">
+                            <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Warning">
+                                <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                           @onclick="() => RejectRegistration(false)">
+                                    Reject
+                                </MudButton>
+                                <AuthorizeView Policy="RequireArtistAlleyAdmin" Context="otherContext">
+                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" T AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                                        <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
+                                                     OnClick="args => RejectRegistration(true)">
+                                            Reject and Ban user
+                                        </MudMenuItem>
+                                    </MudMenu>
+                                </AuthorizeView>
+                            </MudButtonGroup>
+                        </AuthorizeView>
+                    }
+                    @*Show the delete button only for admins*@
+                    <AuthorizeView Policy="RequireArtistAlleyAdmin">
+                        <Authorized>
+                            <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
+
+                                <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(false)">
+                                    Delete
+                                </MudButton>
+
+                                <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                                    <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
+                                                 OnClick="args => DeleteRegistration(true)">
+                                        Delete and Ban user
+                                    </MudMenuItem>
+                                </MudMenu>
+                            </MudButtonGroup>
+                        </Authorized>
+                    </AuthorizeView>
+                </MudItem>
+            </MudGrid >
+        </MudContainer >
+    </DialogContent >
+</MudDialog >
+
+@code {
+
+    [Parameter]
+    public TableRegistrationRecord? Record { get; set; }
+
+
+    private async Task DeleteRegistration(bool banUser)
+    {
+        if (banUser)
+        {
+            var dialogResult = await PromptConfirmTextDialog("Are you sure you want to delete this registration and also ban the user?", "Reason");
+            if (dialogResult.Item1)
+            {
+                await TableRegService.DeleteTableRegistrationAsync(Record);
+                await UserService.PutUserArtistAlleyStatusAsync(Record.OwnerUid, new ArtistAlleyUserPenaltyChangeRequest()
+                {
+                    Penalties = ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED,
+                    Reason = dialogResult.Item2
+                });
+                ReloadDataAndSendSnackbar("Registration was deleted and user banned");
+            }
+        }
+        else
+        {
+            if (await PromptConfirmDialog($"Are you sure you want to delete this registration?"))
+            {
+                await TableRegService.DeleteTableRegistrationAsync(Record);
+                ReloadDataAndSendSnackbar("Registration was deleted");
+            }
+
+        }
+
+    }
+
+    private async Task<(bool, string)> PromptConfirmTextDialog(string dialogText, string textFieldText)
+    {
+
+        DialogParameters<ConfirmDialogWithTextInput> dialogUserban = new()
+        {
+            {
+                x => x.ContentText, dialogText
+            },
+            {
+                x => x.ActionButtonText, "Confirm"
+            },
+            {
+                x => x.TextFieldLabel, textFieldText
+            }
+        };
+
+        var optionsUserBan = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
+
+        IDialogReference dialogRefBan = await DialogService.ShowAsync<ConfirmDialogWithTextInput>("Confirm", dialogUserban, optionsUserBan);
+        DialogResult? resultBan = await dialogRefBan.Result;
+
+        return (!resultBan.Canceled, resultBan.Data as string ?? string.Empty);
+    }
+
+
+    private async Task<bool> PromptConfirmDialog(string dialogText)
+    {
+        DialogParameters<ConfirmDialog> dialog = new()
+        {
+            {
+                x => x.ContentText, dialogText
+            },
+            {
+                x => x.ActionButtonText, "Confirm"
+            }
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
+
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        DialogResult? result = await dialogRef.Result;
+
+        return result is { Canceled: false };
+    }
+
+    private async void RejectRegistration(bool banUser)
+    {
+        if (banUser)
+        {
+            var dialogResult = await PromptConfirmTextDialog("Are you sure you want to reject this registration and also ban the user?", "Reason");
+            if (dialogResult.Item1)
+            {
+                await TableRegService.PutTableRegistrationStatusAsync(Record, TableRegistrationRecord.RegistrationStateEnum.Rejected);
+                await UserService.PutUserArtistAlleyStatusAsync(Record.OwnerUid, new ArtistAlleyUserPenaltyChangeRequest()
+                {
+                    Penalties = ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED,
+                    Reason = dialogResult.Item2
+                });
+                ReloadDataAndSendSnackbar("Registration was rejected and user banned");
+            }
+        }
+        else
+        {
+            if (await PromptConfirmDialog($"Are you sure you want to reject this registration?"))
+            {
+                await TableRegService.PutTableRegistrationStatusAsync(Record, TableRegistrationRecord.RegistrationStateEnum.Rejected);
+                ReloadDataAndSendSnackbar("Registration was rejected");
+            }
+
+        }
+    }
+
+    private void ReloadDataAndSendSnackbar(string snackbarText)
+    {
+        StateHasChanged();
+        Snackbar.Add(snackbarText, Severity.Success);
+    }
+    private async void ApproveRegistration()
+    {
+        if (await PromptConfirmDialog("Are you sure you want to accept this registration?"))
+        {
+            await TableRegService.PutTableRegistrationStatusAsync(Record, TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            ReloadDataAndSendSnackbar("Registration was accepted");
+        }
+    }
+}
