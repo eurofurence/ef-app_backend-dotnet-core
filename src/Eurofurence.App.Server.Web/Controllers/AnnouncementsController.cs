@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -15,11 +15,13 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class AnnouncementsController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
+        private readonly IImageService _imageService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IPushNotificationChannelManager pushNotificationChannelManager)
+        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService, IPushNotificationChannelManager pushNotificationChannelManager)
         {
             _announcementService = announcementService;
+            _imageService = imageService;
             _pushNotificationChannelManager = pushNotificationChannelManager;
         }
 
@@ -70,28 +72,30 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Creates a new announcement and push it to all registered devices.
         /// </summary>
-        /// <param name="record">New announcement to be pushed</param>
+        /// <param name="request">New announcement to be pushed</param>
         /// <returns></returns>
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
-        public async Task<ActionResult> PostAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRecord record)
+        public async Task<ActionResult> PostAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRequest request)
         {
-            try {
-                await _announcementService.InsertOneAsync(record);
-                await _pushNotificationChannelManager.PushSyncRequestAsync();
-                await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+            if (request.ImageId is Guid imageId && (await _imageService.FindOneAsync(imageId)) is null)
+                return NotFound($"Unknown image ID {imageId}.");
 
-                return Ok(record.Id);
-            }
-            catch (DbUpdateException e) {
-                if ((e.InnerException as MySqlConnector.MySqlException)?.ErrorCode == MySqlConnector.MySqlErrorCode.DuplicateKeyEntry)
-                {
-                    return Conflict($"Record with id {record.Id} already exists.");
-                }
-                return BadRequest();
-            }
+            var record = new AnnouncementRecord()
+            {
+                Area = request.Area,
+                Author = request.Author,
+                Title = request.Title,
+                Content = request.Content,
+                ImageId = request.ImageId,
+            };
+            await _announcementService.InsertOneAsync(record);
+            await _pushNotificationChannelManager.PushSyncRequestAsync();
+            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+
+            return Ok(record.Id);
         }
 
         /// <summary>
