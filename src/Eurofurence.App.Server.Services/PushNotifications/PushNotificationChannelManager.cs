@@ -413,7 +413,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var pushType = eventType == PushEventType.Sync ? ApplePushType.Background : ApplePushType.Alert;
 
             var applePush = new ApplePush(pushType)
-                        .AddCustomProperty("Event", eventType)
+                        .AddCustomProperty("Event", eventType.ToString())
                         .AddCustomProperty("CID", _conventionSettings.ConventionIdentifier)
                         .AddCustomProperty("experienceId", _expoConfiguration.ExperienceId)
                         .AddCustomProperty("scopeKey", _expoConfiguration.ScopeKey)
