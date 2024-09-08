@@ -56,7 +56,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns></returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
@@ -65,7 +65,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _announcementService.DeleteOneAsync(id);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
-            return Ok();
+            return NoContent();
         }
 
 
@@ -129,12 +129,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns></returns>
         [HttpDelete]
         [Authorize(Roles = "Admin")]
+        [ProducesResponseType(204)]
         public async Task<ActionResult> ClearAnnouncementAsync()
         {
             await _announcementService.DeleteAllAsync();
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
-            return Ok();
+            return NoContent();
         }
     }
 }
