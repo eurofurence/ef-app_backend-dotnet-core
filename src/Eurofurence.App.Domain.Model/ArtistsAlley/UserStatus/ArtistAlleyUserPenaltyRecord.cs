@@ -30,7 +30,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         }
 
         /// <summary>
-        /// Id of the user from the reg system
+        /// Id of the user from the identity server
         /// </summary>
         [Column("IdentityId")]
         public string IdentityId { get; set; }
