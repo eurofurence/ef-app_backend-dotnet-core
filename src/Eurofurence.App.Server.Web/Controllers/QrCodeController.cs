@@ -5,6 +5,7 @@ using System;
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("qr")]
+    [Route("qrcode")]
     public class QrCodeController : BaseController
     {
         private readonly IQrCodeService _qrCodeService;
