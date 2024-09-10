@@ -152,8 +152,8 @@
             $.get(baseUrl + "/Api/Dealers", function (dealersData) {
 
                 dealersData = dealersData.map(function (o) {
-                    o.DisplayName = (o.DisplayName != "") ? o.DisplayName : o.AttendeeNickname;
-                    o.DisplayNameSort = o.DisplayName.toLowerCase();
+                    o.DisplayName = o.DisplayNameOrAttendeeNickname;
+                    o.DisplayNameSort = o.DisplayNameOrAttendeeNickname.toLowerCase();
 
 
                     o.Progress = 5;
