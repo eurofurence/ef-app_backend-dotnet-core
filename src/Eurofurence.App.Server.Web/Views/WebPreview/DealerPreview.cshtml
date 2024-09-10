@@ -7,7 +7,7 @@
     var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
     var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
 
-    var displayName  = string.IsNullOrEmpty(Model.DisplayName) ? Model.AttendeeNickname : (Model.DisplayName.Equals(Model.AttendeeNickname) ? Model.DisplayName : $"{Model.DisplayName} ({Model.AttendeeNickname})");
+    var displayName  = Model.DisplayNameOrAttendeeNickname;
     var categories = string.Join(", ", Model.Categories);
 
     var mapEntries = ViewData["MapEntries"] as List<MapEntryRecord>;
@@ -31,7 +31,7 @@
 <header>
     @if (Model.ArtistImage != null)
     {
-        <img src="@Model.ArtistImage.Url" title="@Model.DisplayName" 
+        <img src="@Model.ArtistImage.Url" title="@Model.DisplayNameOrAttendeeNickname" 
              style="max-width: 256px;"
              />
     }
@@ -119,7 +119,7 @@
             <script type="text/javascript">
                 var map = L.map('map_@mapId', { crs: L.CRS.Simple, minZoom: 0, maxZoom: 4, zoom: 2 });
                 var bounds = [[0,0], [@mapEntry.Map.Image.Height/10, @mapEntry.Map.Image.Width/10]];
-                var image = L.imageOverlay('@apiBaseUrl/Images/@mapEntry.Map.ImageId.ToString()/Content', bounds, {attribution: '© Eurofurence'}).addTo(map);
+                var image = L.imageOverlay('@mapEntry.Map.Image.Url', bounds, {attribution: '© Eurofurence'}).addTo(map);
 
                 var point = [(@mapEntry.Map.Image.Height -  @mapEntry.Y)/10, @mapEntry.X/10];
                 L.circle(point, {

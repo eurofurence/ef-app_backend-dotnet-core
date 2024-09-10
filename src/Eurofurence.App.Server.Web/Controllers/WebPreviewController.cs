@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -28,6 +29,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeEntryService _knowledgeEntryService;
         private readonly IMapService _mapService;
         private readonly IImageService _imageService;
+        private ILogger _logger;
 
         public const string VIEWDATA_OPENGRAPH_METADATA = nameof(OpenGraphMetadata);
         public const string VIEWDATA_APPID_ITUNES = nameof(ConventionSettings.AppIdITunes);
@@ -47,8 +49,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IKnowledgeGroupService knowledgeGroupService,
             IKnowledgeEntryService knowledgeEntryService,
             IMapService mapService,
-            IImageService imageService
-            )
+            IImageService imageService,
+            ILoggerFactory loggerFactory)
         {
             _conventionSettings = conventionSettings;
             _eventService = eventService;
@@ -60,6 +62,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _knowledgeEntryService = knowledgeEntryService;
             _mapService = mapService;
             _imageService = imageService;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         private void PopulateViewData()
@@ -115,7 +118,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (dealer == null) return NotFound();
 
 
-            var maps = _mapService.FindAll();
+            var maps = _mapService.FindAll().Include(m => m.Image);
             var mapEntries = new List<MapEntryRecord>();
 
             foreach (var map in maps)
@@ -137,7 +140,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var previewImageUrl = dealer.ArtistImage?.Url ?? dealer.ArtistImage?.Url ?? string.Empty;
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
-                .WithTitle(string.IsNullOrEmpty(dealer.DisplayName) ? dealer.AttendeeNickname : dealer.DisplayName)
+                .WithTitle(dealer.DisplayNameOrAttendeeNickname)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(previewImageUrl);
 
