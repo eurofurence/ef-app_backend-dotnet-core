@@ -108,14 +108,17 @@ public class BotService : BackgroundService, IUpdateHandler
         return _client.SendTextMessageAsync(chatId, message, parseMode: ParseMode.Markdown);
     }
 
-    private Task OnSendImageToChatAsync(string chatId, byte[] imageBytes, string message)
+    private async Task OnSendImageToChatAsync(string chatId, Stream image, string message)
     {
-        return _client.SendPhotoAsync(
-            chatId,
-            new InputFileStream(new MemoryStream(imageBytes)),
-            caption: message,
-            parseMode: ParseMode.Markdown
-        );
+        await using (image)
+        {
+            await _client.SendPhotoAsync(
+                chatId,
+                new InputFileStream(image),
+                caption: message,
+                parseMode: ParseMode.Markdown
+            );
+        }
     }
 
     private async Task OnTableRegistrationAsync(string chatId, TableRegistrationRecord record)

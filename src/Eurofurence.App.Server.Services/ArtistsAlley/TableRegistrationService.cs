@@ -176,41 +176,39 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
         private async Task BroadcastAsync(TableRegistrationRecord record)
         {
-            var telegramMessageBuilder = new StringBuilder();
+            var message = new StringBuilder();
 
-            telegramMessageBuilder.Append($"Now in the Artist Alley ({record.Location.RemoveMarkdown()}):\n\n*{record.DisplayName.RemoveMarkdown()}*\n\n");
+            message.Append($@"Now in the Artist Alley ({record.Location.RemoveMarkdown()}):
 
-            telegramMessageBuilder.Append(record.ShortDescription.EscapeMarkdown() + "\n\n");
+*{record.DisplayName.RemoveMarkdown()}*
+
+");
+
+            message.Append(record.ShortDescription.EscapeMarkdown() + "\n\n");
 
             if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
             {
-                telegramMessageBuilder.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
+                message.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
             }
             if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
             {
-                telegramMessageBuilder.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
+                message.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
             }
-
-            var telegramMessage = telegramMessageBuilder.ToString();
-
-            if (record.Image != null)
+            
+            if (record.ImageId.HasValue)
             {
-                using (MemoryStream ms = new())
-                {
-                    var stream = await _imageService.GetImageContentByImageIdAsync(record.Image.Id);
-                    await stream.CopyToAsync(ms);
-                    await stream.DisposeAsync();
-                    await _telegramMessageSender.SendImageToChatAsync(
-                        _configuration.TelegramAnnouncementChannelId,
-                        ms.ToArray(),
-                        telegramMessage);
-                }
+                await _telegramMessageSender.SendImageToChatAsync(
+                    _configuration.TelegramAnnouncementChannelId,
+                    await _imageService.GetImageContentByImageIdAsync(record.ImageId.Value),
+                    message.ToString()
+                );
             }
             else
             {
                 await _telegramMessageSender.SendMarkdownMessageToChatAsync(
                     _configuration.TelegramAnnouncementChannelId,
-                    telegramMessage);
+                    message.ToString()
+                );
             }
         }
 
