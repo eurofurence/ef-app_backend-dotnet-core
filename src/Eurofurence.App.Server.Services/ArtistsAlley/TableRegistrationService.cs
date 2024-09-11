@@ -32,7 +32,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly IHtmlSanitizer _htmlSanitizer;
 
-        private readonly Regex _telegramHandleRegex = new Regex("^@?[0-9a-z_]{5,32}$");
+        private readonly Regex _telegramHandleRegex = new Regex("^@?[0-9A-Za-z_]{5,32}$");
 
         public TableRegistrationService(
             AppDbContext context,
@@ -108,7 +108,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             foreach (var registration in activeRegistrations)
             {
-                if (registration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
+                if (registration.ImageId is {} imageId) await _imageService.DeleteOneAsync(imageId);
                 await DeleteOneAsync(registration.Id);
             }
 
@@ -146,14 +146,14 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
-                                                                           && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
+                                                                                         && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
             var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-                _configuration.TelegramAdminGroupChatId,
-                $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
+            _configuration.TelegramAdminGroupChatId,
+            $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
 
             await BroadcastAsync(record);
 
@@ -215,7 +215,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public async Task RejectByIdAsync(Guid id, string operatorUid)
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
-                && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
+                                                                                         && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
 
             var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
@@ -223,7 +223,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
-                $"*Rejected:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
+            $"*Rejected:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
 
@@ -241,7 +241,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await _appDbContext.SaveChangesAsync();
         }
-
         public async Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid)
         {
             var request = await _appDbContext.TableRegistrations

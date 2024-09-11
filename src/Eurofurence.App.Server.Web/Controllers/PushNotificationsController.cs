@@ -13,14 +13,14 @@ namespace Eurofurence.App.Server.Web.Controllers
     [Route("Api/[controller]")]
     public class PushNotificationsController : BaseController
     {
-        private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
         private readonly IPushNotificationChannelStatisticsService _pushNotificationChannelStatisticsService;
 
         public PushNotificationsController(
-            IFirebaseChannelManager firebaseChannelManager,
+            IPushNotificationChannelManager pushNotificationChannelManager,
             IPushNotificationChannelStatisticsService pushNotificationChannelStatisticsService)
         {
-            _firebaseChannelManager = firebaseChannelManager;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
             _pushNotificationChannelStatisticsService = pushNotificationChannelStatisticsService;
         }
 
@@ -29,7 +29,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(204)]
         public async Task<ActionResult> PushSyncRequestAsync(CancellationToken cancellationToken = default)
         {
-            await _firebaseChannelManager.PushSyncRequestAsync(cancellationToken);
+            await _pushNotificationChannelManager.PushSyncRequestAsync(cancellationToken);
             return NoContent();
         }
 
@@ -43,10 +43,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var ids = User.FindAll("RegSysId").Select(x => x.Value).ToArray();
 
-            await _firebaseChannelManager.RegisterDeviceAsync(
+            await _pushNotificationChannelManager.RegisterDeviceAsync(
                 request.DeviceId,
                 User.GetSubject(),
-                ids,
+            ids,
                 request.DeviceType,
                 cancellationToken
             );

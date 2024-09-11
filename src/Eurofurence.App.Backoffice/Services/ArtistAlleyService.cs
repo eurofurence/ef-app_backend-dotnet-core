@@ -25,5 +25,16 @@ namespace Eurofurence.App.Backoffice.Services
         {
             await http.DeleteAsync($"ArtistsAlley/{record.Id}");
         }
+        public async Task PutArtistAllaySystemStatus(ArtistAlleySystemStatus status)
+        {
+            JsonContent content = JsonContent.Create(status);
+            await http.PutAsync("ArtistsAlley/SystemStatus", content);
+        }
+        public async Task<ArtistAlleySystemStatus> GetArtistAllaySystemStatus()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonStringEnumConverter());
+            return await http.GetFromJsonAsync<ArtistAlleySystemStatus>("ArtistsAlley/SystemStatus",options);
+        }
     }
 }

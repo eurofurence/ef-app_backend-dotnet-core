@@ -1,11 +1,12 @@
-﻿@page "/knowledgebase"
+@page "/knowledgebase"
 @attribute [Authorize(Policy = "RequireKnowledgeBaseEditor")]
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Knowledge
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
-@using Markdig
+@inject IConfiguration Configuration
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 @inject IImageService ImageService
@@ -18,6 +19,8 @@
         <MudToolBar>
             <MudText Typo="Typo.h6">Groups</MudText>
             <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Href="@GetWebPreviewUrl(["KnowledgeGroups"])">
+            </MudIconButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                 @onclick="AddKnowledgeGroup">New Group</MudButton>
         </MudToolBar>
@@ -42,20 +45,24 @@
             {
                 <MudListItem @onclick="() => _selectedGroup = knowledgeGroup">
                     <MudCard Style="background-color: transparent">
-                        <MudCardHeader>
-                            <CardHeaderAvatar>
-                                <MudIcon Icon="@("fas fa-" + knowledgeGroup.FontAwesomeIconName)"></MudIcon>
-                            </CardHeaderAvatar>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
-                            </CardHeaderContent>
-                            <CardHeaderActions>
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                    @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)"></MudIconButton>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                    @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)"></MudIconButton>
-                            </CardHeaderActions>
-                        </MudCardHeader>
+                        <MudBadge Content="@("#" + knowledgeGroup.Order)" Origin="Origin.TopLeft" Overlap="true">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudIcon Icon="@("fas fa-" + knowledgeGroup.FontAwesomeIconName)"></MudIcon>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
+                                </CardHeaderContent>
+                                <CardHeaderActions>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)">
+                                    </MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)">
+                                    </MudIconButton>
+                                </CardHeaderActions>
+                            </MudCardHeader>
+                        </MudBadge>
                         <MudCardContent>
                             <MudText>@knowledgeGroup.Description</MudText>
                         </MudCardContent>
@@ -91,18 +98,24 @@
             @foreach (var knowledgeEntry in GetKnowledgeEntities())
             {
                 <MudCard Class="mt-4">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
-                            <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
-                        </CardHeaderContent>
-                        <CardHeaderActions>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)" />
-                        </CardHeaderActions>
-                    </MudCardHeader>
+                    <MudBadge Content="@("#" + knowledgeEntry.Order)" Origin="Origin.TopLeft" Overlap="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
+                                <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                    Href="@GetWebPreviewUrl(["KnowledgeEntries", knowledgeEntry.Id.ToString()])"
+                                    Target="_blank">
+                                </MudIconButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                    @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)"/>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                    @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)"/>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                    </MudBadge>
                     <MudCardContent>
                         <MarkdownRenderer Text="@knowledgeEntry.Text"></MarkdownRenderer>
 
@@ -114,7 +127,15 @@
                     <MudCardActions>
                         @foreach (var link in knowledgeEntry.Links)
                         {
-                            <MudButton Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                            @if (link.FragmentType == LinkFragment.FragmentTypeEnum.WebExternal)
+                            {
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@link.Target" Target="_blank">
+                                    @link.Name</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Disabled="true" Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                            }
                         }
                     </MudCardActions>
                 </MudCard>
@@ -127,8 +148,8 @@
     public bool Loading = true;
     private string? _knowledgeEntrySearch;
     private KnowledgeGroupRecord? _selectedGroup;
-    private Dictionary<Guid, KnowledgeGroupRecord> _knowledgeGroups = new Dictionary<Guid, KnowledgeGroupRecord>();
-    private List<KnowledgeEntryRecord> _knowledgeEntries = new List<KnowledgeEntryRecord>();
+    private Dictionary<Guid, KnowledgeGroupRecord> _knowledgeGroups = new();
+    private List<KnowledgeEntryRecord> _knowledgeEntries = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,7 +162,8 @@
         Loading = true;
         _knowledgeEntries = [];
 
-        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => ke.Order);
+        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => _knowledgeGroups.FirstOrDefault(kg => kg.Key == ke.KnowledgeGroupId).Value.Order).ThenBy(ke => ke.Order);
+        
         foreach (var response in responses)
         {
             var record = new KnowledgeEntryRecord()
@@ -239,10 +261,10 @@
     private async Task DeleteKnowledgeEntry(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult dialogResult = await dialogRef.Result;
@@ -262,6 +284,12 @@
         }
     }
 
+    private string GetWebPreviewUrl(IEnumerable<string> paths)
+    {
+        var webPreviewUrl = $"{Configuration.GetValue<string>("BackendBaseUrl")?.TrimEnd('/') ?? string.Empty}/Web";
+        return paths.Aggregate(webPreviewUrl, (current, path) => $"{current}/{path.TrimStart('/')}");
+    }
+
     private async Task AddKnowledgeGroup()
     {
         var parameters = new DialogParameters<KnowledgeGroupDialog> { { x => x.Record, null } };
@@ -274,6 +302,7 @@
         {
             Loading = true;
             await LoadKnowledgeGroups();
+            await LoadKnowledgeEntries();
         }
     }
 
@@ -289,16 +318,17 @@
         {
             Loading = true;
             await LoadKnowledgeGroups();
+            await LoadKnowledgeEntries();
         }
     }
 
     private async Task DeleteKnowledgeGroup(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-        {
-            { x => x.ContentText, $"Are you sure you want to delete this knowledge base group?" },
-            { x => x.ActionButtonText, "Confirm" }
-        };
+{
+{ x => x.ContentText, $"Are you sure you want to delete this knowledge base group?" },
+{ x => x.ActionButtonText, "Confirm" }
+};
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
         IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
         DialogResult dialogResult = await dialogRef.Result;

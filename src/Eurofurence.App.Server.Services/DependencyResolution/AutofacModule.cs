@@ -20,6 +20,7 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.ArtistsAlley;
@@ -37,6 +38,7 @@ using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Telegram;
+using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -64,6 +66,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
 
             builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
             builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(ApnsConfiguration.FromConfiguration(_configuration));
+            builder.RegisterInstance(ExpoConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ArtistAlleyConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(LassieConfiguration.FromConfiguration(_configuration));
@@ -104,9 +108,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<EventConferenceTrackService>().As<IEventConferenceTrackService>();
             builder.RegisterType<EventFeedbackService>().As<IEventFeedbackService>();
             builder.RegisterType<EventService>().As<IEventService>();
-            builder.RegisterType<FirebaseChannelManager>()
-                .As<IFirebaseChannelManager>()
-                .SingleInstance();
+            //builder.RegisterType<FirebaseChannelManager>().As<IPushNotificationChannelManager>();
+            builder.RegisterType<PushNotificationChannelManager>().As<IPushNotificationChannelManager>().SingleInstance();
             builder.RegisterType<FursuitBadgeService>().As<IFursuitBadgeService>();
             builder.RegisterType<GanssHtmlSanitizer>().As<IHtmlSanitizer>();
             builder.RegisterType<ImageService>().As<IImageService>();
@@ -118,11 +121,8 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<LostAndFoundService>().As<ILostAndFoundService>();
             builder.RegisterType<LostAndFoundLassieImporter>().As<ILostAndFoundLassieImporter>();
             builder.RegisterType<MapService>().As<IMapService>();
-            builder.RegisterType<PrivateMessageService>()
-                .As<IPrivateMessageService>()
-                .SingleInstance();
-            builder.RegisterType<PushNotificationChannelStatisticsService>()
-                .As<IPushNotificationChannelStatisticsService>();
+            builder.RegisterType<PrivateMessageService>().As<IPrivateMessageService>().SingleInstance();
+            builder.RegisterType<PushNotificationChannelStatisticsService>().As<IPushNotificationChannelStatisticsService>();
             builder.RegisterType<QrCodeService>().As<IQrCodeService>();
             builder.RegisterType<StorageServiceFactory>().As<IStorageServiceFactory>();
             builder.RegisterType<TableRegistrationService>().As<ITableRegistrationService>();
@@ -135,6 +135,7 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             builder.RegisterType<DealerApiClient>().As<IDealerApiClient>();
             builder.RegisterType<DeviceIdentityService>().As<IDeviceIdentityService>();
             builder.RegisterType<RegistrationIdentityService>().As<IRegistrationIdentityService>();
+            builder.RegisterType<ArtistAlleyUserPenaltyService>().As<IArtistAlleyUserPenaltyService>();
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Eurofurence.App.Server.Web.Jobs
     {
         private readonly IAnnouncementService _announcementService;
         private readonly IImageService _imageService;
-        private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
         private readonly IEventService _eventService;
         private readonly AnnouncementConfiguration _configuration;
         private readonly ILogger _logger;
@@ -31,14 +31,14 @@ namespace Eurofurence.App.Server.Web.Jobs
         public UpdateAnnouncementsJob(
             IAnnouncementService announcementService,
             IImageService imageService,
-            IFirebaseChannelManager firebaseChannelManager,
+            IPushNotificationChannelManager pushNotificationChannelManager,
             IEventService eventService,
             AnnouncementConfiguration configuration,
             ILoggerFactory loggerFactory)
         {
             _announcementService = announcementService;
             _imageService = imageService;
-            _firebaseChannelManager = firebaseChannelManager;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
             _eventService = eventService;
             _configuration = configuration;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -132,14 +132,14 @@ namespace Eurofurence.App.Server.Web.Jobs
                     await _eventService.RunImportAsync();
                 }
 
-                await _firebaseChannelManager.PushSyncRequestAsync();
+                await _pushNotificationChannelManager.PushSyncRequestAsync();
 
                 foreach (var record in diff.Where(a => a.Action == ActionEnum.Add))
                 {
                     _logger.LogInformation(LogEvents.Import,
                         "Sending push notification for announcement {id} ({title})", record.Entity.Id,
                         record.Entity.Title);
-                    await _firebaseChannelManager.PushAnnouncementNotificationAsync(record.Entity);
+                    await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record.Entity);
                 }
 
                 _logger.LogInformation(LogEvents.Import, "Announcements import finished successfully.");

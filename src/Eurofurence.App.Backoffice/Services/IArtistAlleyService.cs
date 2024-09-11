@@ -24,5 +24,19 @@ namespace Eurofurence.App.Backoffice.Services
         /// <param name="record">The record to delete</param>
         /// <returns></returns>
         public Task DeleteTableRegistrationAsync(TableRegistrationRecord record);
+
+        /// <summary>
+        /// Sets the global status for the artist alley system.
+        ///
+        /// </summary>
+        /// <param name="status">The new status</param>
+        /// <returns></returns>
+        public Task PutArtistAllaySystemStatus(ArtistAlleySystemStatus status);
+
+        /// <summary>
+        /// Returns the current global status of the artist alley system
+        /// </summary>
+        /// <returns></returns>
+        public Task<ArtistAlleySystemStatus> GetArtistAllaySystemStatus();
     }
 }

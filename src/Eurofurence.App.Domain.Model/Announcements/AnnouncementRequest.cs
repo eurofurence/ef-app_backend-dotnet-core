@@ -1,34 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
-using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRecord : EntityBase
+    public class AnnouncementRequest
     {
-        /// <summary>
-        /// When does this announcement start to be valid?
-        /// </summary>
-        [DataMember]
-        [Required]
-        public DateTime ValidFromDateTimeUtc { get; set; }
-
-        /// <summary>
-        /// Until when will the announcement be valid?
-        /// </summary>
-        [DataMember]
-        [Required]
-        public DateTime ValidUntilDateTimeUtc { get; set; }
-
-        /// <summary>
-        /// Reference provided by JSON ingested in <c>UpdateAnnouncementsJob</c>.
-        /// </summary>
-        [JsonIgnore]
-        public string ExternalReference { get; set; }
-
         /// <summary>
         /// Type of announcement:
         /// <list type="bullet">
@@ -80,12 +58,9 @@ namespace Eurofurence.App.Domain.Model.Announcements
         public string Content { get; set; }
 
         /// <summary>
-        /// ID of an image uploaded via the POST endpoint for images.
+        /// ID of an image to be displayed with the announcement, uploaded via the POST endpoint for images.
         /// </summary>
         [DataMember]
         public Guid? ImageId { get; set; }
-
-        [JsonIgnore]
-        public ImageRecord Image { get; set; }
     }
 }

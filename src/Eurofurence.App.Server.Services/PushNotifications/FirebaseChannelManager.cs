@@ -17,14 +17,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
-    public class FirebaseChannelManager : IFirebaseChannelManager
+    public class FirebaseChannelManager : IPushNotificationChannelManager
     {
         private readonly IDeviceIdentityService _deviceService;
         private readonly IRegistrationIdentityService _registrationService;
         private readonly AppDbContext _appDbContext;
         private readonly FirebaseConfiguration _configuration;
+        private readonly ExpoConfiguration _expoConfiguration;
         private readonly ConventionSettings _conventionSettings;
-        private readonly FirebaseApp _firebaseApp;
         private readonly FirebaseMessaging _firebaseMessaging;
 
         public FirebaseChannelManager(
@@ -32,21 +32,25 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             IRegistrationIdentityService registrationService,
             AppDbContext appDbContext,
             FirebaseConfiguration configuration,
+            ExpoConfiguration expoConfiguration,
             ConventionSettings conventionSettings)
         {
             _deviceService = deviceService;
             _registrationService = registrationService;
             _appDbContext = appDbContext;
             _configuration = configuration;
+            _expoConfiguration = expoConfiguration;
             _conventionSettings = conventionSettings;
 
-            if (_configuration.GoogleServiceCredentialKeyFile is { Length: > 0 } file)
-            {
-                var googleCredential = GoogleCredential.FromFile(file);
+            if (_configuration.GoogleServiceCredentialKeyFile is not { Length: > 0 } file) return;
 
-                _firebaseApp = FirebaseApp.Create(new AppOptions { Credential = googleCredential });
-                _firebaseMessaging = FirebaseMessaging.GetMessaging(_firebaseApp);
+            var googleCredential = GoogleCredential.FromFile(file);
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                FirebaseApp.Create(new AppOptions { Credential = googleCredential });
             }
+
+            _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
         }
 
         public Task PushAnnouncementNotificationAsync(
@@ -78,8 +82,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "CID", _conventionSettings.ConventionIdentifier },
 
                     // For Expo / React Native
-                    { "experienceId", _configuration.ExpoExperienceId },
-                    { "scopeKey", _configuration.ExpoScopeKey },
+                    { "experienceId", _expoConfiguration.ExperienceId },
+                    { "scopeKey", _expoConfiguration.ScopeKey },
                 }
             };
 
@@ -115,8 +119,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushPrivateMessageNotificationToIdentityIdAsync(
             string identityId,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
@@ -125,8 +129,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
             await PushPrivateMessageNotificationAsync(devices,
-                toastTitle,
-                toastMessage,
+                title,
+                message,
                 relatedId,
                 cancellationToken
             );
@@ -134,8 +138,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushPrivateMessageNotificationToRegSysIdAsync(
             string regSysId,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
@@ -144,8 +148,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
             await PushPrivateMessageNotificationAsync(devices,
-                toastTitle,
-                toastMessage,
+                title,
+                message,
                 relatedId,
                 cancellationToken
             );
@@ -165,8 +169,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "CID", _conventionSettings.ConventionIdentifier },
 
                     // For Expo / React Native
-                    { "experienceId", _configuration.ExpoExperienceId },
-                    { "scopeKey", _configuration.ExpoScopeKey },
+                    { "experienceId", _expoConfiguration.ExperienceId },
+                    { "scopeKey", _expoConfiguration.ScopeKey },
                     {
                         "body", JsonSerializer.Serialize(new
                             {
@@ -226,6 +230,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
             else
             {
+                switch (type)
+                {
+                    case DeviceType.Android:
+                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_conventionSettings.ConventionIdentifier}-android");
+                    break;
+                    case DeviceType.Ios:
+                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_conventionSettings.ConventionIdentifier}-ios");
+                    break;
+                }
                 await _deviceService.InsertOneAsync(new DeviceIdentityRecord
                 {
                     IdentityId = identityId,
@@ -258,8 +271,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         private async Task PushPrivateMessageNotificationAsync(
             List<DeviceIdentityRecord> devices,
-            string toastTitle,
-            string toastMessage,
+            string title,
+            string message,
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
@@ -277,8 +290,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             {
                                 Notification = new AndroidNotification()
                                 {
-                                    Title = toastTitle,
-                                    Body = toastMessage,
+                                    Title = title,
+                                    Body = message,
                                     Icon = "notification_icon",
                                     Color = "#006459"
                                 }
@@ -287,14 +300,14 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             {
                                 // For Legacy Native Android App
                                 { "Event", "Notification" },
-                                { "Title", toastTitle },
-                                { "Message", toastMessage },
+                                { "Title", title },
+                                { "Message", message },
                                 { "RelatedId", relatedId.ToString() },
                                 { "CID", _conventionSettings.ConventionIdentifier },
 
                                 // For Expo / React Native
-                                { "experienceId", _configuration.ExpoExperienceId },
-                                { "scopeKey", _configuration.ExpoScopeKey }
+                                { "experienceId", _expoConfiguration.ExperienceId },
+                                { "scopeKey", _expoConfiguration.ScopeKey }
                             }
                         });
                         break;
@@ -310,8 +323,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             },
                             Notification = new Notification()
                             {
-                                Title = toastTitle,
-                                Body = toastMessage,
+                                Title = title,
+                                Body = message,
                             },
                             Apns = new ApnsConfig()
                             {

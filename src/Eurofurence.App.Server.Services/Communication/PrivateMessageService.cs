@@ -16,19 +16,19 @@ namespace Eurofurence.App.Server.Services.Communication
     public class PrivateMessageService : EntityServiceBase<PrivateMessageRecord>, IPrivateMessageService
     {
         private readonly AppDbContext _appDbContext;
-        private readonly IFirebaseChannelManager _firebaseChannelManager;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
         private readonly ConcurrentQueue<QueuedNotificationParameters> _notificationQueue = new();
 
         public PrivateMessageService(
             AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
-            IFirebaseChannelManager firebaseChannelManager
+            IPushNotificationChannelManager pushNotificationChannelManager
         )
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
-            _firebaseChannelManager = firebaseChannelManager;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
         }
 
         public async Task<List<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(
@@ -192,7 +192,7 @@ namespace Eurofurence.App.Server.Services.Communication
                 {
                     if (!string.IsNullOrWhiteSpace(parameters.RecipientRegSysId))
                     {
-                        await _firebaseChannelManager.PushPrivateMessageNotificationToRegSysIdAsync(
+                        await _pushNotificationChannelManager.PushPrivateMessageNotificationToRegSysIdAsync(
                             parameters.RecipientRegSysId,
                             parameters.ToastTitle,
                             parameters.ToastMessage,
@@ -202,7 +202,7 @@ namespace Eurofurence.App.Server.Services.Communication
                     }
                     else
                     {
-                        await _firebaseChannelManager.PushPrivateMessageNotificationToIdentityIdAsync(
+                        await _pushNotificationChannelManager.PushPrivateMessageNotificationToIdentityIdAsync(
                             parameters.RecipientIdentityId,
                             parameters.ToastTitle,
                             parameters.ToastMessage,

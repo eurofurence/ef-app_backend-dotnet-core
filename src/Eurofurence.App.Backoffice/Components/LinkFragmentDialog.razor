@@ -1,21 +1,20 @@
-﻿@using Eurofurence.App.Domain.Model.Knowledge
-@using Eurofurence.App.Backoffice.Services
+﻿@using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Fragments
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
 
 <MudDialog>
     <DialogContent>
-        @if (Record != null)
+        @if (RecordInternal != null)
         {
-            <MudTextField T="string" @bind-Value="Record.Name" Label="Name" />
-            <MudSelect @bind-Value="Record.FragmentType" Label="Type">
+            <MudTextField T="string" @bind-Value="RecordInternal.Name" Label="Name" />
+            <MudSelect @bind-Value="RecordInternal.FragmentType" Label="Type">
                 @foreach (LinkFragment.FragmentTypeEnum item in Enum.GetValues(typeof(LinkFragment.FragmentTypeEnum)))
                 {
                     <MudSelectItem Value="@item">@item</MudSelectItem>
                 }
             </MudSelect>
-            <MudTextField T="string" @bind-Value="Record.Target" Label="Target" />
+            <MudTextField T="string" @bind-Value="RecordInternal.Target" Label="Target" />
         }
     </DialogContent>
     <DialogActions>
@@ -29,13 +28,15 @@
 
     [Parameter] public LinkFragment? Record { get; set; }
 
+    private LinkFragment? RecordInternal { get; set; }
+
     private bool Update { get; set; }
 
     protected override void OnInitialized()
     {
         if (Record == null)
         {
-            Record = new LinkFragment()
+            RecordInternal = new LinkFragment()
                 {
                     Id = Guid.NewGuid()
                 };
@@ -43,6 +44,13 @@
         else
         {
             Update = true;
+            RecordInternal = new LinkFragment()
+            {
+                Id = Record.Id,
+                Name = Record.Name,
+                FragmentType = Record.FragmentType,
+                Target = Record.Target
+            };
         }
     }
 
@@ -50,11 +58,6 @@
 
     private void Save()
     {
-        if (Record == null)
-        {
-            return;
-        }
-
-        MudDialog?.Close(DialogResult.Ok(Record));
+        MudDialog?.Close(DialogResult.Ok(RecordInternal));
     }
 }

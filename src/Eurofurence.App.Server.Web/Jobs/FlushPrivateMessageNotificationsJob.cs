@@ -21,13 +21,13 @@ namespace Eurofurence.App.Server.Web.Jobs
             _privateMessageService = privateMessageService;
         }
 
-        public Task Execute(IJobExecutionContext context)
+        public async Task Execute(IJobExecutionContext context)
         {
             _logger.LogDebug($"Starting job {context.JobDetail.Key.Name}");
 
             try
             {
-                var count = _privateMessageService.FlushPrivateMessageQueueNotifications().Result;
+                var count = await _privateMessageService.FlushPrivateMessageQueueNotifications();
                 if (count > 0)
                 {
                     _logger.LogInformation($"Flushed {count} messages");
@@ -37,8 +37,6 @@ namespace Eurofurence.App.Server.Web.Jobs
             {
                 _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }
-
-            return Task.CompletedTask;
         }
     }
 }
