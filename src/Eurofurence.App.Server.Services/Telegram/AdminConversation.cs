@@ -423,9 +423,10 @@ namespace Eurofurence.App.Server.Services.Telegram
                 .Distinct()
                 .CountAsync();
 
-            var groups = _appDbContext.DeviceIdentities
+            var groups = await _appDbContext.DeviceIdentities
                 .AsNoTracking()
-                .GroupBy(x => x.DeviceType);
+                .GroupBy(x => x.DeviceType)
+                .ToListAsync();
 
             var message = new StringBuilder();
             message.AppendLine(
