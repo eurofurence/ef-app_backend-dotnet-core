@@ -117,7 +117,7 @@ public class BotService : BackgroundService, IUpdateHandler
             parseMode: ParseMode.Markdown
         );
     }
-    
+
     private async Task OnTableRegistrationAsync(string chatId, TableRegistrationRecord record)
     {
         var message = await _client.SendTextMessageAsync(
@@ -209,12 +209,12 @@ public class BotService : BackgroundService, IUpdateHandler
             Guid record;
             lock (_tableRegistrations)
             {
-                _tableRegistrations.TryGetValue(callbackQuery.Message.MessageId, out record);
+                _tableRegistrations.Remove(callbackQuery.Message.MessageId, out record);
             }
 
             if (record == Guid.Empty)
             {
-                await GetOrCreateConversation(callbackQuery.From.Id).OnCallbackQueryAsync(callbackQuery);   
+                await GetOrCreateConversation(callbackQuery.From.Id).OnCallbackQueryAsync(callbackQuery);
             }
             else
             {
@@ -348,82 +348,32 @@ public class BotService : BackgroundService, IUpdateHandler
         CancellationToken cancellationToken)
     {
         var record = await _tableRegistrationService.FindOneAsync(recordId, cancellationToken);
-        if (record is null)
+
+        if (record?.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
         {
-            await _client.EditMessageReplyMarkupAsync(
-                callbackQuery.Message.Chat.Id,
-                callbackQuery.Message.MessageId,
-                null,
-                cancellationToken
-            );
-            
-            lock (_tableRegistrations)
+            switch (callbackQuery.Data)
             {
-                _tableRegistrations.Remove(callbackQuery.Message.MessageId);
-            }
-            
-            return;
-        }
-        
-        switch (record.State)
-        {
-            case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                if (callbackQuery.Data == "Approve")
-                {
+                case "Approve":
                     await _tableRegistrationService.ApproveByIdAsync(
                         recordId,
                         $"Telegram:@{callbackQuery.From.Username}"
                     );
-                }
-                else if (callbackQuery.Data == "Reject")
-                {
+                    break;
+
+                case "Reject":
                     await _tableRegistrationService.RejectByIdAsync(
                         recordId,
                         $"Telegram:@{callbackQuery.From.Username}"
                     );
-
-                    await _client.EditMessageReplyMarkupAsync(
-                        callbackQuery.Message.Chat.Id,
-                        callbackQuery.Message.MessageId,
-                        new InlineKeyboardMarkup(
-                            InlineKeyboardButton.WithCallbackData("Delete")
-                        ),
-                        cancellationToken
-                    );
-                    
-                    return;
-                }
-                break;
-            
-            case TableRegistrationRecord.RegistrationStateEnum.Rejected:
-                if (callbackQuery.Data == "Delete")
-                {
-                    if (record.Image is { } image)
-                    {
-                        await _imageService.DeleteOneAsync(
-                            image.Id,
-                            cancellationToken
-                        );
-                    }
-                    
-                    await _tableRegistrationService.DeleteOneAsync(
-                        recordId,
-                        cancellationToken
-                    );
-                }
-                break;
+                    break;
+            }
         }
-        
+
         await _client.EditMessageReplyMarkupAsync(
             callbackQuery.Message.Chat.Id,
             callbackQuery.Message.MessageId,
             null,
             cancellationToken
         );
-        
-        lock (_tableRegistrations)
-        {
-            _tableRegistrations.Remove(callbackQuery.Message.MessageId);
-        }
     }
 }
