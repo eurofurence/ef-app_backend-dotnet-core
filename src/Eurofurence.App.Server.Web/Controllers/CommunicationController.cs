@@ -7,6 +7,8 @@ using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
+using Eurofurence.App.Server.Web.Identity;
+using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -119,7 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(Roles = "Admin,PrivateMessageSender")]
+        [Authorize(AuthenticationSchemes = $"{OAuth2IntrospectionDefaults.AuthenticationScheme},{ApiKeyAuthenticationDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages/:byIdentityId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageIdentityAsync(
@@ -141,7 +143,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("PrivateMessages/{messageId}/Status")]
-        [Authorize(Roles = "Admin,PrivateMessageSender")]
         [ProducesResponseType(typeof(PrivateMessageStatus), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<PrivateMessageStatus> GetPrivateMessageStatusAsync(

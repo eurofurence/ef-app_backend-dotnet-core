@@ -38,6 +38,7 @@ using MapsterMapper;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using dotAPNS.AspNetCore;
+using System.Collections.Generic;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -133,6 +134,14 @@ namespace Eurofurence.App.Server.Web
                     Type = SecuritySchemeType.Http
                 });
 
+                options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+                {
+                    Name = ApiKeyAuthenticationDefaults.HeaderName,
+                    Description = "Authenticate with a static API key",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+
                 //options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Domain.Model.xml");
@@ -171,7 +180,9 @@ namespace Eurofurence.App.Server.Web
                 .AddOAuth2Introspection(options =>
                 {
                     options.EnableCaching = true;
-                });
+                }).AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationDefaults.AuthenticationScheme,
+                options => Configuration.GetSection(ApiKeyAuthenticationDefaults.AuthenticationScheme).Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>()
+            );
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
