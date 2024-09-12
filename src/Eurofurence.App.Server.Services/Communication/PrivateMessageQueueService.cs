@@ -24,7 +24,8 @@ namespace Eurofurence.App.Server.Services.Communication
         }
 
         public int GetQueueSize() {
-            return _notificationQueue.Count;
+            lock (_notificationQueue)
+                return _notificationQueue.Count;
         }
     }
 }
