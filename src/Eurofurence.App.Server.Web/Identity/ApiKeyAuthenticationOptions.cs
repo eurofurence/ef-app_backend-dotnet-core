@@ -11,6 +11,6 @@ public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
         public string Key { get; set;}
         public string PrincipalName { get; set;}
         public DateTime ValidUntil { get; set;}
-        public string[] Roles { get; set;}
+        public IList<string> Roles { get; set;}
     }
 }

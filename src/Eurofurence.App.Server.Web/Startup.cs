@@ -177,12 +177,14 @@ namespace Eurofurence.App.Server.Web
 
             services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();
             services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
-                .AddOAuth2Introspection(options =>
-                {
-                    options.EnableCaching = true;
-                }).AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationDefaults.AuthenticationScheme,
-                options => Configuration.GetSection(ApiKeyAuthenticationDefaults.AuthenticationScheme).Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>()
-            );
+                .AddOAuth2Introspection(options => { options.EnableCaching = true; })
+                .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>
+                (ApiKeyAuthenticationDefaults.AuthenticationScheme,
+                    options =>
+                    {
+                        options.ApiKeys = Configuration.GetSection("ApiKeys")
+                            .Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>();
+                    });
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
