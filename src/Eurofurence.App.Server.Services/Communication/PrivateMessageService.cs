@@ -17,18 +17,19 @@ namespace Eurofurence.App.Server.Services.Communication
     {
         private readonly AppDbContext _appDbContext;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
-
-        private readonly ConcurrentQueue<QueuedNotificationParameters> _notificationQueue = new();
+        private readonly IPrivateMessageQueueService _privateMessageQueueService;
 
         public PrivateMessageService(
             AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
-            IPushNotificationChannelManager pushNotificationChannelManager
+            IPushNotificationChannelManager pushNotificationChannelManager,
+            IPrivateMessageQueueService privateMessageQueueService
         )
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
             _pushNotificationChannelManager = pushNotificationChannelManager;
+            _privateMessageQueueService = privateMessageQueueService;
         }
 
         public async Task<List<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(
@@ -106,7 +107,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
             await InsertOneAsync(entity, cancellationToken);
 
-            _notificationQueue.Enqueue(new QueuedNotificationParameters()
+            _privateMessageQueueService.EnqueueMessage(new IPrivateMessageQueueService.QueuedNotificationParameters()
             {
                 RecipientRegSysId = request.RecipientUid,
                 ToastTitle = request.ToastTitle,
@@ -135,7 +136,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
             await InsertOneAsync(entity, cancellationToken);
 
-            _notificationQueue.Enqueue(new QueuedNotificationParameters()
+            _privateMessageQueueService.EnqueueMessage(new IPrivateMessageQueueService.QueuedNotificationParameters()
             {
                 RecipientIdentityId = request.RecipientUid,
                 ToastTitle = request.ToastTitle,
@@ -188,7 +189,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
             for (int i = 0; i < messageCount; i++)
             {
-                if (_notificationQueue.TryDequeue(out QueuedNotificationParameters parameters))
+                if (_privateMessageQueueService.DequeueMessage() is { } parameters)
                 {
                     if (!string.IsNullOrWhiteSpace(parameters.RecipientRegSysId))
                     {
@@ -224,7 +225,7 @@ namespace Eurofurence.App.Server.Services.Communication
 
         public int GetNotificationQueueSize()
         {
-            return _notificationQueue.Count;
+            return _privateMessageQueueService.GetQueueSize();
         }
     }
 }

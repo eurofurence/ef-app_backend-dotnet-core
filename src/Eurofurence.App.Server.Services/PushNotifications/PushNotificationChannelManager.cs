@@ -31,7 +31,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly ApnsConfiguration _apnsConfiguration;
         private readonly ExpoConfiguration _expoConfiguration;
         private readonly IApnsService _apnsService;
-        private readonly ApnsJwtOptions _apnsJwtOptions;
         private readonly ILogger _logger;
 
         public PushNotificationChannelManager(
@@ -57,28 +56,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             if (_firebaseConfiguration.IsConfigured)
             {
-                _logger.LogInformation("Configuring Firebase Cloud Messaging (FCM)…");
-                var googleCredential = GoogleCredential.FromFile(_firebaseConfiguration.GoogleServiceCredentialKeyFile);
-                if (FirebaseApp.DefaultInstance == null)
-                {
-                    FirebaseApp.Create(new AppOptions { Credential = googleCredential });
-                }
-
                 _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
-            }
-
-            if (_apnsConfiguration.IsConfigured)
-            {
-                _logger.LogInformation("Configuring Apple Push Notification service (APNs)…");
-                if (_apnsConfiguration.UseDevelopmentServer)
-                    _logger.LogInformation("Using APNs development servers!");
-                _apnsJwtOptions = new ApnsJwtOptions()
-                {
-                    BundleId = apnsConfiguration.BundleId,
-                    CertContent = apnsConfiguration.CertContent,
-                    KeyId = apnsConfiguration.KeyId,
-                    TeamId = apnsConfiguration.TeamId,
-                };
             }
         }
 
@@ -437,7 +415,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             return new ApnsResult()
             {
                 DeviceIdentity = deviceIdentity,
-                ApnsResponse = await _apnsService.SendPush(applePush, _apnsJwtOptions)
+                ApnsResponse = await _apnsService.SendPush(applePush, _apnsConfiguration.ApnsJwtOptions)
             };
         }
 
