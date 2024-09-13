@@ -184,6 +184,9 @@ namespace Eurofurence.App.Server.Web
                     {
                         options.ApiKeys = Configuration.GetSection("ApiKeys")
                             .Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>();
+                        foreach (var apiKey in options.ApiKeys ?? []) {
+                            _logger.LogInformation($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
+                        }
                     });
 
             services.AddControllersWithViews()

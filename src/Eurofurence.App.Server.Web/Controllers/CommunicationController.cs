@@ -88,7 +88,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(Roles = "Admin,PrivateMessageSender")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages")]
         [HttpPost("PrivateMessages/:byRegistrationId")]
         [ProducesResponseType(typeof(Guid), 200)]
@@ -121,7 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="Request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(AuthenticationSchemes = $"{OAuth2IntrospectionDefaults.AuthenticationScheme},{ApiKeyAuthenticationDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages/:byIdentityId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageIdentityAsync(

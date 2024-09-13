@@ -18,14 +18,14 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
     {
         var requestApiKey = Context.Request.Headers[ApiKeyAuthenticationDefaults.HeaderName].FirstOrDefault();
 
-        Logger.LogInformation("Attempting API key authentication…");
+        if (Options.ApiKeys is null || Options.ApiKeys.Count == 0 || requestApiKey is null) return Task.FromResult(AuthenticateResult.Fail("Invalid X-API-Key."));
 
-        if (requestApiKey is null) return Task.FromResult(AuthenticateResult.Fail("No API key provided."));
-
-        Logger.LogInformation($"Found API key: {requestApiKey}");
+        Logger.LogDebug("Attempting API key authentication…");
 
         if (Options.ApiKeys.FirstOrDefault(apiKey => apiKey.Key == requestApiKey && DateTime.Now.CompareTo(apiKey.ValidUntil) <= 0) is { } apiKeyOptions)
         {
+            Logger.LogInformation($"Configured API key for {apiKeyOptions.PrincipalName} with roles {string.Join(',', apiKeyOptions.Roles)} valid until {apiKeyOptions.ValidUntil}.");
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, apiKeyOptions.PrincipalName)
