@@ -74,7 +74,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             var existingEntity = await _appDbContext.Dealers
                 .Include(dealerRecord => dealerRecord.Links)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(ke => ke.Id == entity.Id, cancellationToken);
+                .FirstOrDefaultAsync(d => d.Id == entity.Id, cancellationToken);
 
             foreach (var existingLink in existingEntity.Links)
             {
@@ -99,6 +99,28 @@ namespace Eurofurence.App.Server.Services.Dealers
             }
 
             await base.ReplaceOneAsync(entity, cancellationToken);
+        }
+
+        public override async Task DeleteOneAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var existingEntity = await _appDbContext.Dealers
+                .Include(d => d.Links)
+                .Include(d => d.ArtistImage)
+                .Include(d => d.ArtistThumbnailImage)
+                .Include(d => d.ArtPreviewImage)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+
+            if (existingEntity.Links.Count > 0)
+            {
+                _appDbContext.LinkFragments.RemoveRange(existingEntity.Links);
+                await _appDbContext.SaveChangesAsync(cancellationToken);
+            }
+            if (existingEntity.ArtistImageId is { } artistImageId) await _imageService.DeleteOneAsync(artistImageId, cancellationToken);
+            if (existingEntity.ArtistThumbnailImageId is { } artistThumbnailImageId) await _imageService.DeleteOneAsync(artistThumbnailImageId, cancellationToken);
+            if (existingEntity.ArtPreviewImageId is { } artPreviewImageId) await _imageService.DeleteOneAsync(artPreviewImageId, cancellationToken);
+
+            await base.DeleteOneAsync(id, cancellationToken);
         }
 
         public override async Task<DeltaResponse<DealerRecord>> GetDeltaResponseAsync(
@@ -249,7 +271,7 @@ namespace Eurofurence.App.Server.Services.Dealers
                 var existingRecords = FindAll();
 
                 var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) =>
-                    list.SingleOrDefault(a => a.RegistrationNumber == source.RegistrationNumber));
+                    list.SingleOrDefault(d => d.RegistrationNumber == source.RegistrationNumber));
 
                 patch
                     .Map(s => s.RegistrationNumber, t => t.RegistrationNumber)
@@ -280,14 +302,9 @@ namespace Eurofurence.App.Server.Services.Dealers
                 _appDbContext.ChangeTracker.Clear();
                 await ApplyPatchOperationAsync(diff, cancellationToken);
 
-                _logger.LogDebug(LogEvents.Import, $"Added: {diff.Count(a => a.Action == ActionEnum.Add)}");
-                _logger.LogDebug(LogEvents.Import, $"Deleted: {diff.Count(a => a.Action == ActionEnum.Delete)}");
-                _logger.LogDebug(LogEvents.Import, $"Updated: {diff.Count(a => a.Action == ActionEnum.Update)}");
-                _logger.LogDebug(LogEvents.Import, $"Not Modified: {diff.Count(a => a.Action == ActionEnum.NotModified)}");
-
                 File.Delete(dealerPackagePath);
                 _logger.LogInformation(LogEvents.Import,
-                    $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully.");
+                    $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully with {diff.Count(a => a.Action == ActionEnum.NotModified)} unmodified.");
             }
             finally
             {
@@ -385,12 +402,8 @@ namespace Eurofurence.App.Server.Services.Dealers
             await stream.CopyToAsync(ms, cancellationToken);
             if (existingImage != null)
             {
-                if (imageEntry.Length != existingImage.SizeInBytes)
-                {
-                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken: cancellationToken);
-                }
-
-                return existingImage.Id;
+                var updatedImageRecord = await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken: cancellationToken);
+                return updatedImageRecord.Id;
             }
 
             var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken: cancellationToken);
