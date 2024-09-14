@@ -98,7 +98,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (Request == null) return BadRequest();
 
-            if (User.IsInRole("Attendee"))
+            // Only admins may set the AuthorName via the API
+            if (!User.IsInRole("Admin"))
             {
                 Request.AuthorName = User.GetName();
             }
@@ -130,7 +131,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (Request == null) return BadRequest();
 
-            if (User.IsInRole("Attendee"))
+            // Only admins may set the AuthorName via the API
+            if (!User.IsInRole("Admin"))
             {
                 Request.AuthorName = User.GetName();
             }
