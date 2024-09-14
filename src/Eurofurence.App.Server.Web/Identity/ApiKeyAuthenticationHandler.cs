@@ -28,7 +28,8 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, apiKeyOptions.PrincipalName)
+                new Claim(ClaimTypes.Name, apiKeyOptions.PrincipalName),
+                new Claim("sub", apiKeyOptions.PrincipalName)
             };
 
             foreach (var role in apiKeyOptions.Roles)
