@@ -28,7 +28,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, apiKeyOptions.PrincipalName),
+                new Claim("name", apiKeyOptions.PrincipalName),
                 new Claim("sub", $"{ApiKeyAuthenticationDefaults.AuthenticationScheme}:{apiKeyOptions.PrincipalName}"),
                 new Claim(ClaimTypes.Role, ApiKeyAuthenticationDefaults.AuthenticationScheme)
             };
