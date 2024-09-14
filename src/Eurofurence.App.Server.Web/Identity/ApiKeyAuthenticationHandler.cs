@@ -24,12 +24,13 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
         if (Options.ApiKeys.FirstOrDefault(apiKey => apiKey.Key == requestApiKey && DateTime.Now.CompareTo(apiKey.ValidUntil) <= 0) is { } apiKeyOptions)
         {
-            Logger.LogInformation($"Configured API key for {apiKeyOptions.PrincipalName} with roles {string.Join(',', apiKeyOptions.Roles)} valid until {apiKeyOptions.ValidUntil}.");
+            Logger.LogInformation($"Matched API key for {apiKeyOptions.PrincipalName} with roles {string.Join(',', apiKeyOptions.Roles)} valid until {apiKeyOptions.ValidUntil}.");
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, apiKeyOptions.PrincipalName),
-                new Claim("sub", apiKeyOptions.PrincipalName)
+                new Claim("name", apiKeyOptions.PrincipalName),
+                new Claim("sub", $"{ApiKeyAuthenticationDefaults.AuthenticationScheme}:{apiKeyOptions.PrincipalName}"),
+                new Claim(ClaimTypes.Role, ApiKeyAuthenticationDefaults.AuthenticationScheme)
             };
 
             foreach (var role in apiKeyOptions.Roles)

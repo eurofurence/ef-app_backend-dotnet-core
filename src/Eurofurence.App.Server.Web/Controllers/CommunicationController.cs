@@ -85,7 +85,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     with the same recipient uid, it will push a toast message to those devices.
         ///     The toast message content is defined by the `ToastTitle` and `ToastMessage` properties.
         /// </remarks>
-        /// <param name="Request"></param>
+        /// <param name="request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
         [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
@@ -93,18 +93,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("PrivateMessages/:byRegistrationId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageAsync(
-            [FromBody] SendPrivateMessageByRegSysRequest Request,
+            [FromBody] SendPrivateMessageByRegSysRequest request,
             CancellationToken cancellationToken = default)
         {
-            if (Request == null) return BadRequest();
+            if (request == null) return BadRequest();
 
-            if (User.IsInRole("Attendee"))
+            // Only admins may set the AuthorName via the API
+            if (!User.IsInRole("Admin") || string.IsNullOrWhiteSpace(request.AuthorName))
             {
-                Request.AuthorName = User.GetName();
+                request.AuthorName = User.GetName();
             }
 
             return Json(await _privateMessageService.SendPrivateMessageAsync(
-                Request,
+                request,
                 User.GetSubject(),
                 cancellationToken
             ));
@@ -118,25 +119,26 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     with the same recipient uid, it will push a toast message to those devices.
         ///     The toast message content is defined by the `ToastTitle` and `ToastMessage` properties.
         /// </remarks>
-        /// <param name="Request"></param>
+        /// <param name="request"></param>
         /// <returns>The `Id` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
         [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages/:byIdentityId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageIdentityAsync(
-            [FromBody] SendPrivateMessageByIdentityRequest Request,
+            [FromBody] SendPrivateMessageByIdentityRequest request,
             CancellationToken cancellationToken = default)
         {
-            if (Request == null) return BadRequest();
+            if (request == null) return BadRequest();
 
-            if (User.IsInRole("Attendee"))
+            // Only admins may set the AuthorName via the API
+            if (!User.IsInRole("Admin") || string.IsNullOrWhiteSpace(request.AuthorName))
             {
-                Request.AuthorName = User.GetName();
+                request.AuthorName = User.GetName();
             }
 
             return Json(await _privateMessageService.SendPrivateMessageAsync(
-                Request,
+                request,
                 User.GetSubject(),
                 cancellationToken
             ));
