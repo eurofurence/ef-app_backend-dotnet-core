@@ -24,7 +24,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
         if (Options.ApiKeys.FirstOrDefault(apiKey => apiKey.Key == requestApiKey && DateTime.Now.CompareTo(apiKey.ValidUntil) <= 0) is { } apiKeyOptions)
         {
-            Logger.LogInformation($"Configured API key for {apiKeyOptions.PrincipalName} with roles {string.Join(',', apiKeyOptions.Roles)} valid until {apiKeyOptions.ValidUntil}.");
+            Logger.LogInformation($"Matched API key for {apiKeyOptions.PrincipalName} with roles {string.Join(',', apiKeyOptions.Roles)} valid until {apiKeyOptions.ValidUntil}.");
 
             var claims = new List<Claim>
             {
