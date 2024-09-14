@@ -38,6 +38,7 @@ using MapsterMapper;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using dotAPNS.AspNetCore;
+using System.Collections.Generic;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -133,6 +134,14 @@ namespace Eurofurence.App.Server.Web
                     Type = SecuritySchemeType.Http
                 });
 
+                options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+                {
+                    Name = ApiKeyAuthenticationDefaults.HeaderName,
+                    Description = "Authenticate with a static API key",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+
                 //options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Domain.Model.xml");
@@ -168,10 +177,17 @@ namespace Eurofurence.App.Server.Web
 
             services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();
             services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
-                .AddOAuth2Introspection(options =>
-                {
-                    options.EnableCaching = true;
-                });
+                .AddOAuth2Introspection(options => { options.EnableCaching = true; })
+                .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>
+                (ApiKeyAuthenticationDefaults.AuthenticationScheme,
+                    options =>
+                    {
+                        options.ApiKeys = Configuration.GetSection("ApiKeys")
+                            .Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>();
+                        foreach (var apiKey in options.ApiKeys ?? []) {
+                            _logger.LogInformation($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
+                        }
+                    });
 
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using Eurofurence.App.Server.Web.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
@@ -51,7 +52,24 @@ namespace Eurofurence.App.Server.Web.Swagger
                     }
                 };
 
+            var apiKeyRequirements =
+               new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = ApiKeyAuthenticationDefaults.AuthenticationScheme
+                            }
+                        },
+                        new List<string>()
+                    }
+                };
+
             operation.Security.Add(oAuthRequirements);
+            operation.Security.Add(apiKeyRequirements);
             operation.Parameters = operation.Parameters ?? new List<OpenApiParameter>();
 
             var existingDescription = operation.Description;
