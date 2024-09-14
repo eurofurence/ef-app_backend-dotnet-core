@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -385,12 +385,8 @@ namespace Eurofurence.App.Server.Services.Dealers
             await stream.CopyToAsync(ms, cancellationToken);
             if (existingImage != null)
             {
-                if (imageEntry.Length != existingImage.SizeInBytes)
-                {
-                    await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken: cancellationToken);
-                }
-
-                return existingImage.Id;
+                var updatedImageRecord = await _imageService.ReplaceImageAsync(existingImage.Id, internalReference, ms, cancellationToken: cancellationToken);
+                return updatedImageRecord.Id;
             }
 
             var result = await _imageService.InsertImageAsync(internalReference, ms, cancellationToken: cancellationToken);
