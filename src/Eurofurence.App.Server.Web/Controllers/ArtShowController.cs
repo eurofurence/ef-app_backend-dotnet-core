@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// Import Art Show results for bidders (CSV)
         /// </summary>
         /// <remarks>
-        /// Imports the Art Show result CSV for bidders (`RegNo, ASIDNO, ArtistName, ArtPieceTitle, Status ["Sold", Auction"]`).<br /><br />
+        /// Imports the Art Show result CSV for bidders (`RegNo,ASIDNO,ArtistName,ArtPieceTitle,Status,FinalBidAmount`), where `Status` may only be one of `Auction` or `Sold`.<br /><br />
         /// There's a row-hash built from the mentioned import fields. If a row with the same hash is already present, it will be skipped.
         /// (Importing the same data multiple times does not lead to duplicates.)
         /// </remarks> 
@@ -96,7 +96,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// Import Art Show results for agents (CSV)
         /// </summary>
         /// <remarks>
-        /// Imports the Art Show result CSV for agents (`AgentBadgeNo, AgentName, ArtistName, TotalCashAmount, ExhibitsSold, ExhibitsUnsold, ExhibitsToAuction`).<br /><br />
+        /// Imports the Art Show result CSV for agents (`AgentBadgeNo,AgentName,ArtistName,TotalCashAmount,ExhibitsSold,ExhibitsUnsold,ExhibitsToAuction`).<br /><br />
         /// There's a row-hash built from the mentioned import fields. If a row with the same hash is already present, it will be skipped.
         /// (Importing the same data multiple times does not lead to duplicates.)
         /// </remarks> 

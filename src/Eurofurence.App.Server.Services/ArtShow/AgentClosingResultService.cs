@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -118,7 +118,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 .AppendLine($"Dear {result.AgentName},\n\nWe'd like to inform you about the Art Show results for artist {result.ArtistName}.\n")
                 .AppendLine($"Of {result.ExhibitsTotal} total exhibits:\n\n- {result.ExhibitsUnsold} remain unsold  \n- {result.ExhibitsSold} were sold (before/during closing)  \n- {result.ExhibitsToAuction} are going to the art auction  \n")
                 .AppendLine($"Your expected payout as of now is {result.TotalCashAmount} € (charity percentages, where applicable, already deducted).\n\nIf any exhibits are heading to the auction, the actual payout amount may still increase.\n")
-                .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) in the Art Show during Sales & Unsold Art Pickup times and collect your payout during Artists' Payout times.\n\nThank you!");
+                .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) in the Art Show during Sales & Unsold Art Pickup times and collect your payout during Artists' Payout times.\n\nThank you!\n\n(Disclaimer: expected payout is purely informative and not guaranteed to be accurate, please double check with the posted listings or contact the Art Show team in case of irregularities.)");
 
             var request = new SendPrivateMessageByRegSysRequest()
             {
