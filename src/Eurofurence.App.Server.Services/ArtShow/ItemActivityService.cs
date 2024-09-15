@@ -187,9 +187,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
             }
 
             if (totalDues > 0)
-                message.AppendLine($"\nYour grand total is: {totalDues} €");
+                message.AppendLine($"\nYour expected grand total is: {totalDues} €");
 
-            message.AppendLine("\nPlease make sure you have sufficient cash with you and pay your items at the Security Desk in the foyer before proceeding to pick them up at the Art Show during Sales 6 Pickup. The times for Sales & Pickup are announced in the event schedule and can be found in your conbook, the schedule on our website or right here in the mobile app.\n\nThank you!\n\n(Disclaimer: grand total only includes items with final bid in listing above, won items and final bid amounts are purely informative and not guaranteed to be accurate, please double check with the posted listings or contact the Art Show team in case of irregularities.)");
+            message.AppendLine("\nPlease make sure you have sufficient cash with you and pay your items at the Security Desk in the foyer before proceeding to pick them up at the Art Show during Sales 6 Pickup. The times for Sales & Pickup are announced in the event schedule and can be found in your conbook, the schedule on our website or right here in the mobile app.\n\nThank you!\n\n(Disclaimer: expected grand total only includes items with final bid in listing above, won items and final bid amounts are purely informative and not guaranteed to be accurate, please double check with the posted listings or contact the Art Show team in case of irregularities.)");
 
             var request = new SendPrivateMessageByRegSysRequest()
             {
