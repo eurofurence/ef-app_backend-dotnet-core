@@ -49,9 +49,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 csv.Context.Configuration.Delimiter = ",";
                 csv.Context.Configuration.HasHeaderRecord = false;
 
-                var csvRecords = await csv.GetRecordsAsync<AgentClosingResultImportRow>().ToListAsync();
-
-                foreach (var csvRecord in csvRecords)
+                await foreach (var csvRecord in csv.GetRecordsAsync<AgentClosingResultImportRow>())
                 {
                     var existingRecord = await _appDbContext.AgentClosingResults.AsNoTracking().FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
                     if (existingRecord != null)
