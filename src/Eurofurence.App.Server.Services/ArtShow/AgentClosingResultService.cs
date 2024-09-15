@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -43,11 +43,10 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 await _semaphore.WaitAsync();
                 
-                var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
+                var csv = new CsvReader(logReader, CultureInfo.InvariantCulture);
 
                 csv.Context.RegisterClassMap<AgentClosingResultImportRowClassMap>();
                 csv.Context.Configuration.Delimiter = ",";
-                csv.Context.Configuration.HasHeaderRecord = false;
 
                 await foreach (var csvRecord in csv.GetRecordsAsync<AgentClosingResultImportRow>())
                 {
@@ -87,8 +86,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
             return importResult;
         }
 
-        private IQueryable<AgentClosingResultRecord> GetUnprocessedImportRows()
-            => _appDbContext.AgentClosingResults.Where(a => a.NotificationDateTimeUtc == null);
+        private IList<AgentClosingResultRecord> GetUnprocessedImportRows()
+            => _appDbContext.AgentClosingResults.Where(a => a.NotificationDateTimeUtc == null).ToList();
 
 
         public async Task ExecuteNotificationRunAsync()
@@ -99,9 +98,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
                 var newNotifications = GetUnprocessedImportRows();
 
-                var tasks = newNotifications.AsEnumerable().Select(SendAgentClosingResultNotificationAsync);
-
-                await Task.WhenAll(tasks);
+                foreach (var newNotification in newNotifications)
+                    await SendAgentClosingResultNotificationAsync(newNotification);
             }
             finally
             {
@@ -135,7 +133,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             result.PrivateMessageId = privateMessageId;
             result.NotificationDateTimeUtc = DateTime.UtcNow;
 
-            _appDbContext.AgentClosingResults.Update(result);
+            _appDbContext.Update(result);
             await _appDbContext.SaveChangesAsync();
         }
 

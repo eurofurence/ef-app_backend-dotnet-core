@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
         public ItemActivityService(
             AppDbContext appDbContext,
-            ConventionSettings conventionSettings, 
+            ConventionSettings conventionSettings,
             IPrivateMessageService privateMessageService
             )
         {
@@ -38,12 +38,11 @@ namespace Eurofurence.App.Server.Services.ArtShow
         public async Task<ImportResult> ImportActivityLogAsync(TextReader logReader)
         {
             var importResult = new ImportResult();
-            var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
+            var csv = new CsvReader(logReader, CultureInfo.InvariantCulture);
 
             csv.Context.RegisterClassMap<LogImportRowClassMap>();
             csv.Context.Configuration.Delimiter = ",";
-            csv.Context.Configuration.HasHeaderRecord = false;
-            
+
             await foreach (var csvRecord in csv.GetRecordsAsync<LogImportRow>())
             {
                 var existingRecord = await _appDbContext.ItemActivitys.AsNoTracking().FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
@@ -109,13 +108,11 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
                 var notificationBundles = BuildNotificationBundles();
 
-                var tasks = notificationBundles.Select(async bundle =>
+                foreach (var bundle in notificationBundles)
                 {
                     if (bundle.ItemsSold?.Count > 0) await SendItemsSoldNotificationAsync(bundle.RecipientUid, bundle.ItemsSold);
                     if (bundle.ItemsToAuction?.Count > 0) await SendItemsToAuctionNotificationAsync(bundle.RecipientUid, bundle.ItemsToAuction);
-                });
-
-                await Task.WhenAll(tasks);
+                }
             }
             finally
             {
