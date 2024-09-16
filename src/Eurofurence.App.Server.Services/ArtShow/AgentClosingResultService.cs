@@ -43,15 +43,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
             {
                 await _semaphore.WaitAsync();
                 
-                var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
+                var csv = new CsvReader(logReader, CultureInfo.InvariantCulture);
 
                 csv.Context.RegisterClassMap<AgentClosingResultImportRowClassMap>();
                 csv.Context.Configuration.Delimiter = ",";
-                csv.Context.Configuration.HasHeaderRecord = false;
 
-                var csvRecords = await csv.GetRecordsAsync<AgentClosingResultImportRow>().ToListAsync();
-
-                foreach (var csvRecord in csvRecords)
+                await foreach (var csvRecord in csv.GetRecordsAsync<AgentClosingResultImportRow>())
                 {
                     var existingRecord = await _appDbContext.AgentClosingResults.AsNoTracking().FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
                     if (existingRecord != null)
@@ -89,8 +86,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
             return importResult;
         }
 
-        private IQueryable<AgentClosingResultRecord> GetUnprocessedImportRows()
-            => _appDbContext.AgentClosingResults.Where(a => a.NotificationDateTimeUtc == null);
+        private IList<AgentClosingResultRecord> GetUnprocessedImportRows()
+            => _appDbContext.AgentClosingResults.Where(a => a.NotificationDateTimeUtc == null).ToList();
 
 
         public async Task ExecuteNotificationRunAsync()
@@ -101,9 +98,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
                 var newNotifications = GetUnprocessedImportRows();
 
-                var tasks = newNotifications.AsEnumerable().Select(SendAgentClosingResultNotificationAsync);
-
-                await Task.WhenAll(tasks);
+                foreach (var newNotification in newNotifications)
+                    await SendAgentClosingResultNotificationAsync(newNotification);
             }
             finally
             {
@@ -119,8 +115,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
             message
                 .AppendLine($"Dear {result.AgentName},\n\nWe'd like to inform you about the Art Show results for artist {result.ArtistName}.\n")
                 .AppendLine($"Of {result.ExhibitsTotal} total exhibits:\n\n- {result.ExhibitsUnsold} remain unsold  \n- {result.ExhibitsSold} were sold (before/during closing)  \n- {result.ExhibitsToAuction} are going to the art auction  \n")
-                .AppendLine($"Your expected payout as of now is {result.TotalCashAmount} € (charity percentages, where applicable, already deducted).\n\nIf any exhibits are heading to the auction, the actual payout amount may still increase.\n")
-                .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) in the Art Show during Sales & Unsold Art Pickup times and collect your payout during Artists' Payout times.\n\nThank you!");
+                .AppendLine($"Your expected payout as of now is {result.TotalCashAmount:.00} € (charity percentages, where applicable, already deducted).\n\nIf any exhibits are heading to the auction, the actual payout amount may still increase.\n")
+                .AppendLine($"Please pick up any unsold exhibits ({result.ExhibitsUnsold}) in the Art Show during Sales & Unsold Art Pickup times and collect your payout during Artists' Payout times.\n\nThank you!\n\n(Disclaimer: expected payout is purely informative and not guaranteed to be accurate, please double check with the posted listings or contact the Art Show team in case of irregularities.)");
 
             var request = new SendPrivateMessageByRegSysRequest()
             {
@@ -137,7 +133,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             result.PrivateMessageId = privateMessageId;
             result.NotificationDateTimeUtc = DateTime.UtcNow;
 
-            _appDbContext.AgentClosingResults.Update(result);
+            _appDbContext.Update(result);
             await _appDbContext.SaveChangesAsync();
         }
 

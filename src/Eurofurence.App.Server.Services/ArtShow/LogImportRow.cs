@@ -10,8 +10,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
         public string ArtistName { get; set; }
         public string ArtPieceTitle { get; set; }
         public string Status { get; set; }
+        public int? FinalBidAmount { get; set; }
 
         public Lazy<string> Hash => new Lazy<string>(
-            () => Hashing.ComputeHashSha1(RegNo, ASIDNO, ArtistName, ArtPieceTitle, Status));
+            () => Hashing.ComputeHashSha1(RegNo, ASIDNO, ArtistName, ArtPieceTitle, Status, FinalBidAmount ?? -1));
     }
 }

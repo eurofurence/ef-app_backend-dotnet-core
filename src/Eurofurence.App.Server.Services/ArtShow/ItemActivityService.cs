@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
         public ItemActivityService(
             AppDbContext appDbContext,
-            ConventionSettings conventionSettings, 
+            ConventionSettings conventionSettings,
             IPrivateMessageService privateMessageService
             )
         {
@@ -38,15 +38,12 @@ namespace Eurofurence.App.Server.Services.ArtShow
         public async Task<ImportResult> ImportActivityLogAsync(TextReader logReader)
         {
             var importResult = new ImportResult();
-            var csv = new CsvReader(logReader, CultureInfo.CurrentCulture);
+            var csv = new CsvReader(logReader, CultureInfo.InvariantCulture);
 
             csv.Context.RegisterClassMap<LogImportRowClassMap>();
             csv.Context.Configuration.Delimiter = ",";
-            csv.Context.Configuration.HasHeaderRecord = false;
 
-            var csvRecords = await csv.GetRecordsAsync<LogImportRow>().ToListAsync();
-            
-            foreach (var csvRecord in csvRecords)
+            await foreach (var csvRecord in csv.GetRecordsAsync<LogImportRow>())
             {
                 var existingRecord = await _appDbContext.ItemActivitys.AsNoTracking().FirstOrDefaultAsync(a => a.ImportHash == csvRecord.Hash.Value);
                 if (existingRecord != null)
@@ -62,8 +59,9 @@ namespace Eurofurence.App.Server.Services.ArtShow
                     ASIDNO = csvRecord.ASIDNO,
                     ArtistName = csvRecord.ArtistName,
                     ArtPieceTitle = csvRecord.ArtPieceTitle,
-                    Status = (ItemActivityRecord.StatusEnum) Enum.Parse(typeof(ItemActivityRecord.StatusEnum),
+                    Status = (ItemActivityRecord.StatusEnum)Enum.Parse(typeof(ItemActivityRecord.StatusEnum),
                         csvRecord.Status, true),
+                    FinalBidAmount = csvRecord.FinalBidAmount,
                     ImportDateTimeUtc = DateTime.UtcNow,
                     ImportHash = csvRecord.Hash.Value
                 };
@@ -110,13 +108,11 @@ namespace Eurofurence.App.Server.Services.ArtShow
 
                 var notificationBundles = BuildNotificationBundles();
 
-                var tasks = notificationBundles.Select(async bundle =>
+                foreach (var bundle in notificationBundles)
                 {
                     if (bundle.ItemsSold?.Count > 0) await SendItemsSoldNotificationAsync(bundle.RecipientUid, bundle.ItemsSold);
                     if (bundle.ItemsToAuction?.Count > 0) await SendItemsToAuctionNotificationAsync(bundle.RecipientUid, bundle.ItemsToAuction);
-                });
-
-                await Task.WhenAll(tasks);
+                }
             }
             finally
             {
@@ -133,9 +129,17 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 $"{items.Count} item(s) on which you have been the last bidder will be part of the auction.\n");
 
             foreach (var item in items)
-                message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
+            {
+                if (item.FinalBidAmount is { } finalBidAmount && finalBidAmount > 0)
+                {
+                    message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\" with final bid before auction {item.FinalBidAmount} €");
+                }
+                else {
+                    message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
+                }
+            }
 
-            message.AppendLine("\nIf you wish to defend your current bids against other potential higher bids, please attend the auction.\n\nThank you!");
+            message.AppendLine("\nIf you wish to defend your current bids against other potential higher bids, please attend the auction.\n\nThank you!\n\n(Disclaimer: final bid amounts not guaranteed to be accurate, please double check with the posted listings or contact the Art Show team in case of irregularities.)");
 
             var request = new SendPrivateMessageByRegSysRequest()
             {
@@ -168,10 +172,24 @@ namespace Eurofurence.App.Server.Services.ArtShow
             message.AppendLine(
                 $"Congratulations! You have won {items.Count} item(s) from the Art Show:\n");
 
+            var totalDues = 0;
             foreach (var item in items)
-                message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
+            {
+                if (item.FinalBidAmount is { } finalBidAmount && finalBidAmount > 0)
+                {
+                    message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\" for a final bid of {finalBidAmount} €");
+                    totalDues += finalBidAmount;
+                }
+                else
+                {
+                    message.AppendLine($"- {item.ASIDNO}: \"{item.ArtPieceTitle}\" by \"{item.ArtistName}\"");
+                }
+            }
 
-            message.AppendLine("\nPlease pick them up at the Art Show during sales hours (these are announced in the event schedule and can be found both in your con book or the mobile app).\n\nThank you!");
+            if (totalDues > 0)
+                message.AppendLine($"\nYour expected grand total is: {totalDues} €");
+
+            message.AppendLine("\nPlease make sure you have sufficient cash with you and pay your items at the Security Desk in the foyer before proceeding to pick them up at the Art Show during Sales & Pickup. The times for Sales & Pickup are announced in the event schedule and can be found in your conbook, the schedule on our website or right here in the mobile app.\n\nThank you!\n\n(Disclaimer: expected grand total only includes items with final bid in listing above, won items and final bid amounts are purely informative and not guaranteed to be accurate, please double check with the posted listings or contact the Art Show team in case of irregularities.)");
 
             var request = new SendPrivateMessageByRegSysRequest()
             {
@@ -205,7 +223,8 @@ namespace Eurofurence.App.Server.Services.ArtShow
                 {
                     RecipientUid = bundle.RecipientUid,
                     IdsSold = bundle.ItemsSold.Select(a => a.ASIDNO).ToList(),
-                    IdsToAuction = bundle.ItemsToAuction.Select(a => a.ASIDNO).ToList()
+                    IdsToAuction = bundle.ItemsToAuction.Select(a => a.ASIDNO).ToList(),
+                    GrandTotal = bundle.ItemsSold.Sum(i => (i.FinalBidAmount is { } finalBidAmount && finalBidAmount > 0) ? finalBidAmount : 0),
                 })
                 .ToList();
         }
