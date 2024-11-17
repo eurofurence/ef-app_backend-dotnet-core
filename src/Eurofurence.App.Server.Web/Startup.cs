@@ -57,8 +57,19 @@ namespace Eurofurence.App.Server.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var conventionSettings = ConventionSettings.FromConfiguration(Configuration);
+            var globalOptions = Configuration.GetSection("Global").Get<GlobalOptions>();
 
+            // Configuration from appsettings.json
+            services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
+            services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
+            services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
+            services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;
+            });
+            services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
+            
             services.AddLogging(options =>
             {
                 options.ClearProviders();
@@ -93,7 +104,7 @@ namespace Eurofurence.App.Server.Web
                     opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
-            JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+            var serializerOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = null,
                 PropertyNameCaseInsensitive = true,
@@ -103,18 +114,13 @@ namespace Eurofurence.App.Server.Web
 
             services.AddSingleton(s => serializerOptions);
 
-            services.Configure<ForwardedHeadersOptions>(options =>
-            {
-                options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;
-            });
-
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("api", new OpenApiInfo
                 {
-                    Version = conventionSettings.ConventionIdentifier,
+                    Version = globalOptions.ConventionIdentifier,
                     Title = "Eurofurence API for Mobile Apps",
                     Description = "",
                     Contact = new OpenApiContact
@@ -149,13 +155,12 @@ namespace Eurofurence.App.Server.Web
                 options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
                 options.OperationFilter<BinaryPayloadFilter>();
 
-
                 if (Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1")
                 {
                     options.AddServer(new OpenApiServer()
                     {
                         Description = "nginx (CID in path)",
-                        Url = $"/{conventionSettings.ConventionIdentifier}"
+                        Url = $"/{globalOptions.ConventionIdentifier}"
                     });
                 }
                 else
@@ -167,13 +172,6 @@ namespace Eurofurence.App.Server.Web
                     });
                 }
             });
-
-            services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
-
-            services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
-            services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
-
-            services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
 
             services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();
             services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
@@ -209,8 +207,7 @@ namespace Eurofurence.App.Server.Web
                 var connectionString = Configuration.GetConnectionString("Eurofurence");
 
                 var serverVersionString = Environment.GetEnvironmentVariable("MYSQL_VERSION");
-                ServerVersion serverVersion;
-                if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out serverVersion))
+                if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out var serverVersion))
                 {
                     serverVersion = ServerVersion.AutoDetect(connectionString);
                 }
@@ -377,7 +374,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Build();
 
-            CidRouteBaseAttribute.Value = conventionSettings.ConventionIdentifier;
+            CidRouteBaseAttribute.Value = globalOptions.ConventionIdentifier;
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

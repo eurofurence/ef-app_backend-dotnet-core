@@ -64,7 +64,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
         {
             if (_configuration == null) return;
 
-            builder.RegisterInstance(ConventionSettings.FromConfiguration(_configuration));
             builder.RegisterInstance(FirebaseConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ApnsConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(ExpoConfiguration.FromConfiguration(_configuration));

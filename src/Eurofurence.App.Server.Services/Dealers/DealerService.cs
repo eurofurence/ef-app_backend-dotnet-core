@@ -20,6 +20,7 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using File = System.IO.File;
 
 namespace Eurofurence.App.Server.Services.Dealers
@@ -29,7 +30,7 @@ namespace Eurofurence.App.Server.Services.Dealers
     {
         private readonly AppDbContext _appDbContext;
         private readonly IDealerApiClient _dealerApiClient;
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly IImageService _imageService;
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly ILogger _logger;
@@ -39,7 +40,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
             IDealerApiClient dealerApiClient,
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             IImageService imageService,
             IHttpUriSanitizer uriSanitizer,
             ILoggerFactory loggerFactory
@@ -48,7 +49,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         {
             _appDbContext = appDbContext;
             _dealerApiClient = dealerApiClient;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
             _imageService = imageService;
             _uriSanitizer = uriSanitizer;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -172,12 +173,12 @@ namespace Eurofurence.App.Server.Services.Dealers
                 await _semaphore.WaitAsync();
                 _logger.LogDebug(LogEvents.Import, "Starting dealers import.");
 
-                if (!Directory.Exists(_conventionSettings.WorkingDirectory))
+                if (!Directory.Exists(_globalOptions.WorkingDirectory))
                 {
-                    Directory.CreateDirectory(_conventionSettings.WorkingDirectory);
+                    Directory.CreateDirectory(_globalOptions.WorkingDirectory);
                 }
 
-                var dealerPackagePath = Path.Combine(_conventionSettings.WorkingDirectory, "dealers.zip");
+                var dealerPackagePath = Path.Combine(_globalOptions.WorkingDirectory, "dealers.zip");
                 var newDealersExportDownloaded = await _dealerApiClient.DownloadDealersExportAsync(dealerPackagePath);
 
                 if (!newDealersExportDownloaded)

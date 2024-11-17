@@ -25,7 +25,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly IDeviceIdentityService _deviceService;
         private readonly IRegistrationIdentityService _registrationService;
         private readonly AppDbContext _appDbContext;
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly FirebaseConfiguration _firebaseConfiguration;
         private readonly FirebaseMessaging _firebaseMessaging;
         private readonly ApnsConfiguration _apnsConfiguration;
@@ -38,7 +38,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             IRegistrationIdentityService registrationService,
             AppDbContext appDbContext,
             FirebaseConfiguration configuration,
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             ExpoConfiguration expoConfiguration,
             ApnsConfiguration apnsConfiguration,
             IApnsService apnsService,
@@ -48,7 +48,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _registrationService = registrationService;
             _appDbContext = appDbContext;
             _firebaseConfiguration = configuration;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
             _expoConfiguration = expoConfiguration;
             _apnsConfiguration = apnsConfiguration;
             _apnsService = apnsService;
@@ -133,12 +133,12 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             {
                 var androidMessage = new Message()
                 {
-                    Topic = $"{_conventionSettings.ConventionIdentifier}-android",
+                    Topic = $"{_globalOptions.ConventionIdentifier}-android",
                     Data = new Dictionary<string, string>()
                 {
                     // For Legacy Native Android App
                     { "Event", "Sync" },
-                    { "CID", _conventionSettings.ConventionIdentifier },
+                    { "CID", _globalOptions.ConventionIdentifier },
 
                     // For Expo / React Native
                     { "experienceId", _expoConfiguration.ExperienceId },
@@ -147,7 +147,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         "body", JsonSerializer.Serialize(new
                             {
                                 @event = "Sync",
-                                cid = _conventionSettings.ConventionIdentifier
+                                cid = _globalOptions.ConventionIdentifier
                             }
                         )
                     }
@@ -392,7 +392,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var applePush = new ApplePush(pushType)
                         .AddCustomProperty("Event", eventType.ToString())
-                        .AddCustomProperty("CID", _conventionSettings.ConventionIdentifier)
+                        .AddCustomProperty("CID", _globalOptions.ConventionIdentifier)
                         .AddCustomProperty("experienceId", _expoConfiguration.ExperienceId)
                         .AddCustomProperty("scopeKey", _expoConfiguration.ScopeKey)
                         .SetPriority(5)
@@ -449,7 +449,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "Title", title },
                     { "Text", message },
                     { "RelatedId", relatedId.ToString() },
-                    { "CID", _conventionSettings.ConventionIdentifier },
+                    { "CID", _globalOptions.ConventionIdentifier },
 
                     // For Expo / React Native
                     { "experienceId", _expoConfiguration.ExperienceId },
@@ -460,7 +460,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             if (deviceIdentity != null)
                 fcmMessage.Token = deviceIdentity.DeviceToken;
             else
-                fcmMessage.Topic = $"{_conventionSettings.ConventionIdentifier}-android";
+                fcmMessage.Topic = $"{_globalOptions.ConventionIdentifier}-android";
 
             return fcmMessage;
         }

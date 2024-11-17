@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -35,7 +36,7 @@ public class BotService : BackgroundService, IUpdateHandler
     private readonly IServiceProvider _serviceProvider;
     private readonly IEventService _eventService;
     private readonly IEventConferenceRoomService _eventConferenceRoomService;
-    private readonly ConventionSettings _conventionSettings;
+    private readonly GlobalOptions _globalOptions;
     private readonly IDealerService _dealerService;
     private readonly IImageService _imageService;
     private readonly ITableRegistrationService _tableRegistrationService;
@@ -49,7 +50,7 @@ public class BotService : BackgroundService, IUpdateHandler
         IServiceProvider serviceProvider,
         IEventService eventService,
         IEventConferenceRoomService eventConferenceRoomService,
-        ConventionSettings conventionSettings,
+        IOptions<GlobalOptions> globalOptions,
         IDealerService dealerService,
         ITelegramMessageBroker telegramMessageBroker,
         IImageService imageService,
@@ -60,7 +61,7 @@ public class BotService : BackgroundService, IUpdateHandler
         _serviceProvider = serviceProvider;
         _eventService = eventService;
         _eventConferenceRoomService = eventConferenceRoomService;
-        _conventionSettings = conventionSettings;
+        _globalOptions = globalOptions.Value;
         _dealerService = dealerService;
         _imageService = imageService;
         _tableRegistrationService = tableRegistrationService;
@@ -303,7 +304,7 @@ public class BotService : BackgroundService, IUpdateHandler
                     $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime:hh\\:mm}-{e.EndTime:hh\\:mm}: {e.Title} " +
                     (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
                     new InputTextMessageContent(
-                        $"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
+                        $"*Event:* https://app.eurofurence.org/{_globalOptions.ConventionIdentifier}/Web/Events/{e.Id}")
                     {
                         ParseMode = ParseMode.Markdown
                     }
@@ -338,7 +339,7 @@ public class BotService : BackgroundService, IUpdateHandler
                 e.Id.ToString(),
                 $"DEALER: {e.DisplayNameOrAttendeeNickname}",
                 new InputTextMessageContent(
-                    $"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
+                    $"*Dealer:* https://app.eurofurence.org/{_globalOptions.ConventionIdentifier}/Web/Dealers/{e.Id}")
                 {
                     ParseMode = ParseMode.Markdown
                 }))
