@@ -14,6 +14,7 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
@@ -22,29 +23,29 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly IDeviceIdentityService _deviceService;
         private readonly IRegistrationIdentityService _registrationService;
         private readonly AppDbContext _appDbContext;
-        private readonly FirebaseConfiguration _configuration;
+        private readonly FirebaseOptions _options;
         private readonly ExpoConfiguration _expoConfiguration;
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly FirebaseMessaging _firebaseMessaging;
 
         public FirebaseChannelManager(
             IDeviceIdentityService deviceService,
             IRegistrationIdentityService registrationService,
             AppDbContext appDbContext,
-            FirebaseConfiguration configuration,
+            IOptions<FirebaseOptions> options,
             ExpoConfiguration expoConfiguration,
-            ConventionSettings conventionSettings)
+            IOptions<GlobalOptions> globalOptions)
         {
             _deviceService = deviceService;
             _registrationService = registrationService;
             _appDbContext = appDbContext;
-            _configuration = configuration;
+            _options = options.Value;
             _expoConfiguration = expoConfiguration;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
 
-            if (_configuration.GoogleServiceCredentialKeyFile is not { Length: > 0 } file) return;
+            if (string.IsNullOrEmpty(_options.GoogleServiceCredentialKeyFile)) return;
 
-            var googleCredential = GoogleCredential.FromFile(file);
+            var googleCredential = GoogleCredential.FromFile(_options.GoogleServiceCredentialKeyFile);
             if (FirebaseApp.DefaultInstance == null)
             {
                 FirebaseApp.Create(new AppOptions { Credential = googleCredential });
@@ -57,11 +58,11 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             AnnouncementRecord announcement,
             CancellationToken cancellationToken = default)
         {
-            if (!_configuration.IsConfigured) return Task.CompletedTask;
+            if (string.IsNullOrEmpty(_options.GoogleServiceCredentialKeyFile)) return Task.CompletedTask;
 
             var androidMessage = new Message()
             {
-                Topic = $"{_conventionSettings.ConventionIdentifier}-android",
+                Topic = $"{_globalOptions.ConventionIdentifier}-android",
                 Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
@@ -79,7 +80,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "Title", announcement.Title.RemoveMarkdown() },
                     { "Text", announcement.Content.RemoveMarkdown() },
                     { "RelatedId", announcement.Id.ToString() },
-                    { "CID", _conventionSettings.ConventionIdentifier },
+                    { "CID", _globalOptions.ConventionIdentifier },
 
                     // For Expo / React Native
                     { "experienceId", _expoConfiguration.ExperienceId },
@@ -89,7 +90,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var apnsMessage = new Message()
             {
-                Topic = $"{_conventionSettings.ConventionIdentifier}-ios",
+                Topic = $"{_globalOptions.ConventionIdentifier}-ios",
                 Data = new Dictionary<string, string>()
                 {
                     { "event", "Announcement" },
@@ -124,7 +125,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (!_configuration.IsConfigured) return;
+            if (string.IsNullOrEmpty(_options.GoogleServiceCredentialKeyFile)) return;
 
             var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
@@ -143,7 +144,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (!_configuration.IsConfigured) return;
+            if (string.IsNullOrEmpty(_options.GoogleServiceCredentialKeyFile)) return;
 
             var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
@@ -157,16 +158,16 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public Task PushSyncRequestAsync(CancellationToken cancellationToken = default)
         {
-            if (!_configuration.IsConfigured) return Task.CompletedTask;
+            if (string.IsNullOrEmpty(_options.GoogleServiceCredentialKeyFile)) return Task.CompletedTask;
 
             var androidMessage = new Message()
             {
-                Topic = $"{_conventionSettings.ConventionIdentifier}-android",
+                Topic = $"{_globalOptions.ConventionIdentifier}-android",
                 Data = new Dictionary<string, string>()
                 {
                     // For Legacy Native Android App
                     { "Event", "Sync" },
-                    { "CID", _conventionSettings.ConventionIdentifier },
+                    { "CID", _globalOptions.ConventionIdentifier },
 
                     // For Expo / React Native
                     { "experienceId", _expoConfiguration.ExperienceId },
@@ -175,7 +176,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                         "body", JsonSerializer.Serialize(new
                             {
                                 @event = "Sync",
-                                cid = _conventionSettings.ConventionIdentifier
+                                cid = _globalOptions.ConventionIdentifier
                             }
                         )
                     }
@@ -184,7 +185,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var apnsMessage = new Message()
             {
-                Topic = $"{_conventionSettings.ConventionIdentifier}-ios",
+                Topic = $"{_globalOptions.ConventionIdentifier}-ios",
                 Data = new Dictionary<string, string>()
                 {
                     { "event", "Sync" },
@@ -233,10 +234,10 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 switch (type)
                 {
                     case DeviceType.Android:
-                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_conventionSettings.ConventionIdentifier}-android");
+                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_globalOptions.ConventionIdentifier}-android");
                     break;
                     case DeviceType.Ios:
-                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_conventionSettings.ConventionIdentifier}-ios");
+                        await _firebaseMessaging.SubscribeToTopicAsync([deviceToken], $"{_globalOptions.ConventionIdentifier}-ios");
                     break;
                 }
                 await _deviceService.InsertOneAsync(new DeviceIdentityRecord
@@ -303,7 +304,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                                 { "Title", title },
                                 { "Message", message },
                                 { "RelatedId", relatedId.ToString() },
-                                { "CID", _conventionSettings.ConventionIdentifier },
+                                { "CID", _globalOptions.ConventionIdentifier },
 
                                 // For Expo / React Native
                                 { "experienceId", _expoConfiguration.ExperienceId },

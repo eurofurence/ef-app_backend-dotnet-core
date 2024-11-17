@@ -39,6 +39,7 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using dotAPNS.AspNetCore;
 using System.Collections.Generic;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -61,6 +62,7 @@ namespace Eurofurence.App.Server.Web
 
             // Configuration from appsettings.json
             services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
+            services.Configure<FirebaseOptions>(Configuration.GetSection("Push:Firebase"));
             services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
