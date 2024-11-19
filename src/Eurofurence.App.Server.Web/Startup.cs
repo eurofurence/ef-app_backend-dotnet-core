@@ -60,6 +60,7 @@ namespace Eurofurence.App.Server.Web
         public void ConfigureServices(IServiceCollection services)
         {
             var globalOptions = Configuration.GetSection("Global").Get<GlobalOptions>();
+            var lassieOptions = Configuration.GetSection("Lassie").Get<LassieOptions>();
 
             // Configuration from appsettings.json
             services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
@@ -68,6 +69,7 @@ namespace Eurofurence.App.Server.Web
             services.Configure<ExpoOptions>(Configuration.GetSection("Push:Expo"));
             services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
             services.Configure<ArtistAlleyOptions>(Configuration.GetSection("ArtistAlley"));
+            services.Configure<LassieOptions>(Configuration.GetSection("Lassie"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
@@ -347,8 +349,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateLostAndFoundConfiguration.Enabled)
                 {
-                    var lassieConfiguration = LassieConfiguration.FromConfiguration(Configuration);
-                    if (string.IsNullOrWhiteSpace(lassieConfiguration.BaseApiUrl))
+                    if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl))
                     {
                         logger.LogError("Update lost and found job can't be added: Empty source url");
                     }
