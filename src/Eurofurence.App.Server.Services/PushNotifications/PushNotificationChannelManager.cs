@@ -30,7 +30,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly FirebaseOptions _firebaseOptions;
         private readonly FirebaseMessaging _firebaseMessaging;
         private readonly ApnsOptions _apnsOptions;
-        private readonly ExpoConfiguration _expoConfiguration;
+        private readonly ExpoOptions _expoOptions;
         private readonly IApnsService _apnsService;
         private readonly ILogger _logger;
 
@@ -40,7 +40,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             AppDbContext appDbContext,
             IOptions<FirebaseOptions> options,
             IOptions<GlobalOptions> globalOptions,
-            ExpoConfiguration expoConfiguration,
+            IOptions<ExpoOptions> expoOptions,
             IOptions<ApnsOptions> apnsOptions,
             IApnsService apnsService,
             ILoggerFactory loggerFactory)
@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _appDbContext = appDbContext;
             _firebaseOptions = options.Value;
             _globalOptions = globalOptions.Value;
-            _expoConfiguration = expoConfiguration;
+            _expoOptions = expoOptions.Value;
             _apnsOptions = apnsOptions.Value;
             _apnsService = apnsService;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -146,8 +146,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "CID", _globalOptions.ConventionIdentifier },
 
                     // For Expo / React Native
-                    { "experienceId", _expoConfiguration.ExperienceId },
-                    { "scopeKey", _expoConfiguration.ScopeKey },
+                    { "experienceId", _expoOptions.ExperienceId },
+                    { "scopeKey", _expoOptions.ScopeKey },
                     {
                         "body", JsonSerializer.Serialize(new
                             {
@@ -398,8 +398,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var applePush = new ApplePush(pushType)
                         .AddCustomProperty("Event", eventType.ToString())
                         .AddCustomProperty("CID", _globalOptions.ConventionIdentifier)
-                        .AddCustomProperty("experienceId", _expoConfiguration.ExperienceId)
-                        .AddCustomProperty("scopeKey", _expoConfiguration.ScopeKey)
+                        .AddCustomProperty("experienceId", _expoOptions.ExperienceId)
+                        .AddCustomProperty("scopeKey", _expoOptions.ScopeKey)
                         .SetPriority(5)
                         .AddToken(deviceIdentity.DeviceToken);
 
@@ -465,8 +465,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     { "CID", _globalOptions.ConventionIdentifier },
 
                     // For Expo / React Native
-                    { "experienceId", _expoConfiguration.ExperienceId },
-                    { "scopeKey", _expoConfiguration.ScopeKey },
+                    { "experienceId", _expoOptions.ExperienceId },
+                    { "scopeKey", _expoOptions.ScopeKey },
                 }
             };
 
