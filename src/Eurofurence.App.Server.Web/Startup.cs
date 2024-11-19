@@ -26,7 +26,6 @@ using Microsoft.AspNetCore.Authentication;
 using Quartz;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
-using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
@@ -41,6 +40,7 @@ using dotAPNS.AspNetCore;
 using System.Collections.Generic;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 
 namespace Eurofurence.App.Server.Web
@@ -62,6 +62,7 @@ namespace Eurofurence.App.Server.Web
         {
             var globalOptions = Configuration.GetSection("Global").Get<GlobalOptions>();
             var lassieOptions = Configuration.GetSection("Lassie").Get<LassieOptions>();
+            var dealersOptions = Configuration.GetSection("Dealers").Get<DealersOptions>();
 
             // Configuration from appsettings.json
             services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
@@ -72,6 +73,7 @@ namespace Eurofurence.App.Server.Web
             services.Configure<ArtistAlleyOptions>(Configuration.GetSection("ArtistAlley"));
             services.Configure<LassieOptions>(Configuration.GetSection("Lassie"));
             services.Configure<MinIoOptions>(Configuration.GetSection("MinIo"));
+            services.Configure<DealersOptions>(Configuration.GetSection("Dealers"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
@@ -291,8 +293,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateDealersConfiguration.Enabled)
                 {
-                    var dealersConfiguration = DealerConfiguration.FromConfiguration(Configuration);
-                    if (string.IsNullOrWhiteSpace(dealersConfiguration.Url))
+                    if (string.IsNullOrWhiteSpace(dealersOptions.Url))
                     {
                         logger.LogError("Update dealers job can't be added: Empty source url");
                     }

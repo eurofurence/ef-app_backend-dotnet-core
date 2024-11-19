@@ -65,7 +65,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
             if (_configuration == null) return;
 
             builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
-            builder.RegisterInstance(DealerConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(AnnouncementConfiguration.FromConfiguration(_configuration));
             builder.RegisterInstance(EventConfiguration.FromConfiguration(_configuration));
         }
