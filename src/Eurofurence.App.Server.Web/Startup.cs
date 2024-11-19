@@ -63,6 +63,7 @@ namespace Eurofurence.App.Server.Web
             // Configuration from appsettings.json
             services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
             services.Configure<FirebaseOptions>(Configuration.GetSection("Push:Firebase"));
+            services.Configure<ApnsOptions>(Configuration.GetSection("Push:Apns"));
             services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));

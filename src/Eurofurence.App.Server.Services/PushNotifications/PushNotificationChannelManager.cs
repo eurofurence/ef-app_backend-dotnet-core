@@ -29,7 +29,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly GlobalOptions _globalOptions;
         private readonly FirebaseOptions _firebaseOptions;
         private readonly FirebaseMessaging _firebaseMessaging;
-        private readonly ApnsConfiguration _apnsConfiguration;
+        private readonly ApnsOptions _apnsOptions;
         private readonly ExpoConfiguration _expoConfiguration;
         private readonly IApnsService _apnsService;
         private readonly ILogger _logger;
@@ -41,7 +41,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             IOptions<FirebaseOptions> options,
             IOptions<GlobalOptions> globalOptions,
             ExpoConfiguration expoConfiguration,
-            ApnsConfiguration apnsConfiguration,
+            IOptions<ApnsOptions> apnsOptions,
             IApnsService apnsService,
             ILoggerFactory loggerFactory)
         {
@@ -51,7 +51,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _firebaseOptions = options.Value;
             _globalOptions = globalOptions.Value;
             _expoConfiguration = expoConfiguration;
-            _apnsConfiguration = apnsConfiguration;
+            _apnsOptions = apnsOptions.Value;
             _apnsService = apnsService;
             _logger = loggerFactory.CreateLogger(GetType());
 
@@ -76,9 +76,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _firebaseMessaging.SendAsync(androidMessage, cancellationToken);
             }
 
-            if (_apnsConfiguration.IsConfigured)
+            if (_apnsOptions.IsConfigured)
             {
-                var apnsDeviceIdentities = await _deviceService.FindAll(d => d.DeviceType == DeviceType.Ios).ToArrayAsync();
+                var apnsDeviceIdentities = await _deviceService.FindAll(d => d.DeviceType == DeviceType.Ios).ToArrayAsync(cancellationToken: cancellationToken);
 
                 _logger.LogInformation($"Pushing announcement {announcement.Id} to {apnsDeviceIdentities.Count()} devices on APNs…");
 
@@ -101,7 +101,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && !_apnsConfiguration.IsConfigured) return;
+            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && !_apnsOptions.IsConfigured) return;
 
             var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
@@ -120,7 +120,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && !_apnsConfiguration.IsConfigured) return;
+            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && !_apnsOptions.IsConfigured) return;
 
             var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
@@ -162,7 +162,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _firebaseMessaging.SendAsync(androidMessage, cancellationToken);
             }
 
-            if (_apnsConfiguration.IsConfigured)
+            if (_apnsOptions.IsConfigured)
             {
                 var apnsDeviceIdentities = await _deviceService.FindAll(d => d.DeviceType == DeviceType.Ios).ToArrayAsync();
 
@@ -363,7 +363,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await _firebaseMessaging.SendEachAsync(firebaseMessages, cancellationToken);
             }
 
-            if (_apnsConfiguration.IsConfigured && apnsTasks.Any())
+            if (_apnsOptions.IsConfigured && apnsTasks.Any())
             {
                 _logger.LogDebug($"Pushing private message {relatedId} to {apnsTasks.Count()} devices on APNs…");
                 var apnsResults = await Task.WhenAll(apnsTasks);
@@ -414,13 +414,21 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             if (relatedId != null)
                 applePush.AddCustomProperty("RelatedId", relatedId.ToString());
 
-            if (_apnsConfiguration.UseDevelopmentServer)
+            if (_apnsOptions.UseDevelopmentServer)
                 applePush.SendToDevelopmentServer();
+
+            var apnsJwtOptions = new ApnsJwtOptions
+            {
+                BundleId = _apnsOptions.BundleId,
+                CertContent = _apnsOptions.CertContent,
+                KeyId = _apnsOptions.KeyId,
+                TeamId = _apnsOptions.TeamId,
+            };
 
             return new ApnsResult()
             {
                 DeviceIdentity = deviceIdentity,
-                ApnsResponse = await _apnsService.SendPush(applePush, _apnsConfiguration.ApnsJwtOptions)
+                ApnsResponse = await _apnsService.SendPush(applePush, apnsJwtOptions)
             };
         }
 
