@@ -41,6 +41,7 @@ using dotAPNS.AspNetCore;
 using System.Collections.Generic;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.MinIO;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -70,6 +71,7 @@ namespace Eurofurence.App.Server.Web
             services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
             services.Configure<ArtistAlleyOptions>(Configuration.GetSection("ArtistAlley"));
             services.Configure<LassieOptions>(Configuration.GetSection("Lassie"));
+            services.Configure<MinIoOptions>(Configuration.GetSection("MinIo"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
