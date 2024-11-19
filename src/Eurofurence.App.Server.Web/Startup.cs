@@ -63,6 +63,7 @@ namespace Eurofurence.App.Server.Web
             var globalOptions = Configuration.GetSection("Global").Get<GlobalOptions>();
             var lassieOptions = Configuration.GetSection("Lassie").Get<LassieOptions>();
             var dealersOptions = Configuration.GetSection("Dealers").Get<DealersOptions>();
+            var announcementOptions = Configuration.GetSection("Announcements").Get<AnnouncementOptions>();
 
             // Configuration from appsettings.json
             services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
@@ -74,6 +75,7 @@ namespace Eurofurence.App.Server.Web
             services.Configure<LassieOptions>(Configuration.GetSection("Lassie"));
             services.Configure<MinIoOptions>(Configuration.GetSection("MinIo"));
             services.Configure<DealersOptions>(Configuration.GetSection("Dealers"));
+            services.Configure<AnnouncementOptions>(Configuration.GetSection("Announcements"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
@@ -271,8 +273,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateAnnouncementsConfiguration.Enabled)
                 {
-                    var announcementsConfiguration = AnnouncementConfiguration.FromConfiguration(Configuration);
-                    if (string.IsNullOrWhiteSpace(announcementsConfiguration.Url))
+                    if (string.IsNullOrWhiteSpace(announcementOptions.Url))
                     {
                         logger.LogError( "Update announcements job can't be added: Empty source url");
                     }
