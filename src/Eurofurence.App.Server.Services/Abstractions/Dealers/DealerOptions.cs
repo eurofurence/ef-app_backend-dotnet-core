@@ -1,6 +1,6 @@
 ﻿namespace Eurofurence.App.Server.Services.Abstractions.Dealers
 {
-    public class DealersOptions
+    public class DealerOptions
     {
         public string Url { get; set; }
         public string User { get; set; }

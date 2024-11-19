@@ -62,8 +62,9 @@ namespace Eurofurence.App.Server.Web
         {
             var globalOptions = Configuration.GetSection("Global").Get<GlobalOptions>();
             var lassieOptions = Configuration.GetSection("Lassie").Get<LassieOptions>();
-            var dealersOptions = Configuration.GetSection("Dealers").Get<DealersOptions>();
+            var dealerOptions = Configuration.GetSection("Dealers").Get<DealerOptions>();
             var announcementOptions = Configuration.GetSection("Announcements").Get<AnnouncementOptions>();
+            var eventOptions = Configuration.GetSection("Events").Get<EventOptions>();
 
             // Configuration from appsettings.json
             services.Configure<GlobalOptions>(Configuration.GetSection("Global"));
@@ -74,8 +75,9 @@ namespace Eurofurence.App.Server.Web
             services.Configure<ArtistAlleyOptions>(Configuration.GetSection("ArtistAlley"));
             services.Configure<LassieOptions>(Configuration.GetSection("Lassie"));
             services.Configure<MinIoOptions>(Configuration.GetSection("MinIo"));
-            services.Configure<DealersOptions>(Configuration.GetSection("Dealers"));
+            services.Configure<DealerOptions>(Configuration.GetSection("Dealers"));
             services.Configure<AnnouncementOptions>(Configuration.GetSection("Announcements"));
+            services.Configure<EventOptions>(Configuration.GetSection("Events"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
@@ -294,7 +296,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateDealersConfiguration.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(dealersOptions.Url))
+                    if (string.IsNullOrWhiteSpace(dealerOptions.Url))
                     {
                         logger.LogError("Update dealers job can't be added: Empty source url");
                     }
@@ -315,8 +317,7 @@ namespace Eurofurence.App.Server.Web
 
                 if (updateEventsConfiguration.Enabled)
                 {
-                    var eventsConfiguration = EventConfiguration.FromConfiguration(Configuration);
-                    if (string.IsNullOrWhiteSpace(eventsConfiguration.Url))
+                    if (string.IsNullOrWhiteSpace(eventOptions.Url))
                     {
                         logger.LogError("Update events job can't be added: Empty source url");
                     }

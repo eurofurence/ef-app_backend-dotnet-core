@@ -15,6 +15,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Events
 {
@@ -25,8 +26,8 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly IEventConferenceDayService _eventConferenceDayService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
-        private readonly EventConfiguration _configuration;
-        private static SemaphoreSlim _semaphore = new(1, 1);
+        private readonly EventOptions _eventOptions;
+        private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
         private TimeSpan DateTimeOffset { get; set; }
 
@@ -37,14 +38,14 @@ namespace Eurofurence.App.Server.Services.Events
             IEventConferenceRoomService eventConferenceRoomService,
             IEventConferenceTrackService eventConferenceTrackService,
             ILoggerFactory loggerFactory,
-            EventConfiguration configuration
+            IOptions<EventOptions> eventOptions
         )
             : base(appDbContext, storageServiceFactory)
         {
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceTrackService = eventConferenceTrackService;
-            _configuration = configuration;
+            _eventOptions = eventOptions.Value;
             DateTimeOffset = TimeSpan.Zero;
             _logger = loggerFactory.CreateLogger(GetType());
         }
@@ -64,11 +65,11 @@ namespace Eurofurence.App.Server.Services.Events
         {
             try
             {
-                await _semaphore.WaitAsync();
+                await Semaphore.WaitAsync();
                 _logger.LogDebug(LogEvents.Import, "Starting event import.");
 
                 var httpClient = new HttpClient();
-                var fileStream = await httpClient.GetStreamAsync(_configuration.Url);
+                var fileStream = await httpClient.GetStreamAsync(_eventOptions.Url);
                 TextReader reader = new StreamReader(fileStream);
 
                 using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
@@ -110,7 +111,7 @@ namespace Eurofurence.App.Server.Services.Events
             }
             finally
             {
-                _semaphore.Release();
+                Semaphore.Release();
             }
         }
 
@@ -193,10 +194,10 @@ namespace Eurofurence.App.Server.Services.Events
         }
 
         private List<EventRecord> UpdateEventEntries(
-            IList<EventImportRow> ImportEventEntries,
-            IList<EventConferenceTrackRecord> CurrentConferenceTracks,
-            IList<EventConferenceRoomRecord> CurrentConferenceRooms,
-            IList<EventConferenceDayRecord> CurrentConferenceDays,
+            IList<EventImportRow> importEventEntries,
+            IList<EventConferenceTrackRecord> currentConferenceTracks,
+            IList<EventConferenceRoomRecord> currentConferenceRooms,
+            IList<EventConferenceDayRecord> currentConferenceDays,
             ref int modifiedRecords
         )
         {
@@ -212,28 +213,28 @@ namespace Eurofurence.App.Server.Services.Events
                 .Map(s => (s.Title + '�').Split('�')[1]?.Trim(), t => t.SubTitle)
                 .Map(s => s.Abstract, t => t.Abstract)
                 .Map(
-                    s => CurrentConferenceTracks.Single(a => a.Name == s.ConferenceTrack).Id,
+                    s => currentConferenceTracks.Single(a => a.Name == s.ConferenceTrack).Id,
                     t => t.ConferenceTrackId)
                 .Map(
-                    s => CurrentConferenceRooms.Single(a => a.Name == s.ConferenceRoom).Id,
+                    s => currentConferenceRooms.Single(a => a.Name == s.ConferenceRoom).Id,
                     t => t.ConferenceRoomId)
                 .Map(
-                    s => CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName).Id,
+                    s => currentConferenceDays.Single(a => a.Name == s.ConferenceDayName).Id,
                     t => t.ConferenceDayId)
                 .Map(s => s.Description, t => t.Description)
                 .Map(s => s.Duration, t => t.Duration)
                 .Map(s => s.StartTime, t => t.StartTime)
                 .Map(s => s.EndTime, t => t.EndTime)
-                .Map(s => DateTime.SpecifyKind(CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
+                .Map(s => DateTime.SpecifyKind(currentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
                     .Date.Add(s.StartTime), DateTimeKind.Utc).AddHours(-2), t => t.StartDateTimeUtc)
-                .Map(s => DateTime.SpecifyKind(CurrentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
+                .Map(s => DateTime.SpecifyKind(currentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
                         .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc),
                     t => t.EndDateTimeUtc)
                 .Map(s => s.PanelHosts, t => t.PanelHosts)
                 .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase), t => t.IsAcceptingFeedback)
                 .Map(s => s.CalculateTags(), t => t.Tags);
 
-            var diff = patch.Patch(ImportEventEntries, eventRecords);
+            var diff = patch.Patch(importEventEntries, eventRecords);
 
             ApplyPatchOperationAsync(diff).Wait();
 
@@ -264,7 +265,7 @@ namespace Eurofurence.App.Server.Services.Events
             {
                 var tags = this.Tags.Split(",")
                     .Union(this.CustomTags.Split(","))
-                    .Where(tag => !String.IsNullOrWhiteSpace(tag))
+                    .Where(tag => !string.IsNullOrWhiteSpace(tag))
                     .Select(tag => tag.Trim())
                     .Select(tag => tag.Replace("fsps", "photoshoot"))
                     .ToArray();
