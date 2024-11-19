@@ -63,8 +63,6 @@ namespace Eurofurence.App.Server.Services.DependencyResolution
         private void RegisterConfigurations(ContainerBuilder builder)
         {
             if (_configuration == null) return;
-
-            builder.RegisterInstance(CollectionGameConfiguration.FromConfiguration(_configuration));
         }
 
         private void RegisterServices(ContainerBuilder builder)

@@ -41,6 +41,7 @@ using System.Collections.Generic;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
+using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 
 namespace Eurofurence.App.Server.Web
@@ -78,6 +79,7 @@ namespace Eurofurence.App.Server.Web
             services.Configure<DealerOptions>(Configuration.GetSection("Dealers"));
             services.Configure<AnnouncementOptions>(Configuration.GetSection("Announcements"));
             services.Configure<EventOptions>(Configuration.GetSection("Events"));
+            services.Configure<CollectionGameOptions>(Configuration.GetSection("CollectionGame"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
