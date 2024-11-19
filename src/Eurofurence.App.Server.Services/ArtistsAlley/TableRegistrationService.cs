@@ -19,13 +19,14 @@ using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
     public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord>, ITableRegistrationService
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ArtistAlleyConfiguration _configuration;
+        private readonly ArtistAlleyOptions _artistAlleyOptions;
         private readonly ITelegramMessageSender _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
@@ -37,7 +38,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public TableRegistrationService(
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
-            ArtistAlleyConfiguration configuration,
+            IOptions<ArtistAlleyOptions> artistAlleyOptions,
             ITelegramMessageSender telegramMessageSender,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
@@ -45,7 +46,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             IHtmlSanitizer htmlSanitizer) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
-            _configuration = configuration;
+            _artistAlleyOptions = artistAlleyOptions.Value;
             _telegramMessageSender = telegramMessageSender;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
@@ -112,11 +113,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 await DeleteOneAsync(registration.Id);
             }
 
-            ImageRecord image = null;
-            if (imageStream != null)
-            {
-                image = await _imageService.InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
-            }
+            var image = await _imageService.InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
@@ -138,7 +135,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
             await _telegramMessageSender.SendTableRegistrationAsync(
-                _configuration.TelegramAdminGroupChatId,
+                _artistAlleyOptions.Telegram.AdminGroupChatId,
                 record
             );
         }
@@ -152,7 +149,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.Touch();
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-            _configuration.TelegramAdminGroupChatId,
+            _artistAlleyOptions.Telegram.AdminGroupChatId,
             $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
 
             await BroadcastAsync(record);
@@ -198,7 +195,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             if (record.ImageId.HasValue)
             {
                 await _telegramMessageSender.SendImageToChatAsync(
-                    _configuration.TelegramAnnouncementChannelId,
+                    _artistAlleyOptions.Telegram.AnnouncementChannelId,
                     await _imageService.GetImageContentByImageIdAsync(record.ImageId.Value),
                     message.ToString()
                 );
@@ -206,7 +203,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             else
             {
                 await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-                    _configuration.TelegramAnnouncementChannelId,
+                    _artistAlleyOptions.Telegram.AnnouncementChannelId,
                     message.ToString()
                 );
             }
@@ -222,7 +219,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             record.Touch();
 
-            await _telegramMessageSender.SendMarkdownMessageToChatAsync(_configuration.TelegramAdminGroupChatId,
+            await _telegramMessageSender.SendMarkdownMessageToChatAsync(_artistAlleyOptions.Telegram.AdminGroupChatId,
             $"*Rejected:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";

@@ -40,6 +40,7 @@ using Telegram.Bot;
 using dotAPNS.AspNetCore;
 using System.Collections.Generic;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -66,6 +67,7 @@ namespace Eurofurence.App.Server.Web
             services.Configure<ApnsOptions>(Configuration.GetSection("Push:Apns"));
             services.Configure<ExpoOptions>(Configuration.GetSection("Push:Expo"));
             services.Configure<QrCodeConfiguration>(Configuration.GetSection("QrCode"));
+            services.Configure<ArtistAlleyOptions>(Configuration.GetSection("ArtistAlley"));
             services.Configure<IdentityOptions>(Configuration.GetSection("Identity"));
             services.Configure<AuthorizationOptions>(Configuration.GetSection("Authorization"));
             services.Configure<ForwardedHeadersOptions>(options =>
