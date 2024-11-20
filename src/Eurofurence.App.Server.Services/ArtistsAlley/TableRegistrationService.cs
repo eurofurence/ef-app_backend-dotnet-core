@@ -27,7 +27,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
     {
         private readonly AppDbContext _appDbContext;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
-        private readonly ITelegramMessageSender _telegramMessageSender;
+        private readonly ITelegramMessageBroker _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly IHttpUriSanitizer _uriSanitizer;
@@ -39,7 +39,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
             IOptions<ArtistAlleyOptions> artistAlleyOptions,
-            ITelegramMessageSender telegramMessageSender,
+            ITelegramMessageBroker telegramMessageSender,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
             IHttpUriSanitizer uriSanitizer,

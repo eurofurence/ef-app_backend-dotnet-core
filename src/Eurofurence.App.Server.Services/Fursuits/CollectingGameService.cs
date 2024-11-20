@@ -23,14 +23,14 @@ namespace Eurofurence.App.Server.Services.Fursuits
         private readonly AppDbContext _appDbContext;
         private static SemaphoreSlim _semaphore = new(1, 1);
         private readonly CollectionGameOptions _collectionGameOptions;
-        private readonly ITelegramMessageSender _telegramMessageSender;
+        private readonly ITelegramMessageBroker _telegramMessageSender;
         private ILogger _logger;
 
         public CollectingGameService(
             AppDbContext appDbContext,
             ILoggerFactory loggerFactory,
             IOptions<CollectionGameOptions> collectionGameOptions,
-            ITelegramMessageSender telegramMessageSender
+            ITelegramMessageBroker telegramMessageSender
         )
         {
             _appDbContext = appDbContext;

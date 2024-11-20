@@ -39,7 +39,7 @@ namespace Eurofurence.App.Server.Services.Tests
             return new CollectingGameService(appDbContext, 
                 new NullLoggerFactory(),
                 Options.Create(new CollectionGameOptions()),
-                new Mock<ITelegramMessageSender>().As<ITelegramMessageSender>().Object);
+                new Mock<ITelegramMessageBroker>().As<ITelegramMessageBroker>().Object);
         }
 
         private async Task<DeviceIdentityRecord> CreateDeviceAsync(AppDbContext appDbContext)

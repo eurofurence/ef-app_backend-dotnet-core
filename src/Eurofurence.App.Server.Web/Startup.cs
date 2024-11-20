@@ -1,5 +1,4 @@
-﻿using Autofac;
-using Eurofurence.App.Server.Services.Abstractions;
+﻿using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
@@ -43,6 +42,32 @@ using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
+using Eurofurence.App.Server.Services.Abstractions.ArtShow;
+using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Knowledge;
+using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
+using Eurofurence.App.Server.Services.Abstractions.Maps;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
+using Eurofurence.App.Server.Services.Abstractions.Users;
+using Eurofurence.App.Server.Services.Abstractions.Validation;
+using Eurofurence.App.Server.Services.Announcements;
+using Eurofurence.App.Server.Services.ArtistsAlley;
+using Eurofurence.App.Server.Services.ArtShow;
+using Eurofurence.App.Server.Services.Communication;
+using Eurofurence.App.Server.Services.Dealers;
+using Eurofurence.App.Server.Services.Events;
+using Eurofurence.App.Server.Services.Fursuits;
+using Eurofurence.App.Server.Services.Images;
+using Eurofurence.App.Server.Services.Knowledge;
+using Eurofurence.App.Server.Services.Lassie;
+using Eurofurence.App.Server.Services.LostAndFound;
+using Eurofurence.App.Server.Services.Maps;
+using Eurofurence.App.Server.Services.PushNotifications;
+using Eurofurence.App.Server.Services.Sanitization;
+using Eurofurence.App.Server.Services.Storage;
+using Eurofurence.App.Server.Services.Users;
+using Eurofurence.App.Server.Services.Validation;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -87,7 +112,43 @@ namespace Eurofurence.App.Server.Web
                 options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;
             });
             services.ConfigureOptions<ConfigureOAuth2IntrospectionOptions>();
-            
+
+            // Register services
+            services.AddTransient<IAgentClosingResultService, AgentClosingResultService>();
+            services.AddTransient<IAnnouncementService, AnnouncementService>();
+            services.AddTransient<ICollectingGameService, CollectingGameService>();
+            services.AddTransient<IDealerService, DealerService>();
+            services.AddTransient<IEventConferenceDayService, EventConferenceDayService>();
+            services.AddTransient<IEventConferenceRoomService, EventConferenceRoomService>();
+            services.AddTransient<IEventConferenceTrackService, EventConferenceTrackService>();
+            services.AddTransient<IEventFeedbackService, EventFeedbackService>();
+            services.AddTransient<IEventService, EventService>();
+            services.AddTransient<IPushNotificationChannelManager, PushNotificationChannelManager>();
+            services.AddTransient<IFursuitBadgeService, FursuitBadgeService>();
+            services.AddTransient<IHtmlSanitizer, GanssHtmlSanitizer>();
+            services.AddTransient<IImageService, ImageService>();
+            services.AddTransient<IItemActivityService, ItemActivityService>();
+            services.AddTransient<IKnowledgeEntryService, KnowledgeEntryService>();
+            services.AddTransient<IKnowledgeGroupService, KnowledgeGroupService>();
+            services.AddTransient<ILassieApiClient, LassieApiClient>();
+            services.AddTransient<ILinkFragmentValidator, LinkFragmentValidator>();
+            services.AddTransient<ILostAndFoundService, LostAndFoundService>();
+            services.AddTransient<ILostAndFoundLassieImporter, LostAndFoundLassieImporter>();
+            services.AddTransient<IMapService, MapService>();
+            services.AddTransient<IPrivateMessageService, PrivateMessageService>();
+            services.AddTransient<IPushNotificationChannelStatisticsService, PushNotificationChannelStatisticsService>();
+            services.AddTransient<IQrCodeService, QrCodeService>();
+            services.AddTransient<IStorageServiceFactory, StorageServiceFactory>();
+            services.AddTransient<ITableRegistrationService, TableRegistrationService>();
+            services.AddTransient<IHttpUriSanitizer, HttpUriSanitizer>();
+            services.AddTransient<IUserManager, UserManager>();
+            services.AddTransient<IDealerApiClient, DealerApiClient>();
+            services.AddTransient<IDeviceIdentityService, DeviceIdentityService>();
+            services.AddTransient<IRegistrationIdentityService, RegistrationIdentityService>();
+            services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
+            services.AddSingleton<ITelegramMessageBroker, TelegramMessageBroker>();
+            services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
+
             services.AddLogging(options =>
             {
                 options.ClearProviders();
@@ -378,7 +439,6 @@ namespace Eurofurence.App.Server.Web
 
             services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
-            var builder = new ContainerBuilder();
             // Add Mapster for mapping DTOs
             var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
             typeAdapterConfig.Default.PreserveReference(true);
@@ -386,14 +446,7 @@ namespace Eurofurence.App.Server.Web
             services.AddSingleton(typeAdapterConfig);
             services.AddScoped<IMapper, ServiceMapper>();
 
-            builder.Build();
-
             CidRouteBaseAttribute.Value = globalOptions.ConventionIdentifier;
-        }
-
-        public void ConfigureContainer(ContainerBuilder builder)
-        {
-            builder.RegisterModule(new Services.DependencyResolution.AutofacModule(Configuration));
         }
 
         public void Configure(
