@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -48,23 +46,20 @@ public class BotService : BackgroundService, IUpdateHandler
         ILogger<BotService> logger,
         ITelegramBotClient client,
         IServiceProvider serviceProvider,
-        IEventService eventService,
-        IEventConferenceRoomService eventConferenceRoomService,
         IOptions<GlobalOptions> globalOptions,
-        IDealerService dealerService,
-        ITelegramMessageBroker telegramMessageBroker,
-        IImageService imageService,
-        ITableRegistrationService tableRegistrationService)
+        ITelegramMessageBroker telegramMessageBroker)
     {
         _logger = logger;
         _client = client;
         _serviceProvider = serviceProvider;
-        _eventService = eventService;
-        _eventConferenceRoomService = eventConferenceRoomService;
         _globalOptions = globalOptions.Value;
-        _dealerService = dealerService;
-        _imageService = imageService;
-        _tableRegistrationService = tableRegistrationService;
+
+        using var scope = _serviceProvider.CreateScope();
+        _eventService = scope.ServiceProvider.GetService<IEventService>();
+        _eventConferenceRoomService = scope.ServiceProvider.GetService<IEventConferenceRoomService>();
+        _dealerService = scope.ServiceProvider.GetService<IDealerService>();
+        _imageService = scope.ServiceProvider.GetService<IImageService>();
+        _tableRegistrationService = scope.ServiceProvider.GetService<ITableRegistrationService>();
 
         telegramMessageBroker.OnSendMarkdownMessageToChatAsync += OnSendMarkdownMessageToChatAsync;
         telegramMessageBroker.OnSendImageToChatAsync += OnSendImageToChatAsync;
