@@ -22,11 +22,13 @@ public class ConfigureOAuth2IntrospectionOptions(
         Configure(options);
     }
 
-    private async Task OnTokenValidated(TokenValidatedContext context)
+    private static Task OnTokenValidated(TokenValidatedContext context)
     {
         if (context.Principal?.Identity is ClaimsIdentity identity)
         {
             identity.AddClaim(new Claim("token", context.SecurityToken));
         }
+
+        return Task.CompletedTask;
     }
 }
