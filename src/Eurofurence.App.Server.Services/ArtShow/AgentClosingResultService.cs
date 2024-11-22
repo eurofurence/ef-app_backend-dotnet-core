@@ -14,24 +14,25 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.ArtShow
 {
     public class AgentClosingResultService : IAgentClosingResultService
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly IPrivateMessageService _privateMessageService;
         private static SemaphoreSlim _semaphore = new(1, 1);
 
         public AgentClosingResultService(
             AppDbContext appDbContext,
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             IPrivateMessageService privateMessageService
             )
         {
             _appDbContext = appDbContext;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
             _privateMessageService = privateMessageService;
         }
 
@@ -60,7 +61,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
                     var newRecord = new AgentClosingResultRecord()
                     {
                         Id = Guid.NewGuid(),
-                        OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{csvRecord.AgentBadgeNo}",
+                        OwnerUid = $"RegSys:{_globalOptions.ConventionIdentifier}:{csvRecord.AgentBadgeNo}",
                         AgentBadgeNo = csvRecord.AgentBadgeNo,
                         AgentName = csvRecord.AgentName,
                         ArtistName = csvRecord.ArtistName,

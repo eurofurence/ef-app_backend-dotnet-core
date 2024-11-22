@@ -12,11 +12,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
-    <ProjectReference
-      Include="..\Eurofurence.App.Infrastructure.EntityFramework\Eurofurence.App.Infrastructure.EntityFramework.csproj" />
+    <ProjectReference Include="..\Eurofurence.App.Infrastructure.EntityFramework\Eurofurence.App.Infrastructure.EntityFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="8.1.0" />
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="dotAPNS" Version="4.5.0" />
     <PackageReference Include="dotAPNS.AspNetCore" Version="2.2.2" />

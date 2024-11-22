@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Lassie
 {
@@ -14,12 +15,12 @@ namespace Eurofurence.App.Server.Services.Lassie
             public T[] Data { get; set; }
         }
 
-        private LassieConfiguration _configuration;
+        private LassieOptions _lassieOptions;
         private JsonSerializerOptions _serializerOptions;
 
-        public LassieApiClient(LassieConfiguration configuration, JsonSerializerOptions serializerOptions)
+        public LassieApiClient(IOptions<LassieOptions> lassieOptions, JsonSerializerOptions serializerOptions)
         {
-            _configuration = configuration;
+            _lassieOptions = lassieOptions.Value;
             _serializerOptions = serializerOptions;
         }
 
@@ -27,13 +28,13 @@ namespace Eurofurence.App.Server.Services.Lassie
         {
             var outgoingQuery = new List<KeyValuePair<string, string>>()
             {
-                new KeyValuePair<string, string>("apikey", _configuration.ApiKey),
+                new KeyValuePair<string, string>("apikey", _lassieOptions.ApiKey),
                 new KeyValuePair<string, string>("request", "lostandfounddb"),
                 new KeyValuePair<string, string>("command", command)
             };
 
             using var client = new HttpClient();
-            var response = await client.PostAsync(_configuration.BaseApiUrl, new FormUrlEncodedContent(outgoingQuery));
+            var response = await client.PostAsync(_lassieOptions.BaseApiUrl, new FormUrlEncodedContent(outgoingQuery));
             var content = await response.Content.ReadAsStringAsync();
 
             var dataResponse = DeserializeLostAndFoundResponse(content);

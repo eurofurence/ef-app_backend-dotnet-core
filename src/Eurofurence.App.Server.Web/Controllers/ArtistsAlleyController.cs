@@ -23,16 +23,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
-        private readonly ArtistAlleyConfiguration _configuration;
+        private readonly ArtistAlleyOptions _artistAlleyOptions;
 
-        private const string ArtistAlleyDisabledFilePath = ".ArtistAlleyDisabled";
-
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,ArtistAlleyConfiguration _configuration, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
-            this._configuration = _configuration;
+            _artistAlleyOptions = artistAlleyOptions.Value;
         }
         
         
@@ -99,7 +97,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
-            if (!_configuration.RegistrationEnabled)
+            if (!_artistAlleyOptions.RegistrationEnabled)
             {
                 return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }

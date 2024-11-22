@@ -1,19 +1,16 @@
 ﻿@using Eurofurence.App.Server.Web.Controllers
 @using Eurofurence.App.Server.Services.Abstractions
-@model ConventionSettings
+@using Microsoft.Extensions.Options
+@inject IOptions<GlobalOptions> GlobalOptions
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
 
-    var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
-    var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
-    var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
-
-    var scheduleUrl = $"https://www.eurofurence.org/{Model.ConventionIdentifier}/schedule";
+    var scheduleUrl = $"https://www.eurofurence.org/{GlobalOptions.Value.ConventionIdentifier}/schedule";
 }
 
 <header>
     <h1>
-        Eurofurence @Model.ConventionNumber Event Schedule
+        Eurofurence @GlobalOptions.Value.ConventionNumber Event Schedule
         <span>What is happening when and where?</span>
     </h1>
 </header>
@@ -21,7 +18,7 @@
 <section class="summary">
     <div class="infobox">
         <i class="fas fa-calendar"></i> Just want to see what events
-        Eurofurence @Model.ConventionNumber has in store for you this year?<br>
+        Eurofurence @GlobalOptions.Value.ConventionNumber has in store for you this year?<br>
         Head on over to our <a href="@scheduleUrl">schedule at @scheduleUrl</a>!
     </div>
     <div class="infobox">

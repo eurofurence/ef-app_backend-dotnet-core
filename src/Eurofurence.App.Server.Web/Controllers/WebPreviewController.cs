@@ -2,7 +2,6 @@
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Web.Extensions;
@@ -12,14 +11,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Web")]
     public class WebPreviewController : BaseController
     {
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly IEventService _eventService;
         private readonly IEventConferenceDayService _eventConferenceDayService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
@@ -28,19 +27,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly IKnowledgeEntryService _knowledgeEntryService;
         private readonly IMapService _mapService;
-        private readonly IImageService _imageService;
-        private ILogger _logger;
 
         public const string VIEWDATA_OPENGRAPH_METADATA = nameof(OpenGraphMetadata);
-        public const string VIEWDATA_APPID_ITUNES = nameof(ConventionSettings.AppIdITunes);
-        public const string VIEWDATA_APPID_PLAY = nameof(ConventionSettings.AppIdPlay);
-        public const string VIEWDATA_BASE_URL = nameof(ConventionSettings.BaseUrl);
-        public const string VIEWDATA_API_BASE_URL = nameof(ConventionSettings.ApiBaseUrl);
-        public const string VIEWDATA_CONTENT_BASE_URL = nameof(ConventionSettings.ContentBaseUrl);
-        public const string VIEWDATA_WEB_BASE_URL = nameof(ConventionSettings.WebBaseUrl);
+        public const string VIEWDATA_APPID_ITUNES = nameof(GlobalOptions.AppIdITunes);
+        public const string VIEWDATA_APPID_PLAY = nameof(GlobalOptions.AppIdPlay);
+        public const string VIEWDATA_BASE_URL = nameof(GlobalOptions.BaseUrl);
+        public const string VIEWDATA_API_BASE_URL = nameof(GlobalOptions.ApiBaseUrl);
+        public const string VIEWDATA_CONTENT_BASE_URL = nameof(GlobalOptions.ContentBaseUrl);
+        public const string VIEWDATA_WEB_BASE_URL = nameof(GlobalOptions.WebBaseUrl);
 
         public WebPreviewController(
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             IEventService eventService,
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
@@ -48,11 +45,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             IDealerService dealerService,
             IKnowledgeGroupService knowledgeGroupService,
             IKnowledgeEntryService knowledgeEntryService,
-            IMapService mapService,
-            IImageService imageService,
-            ILoggerFactory loggerFactory)
+            IMapService mapService)
         {
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
             _eventService = eventService;
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceRoomService = eventConferenceRoomService;
@@ -61,18 +56,16 @@ namespace Eurofurence.App.Server.Web.Controllers
             _knowledgeGroupService = knowledgeGroupService;
             _knowledgeEntryService = knowledgeEntryService;
             _mapService = mapService;
-            _imageService = imageService;
-            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         private void PopulateViewData()
         {
-            ViewData[VIEWDATA_API_BASE_URL] = _conventionSettings.ApiBaseUrl;
-            ViewData[VIEWDATA_BASE_URL] = _conventionSettings.BaseUrl;
-            ViewData[VIEWDATA_WEB_BASE_URL] = _conventionSettings.WebBaseUrl;
-            ViewData[VIEWDATA_CONTENT_BASE_URL] = _conventionSettings.ContentBaseUrl;
-            ViewData[VIEWDATA_APPID_ITUNES] = _conventionSettings.AppIdITunes;
-            ViewData[VIEWDATA_APPID_PLAY] = _conventionSettings.AppIdPlay;
+            ViewData[VIEWDATA_API_BASE_URL] = _globalOptions.ApiBaseUrl;
+            ViewData[VIEWDATA_BASE_URL] = _globalOptions.BaseUrl;
+            ViewData[VIEWDATA_WEB_BASE_URL] = _globalOptions.WebBaseUrl;
+            ViewData[VIEWDATA_CONTENT_BASE_URL] = _globalOptions.ContentBaseUrl;
+            ViewData[VIEWDATA_APPID_ITUNES] = _globalOptions.AppIdITunes;
+            ViewData[VIEWDATA_APPID_PLAY] = _globalOptions.AppIdPlay;
         }
 
         [HttpGet("Events/{id}")]
@@ -105,10 +98,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         public ActionResult GetEvents()
         {
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
-                            .WithTitle($"Eurofurence {_conventionSettings.ConventionNumber} Event Schedule")
-                            .WithDescription($"Find out what is happening when and where at Eurofurence {_conventionSettings.ConventionNumber}");
+                            .WithTitle($"Eurofurence {_globalOptions.ConventionNumber} Event Schedule")
+                            .WithDescription($"Find out what is happening when and where at Eurofurence {_globalOptions.ConventionNumber}");
 
-            return View("EventsPreview", _conventionSettings);
+            return View("EventsPreview", _globalOptions);
         }
 
         [HttpGet("Dealers/{id}")]
@@ -205,7 +198,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 related_applications = new[] {
                     new {
                         platform = "play",
-                        id = _conventionSettings.AppIdPlay
+                        id = _globalOptions.AppIdPlay
                     }
                 }
             });

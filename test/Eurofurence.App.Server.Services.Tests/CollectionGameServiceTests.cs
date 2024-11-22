@@ -12,6 +12,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Fursuits;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Eurofurence.App.Server.Services.Tests
@@ -36,9 +37,9 @@ namespace Eurofurence.App.Server.Services.Tests
         private CollectingGameService GetService(AppDbContext appDbContext)
         {
             return new CollectingGameService(appDbContext, 
-                new NullLoggerFactory(), 
-                new CollectionGameConfiguration(),
-                new Mock<ITelegramMessageSender>().As<ITelegramMessageSender>().Object);
+                new NullLoggerFactory(),
+                Options.Create(new CollectionGameOptions()),
+                new Mock<ITelegramMessageBroker>().As<ITelegramMessageBroker>().Object);
         }
 
         private async Task<DeviceIdentityRecord> CreateDeviceAsync(AppDbContext appDbContext)

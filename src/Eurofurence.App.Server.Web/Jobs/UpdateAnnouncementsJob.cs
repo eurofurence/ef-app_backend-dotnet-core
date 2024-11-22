@@ -14,6 +14,7 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Quartz;
 
 namespace Eurofurence.App.Server.Web.Jobs
@@ -25,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Jobs
         private readonly IImageService _imageService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
         private readonly IEventService _eventService;
-        private readonly AnnouncementConfiguration _configuration;
+        private readonly AnnouncementOptions _announcementOptions;
         private readonly ILogger _logger;
 
         public UpdateAnnouncementsJob(
@@ -33,14 +34,14 @@ namespace Eurofurence.App.Server.Web.Jobs
             IImageService imageService,
             IPushNotificationChannelManager pushNotificationChannelManager,
             IEventService eventService,
-            AnnouncementConfiguration configuration,
+            IOptions<AnnouncementOptions> announcementOptions,
             ILoggerFactory loggerFactory)
         {
             _announcementService = announcementService;
             _imageService = imageService;
             _pushNotificationChannelManager = pushNotificationChannelManager;
             _eventService = eventService;
-            _configuration = configuration;
+            _announcementOptions = announcementOptions.Value;
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
@@ -50,10 +51,10 @@ namespace Eurofurence.App.Server.Web.Jobs
 
             try
             {
-                var response = string.Empty;
+                string response;
                 using (var client = new HttpClient())
                 {
-                    var url = _configuration.Url;
+                    var url = _announcementOptions.Url;
                     if (string.IsNullOrWhiteSpace(url))
                     {
                         _logger.LogError(LogEvents.Import, "Empty source url; cancelling job");
@@ -126,7 +127,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 await _announcementService.ApplyPatchOperationAsync(diff);
 
-                if (diff.Where(p => (p.Action == ActionEnum.Add || p.Action == ActionEnum.Update) && (p.Entity.Area == "New" || p.Entity.Area == "Deleted" || p.Entity.Area == "Rescheduled")).Any())
+                if (diff.Any(p => p.Action is ActionEnum.Add or ActionEnum.Update && p.Entity.Area is "New" or "Deleted" or "Rescheduled"))
                 {
                     _logger.LogInformation(LogEvents.Import, "Found new/modified Announcements affecting events; performing event import.");
                     await _eventService.RunImportAsync();

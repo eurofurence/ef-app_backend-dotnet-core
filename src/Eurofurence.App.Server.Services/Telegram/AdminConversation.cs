@@ -22,6 +22,7 @@ using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Telegram
 {
@@ -33,8 +34,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly IImageService _imageService;
         private readonly ICollectingGameService _collectingGameService;
-        private readonly ConventionSettings _conventionSettings;
-
+        private readonly GlobalOptions _globalOptions;
 
         private class CommandInfo
         {
@@ -88,7 +88,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             ITableRegistrationService tableRegistrationService,
             IImageService imageService,
             ICollectingGameService collectingGameService,
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             ILoggerFactory loggerFactory)
         {
             _appDbContext = appDbContext;
@@ -98,7 +98,7 @@ namespace Eurofurence.App.Server.Services.Telegram
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
             _collectingGameService = collectingGameService;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
 
             _commands = new List<CommandInfo>()
             {
@@ -292,7 +292,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                             }
 
                                             var recipientUid =
-                                                $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}";
+                                                $"RegSys:{_globalOptions.ConventionIdentifier}:{regNo}";
                                             var messageId = await _privateMessageService.SendPrivateMessageAsync(
                                                 new SendPrivateMessageByRegSysRequest()
                                                 {
@@ -343,7 +343,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                     }
 
                     var result = await _collectingGameService.UnbanPlayerAsync(
-                        $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}");
+                        $"RegSys:{_globalOptions.ConventionIdentifier}:{regNo}");
 
                     if (result.IsSuccessful)
                     {
@@ -739,7 +739,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                                         return;
                                     }
 
-                                    if (badge.OwnerUid != $"RegSys:{_conventionSettings.ConventionIdentifier}:{regNo}")
+                                    if (badge.OwnerUid != $"RegSys:{_globalOptions.ConventionIdentifier}:{regNo}")
                                     {
                                         await ReplyAsync(
                                             $"*Error*: Fursuit badge with no *{fursuitBadgeNo}* exists, but does *not* belong to reg no *{regNo}*. Aborting.");
