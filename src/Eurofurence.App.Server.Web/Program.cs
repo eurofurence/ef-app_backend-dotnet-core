@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<FirebaseOptions>(builder.Configuration.GetSection("Push:Firebase"));
             builder.Services.Configure<ApnsOptions>(builder.Configuration.GetSection("Push:Apns"));
             builder.Services.Configure<ExpoOptions>(builder.Configuration.GetSection("Push:Expo"));
-            builder.Services.Configure<QrCodeConfiguration>(builder.Configuration.GetSection("QrCode"));
+            builder.Services.Configure<QrCodeOptions>(builder.Configuration.GetSection("QrCode"));
             builder.Services.Configure<ArtistAlleyOptions>(builder.Configuration.GetSection("ArtistAlley"));
             builder.Services.Configure<LassieOptions>(builder.Configuration.GetSection("Lassie"));
             builder.Services.Configure<MinIoOptions>(builder.Configuration.GetSection("MinIo"));

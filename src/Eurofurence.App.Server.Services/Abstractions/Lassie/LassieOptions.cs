@@ -2,7 +2,7 @@
 {
     public class LassieOptions
     {
-        public string BaseApiUrl { get; set; }
-        public string ApiKey { get; set; }
+        public string BaseApiUrl { get; init; }
+        public string ApiKey { get; init; }
     }
 }

@@ -2,12 +2,12 @@
 {
     public class MinIoOptions
     {
-        public string Endpoint { get; set; }
-        public string BaseUrl { get; set; }
-        public string Region { get; set; } = "us-east-1";
-        public string AccessKey { get; set; }
-        public string SecretKey { get; set; }
-        public bool Secure { get; set; }
-        public string Bucket { get; set; }
+        public string Endpoint { get; init; }
+        public string BaseUrl { get; init; }
+        public string Region { get; init; } = "us-east-1";
+        public string AccessKey { get; init; }
+        public string SecretKey { get; init; }
+        public bool Secure { get; init; }
+        public string Bucket { get; init; }
     }
 }

@@ -2,7 +2,7 @@
 {
     public class ArtistAlleyOptions
     {
-        public bool RegistrationEnabled { get; set; }
-        public ArtistAlleyTelegramOptions Telegram { get; set; }
+        public bool RegistrationEnabled { get; init; }
+        public ArtistAlleyTelegramOptions Telegram { get; init; }
     }
 }
