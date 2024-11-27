@@ -14,6 +14,7 @@ using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Fursuits
 {
@@ -21,20 +22,20 @@ namespace Eurofurence.App.Server.Services.Fursuits
     {
         private readonly AppDbContext _appDbContext;
         private static SemaphoreSlim _semaphore = new(1, 1);
-        private readonly CollectionGameConfiguration _collectionGameConfiguration;
-        private readonly ITelegramMessageSender _telegramMessageSender;
+        private readonly CollectionGameOptions _collectionGameOptions;
+        private readonly ITelegramMessageBroker _telegramMessageSender;
         private ILogger _logger;
 
         public CollectingGameService(
             AppDbContext appDbContext,
             ILoggerFactory loggerFactory,
-            CollectionGameConfiguration collectionGameConfiguration,
-            ITelegramMessageSender telegramMessageSender
+            IOptions<CollectionGameOptions> collectionGameOptions,
+            ITelegramMessageBroker telegramMessageSender
         )
         {
             _appDbContext = appDbContext;
             _logger = loggerFactory.CreateLogger(GetType());
-            _collectionGameConfiguration = collectionGameConfiguration;
+            _collectionGameOptions = collectionGameOptions.Value;
             _telegramMessageSender = telegramMessageSender;
         }
 
@@ -600,10 +601,10 @@ namespace Eurofurence.App.Server.Services.Fursuits
 
         private async Task SendToTelegramManagementChannelAsync(string message)
         {
-            if (string.IsNullOrWhiteSpace(_collectionGameConfiguration.TelegramManagementChatId)) return;
+            if (string.IsNullOrWhiteSpace(_collectionGameOptions.TelegramManagementChatId)) return;
 
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-                _collectionGameConfiguration.TelegramManagementChatId, message);
+                _collectionGameOptions.TelegramManagementChatId, message);
         }
 
         public async Task<IResult> RecalculateAsync()
