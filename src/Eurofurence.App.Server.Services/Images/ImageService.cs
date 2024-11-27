@@ -16,6 +16,7 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 
@@ -25,20 +26,20 @@ namespace Eurofurence.App.Server.Services.Images
     {
         private readonly AppDbContext _appDbContext;
         private readonly IMinioClient _minIoClient;
-        private readonly MinIoConfiguration _minIoConfiguration;
+        private readonly MinIoOptions _minIoOptions;
 
         public ImageService(
             AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
-            MinIoConfiguration minIoConfiguration)
+            IOptions<MinIoOptions> minIoOptions)
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
-            _minIoConfiguration = minIoConfiguration;
-            _minIoClient = new MinioClient().WithEndpoint(minIoConfiguration.Endpoint)
-                .WithCredentials(minIoConfiguration.AccessKey, minIoConfiguration.SecretKey)
-                .WithRegion(minIoConfiguration.Region)
-                .WithSSL(minIoConfiguration.Secure)
+            _minIoOptions = minIoOptions.Value;
+            _minIoClient = new MinioClient().WithEndpoint(_minIoOptions.Endpoint)
+                .WithCredentials(_minIoOptions.AccessKey, _minIoOptions.SecretKey)
+                .WithRegion(_minIoOptions.Region)
+                .WithSSL(_minIoOptions.Secure)
                 .Build();
         }
 
@@ -58,7 +59,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
             await DeleteFileFromMinIoAsync(
-                _minIoConfiguration.Bucket,
+                _minIoOptions.Bucket,
                 entity.InternalFileName,
                 cancellationToken
             );
@@ -73,7 +74,7 @@ namespace Eurofurence.App.Server.Services.Images
                 .ToListAsync(cancellationToken);
 
             await DeleteFilesFromMinIoAsync(
-                _minIoConfiguration.Bucket,
+                _minIoOptions.Bucket,
                 imageIds,
                 cancellationToken
             );
@@ -114,7 +115,7 @@ namespace Eurofurence.App.Server.Services.Images
             {
                 Id = guid,
                 InternalFileName = fileName,
-                Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}",
+                Url = $"{_minIoOptions.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoOptions.Bucket}/{fileName}",
                 IsRestricted = isRestricted,
                 InternalReference = internalReference,
                 IsDeleted = 0,
@@ -128,7 +129,7 @@ namespace Eurofurence.App.Server.Services.Images
             await base.InsertOneAsync(record, cancellationToken);
 
             await UploadFileToMinIoAsync(
-                _minIoConfiguration.Bucket,
+                _minIoOptions.Bucket,
                 record.InternalFileName,
                 imageFormat?.DefaultMimeType,
                 stream,
@@ -175,7 +176,7 @@ namespace Eurofurence.App.Server.Services.Images
             }
 
             await DeleteFileFromMinIoAsync(
-                _minIoConfiguration.Bucket,
+                _minIoOptions.Bucket,
                 existingRecord.InternalFileName,
                 cancellationToken
             );
@@ -185,7 +186,7 @@ namespace Eurofurence.App.Server.Services.Images
                 : existingRecord.Id + ".png";
 
             existingRecord.InternalFileName = fileName;
-            existingRecord.Url = $"{_minIoConfiguration.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoConfiguration.Bucket}/{fileName}";
+            existingRecord.Url = $"{_minIoOptions.BaseUrl ?? _minIoClient.Config.Endpoint}/{_minIoOptions.Bucket}/{fileName}";
             existingRecord.IsRestricted = isRestricted;
             existingRecord.InternalReference = internalReference;
             existingRecord.MimeType = imageFormat?.DefaultMimeType;
@@ -195,7 +196,7 @@ namespace Eurofurence.App.Server.Services.Images
             existingRecord.ContentHashSha1 = hash;
 
             await UploadFileToMinIoAsync(
-                _minIoConfiguration.Bucket,
+                _minIoOptions.Bucket,
                 existingRecord.InternalFileName,
                 imageFormat?.DefaultMimeType,
                 stream,
@@ -214,13 +215,13 @@ namespace Eurofurence.App.Server.Services.Images
 
             // Checks if the object exists
             await _minIoClient.StatObjectAsync(new StatObjectArgs()
-                    .WithBucket(_minIoConfiguration.Bucket)
+                    .WithBucket(_minIoOptions.Bucket)
                     .WithObject(existingRecord.InternalFileName),
                 cancellationToken);
 
             var ms = new MemoryStream();
             await _minIoClient.GetObjectAsync(new GetObjectArgs()
-                    .WithBucket(_minIoConfiguration.Bucket)
+                    .WithBucket(_minIoOptions.Bucket)
                     .WithObject(existingRecord.InternalFileName)
                     .WithCallbackStream(stream => { stream.CopyTo(ms); }),
                 cancellationToken);
@@ -374,12 +375,10 @@ namespace Eurofurence.App.Server.Services.Images
         public async Task<ImageRecord> SetRestricted(Guid id, bool isRestricted,
             CancellationToken cancellationToken = default)
         {
-            var record = await _appDbContext.Images.FirstOrDefaultAsync(i => i.Id == id);
-            if (record == null)
-            {
-                record.IsRestricted = isRestricted;
-                await _appDbContext.SaveChangesAsync(cancellationToken);
-            }
+            var record = await _appDbContext.Images.FirstOrDefaultAsync(i => i.Id == id, cancellationToken: cancellationToken);
+            if (record == null) return null;
+            record.IsRestricted = isRestricted;
+            await _appDbContext.SaveChangesAsync(cancellationToken);
             return record;
         }
     }

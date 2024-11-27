@@ -9,24 +9,25 @@ using System.Threading;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Fursuits
 {
     public class FursuitBadgeService : IFursuitBadgeService
     {
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly AppDbContext _appDbContext;
         private readonly IImageService _imageService;
         private readonly SemaphoreSlim _sync = new(1, 1);
 
         public FursuitBadgeService(
             AppDbContext appDbContext,
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             IImageService imageService
             )
         {
             _appDbContext = appDbContext;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
             _imageService = imageService;
         }
 
@@ -51,7 +52,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
                 fursuitBadge = record;
 
                 record.ExternalReference = registration.BadgeNo.ToString();
-                record.OwnerUid = $"RegSys:{_conventionSettings.ConventionIdentifier}:{registration.RegNo}";
+                record.OwnerUid = $"RegSys:{_globalOptions.ConventionIdentifier}:{registration.RegNo}";
                 record.Gender = registration.Gender;
                 record.Name = registration.Name;
                 record.Species = registration.Species;

@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -19,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -35,7 +34,7 @@ public class BotService : BackgroundService, IUpdateHandler
     private readonly IServiceProvider _serviceProvider;
     private readonly IEventService _eventService;
     private readonly IEventConferenceRoomService _eventConferenceRoomService;
-    private readonly ConventionSettings _conventionSettings;
+    private readonly GlobalOptions _globalOptions;
     private readonly IDealerService _dealerService;
     private readonly IImageService _imageService;
     private readonly ITableRegistrationService _tableRegistrationService;
@@ -47,23 +46,20 @@ public class BotService : BackgroundService, IUpdateHandler
         ILogger<BotService> logger,
         ITelegramBotClient client,
         IServiceProvider serviceProvider,
-        IEventService eventService,
-        IEventConferenceRoomService eventConferenceRoomService,
-        ConventionSettings conventionSettings,
-        IDealerService dealerService,
-        ITelegramMessageBroker telegramMessageBroker,
-        IImageService imageService,
-        ITableRegistrationService tableRegistrationService)
+        IOptions<GlobalOptions> globalOptions,
+        ITelegramMessageBroker telegramMessageBroker)
     {
         _logger = logger;
         _client = client;
         _serviceProvider = serviceProvider;
-        _eventService = eventService;
-        _eventConferenceRoomService = eventConferenceRoomService;
-        _conventionSettings = conventionSettings;
-        _dealerService = dealerService;
-        _imageService = imageService;
-        _tableRegistrationService = tableRegistrationService;
+        _globalOptions = globalOptions.Value;
+
+        using var scope = _serviceProvider.CreateScope();
+        _eventService = scope.ServiceProvider.GetService<IEventService>();
+        _eventConferenceRoomService = scope.ServiceProvider.GetService<IEventConferenceRoomService>();
+        _dealerService = scope.ServiceProvider.GetService<IDealerService>();
+        _imageService = scope.ServiceProvider.GetService<IImageService>();
+        _tableRegistrationService = scope.ServiceProvider.GetService<ITableRegistrationService>();
 
         telegramMessageBroker.OnSendMarkdownMessageToChatAsync += OnSendMarkdownMessageToChatAsync;
         telegramMessageBroker.OnSendImageToChatAsync += OnSendImageToChatAsync;
@@ -303,7 +299,7 @@ public class BotService : BackgroundService, IUpdateHandler
                     $"EVENT: {e.StartDateTimeUtc.DayOfWeek} {e.StartTime:hh\\:mm}-{e.EndTime:hh\\:mm}: {e.Title} " +
                     (string.IsNullOrEmpty(e.SubTitle) ? "" : $" ({e.SubTitle})"),
                     new InputTextMessageContent(
-                        $"*Event:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Events/{e.Id}")
+                        $"*Event:* https://app.eurofurence.org/{_globalOptions.ConventionIdentifier}/Web/Events/{e.Id}")
                     {
                         ParseMode = ParseMode.Markdown
                     }
@@ -338,7 +334,7 @@ public class BotService : BackgroundService, IUpdateHandler
                 e.Id.ToString(),
                 $"DEALER: {e.DisplayNameOrAttendeeNickname}",
                 new InputTextMessageContent(
-                    $"*Dealer:* https://app.eurofurence.org/{_conventionSettings.ConventionIdentifier}/Web/Dealers/{e.Id}")
+                    $"*Dealer:* https://app.eurofurence.org/{_globalOptions.ConventionIdentifier}/Web/Dealers/{e.Id}")
                 {
                     ParseMode = ParseMode.Markdown
                 }))
