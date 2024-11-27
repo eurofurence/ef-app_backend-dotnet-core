@@ -1,21 +1,21 @@
 ﻿using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Microsoft.Extensions.Options;
 
-namespace Eurofurence.App.Server.Services.Communication
+namespace Eurofurence.App.Server.Services.QrCode
 {
     public class QrCodeService : IQrCodeService
     {
-        private readonly QrCodeConfiguration _qrCodeConfiguration;
+        private readonly QrCodeOptions _qrCodeOptions;
 
         public QrCodeService(
-            IOptionsMonitor<QrCodeConfiguration> qrCodeConfiguration
+            IOptionsMonitor<QrCodeOptions> qrCodeOptions
         )
         {
-            _qrCodeConfiguration = qrCodeConfiguration.CurrentValue;
+            _qrCodeOptions = qrCodeOptions.CurrentValue;
         }
         public string GetTarget(string id)
         {
-            return _qrCodeConfiguration.Targets[id];
+            return _qrCodeOptions.Targets[id];
         }
     }
 }

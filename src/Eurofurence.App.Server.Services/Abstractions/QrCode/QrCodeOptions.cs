@@ -2,8 +2,8 @@
 
 namespace Eurofurence.App.Server.Services.Abstractions.QrCode
 {
-    public class QrCodeConfiguration
+    public class QrCodeOptions
     {
-        public Dictionary<string, string> Targets { get; set; }
+        public Dictionary<string, string> Targets { get; init; }
     }
 }

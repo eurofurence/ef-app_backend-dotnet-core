@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Autofac;
 using Eurofurence.App.Server.Web.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -20,12 +19,12 @@ namespace Eurofurence.App.Server.Web.Swagger
                 .MethodInfo;
 
             if (methodInfo == null ||
-                methodInfo.CustomAttributes.All(a => !a.AttributeType.IsAssignableTo<AuthorizeAttribute>()))
+                methodInfo.CustomAttributes.All(a => !typeof(AuthorizeAttribute).IsAssignableFrom(a.AttributeType)))
                 return;
 
 
             var requiredRoles = methodInfo.CustomAttributes
-                .Where(a => a.AttributeType.IsAssignableTo<AuthorizeAttribute>())
+                .Where(a => typeof(AuthorizeAttribute).IsAssignableFrom(a.AttributeType))
                 .SelectMany(a => a.NamedArguments.Where(b => b.MemberName == "Roles"))
                 .Select(a => a.TypedValue.Value.ToString())
                 .SelectMany(a => a.Split(',', ';', ' '))

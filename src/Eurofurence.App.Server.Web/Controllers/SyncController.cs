@@ -12,6 +12,7 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -29,7 +30,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly ILogger _logger;
         private readonly IMapService _mapService;
-        private readonly ConventionSettings _conventionSettings;
+        private readonly GlobalOptions _globalOptions;
         private readonly IMapper _mapper;
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -43,7 +44,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IDealerService dealerService,
             IAnnouncementService announcementService,
             IMapService mapService,
-            ConventionSettings conventionSettings,
+            IOptions<GlobalOptions> globalOptions,
             IMapper mapper
         )
         {
@@ -58,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
             _announcementService = announcementService;
             _mapService = mapService;
-            _conventionSettings = conventionSettings;
+            _globalOptions = globalOptions.Value;
             _mapper = mapper;
         }
 
@@ -74,8 +75,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var response = new AggregatedDeltaResponse
             {
-                ConventionIdentifier = _conventionSettings.ConventionIdentifier,
-                State = _conventionSettings.State,
+                ConventionIdentifier = _globalOptions.ConventionIdentifier,
+                State = _globalOptions.State,
                 Since = since,
                 CurrentDateTimeUtc = DateTime.UtcNow,
 
