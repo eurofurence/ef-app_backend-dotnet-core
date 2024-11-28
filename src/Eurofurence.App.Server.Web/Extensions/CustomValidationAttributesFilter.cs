@@ -35,7 +35,7 @@ namespace Eurofurence.App.Server.Web.Extensions
                     .SingleOrDefault(b => b.AttributeType == typeof(EnsureEntityIdMatchesAttribute))
                     .ConstructorArguments[0].Value.ToString()));
 
-            foreach(var check in entityIdMatches)
+            foreach (var check in entityIdMatches)
             {
                 if (
                     !context.ActionArguments.ContainsKey(check.Item1) ||

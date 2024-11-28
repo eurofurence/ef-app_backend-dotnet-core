@@ -16,7 +16,7 @@ namespace Eurofurence.App.Server.Services.Validation
         private readonly IMapService _mapService;
 
         public LinkFragmentValidator(
-            IDealerService dealerService, 
+            IDealerService dealerService,
             IEventConferenceRoomService eventConferenceRoomService,
             IMapService mapService)
         {
@@ -83,12 +83,12 @@ namespace Eurofurence.App.Server.Services.Validation
 
             public static ValidationResult Valid()
             {
-                return new ValidationResult {IsValid = true};
+                return new ValidationResult { IsValid = true };
             }
 
             public static ValidationResult Error(string message)
             {
-                return new ValidationResult {IsValid = false, ErrorMessage = message};
+                return new ValidationResult { IsValid = false, ErrorMessage = message };
             }
         }
     }
