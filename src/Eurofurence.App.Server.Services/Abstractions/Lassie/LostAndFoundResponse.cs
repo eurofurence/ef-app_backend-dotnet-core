@@ -13,7 +13,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Lassie
 
         [JsonPropertyName("title")]
         public string Title { get; set; }
-        
+
         [JsonPropertyName("description")]
         public string Description { get; set; }
 

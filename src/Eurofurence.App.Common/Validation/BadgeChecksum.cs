@@ -31,7 +31,7 @@ namespace Eurofurence.App.Common.Validation
         public static bool TryParse(string id, out int regNo)
         {
             var numberPart = id.Substring(0, id.Length - 1);
-            var checksumLetter = id[id.Length-1];
+            var checksumLetter = id[id.Length - 1];
 
             if (CHECKSUM_LETTER_MAP.IndexOf(checksumLetter) == -1)
             {

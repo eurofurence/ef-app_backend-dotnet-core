@@ -34,7 +34,7 @@ namespace Eurofurence.App.Backoffice.Services
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return await http.GetFromJsonAsync<ArtistAlleySystemStatus>("ArtistsAlley/SystemStatus",options);
+            return await http.GetFromJsonAsync<ArtistAlleySystemStatus>("ArtistsAlley/SystemStatus", options);
         }
     }
 }

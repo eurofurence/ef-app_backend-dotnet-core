@@ -30,7 +30,7 @@ namespace Eurofurence.App.Server.Web.Extensions
 
         public static ActionResult AsActionResult<T>(this IResult<T> obj)
         {
-            if (obj.IsSuccessful) return new ObjectResult(obj.Value) {StatusCode = 200};
+            if (obj.IsSuccessful) return new ObjectResult(obj.Value) { StatusCode = 200 };
             return new BadRequestObjectResult(new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage });
         }
 
@@ -39,7 +39,7 @@ namespace Eurofurence.App.Server.Web.Extensions
             var result = new ApiSafeResult()
             {
                 IsSuccessful = obj.IsSuccessful,
-                Error = obj.IsSuccessful ? null : new ApiErrorResult {Code = obj.ErrorCode, Message = obj.ErrorMessage}
+                Error = obj.IsSuccessful ? null : new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage }
             };
 
             return new ObjectResult(result);
@@ -55,7 +55,7 @@ namespace Eurofurence.App.Server.Web.Extensions
             }
             else
             {
-                result.Error = new ApiErrorResult {Code = obj.ErrorCode, Message = obj.ErrorMessage};
+                result.Error = new ApiErrorResult { Code = obj.ErrorCode, Message = obj.ErrorMessage };
             }
             return new ObjectResult(result);
         }

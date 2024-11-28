@@ -36,7 +36,7 @@ namespace Eurofurence.App.Server.Services.Tests
 
         private CollectingGameService GetService(AppDbContext appDbContext)
         {
-            return new CollectingGameService(appDbContext, 
+            return new CollectingGameService(appDbContext,
                 new NullLoggerFactory(),
                 Options.Create(new CollectionGameOptions()),
                 new Mock<ITelegramMessageBroker>().As<ITelegramMessageBroker>().Object);
@@ -50,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Tests
                 DeviceToken = "DeviceToken",
                 DeviceType = DeviceType.Android
             };
-            
+
             appDbContext.DeviceIdentities.Add(record);
 
             appDbContext.RegistrationIdentities.Add(new RegistrationIdentityRecord
@@ -58,7 +58,7 @@ namespace Eurofurence.App.Server.Services.Tests
                 RegSysId = "123",
                 IdentityId = "Identity"
             });
-            
+
             await appDbContext.SaveChangesAsync();
             return record;
         }
@@ -103,7 +103,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var testUser = await CreateDeviceAsync(appDbContext);
             var testToken = await CreateTokenAsync(appDbContext);
             var testUserFursuitBadge = await CreateFursuitBadgeAsync(appDbContext, ownerUid: testUser.IdentityId);
-            
+
             var result = await collectingGameService.RegisterTokenForFursuitBadgeForOwnerAsync(testUser.IdentityId, testUserFursuitBadge.Id, testToken.Value);
             var testUserFursuitParticipation = await appDbContext.FursuitParticipations.AsNoTracking().FirstOrDefaultAsync(a => a.OwnerUid == testUser.IdentityId);
             testToken = await appDbContext.Tokens.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == testToken.Id);
@@ -123,7 +123,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var testUser = await CreateDeviceAsync(appDbContext);
             var testToken = INVALID_TOKEN;
             var testUserFursuitBadge = await CreateFursuitBadgeAsync(appDbContext, ownerUid: testUser.IdentityId);
-            
+
             Assert.NotNull(testUser);
             Assert.NotNull(testUserFursuitBadge);
 
@@ -144,7 +144,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var testUser = await CreateDeviceAsync(appDbContext);
             var testToken = await CreateTokenAsync(appDbContext);
             var invalidFursuitBadgeId = Guid.NewGuid();
-            
+
             Assert.NotNull(testUser);
             Assert.NotNull(testToken);
 
@@ -194,7 +194,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.IdentityId, 
+                setup.player2WithoutFursuit.IdentityId,
                 setup.player1Token.Value,
                 "Test User 2"
             );
@@ -222,13 +222,13 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.IdentityId, 
+                setup.player2WithoutFursuit.IdentityId,
                 setup.player1Token.Value,
                 "Test User 2"
             );
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.IdentityId, 
+                setup.player2WithoutFursuit.IdentityId,
                 setup.player1Token.Value,
                 "Test User 2"
             );
@@ -247,7 +247,7 @@ namespace Eurofurence.App.Server.Services.Tests
             var setup = await SetupTwoPlayersWithOneFursuitTokenAsync();
 
             var result = await collectingGameService.CollectTokenForPlayerAsync(
-                setup.player2WithoutFursuit.IdentityId, 
+                setup.player2WithoutFursuit.IdentityId,
                 INVALID_TOKEN,
                 "Test User 2"
             );
@@ -285,7 +285,7 @@ namespace Eurofurence.App.Server.Services.Tests
             IResult<CollectTokenResponse> result = null;
             for (int i = 0; i < 20; i++)
                 result = await collectingGameService.CollectTokenForPlayerAsync(
-                    setup.player1WithFursuit.IdentityId, 
+                    setup.player1WithFursuit.IdentityId,
                     INVALID_TOKEN,
                     "Test User 1"
                 );

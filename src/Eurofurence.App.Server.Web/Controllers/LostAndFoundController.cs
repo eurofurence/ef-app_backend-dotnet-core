@@ -18,9 +18,9 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "Attendee")]
         [HttpGet("Items")]
-        public  IQueryable<LostAndFoundRecord> GetItemsAsync()
+        public IQueryable<LostAndFoundRecord> GetItemsAsync()
         {
             return _lostAndFoundService.FindAll();
         }
     }
-} 
+}

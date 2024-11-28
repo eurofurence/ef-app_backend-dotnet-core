@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Swagger
                 Required = true,
                 Content = new Dictionary<string, OpenApiMediaType>()
                 {
-                    { "Content", 
+                    { "Content",
                         new OpenApiMediaType()
                         {
                             Schema = new OpenApiSchema()

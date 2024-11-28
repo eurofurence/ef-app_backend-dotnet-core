@@ -32,8 +32,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
             _artistAlleyOptions = artistAlleyOptions.Value;
         }
-        
-        
+
+
         [HttpPut("{id}/:status")]
         [Authorize(Roles = "Admin, ArtistAlleyAdmin, ArtistAlleyModerator")]
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
@@ -54,7 +54,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             else if (state == TableRegistrationRecord.RegistrationStateEnum.Accepted)
             {
                 await _tableRegistrationService.ApproveByIdAsync(id, "API:" + User.Identity.Name);
-                if (record.ImageId is {} imageId) await _imageService.SetRestricted(imageId, false);
+                if (record.ImageId is { } imageId) await _imageService.SetRestricted(imageId, false);
             }
 
             return NoContent();
@@ -101,7 +101,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
-            
+
             if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
             {
                 return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
@@ -145,7 +145,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             await _tableRegistrationService.DeleteOneAsync(id);
 
-            if (tableRegistration.ImageId is {} imageId) await _imageService.DeleteOneAsync(imageId);
+            if (tableRegistration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
 
             return NoContent();
         }

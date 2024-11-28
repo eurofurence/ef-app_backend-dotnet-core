@@ -61,7 +61,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
             [Required]
             [Column("ChangedBy")]
             public string ChangedBy { get; set; }
-        
+
             /// <summary>
             /// The new penalty which was set
             /// </summary>

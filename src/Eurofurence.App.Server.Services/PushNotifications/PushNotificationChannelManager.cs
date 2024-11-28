@@ -241,7 +241,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         /// <summary>
         /// Types of potential push events as expected by the apps.
         /// </summary>
-        private enum PushEventType {
+        private enum PushEventType
+        {
             /// <summary>
             /// Broadcast announcement to all registered devices.
             /// </summary>

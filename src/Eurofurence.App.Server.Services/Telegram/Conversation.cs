@@ -16,7 +16,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public Conversation()
         {
-            
+
         }
 
         //protected async Task RespondWithChoicesAsync(

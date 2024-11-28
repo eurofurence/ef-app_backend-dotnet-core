@@ -6,7 +6,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Telegram
 {
     public interface IUserManager
     {
-        Task<TEnum> GetAclForUserAsync<TEnum>(string username) where TEnum: struct;
+        Task<TEnum> GetAclForUserAsync<TEnum>(string username) where TEnum : struct;
 
         Task SetAclForUserAsync<TEnum>(string username, TEnum acl);
 

@@ -92,7 +92,7 @@ namespace Eurofurence.App.Server.Services.Fursuits
             {
                 result = await _imageService.GetImageContentByImageIdAsync((Guid)content.ImageId);
             }
-            
+
             return result;
         }
 

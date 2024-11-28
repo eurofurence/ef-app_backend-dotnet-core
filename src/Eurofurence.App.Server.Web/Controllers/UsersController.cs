@@ -17,7 +17,7 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class UsersController : BaseController
     {
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
-        public UsersController( IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
         }
@@ -31,7 +31,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (User.Identity is ClaimsIdentity identity)
             {
                 result.Roles = identity.FindAll(identity.RoleClaimType).Select(c => c.Value).ToArray();
-                result.Registrations = identity.FindAll(UserRegistrationClaims.Id).Select(c => {
+                result.Registrations = identity.FindAll(UserRegistrationClaims.Id).Select(c =>
+                {
                     var statusString = identity.FindFirst(UserRegistrationClaims.Status(c.Value))?.Value.Replace(" ", "");
                     Enum.TryParse(statusString, true, out UserRegistrationStatus registrationStatus);
                     var registration = new UserRegistration

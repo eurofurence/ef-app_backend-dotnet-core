@@ -4,6 +4,9 @@ name: Create and publish Docker images for backend and backoffice
 # Note: DOLLAR in the field descriptions should of course be replaced with a dollar sign.
 #       GitHub parses the description, so we can't write it correctly :)
 
+env:
+  HUSKY: 0
+
 on:
   workflow_call:
     inputs:

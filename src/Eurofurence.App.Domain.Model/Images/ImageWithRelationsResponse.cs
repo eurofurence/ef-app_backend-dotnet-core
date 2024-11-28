@@ -19,7 +19,7 @@ namespace Eurofurence.App.Domain.Model.Images
         [DataMember]
         public List<Guid> TableRegistrationIds { get; set; } = new();
 
-        [DataMember] 
+        [DataMember]
         public List<Guid> MapIds { get; set; } = new();
 
         [DataMember]

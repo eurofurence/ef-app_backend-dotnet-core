@@ -9,7 +9,7 @@ namespace Eurofurence.App.Domain.Model.Communication
     {
         [DataMember]
         public string RecipientRegSysId { get; set; }
-        
+
         [DataMember]
         public string RecipientIdentityId { get; set; }
 

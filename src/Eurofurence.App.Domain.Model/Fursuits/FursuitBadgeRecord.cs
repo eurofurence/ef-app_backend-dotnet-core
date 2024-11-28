@@ -14,7 +14,7 @@ namespace Eurofurence.App.Domain.Model.Fursuits
 
         [DataMember]
         [Required]
-        public string OwnerUid { get; set;  }
+        public string OwnerUid { get; set; }
 
         [DataMember]
         [Required]

@@ -14,7 +14,7 @@ public static class PrincipalExtensions
     {
         return principal.FindAll("RegSysId").Select(x => x.Value).ToArray();
     }
-    
+
     public static string GetName(this ClaimsPrincipal principal)
     {
         return principal.FindFirst("name")?.Value;

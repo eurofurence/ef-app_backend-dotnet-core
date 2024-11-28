@@ -46,7 +46,7 @@ namespace Eurofurence.App.Server.Services.Users
                 Reason = reason
             };
             _appDbContext.ArtistAlleyUserPenaltyChanges.Add(log);
-            
+
             response.Status = penalties;
             await _appDbContext.SaveChangesAsync();
         }
