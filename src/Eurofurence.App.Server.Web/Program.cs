@@ -4,7 +4,8 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Eurofurence.App.Server.Services.Abstractions.Lassie;using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Eurofurence.App.Server.Services.Abstractions.Lassie;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
@@ -40,7 +41,7 @@ namespace Eurofurence.App.Server.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
+
             builder.WebHost.ConfigureKestrel(options =>
             {
                 options.ListenAnyIP(30001);

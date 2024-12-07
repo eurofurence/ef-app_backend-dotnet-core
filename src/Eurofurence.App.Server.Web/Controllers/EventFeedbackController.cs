@@ -24,7 +24,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [Authorize(Roles = "Attendee")]
-        public async Task<ActionResult> PostEventFeedbackAsync([FromBody]PostEventFeedbackRequest request)
+        public async Task<ActionResult> PostEventFeedbackAsync([FromBody] PostEventFeedbackRequest request)
         {
             if (request == null) return BadRequest();
 

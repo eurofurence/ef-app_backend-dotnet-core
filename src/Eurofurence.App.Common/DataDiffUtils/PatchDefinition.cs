@@ -98,7 +98,7 @@ namespace Eurofurence.App.Common.DataDiffUtils
                     if (sourceValue is ICollection &&
                         sourceValue.GetType().IsGenericType)
                         return CollectionsEqual((ICollection)sourceValue, (ICollection)targetValue);
-                     
+
                     return (bool)sourceValue?.Equals(targetValue);
                 },
                 ApplySourceValueToTarget =
@@ -129,7 +129,7 @@ namespace Eurofurence.App.Common.DataDiffUtils
             {
                 TTarget target;
 
-                var result = new PatchOperation<TTarget> {Action = ActionEnum.NotModified};
+                var result = new PatchOperation<TTarget> { Action = ActionEnum.NotModified };
 
                 var existingTarget = _targetItemLocator(sourceItem, unprocessedTargets);
                 if (existingTarget != null)

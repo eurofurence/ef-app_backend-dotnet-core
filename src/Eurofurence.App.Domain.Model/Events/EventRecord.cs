@@ -80,7 +80,7 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public string[] Tags { get; set; }
-        
+
         [JsonIgnore]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }
 

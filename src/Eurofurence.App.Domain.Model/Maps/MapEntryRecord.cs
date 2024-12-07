@@ -32,7 +32,7 @@ namespace Eurofurence.App.Domain.Model.Maps
         [DataMember]
         public int TapRadius { get; set; }
 
-        [DataMember] 
+        [DataMember]
         public List<LinkFragment> Links { get; set; } = new();
 
         [JsonIgnore]

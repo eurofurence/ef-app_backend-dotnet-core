@@ -30,7 +30,7 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [JsonIgnore]
         public KnowledgeGroupRecord KnowledgeGroup { get; set; }
 
-        [DataMember] 
+        [DataMember]
         public virtual List<LinkFragment> Links { get; set; } = new();
 
         [JsonIgnore]

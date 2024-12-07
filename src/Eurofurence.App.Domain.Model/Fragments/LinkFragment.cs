@@ -49,7 +49,7 @@ namespace Eurofurence.App.Domain.Model.Fragments
             if (obj == null || GetType() != obj.GetType())
                 return false;
 
-            var f = (LinkFragment) obj;
+            var f = (LinkFragment)obj;
 
             return
                 f.FragmentType == FragmentType
@@ -62,7 +62,7 @@ namespace Eurofurence.App.Domain.Model.Fragments
         {
             unchecked
             {
-                var hashCode = (int) FragmentType;
+                var hashCode = (int)FragmentType;
                 hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
                 return hashCode;
