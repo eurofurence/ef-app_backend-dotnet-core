@@ -2,14 +2,13 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
 WORKDIR /app
 ENV NUGET_PACKAGES=/dotnet/packages
-
+ENV HUSKY=0
 # Allow results of `dotnet restore` to be cached if there are no changes to dependencies.
 COPY ./NuGet.config /app/NuGet.config
 RUN --mount=type=cache,target=/dotnet/packages \
     --mount=type=cache,target=/dotnet/global-packages \
     --mount=type=bind,source=./ef-app_backend-dotnet-core.sln,target=/app/ef-app_backend-dotnet-core.sln \
     --mount=type=bind,source=./src/Eurofurence.App.Common/Eurofurence.App.Common.csproj,target=/app/src/Eurofurence.App.Common/Eurofurence.App.Common.csproj \
-    --mount=type=bind,source=./src/Eurofurence.App.Tools.CliToolBox/Eurofurence.App.Tools.CliToolBox.csproj,target=/app/src/Eurofurence.App.Tools.CliToolBox/Eurofurence.App.Tools.CliToolBox.csproj \
     --mount=type=bind,source=./src/Eurofurence.App.Server.Services/Eurofurence.App.Server.Services.csproj,target=/app/src/Eurofurence.App.Server.Services/Eurofurence.App.Server.Services.csproj \
     --mount=type=bind,source=./src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj,target=/app/src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj \
     --mount=type=bind,source=./src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj,target=/app/src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj \

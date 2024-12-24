@@ -1,0 +1,106 @@
+name: ef-mobile-app-backend
+
+services:
+  backend:
+    
+    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
+    build:
+      
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - '30001:30001'
+    volumes:
+      - './:/workspaces:cached'
+      - './appsettings.json:/app/appsettings.json'
+      - './firebase.json:/app/firebase.json'
+    command: sleep infinity
+    depends_on:
+      db:
+        condition: service_healthy
+      # backend-init:
+      #   condition: service_completed_successfully
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+  # backend-init:
+  #   image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
+  #   volumes:
+  #     - './appsettings.json:/app/appsettings.json'
+  #     - './firebase.json:/app/firebase.json'
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   entrypoint: /app/db-migration-bundle
+
+  # backoffice:
+  #   image: ghcr.io/eurofurence/ef-app_backend-dotnet-core-backoffice:dev
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-backoffice
+  #   ports:
+  #     - '${EF_MOBILE_APP_BACKOFFICE_PORT}:8443'
+  #   volumes:
+  #     - './appsettings-backoffice.json:/usr/share/nginx/html/appsettings.json'
+  #   environment:
+  #     - 'BACKOFFICE_BASE_PATH=${EF_MOBILE_APP_BACKOFFICE_BASE_PATH}'
+  #   depends_on:
+  #     backend:
+  #       condition: service_started
+
+  db:
+    image: docker.io/mariadb:latest
+    environment:
+      MARIADB_DATABASE: 'ef_backend'
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
+    volumes:
+      - db:/var/lib/mysql
+    ports:
+      - '33306:3306'
+    healthcheck:
+      test: mariadb-admin ping -h 127.0.0.1 -u root
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio:/data
+    environment:
+      - "MINIO_ROOT_USER=minioAccessKey"
+      - "MINIO_ROOT_PASSWORD=minioVerySecretKey"
+    command: server /data --console-address :9001
+    healthcheck:
+      test: >
+        /bin/sh -c "
+        /usr/bin/mc config host add ef-minio http://minio:9000 minioAccessKey minioVerySecretKey;
+        /usr/bin/mc ready ef-minio;
+        "
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add ef-minio http://minio:9000 minioAccessKey minioVerySecretKey;
+      /usr/bin/mc ready ef-minio;
+      /usr/bin/mc mb -p ef-minio/ef-mobile-app-local;
+      /usr/bin/mc anonymous set download ef-minio/ef-mobile-app-local;
+      exit 0;
+      "
+volumes:
+  db:
+  minio:
