@@ -1,7 +1,8 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
 WORKDIR /app
 ENV NUGET_PACKAGES=/dotnet/packages
+# Disable husky in docker build
 ENV HUSKY=0
 # Allow results of `dotnet restore` to be cached if there are no changes to dependencies.
 COPY ./NuGet.config /app/NuGet.config
