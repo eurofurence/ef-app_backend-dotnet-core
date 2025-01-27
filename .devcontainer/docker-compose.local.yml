@@ -2,53 +2,21 @@ name: ef-mobile-app-backend
 
 services:
   backend:
-    
-    image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
-    build:
-      context: .
-      dockerfile: Dockerfile.local
+    image: mcr.microsoft.com/devcontainers/dotnet:8.0
+
     ports:
       - '30001:30001'
     volumes:
       - ../:/app:cached
-      - '../appsettings.json:/app/appsettings.json'
-      - '../firebase.json:/app/firebase.json'
     command: sleep infinity
     depends_on:
       db:
         condition: service_healthy
-      # backend-init:
-      #   condition: service_completed_successfully
       minio:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
-
-  # backend-init:
-  #   image: ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev
-  #   volumes:
-  #     - './appsettings.json:/app/appsettings.json'
-  #     - './firebase.json:/app/firebase.json'
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   entrypoint: /app/db-migration-bundle
-
-  # backoffice:
-  #   image: ghcr.io/eurofurence/ef-app_backend-dotnet-core-backoffice:dev
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile-backoffice
-  #   ports:
-  #     - '${EF_MOBILE_APP_BACKOFFICE_PORT}:8443'
-  #   volumes:
-  #     - './appsettings-backoffice.json:/usr/share/nginx/html/appsettings.json'
-  #   environment:
-  #     - 'BACKOFFICE_BASE_PATH=${EF_MOBILE_APP_BACKOFFICE_BASE_PATH}'
-  #   depends_on:
-  #     backend:
-  #       condition: service_started
-
+        
   db:
     image: docker.io/mariadb:latest
     environment:

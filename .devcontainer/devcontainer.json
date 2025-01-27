@@ -5,7 +5,7 @@
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "dockerComposeFile": ["docker-compose.local.yml"],
   // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
+
   "service": "backend",
   "workspaceFolder": "/app",
   //"build": {"context": "."},
@@ -14,14 +14,15 @@
     // Configure properties specific to VS Code.
     "vscode": {
       "settings": {},
-      "extensions": ["streetsidesoftware.code-spell-checker","ms-dotnettools.csdevkit"]
+      "extensions": [
+        "streetsidesoftware.code-spell-checker",
+        "ms-dotnettools.csdevkit"
+      ]
     }
   },
-  "remoteUser": "root",
-  
+  "postCreateCommand": "dotnet tool restore && dotnet husky install",
   "shutdownAction": "stopCompose",
-  // Use 'portsAttributes' to set default properties for specific forwarded ports.
-  // More info: https://containers.dev/implementors/json_reference/#port-attributes
+
   "portsAttributes": {
     "5000": {
       "label": "Hello Remote World",
@@ -32,12 +33,5 @@
     }
   },
 
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [5000, 5001]
-
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "dotnet restore",
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  "forwardPorts": [5000, 5001, 3306]
 }
