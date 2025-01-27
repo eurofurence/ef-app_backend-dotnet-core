@@ -20,6 +20,9 @@ default:
 # Initialize configuration files in root folder
 init: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json" "appsettings") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json" "firebase") (_create_from_sample "Eurofurence.App.Backoffice/wwwroot" "appsettings" "json" "appsettings-backoffice")
 
+# Initalize configurations files in their own project folders. This is required for running this project in a devcontainer
+init-devcontainer: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json" "src/Eurofurence.App.Server.Web/appsettings") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json" "src/Eurofurence.App.Server.Web/firebase") (_create_from_sample "Eurofurence.App.Backoffice/wwwroot" "appsettings" "json" "src/Eurofurence.App.Backoffice/wwwroot/appsettings")
+
 # Start the docker compose stack
 up *ARGS: (init)
 	docker compose up {{ARGS}}
