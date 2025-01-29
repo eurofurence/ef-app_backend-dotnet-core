@@ -26,8 +26,6 @@
   "shutdownAction": "stopCompose",
   "forwardPorts": [
     30001,
-    5093,
-    7140,
     33306
   ]
 }
