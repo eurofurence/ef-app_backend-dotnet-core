@@ -7,7 +7,7 @@ services:
     ports:
       - '30001:30001'
     volumes:
-      - ../:/app:cached
+      - ../:/app
     command: sleep infinity
     depends_on:
       db:

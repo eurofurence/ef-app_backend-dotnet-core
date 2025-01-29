@@ -23,15 +23,5 @@
   "postCreateCommand": "dotnet tool restore && dotnet husky install",
   "shutdownAction": "stopCompose",
 
-  "portsAttributes": {
-    "5000": {
-      "label": "Hello Remote World",
-      "onAutoForward": "notify"
-    },
-    "5001": {
-      "protocol": "https"
-    }
-  },
-
-  "forwardPorts": [5000, 5001, 3306]
+  "forwardPorts": [30001, 5093,7140, 33306]
 }
