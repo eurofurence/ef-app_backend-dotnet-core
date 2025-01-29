@@ -3,7 +3,9 @@
 {
   "name": "C# (.NET)",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "dockerComposeFile": ["docker-compose.local.yml"],
+  "dockerComposeFile": [
+    "docker-compose.local.yml"
+  ],
   // Features to add to the dev container. More info: https://containers.dev/features.
 
   "service": "backend",
@@ -22,6 +24,10 @@
   },
   "postCreateCommand": "dotnet tool restore && dotnet husky install",
   "shutdownAction": "stopCompose",
-
-  "forwardPorts": [30001, 5093,7140, 33306]
+  "forwardPorts": [
+    30001,
+    5093,
+    7140,
+    33306
+  ]
 }
