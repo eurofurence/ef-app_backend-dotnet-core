@@ -1,0 +1,31 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
+{
+  "name": "C# (.NET)",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "dockerComposeFile": [
+    "docker-compose.local.yml"
+  ],
+  // Features to add to the dev container. More info: https://containers.dev/features.
+
+  "service": "backend",
+  "workspaceFolder": "/app",
+  //"build": {"context": "."},
+  // Configure tool-specific properties.
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      "settings": {},
+      "extensions": [
+        "streetsidesoftware.code-spell-checker",
+        "ms-dotnettools.csdevkit"
+      ]
+    }
+  },
+  "postCreateCommand": "dotnet tool restore && dotnet husky install",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [
+    30001,
+    33306
+  ]
+}
