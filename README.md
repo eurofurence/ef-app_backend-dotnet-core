@@ -16,12 +16,16 @@
 
 ## Run locally using a devcontainer
 
-1. Initialise configuration files for development via `just init-devcontainer` and then customising them with your secrets etc. Or do the same steps as before but leave the files where they are.
+1. Initialise configuration files for development via `just init-devcontainer` and then customising them with your secrets, etc.
 2. Open the project as a devcontainer in your favorite editor like VSCode or Rider.
-3. Manually run migrations, for example:
+3. Manually run migrations, for example like:
 ```
 dotnet ef database update -p src/Eurofurence.App.Infrastructure.EntityFramework/ -s src/Eurofurence.App.Server.Web
 ```
+
+Note:
+Currently only the backend service is supported here, since debugging a blazor app inside a devcontainer is not possible yet.
+So if you want to debug the backoffice you have to start it directly on the machine. 
 
 ## Run locally using Docker Compose and [`just`](https://github.com/casey/just)
 
