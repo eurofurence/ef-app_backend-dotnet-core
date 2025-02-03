@@ -64,6 +64,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<ArtistAlleyUserPenaltyRecord> ArtistAlleyUserPenalties { get; set; }
 
         public virtual DbSet<ArtistAlleyUserPenaltyRecord.StateChangeRecord> ArtistAlleyUserPenaltyChanges { get; set; }
+
+        public virtual DbSet<EventFavoriteRecord> EventFavorites { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -109,6 +111,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
                 .HasMany(i => i.DealerArtistThumbnails)
                 .WithOne(d => d.ArtistThumbnailImage)
                 .HasForeignKey(d => d.ArtistThumbnailImageId);
+
         }
     }
 }
