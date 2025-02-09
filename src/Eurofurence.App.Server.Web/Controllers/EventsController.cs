@@ -9,11 +9,13 @@ using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("Api/[controller]")]
-    public class EventsController : BaseController
+    public class
+        EventsController : BaseController
     {
         private readonly IEventService _eventService;
         private readonly IImageService _imageService;
@@ -21,10 +23,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IEventFavoritesService _eventFavoriteService;
 
         public EventsController(IEventService eventService,
-            IImageService imageService)
+            IImageService imageService, IEventFavoritesService eventFavoriteService)
         {
             _eventService = eventService;
             _imageService = imageService;
+            _eventFavoriteService = eventFavoriteService;
         }
 
         /// <summary>
@@ -52,9 +55,10 @@ namespace Eurofurence.App.Server.Web.Controllers
             DateTime conflictStartTime,
             DateTime conflictEndTime,
             int toleranceInMinutes
-            )
+        )
         {
-            return _eventService.FindConflicts(conflictStartTime, conflictEndTime, TimeSpan.FromMinutes(toleranceInMinutes));
+            return _eventService.FindConflicts(conflictStartTime, conflictEndTime,
+                TimeSpan.FromMinutes(toleranceInMinutes));
         }
 
         /// <summary>
@@ -85,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
         {
-            var events = _eventService.FindAll(x => x.Id == id);
+            var events = _eventService.FindAll(x => x.Id == id).AsNoTracking();
 
             if (!events.Any())
             {
@@ -106,6 +110,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 return NotFound();
             }
+
             await _eventFavoriteService.RemoveEventFromFavoritesIfExist(User, events.First());
 
             return NoContent();
@@ -121,7 +126,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
         [HttpPut("{id}/:bannerImageId")]
-        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
+        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
+            [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
             if (eventRecord == null)
@@ -148,7 +154,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
         [HttpPut("{id}/:posterImageId")]
-        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
+        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
+            [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
             if (eventRecord == null)

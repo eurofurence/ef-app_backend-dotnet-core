@@ -64,6 +64,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IEventConferenceRoomService, EventConferenceRoomService>();
             services.AddTransient<IEventConferenceTrackService, EventConferenceTrackService>();
             services.AddTransient<IEventFeedbackService, EventFeedbackService>();
+            services.AddTransient<IEventFavoritesService, EventFavoritesService>();
             services.AddTransient<IEventService, EventService>();
             services.AddTransient<IPushNotificationChannelManager, PushNotificationChannelManager>();
             services.AddTransient<IFursuitBadgeService, FursuitBadgeService>();

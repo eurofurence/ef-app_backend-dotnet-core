@@ -11,29 +11,37 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Events
 {
-    public class EventFavoritesService : EntityServiceBase<EventFavoriteRecord>, IEventFavoritesService
+    public class EventFavoritesService(
+        AppDbContext appDbContext,
+        IStorageServiceFactory storageServiceFactory,
+        bool useSoftDelete = true)
+        : EntityServiceBase<EventFavoriteRecord>(appDbContext, storageServiceFactory, useSoftDelete),
+            IEventFavoritesService
     {
 
-        private readonly AppDbContext _appDbContext;
-
-
-        public EventFavoritesService(AppDbContext appDbContext, IStorageServiceFactory storageServiceFactory, bool useSoftDelete = true) : base(appDbContext, storageServiceFactory, useSoftDelete)
-        {
-            this._appDbContext = appDbContext;
-        }
 
         public async Task AddEventToFavoritesIfNotExist(ClaimsPrincipal user, EventRecord eventRecords)
         {
-            if (!_appDbContext.EventFavorites.Any(x => x.UserUid == user.GetSubject() && x.Event == eventRecords))
+            if (!appDbContext.EventFavorites.Any(x => x.UserUid == user.GetSubject() && x.Event == eventRecords))
             {
-                EventFavoriteRecord record = new EventFavoriteRecord(eventRecords, user.GetSubject());
-                await _appDbContext.AddAsync(record);
+                EventFavoriteRecord record = new EventFavoriteRecord
+                {
+                    UserUid = user.GetSubject(),
+                    EventId = eventRecords.Id
+                };
+                appDbContext.EventFavorites.Add(record);
+                await appDbContext.SaveChangesAsync();
             }
         }
 
+        /// <summary>
+        /// Returns a list with all favorite events of a given user by their regid : <paramref name="user"/>
+        /// </summary>
+        /// <param name="user">The user whose events should be fetched</param>
+        /// <returns>A list of all the events of the user</returns>
         public List<EventRecord> GetFavoriteEventsFromUser(ClaimsPrincipal user)
         {
-            return _appDbContext.EventFavorites
+            return appDbContext.EventFavorites
                 .AsNoTracking()
                 .Where(x => x.UserUid == user.GetSubject())
                 .Select(x => x.Event)
@@ -42,7 +50,7 @@ namespace Eurofurence.App.Server.Services.Events
 
         public async Task RemoveEventFromFavoritesIfExist(ClaimsPrincipal user, EventRecord eventRecord)
         {
-            var foundRecord = _appDbContext.EventFavorites.FirstOrDefault(x => x.UserUid == user.GetSubject() && x.Event == eventRecord);
+            var foundRecord = appDbContext.EventFavorites.FirstOrDefault(x => x.UserUid == user.GetSubject() && x.Event == eventRecord);
             if (foundRecord != null)
             {
                 await base.DeleteOneAsync(foundRecord.Id);

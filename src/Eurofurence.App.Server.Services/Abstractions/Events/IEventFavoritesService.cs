@@ -6,6 +6,9 @@ using Eurofurence.App.Domain.Model.Events;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Events;
 
+/// <summary>
+/// Service for managing event favorites
+/// </summary>
 public interface IEventFavoritesService : IEntityServiceOperations<EventFavoriteRecord>
 {
     /// <summary>
@@ -25,7 +28,7 @@ public interface IEventFavoritesService : IEntityServiceOperations<EventFavorite
     Task RemoveEventFromFavoritesIfExist(ClaimsPrincipal user, EventRecord eventRecord);
 
     /// <summary>
-    /// 
+    /// Returns all favorite events associated with that user
     /// </summary>
     /// <param name="user"></param>
     /// <returns></returns>

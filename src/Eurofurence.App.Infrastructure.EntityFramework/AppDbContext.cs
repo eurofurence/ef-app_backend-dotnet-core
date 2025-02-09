@@ -112,6 +112,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
                 .WithOne(d => d.ArtistThumbnailImage)
                 .HasForeignKey(d => d.ArtistThumbnailImageId);
 
+            // modelBuilder.Entity<EventFavoriteRecord>()
+            //     .HasOne(x => x.Event);
+
         }
     }
 }
