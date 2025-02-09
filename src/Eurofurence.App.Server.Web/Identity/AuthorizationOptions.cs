@@ -15,8 +15,6 @@ public class AuthorizationOptions
 
     public HashSet<string> ArtShow { get; init; } = new();
 
-    public HashSet<string> FursuitBadgeSystem { get; init; } = new();
-
     /// <summary>
     /// Artist alley moderators may approve or reject table applications from attendees.
     /// </summary>
