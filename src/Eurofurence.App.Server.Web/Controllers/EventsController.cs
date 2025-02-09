@@ -73,18 +73,23 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _eventService.FindOneAsync(id)).Transient404(HttpContext);
         }
 
+        /// <summary>
+        /// Returns the favorite events of the currently logged-in user
+        /// </summary>
+        /// <returns>A list of <see cref="EventRecord"/> marked as favorite</returns>
         [Authorize]
         [HttpGet("Favorites")]
-        public async Task<ActionResult> GetMyFavorites()
+        [ProducesResponseType(200)]
+        public Task<ActionResult> GetMyFavorites()
         {
-            return Ok(_eventFavoriteService.GetFavoriteEventsFromUser(User));
+            return Task.FromResult<ActionResult>(Ok(_eventFavoriteService.GetFavoriteEventsFromUser(User)));
         }
 
         /// <summary>
         /// Adds an event to favorites
         /// </summary>
         /// <param name="id">The id of the event</param>
-        /// <returns></returns>
+        /// <returns>Just a status code</returns>
         [Authorize]
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
@@ -100,6 +105,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Removes an event from favorites
+        /// </summary>
+        /// <param name="id">The id of the event</param>
+        /// <returns>Just a status code</returns>
         [Authorize]
         [HttpDelete("{id}/:favorite")]
         public async Task<ActionResult> UnmarkEventAsFavorite([FromRoute] Guid id)
@@ -126,8 +136,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
         [HttpPut("{id}/:bannerImageId")]
-        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
-            [FromRoute] Guid id)
+        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
             if (eventRecord == null)
@@ -154,8 +163,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
         [HttpPut("{id}/:posterImageId")]
-        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
-            [FromRoute] Guid id)
+        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId, [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
             if (eventRecord == null)
