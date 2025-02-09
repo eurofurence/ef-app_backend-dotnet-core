@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     /// <inheritdoc />
-    public partial class AddFavoriteEvents : Migration
+    public partial class AddEventFavorites : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     EventId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    OwnerUid = table.Column<string>(type: "longtext", nullable: true)
+                    UserUid = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LastChangeDateTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     IsDeleted = table.Column<int>(type: "int", nullable: false)

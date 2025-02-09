@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250129122330_AddFavoriteEvents")]
-    partial class AddFavoriteEvents
+    [Migration("20250203165036_AddEventFavorites")]
+    partial class AddEventFavorites
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -569,7 +569,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("OwnerUid")
+                    b.Property<string>("UserUid")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -1284,7 +1284,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFavoriteRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", "Event")
-                        .WithMany()
+                        .WithMany("Favorites")
                         .HasForeignKey("EventId");
 
                     b.Navigation("Event");
@@ -1438,6 +1438,11 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceTrackRecord", b =>
                 {
                     b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventRecord", b =>
+                {
+                    b.Navigation("Favorites");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.FursuitParticipationRecord", b =>
