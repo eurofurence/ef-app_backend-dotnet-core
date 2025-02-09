@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Eurofurence.App.Domain.Model.Events;
 
 namespace Eurofurence.App.Domain.Model.Users
 {
@@ -8,9 +6,7 @@ namespace Eurofurence.App.Domain.Model.Users
     {
         [DataMember]
         public string[] Roles { get; set; }
-
         [DataMember]
         public UserRegistration[] Registrations { get; set; }
-
     }
 }
