@@ -6,7 +6,6 @@ using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
-using Eurofurence.App.Domain.Model.Fursuits;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
 
@@ -56,9 +55,6 @@ namespace Eurofurence.App.Domain.Model.Images
 
         [JsonIgnore]
         public virtual List<KnowledgeEntryRecord> KnowledgeEntries { get; set; } = new();
-
-        [JsonIgnore]
-        public virtual List<FursuitBadgeRecord> FursuitBadges { get; set; } = new();
 
         [JsonIgnore]
         public virtual List<TableRegistrationRecord> TableRegistrations { get; set; } = new();

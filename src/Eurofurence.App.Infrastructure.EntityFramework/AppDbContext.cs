@@ -2,13 +2,10 @@
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.ArtShow;
-using Eurofurence.App.Domain.Model.CollectionGame;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Fragments;
-using Eurofurence.App.Domain.Model.Fursuits;
-using Eurofurence.App.Domain.Model.Fursuits.CollectingGame;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.LostAndFound;
@@ -44,11 +41,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
         public virtual DbSet<EventFeedbackRecord> EventFeedbacks { get; set; }
         public virtual DbSet<EventRecord> Events { get; set; }
-        public virtual DbSet<FursuitParticipationRecord> FursuitParticipations { get; set; }
-        public virtual DbSet<PlayerParticipationRecord> PlayerParticipations { get; set; }
-        public virtual DbSet<CollectionEntryRecord> CollectionEntries { get; set; }
-        public virtual DbSet<TokenRecord> Tokens { get; set; }
-        public virtual DbSet<FursuitBadgeRecord> FursuitBadges { get; set; }
         public virtual DbSet<ImageRecord> Images { get; set; }
         public virtual DbSet<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
         public virtual DbSet<KnowledgeGroupRecord> KnowledgeGroups { get; set; }

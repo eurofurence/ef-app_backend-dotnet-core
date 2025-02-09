@@ -29,7 +29,6 @@ using Serilog;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
-using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
@@ -67,7 +66,6 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<DealerOptions>(builder.Configuration.GetSection("Dealers"));
             builder.Services.Configure<AnnouncementOptions>(builder.Configuration.GetSection("Announcements"));
             builder.Services.Configure<EventOptions>(builder.Configuration.GetSection("Events"));
-            builder.Services.Configure<CollectionGameOptions>(builder.Configuration.GetSection("CollectionGame"));
             builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Identity"));
             builder.Services.Configure<AuthorizationOptions>(builder.Configuration.GetSection("Authorization"));
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
