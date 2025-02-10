@@ -6,7 +6,6 @@
         public JobOption UpdateAnnouncements { get; set; }
         public JobOption UpdateDealers { get; set; }
         public JobOption UpdateEvents { get; set; }
-        public JobOption UpdateFursuitCollectionGameParticipation { get; set; }
         public JobOption UpdateLostAndFound { get; set; }
     }
 }

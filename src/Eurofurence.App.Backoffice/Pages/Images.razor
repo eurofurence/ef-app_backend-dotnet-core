@@ -41,12 +41,6 @@
         <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
         <TemplateColumn Title="Usage">
             <CellTemplate>
-                @if (context.Item?.FursuitBadgeIds.Count > 0)
-                {
-                    <MudTooltip Text="Fursuit Badges">
-                        <MudIcon Icon="@Icons.Material.Outlined.Badge"></MudIcon>
-                    </MudTooltip>
-                }
                 @if (context.Item?.TableRegistrationIds.Count > 0)
                 {
                     <MudTooltip Text="Table Registrations">

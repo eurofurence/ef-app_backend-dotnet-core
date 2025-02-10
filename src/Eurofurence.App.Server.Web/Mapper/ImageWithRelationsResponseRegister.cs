@@ -14,7 +14,6 @@ namespace Eurofurence.App.Server.Web.Mapper
             config
                 .NewConfig<ImageRecord, ImageWithRelationsResponse>()
                 .Map(dest => dest.KnowledgeEntryIds, src => src.KnowledgeEntries.Select(ke => ke.Id))
-                .Map(dest => dest.FursuitBadgeIds, src => src.FursuitBadges.Select(fb => fb.Id))
                 .Map(dest => dest.TableRegistrationIds, src => src.TableRegistrations.Select(tr => tr.Id))
                 .Map(dest => dest.MapIds, src => src.Maps.Select(m => m.Id))
                 .Map(dest => dest.EventBannerIds, src => src.EventBanners.Select(eb => eb.Id))

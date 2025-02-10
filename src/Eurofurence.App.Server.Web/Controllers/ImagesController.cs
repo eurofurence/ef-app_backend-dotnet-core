@@ -65,7 +65,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             return _mapper.Map<IEnumerable<ImageWithRelationsResponse>>(
                 _imageService.FindAll()
                     .Include(i => i.KnowledgeEntries)
-                    .Include(i => i.FursuitBadges)
                     .Include(i => i.TableRegistrations)
                     .Include(i => i.Maps)
                     .Include(i => i.DealerArtPreviews)
