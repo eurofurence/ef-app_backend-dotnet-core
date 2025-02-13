@@ -60,12 +60,11 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<LinkFragment> LinkFragments { get; set; }
         public virtual DbSet<DeviceIdentityRecord> DeviceIdentities { get; set; }
         public virtual DbSet<UserRecord> Users { get; set; }
-
         public virtual DbSet<ArtistAlleyUserPenaltyRecord> ArtistAlleyUserPenalties { get; set; }
 
         public virtual DbSet<ArtistAlleyUserPenaltyRecord.StateChangeRecord> ArtistAlleyUserPenaltyChanges { get; set; }
 
-        public virtual DbSet<EventFavoriteRecord> EventFavorites { get; set; }
+        // public virtual DbSet<EventFavoriteRecord> EventFavorites { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -112,7 +111,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
                 .WithOne(d => d.ArtistThumbnailImage)
                 .HasForeignKey(d => d.ArtistThumbnailImageId);
 
-            modelBuilder.Entity<TelegramUserRecord>()
+            modelBuilder.Entity<UserRecord>()
                 .HasMany(u => u.FavoriteEvents)
                 .WithMany(e => e.FavoredBy);
         }
