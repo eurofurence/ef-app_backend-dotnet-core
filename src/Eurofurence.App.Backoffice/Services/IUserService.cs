@@ -5,7 +5,7 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public interface IUserService
     {
-        public Task<UserRecord> GetUserSelf();
+        public Task<UserResponse> GetUserSelf();
 
         /// <summary>
         /// Changes the artist alley status of a given user (by <paramref name="userID"/>)

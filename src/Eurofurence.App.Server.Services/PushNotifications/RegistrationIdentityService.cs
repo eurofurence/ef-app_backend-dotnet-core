@@ -9,5 +9,5 @@ public class RegistrationIdentityService(
     AppDbContext appDbContext,
     IStorageServiceFactory storageServiceFactory,
     bool useSoftDelete = true
-) : EntityServiceBase<RegistrationIdentityRecord>(appDbContext, storageServiceFactory, useSoftDelete),
+) : EntityServiceBase<UserRecord>(appDbContext, storageServiceFactory, useSoftDelete),
     IRegistrationIdentityService;

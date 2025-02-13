@@ -10,6 +10,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Telegram
 
         Task SetAclForUserAsync<TEnum>(string username, TEnum acl);
 
-        IQueryable<UserRecord> GetUsers();
+        IQueryable<TelegramUserRecord> GetUsers();
     }
 }

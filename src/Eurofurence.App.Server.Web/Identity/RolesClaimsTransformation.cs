@@ -161,10 +161,12 @@ public class RolesClaimsTransformation(
             foreach (var registration in cachedRegistrations)
             {
                 identity.AddClaim(new Claim(UserRegistrationClaims.Id, registration.Key));
-                identity.AddClaim(new Claim(UserRegistrationClaims.Status(registration.Key), registration.Value.ToString()));
+                identity.AddClaim(new Claim(UserRegistrationClaims.Status(registration.Key),
+                    registration.Value.ToString()));
             }
 
-            if (cachedRegistrations.Any(registrationStatus => registrationStatus.Value == UserRegistrationStatus.CheckedIn))
+            if (cachedRegistrations.Any(registrationStatus =>
+                    registrationStatus.Value == UserRegistrationStatus.CheckedIn))
             {
                 identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
             }
@@ -211,9 +213,10 @@ public class RolesClaimsTransformation(
             identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
         }
 
-        if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId)
+        if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
+            identity.FindFirst("name")?.Value is { Length: > 0 } nickname)
         {
-            await UpdateRegSysIdsInDb(registrations.Keys.ToList(), identityId);
+            await UpdateRegSysIdsInDb(registrations.Keys.ToList(), identityId, nickname);
         }
 
         var exp = identity.FindFirst(x => x.Type == "exp");
@@ -235,25 +238,26 @@ public class RolesClaimsTransformation(
         using var client = httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
         var statusRequest = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(new Uri($"{regSysUrl.TrimEnd('/')}/"), $"attsrv/api/rest/v1/attendees/{id}/status"));
+            new Uri(new Uri($"{regSysUrl.TrimEnd('/')}/"), $"attsrv/api/rest/v1/attendees/{id}/status"));
         statusRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         using var statusResponse = await client.SendAsync(statusRequest);
 
         if (statusResponse.IsSuccessStatusCode)
         {
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
-            Enum.TryParse(statusJson.RootElement.TryGetString("status")?.Replace(" ", ""), true, out UserRegistrationStatus status);
+            Enum.TryParse(statusJson.RootElement.TryGetString("status")?.Replace(" ", ""), true,
+                out UserRegistrationStatus status);
             return status;
         }
 
         return UserRegistrationStatus.Unknown;
     }
 
-    private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId)
+    private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId, string nickname)
     {
         var newIds = new HashSet<string>(ids);
 
-        var existingIds = await db.RegistrationIdentities
+        var existingIds = await db.Users
             .AsNoTracking()
             .Where(x => newIds.Contains(x.RegSysId))
             .Select(x => x.RegSysId)
@@ -266,10 +270,11 @@ public class RolesClaimsTransformation(
 
         if (newIds.Count > 0)
         {
-            await db.RegistrationIdentities.AddRangeAsync(newIds.Select(x => new RegistrationIdentityRecord
+            await db.Users.AddRangeAsync(newIds.Select(x => new UserRecord
             {
                 RegSysId = x,
-                IdentityId = identityId
+                IdentityId = identityId,
+                Nickname = nickname
             }));
 
             await db.SaveChangesAsync();

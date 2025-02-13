@@ -255,7 +255,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var devices = await _appDbContext.RegistrationIdentities
+                    var devices = await _appDbContext.Users
                         .Where(x => x.RegSysId == regNo.ToString())
                         .Join(
                             _appDbContext.DeviceIdentities,
@@ -378,7 +378,7 @@ namespace Eurofurence.App.Server.Services.Telegram
                         return;
                     }
 
-                    var devices = await _appDbContext.RegistrationIdentities
+                    var devices = await _appDbContext.Users
                         .Where(x => x.RegSysId == regNo.ToString())
                         .Join(
                             _appDbContext.DeviceIdentities,
@@ -413,7 +413,7 @@ namespace Eurofurence.App.Server.Services.Telegram
         {
             var devicesWithSessionCount = await _appDbContext.DeviceIdentities.CountAsync();
 
-            var uniqueUserIds = await _appDbContext.RegistrationIdentities
+            var uniqueUserIds = await _appDbContext.Users
                 .Join(
                     _appDbContext.DeviceIdentities,
                     x => x.IdentityId,

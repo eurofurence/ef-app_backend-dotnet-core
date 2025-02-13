@@ -231,7 +231,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 set.Remove(id);
             }
 
-            await _registrationService.InsertMultipleAsync(set.Select(x => new RegistrationIdentityRecord
+            await _registrationService.InsertMultipleAsync(set.Select(x => new UserRecord
             {
                 RegSysId = x,
                 IdentityId = identityId
