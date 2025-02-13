@@ -9,7 +9,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events;
 /// <summary>
 /// Service for managing event favorites
 /// </summary>
-public interface IEventFavoritesService : IEntityServiceOperations<EventFavoriteRecord>
+public interface IEventFavoritesService
 {
     /// <summary>
     /// Adds the given event to the users (<paramref name="user"/>) favorites

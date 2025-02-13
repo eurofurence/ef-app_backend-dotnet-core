@@ -16,8 +16,7 @@ namespace Eurofurence.App.Server.Services.Events
         AppDbContext appDbContext,
         IStorageServiceFactory storageServiceFactory,
         bool useSoftDelete = true)
-        : EntityServiceBase<EventFavoriteRecord>(appDbContext, storageServiceFactory, useSoftDelete),
-            IEventFavoritesService
+        : IEventFavoritesService
     {
         public async Task AddEventToFavoritesIfNotExist(ClaimsPrincipal user, EventRecord eventRecords)
         {

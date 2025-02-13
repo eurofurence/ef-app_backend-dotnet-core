@@ -110,10 +110,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
                 .HasMany(i => i.DealerArtistThumbnails)
                 .WithOne(d => d.ArtistThumbnailImage)
                 .HasForeignKey(d => d.ArtistThumbnailImageId);
-
-            modelBuilder.Entity<UserRecord>()
-                .HasMany(u => u.FavoriteEvents)
-                .WithMany(e => e.FavoredBy);
         }
     }
 }
