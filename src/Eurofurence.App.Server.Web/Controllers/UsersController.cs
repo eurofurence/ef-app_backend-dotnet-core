@@ -24,10 +24,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize]
         [HttpGet(":self")]
-        [ProducesResponseType(typeof(UserRecord), 200)]
-        public UserRecord GetUsersSelf()
+        [ProducesResponseType(typeof(UserResponse), 200)]
+        public UserResponse GetUsersSelf()
         {
-            var result = new UserRecord();
+            var result = new UserResponse();
             if (User.Identity is ClaimsIdentity identity)
             {
                 result.Roles = identity.FindAll(identity.RoleClaimType).Select(c => c.Value).ToArray();

@@ -1,7 +1,9 @@
 ﻿using Eurofurence.App.Domain.Model.Images;
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Eurofurence.App.Domain.Model.Telegram;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
@@ -80,6 +82,8 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public string[] Tags { get; set; }
+
+        public List<TelegramUserRecord> FavoredBy { get; set; } = new();
 
         [JsonIgnore]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }

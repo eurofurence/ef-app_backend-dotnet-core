@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250203165036_AddEventFavorites")]
-    partial class AddEventFavorites
+    [Migration("20250213125901_RefactoredUsersTables")]
+    partial class RefactoredUsersTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -560,7 +560,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("EventId")
+                    b.Property<Guid>("EventId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("IsDeleted")
@@ -1127,7 +1127,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("DeviceIdentities");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.RegistrationIdentityRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.UserRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1143,13 +1143,16 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("Nickname")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("RegSysId")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("RegistrationIdentities");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Sync.EntityStorageInfoRecord", b =>
@@ -1175,7 +1178,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("EntityStorageInfos");
                 });
 
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Telegram.UserRecord", b =>
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Telegram.TelegramUserRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1190,12 +1193,30 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("RegsysID")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Username")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("TelegramUsers");
+                });
+
+            modelBuilder.Entity("EventRecordTelegramUserRecord", b =>
+                {
+                    b.Property<Guid>("FavoredById")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("FavoriteEventsId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("FavoredById", "FavoriteEventsId");
+
+                    b.HasIndex("FavoriteEventsId");
+
+                    b.ToTable("EventRecordTelegramUserRecord");
                 });
 
             modelBuilder.Entity("ImageRecordKnowledgeEntryRecord", b =>
@@ -1284,8 +1305,10 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFavoriteRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", "Event")
-                        .WithMany("Favorites")
-                        .HasForeignKey("EventId");
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Event");
                 });
@@ -1395,6 +1418,21 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("Image");
                 });
 
+            modelBuilder.Entity("EventRecordTelegramUserRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Telegram.TelegramUserRecord", null)
+                        .WithMany()
+                        .HasForeignKey("FavoredById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", null)
+                        .WithMany()
+                        .HasForeignKey("FavoriteEventsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ImageRecordKnowledgeEntryRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", null)
@@ -1438,11 +1476,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceTrackRecord", b =>
                 {
                     b.Navigation("Events");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventRecord", b =>
-                {
-                    b.Navigation("Favorites");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.FursuitParticipationRecord", b =>

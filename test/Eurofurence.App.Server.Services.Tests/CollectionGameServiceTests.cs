@@ -53,7 +53,7 @@ namespace Eurofurence.App.Server.Services.Tests
 
             appDbContext.DeviceIdentities.Add(record);
 
-            appDbContext.RegistrationIdentities.Add(new RegistrationIdentityRecord
+            appDbContext.Users.Add(new UserRecord
             {
                 RegSysId = "123",
                 IdentityId = "Identity"

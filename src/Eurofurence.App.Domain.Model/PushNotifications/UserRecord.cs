@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.PushNotifications;
 
-public class RegistrationIdentityRecord : EntityBase
+public class UserRecord : EntityBase
 {
     [Required]
     [DataMember]
@@ -12,4 +12,7 @@ public class RegistrationIdentityRecord : EntityBase
     [Required]
     [DataMember]
     public string IdentityId { get; set; }
+    
+    [DataMember]
+    public string Nickname { get; set; }
 }
