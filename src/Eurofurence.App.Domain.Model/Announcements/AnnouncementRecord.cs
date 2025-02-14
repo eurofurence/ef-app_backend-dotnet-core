@@ -3,11 +3,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Server.Web.Controllers.Transformer;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRecord : EntityBase
+    public class AnnouncementRecord : EntityBase, IDtoTransformer<AnnouncementRequest>
     {
         /// <summary>
         /// When does this announcement start to be valid?
@@ -85,7 +86,27 @@ namespace Eurofurence.App.Domain.Model.Announcements
         [DataMember]
         public Guid? ImageId { get; set; }
 
-        [JsonIgnore]
-        public ImageRecord Image { get; set; }
+        [JsonIgnore] public ImageRecord Image { get; set; }
+
+        public AnnouncementRequest Transform()
+        {
+            return new AnnouncementRequest
+            {
+                Area = Area,
+                Author = Author,
+                Title = Title,
+                Content = Content,
+                ImageId = ImageId,
+            };
+        }
+
+        public void Merge(AnnouncementRequest source)
+        {
+            Area = source.Area;
+            Author = source.Author;
+            Title = source.Title;
+            Content = source.Content;
+            ImageId = source.ImageId;
+        }
     }
 }
