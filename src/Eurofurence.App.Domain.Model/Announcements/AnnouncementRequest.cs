@@ -1,11 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Server.Web.Controllers.Transformer;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRequest
+    public class AnnouncementRequest : IDtoTransformer<AnnouncementRecord>
     {
         /// <summary>
         /// Type of announcement:
@@ -62,5 +63,26 @@ namespace Eurofurence.App.Domain.Model.Announcements
         /// </summary>
         [DataMember]
         public Guid? ImageId { get; set; }
+
+        public AnnouncementRecord Transform()
+        {
+            return new AnnouncementRecord
+            {
+                Area = Area,
+                Author = Author,
+                Title = Title,
+                Content = Content,
+                ImageId = ImageId
+            };
+        }
+
+        public void Merge(AnnouncementRecord source)
+        {
+            Area = source.Area;
+            Author = source.Author;
+            Title = source.Title;
+            Content = source.Content;
+            ImageId = source.ImageId;
+        }
     }
 }
