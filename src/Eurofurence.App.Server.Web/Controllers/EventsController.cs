@@ -94,14 +94,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
         {
-            var events = _eventService.FindAll(x => x.Id == id).AsNoTracking();
+            var foundEvent = await _eventService.FindOneAsync(id);
 
-            if (!events.Any())
+            if (foundEvent == null)
             {
                 return NotFound();
             }
 
-            await _eventFavoriteService.AddEventToFavoritesIfNotExist(User, events.First());
+            await _eventFavoriteService.AddEventToFavoritesIfNotExist(User, foundEvent);
             return NoContent();
         }
 

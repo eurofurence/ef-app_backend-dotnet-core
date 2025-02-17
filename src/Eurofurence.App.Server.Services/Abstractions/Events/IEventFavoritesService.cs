@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
@@ -17,7 +18,7 @@ public interface IEventFavoritesService
     /// <param name="user">The user to which the favorite should be added to</param>
     /// <param name="eventRecords">The event that should be marked as favorite</param>
     /// <returns></returns>
-    Task AddEventToFavoritesIfNotExist(ClaimsPrincipal user, EventRecord eventRecords);
+    Task AddEventToFavoritesIfNotExist([NotNull] ClaimsPrincipal user, EventRecord eventRecords);
 
     /// <summary>
     /// Removes a given event from the users (<paramref name="user"/>) favorites if it exists.
