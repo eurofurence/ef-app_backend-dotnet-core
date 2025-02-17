@@ -89,6 +89,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _pushNotificationChannelManager.PushSyncRequestAsync();
             await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
 
+            AnnouncementResponse resp = record.Transform();
+
             return Ok(record.Id);
         }
 

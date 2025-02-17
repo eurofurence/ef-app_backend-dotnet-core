@@ -76,13 +76,7 @@ namespace Eurofurence.App.Domain.Model.Announcements
             };
         }
 
-        public void Merge(AnnouncementRecord source)
-        {
-            Area = source.Area;
-            Author = source.Author;
-            Title = source.Title;
-            Content = source.Content;
-            ImageId = source.ImageId;
-        }
+
+
     }
 }
