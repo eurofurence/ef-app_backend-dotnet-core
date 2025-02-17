@@ -20,14 +20,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IEventService _eventService;
         private readonly IImageService _imageService;
 
-        private readonly IEventFavoritesService _eventFavoriteService;
-
         public EventsController(IEventService eventService,
-            IImageService imageService, IEventFavoritesService eventFavoriteService)
+            IImageService imageService)
         {
             _eventService = eventService;
             _imageService = imageService;
-            _eventFavoriteService = eventFavoriteService;
         }
 
         /// <summary>
@@ -82,7 +79,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(200)]
         public Task<ActionResult> GetMyFavorites()
         {
-            return Task.FromResult<ActionResult>(Ok(_eventFavoriteService.GetFavoriteEventsFromUser(User)));
+            return Task.FromResult<ActionResult>(Ok(_eventService.GetFavoriteEventsFromUser(User)));
         }
 
         /// <summary>
@@ -101,7 +98,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return NotFound();
             }
 
-            await _eventFavoriteService.AddEventToFavoritesIfNotExist(User, foundEvent);
+            await _eventService.AddEventToFavoritesIfNotExist(User, foundEvent);
             return NoContent();
         }
 
@@ -121,7 +118,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return NotFound();
             }
 
-            await _eventFavoriteService.RemoveEventFromFavoritesIfExist(User, events.First());
+            await _eventService.RemoveEventFromFavoritesIfExist(User, events.First());
 
             return NoContent();
         }
