@@ -8,7 +8,7 @@ using Eurofurence.App.Server.Web.Controllers.Transformer;
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRecord : EntityBase, IDtoTransformer<AnnouncementRequest>
+    public class AnnouncementRecord : EntityBase, IDtoRecordTransformer<AnnouncementRequest, AnnouncementResponse>
     {
         /// <summary>
         /// When does this announcement start to be valid?
@@ -88,10 +88,12 @@ namespace Eurofurence.App.Domain.Model.Announcements
 
         [JsonIgnore] public ImageRecord Image { get; set; }
 
-        public AnnouncementRequest Transform()
+
+        public AnnouncementResponse Transform()
         {
-            return new AnnouncementRequest
+            return new AnnouncementResponse()
             {
+                Id = Id,
                 Area = Area,
                 Author = Author,
                 Title = Title,
