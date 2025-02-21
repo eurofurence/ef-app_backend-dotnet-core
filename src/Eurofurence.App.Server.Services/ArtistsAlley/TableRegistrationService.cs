@@ -109,7 +109,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             foreach (var registration in activeRegistrations)
             {
-                if (registration.ImageId is {} imageId) await _imageService.DeleteOneAsync(imageId);
+                if (registration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
                 await DeleteOneAsync(registration.Id);
             }
 
@@ -191,7 +191,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             {
                 message.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
             }
-            
+
             if (record.ImageId.HasValue)
             {
                 await _telegramMessageSender.SendImageToChatAsync(

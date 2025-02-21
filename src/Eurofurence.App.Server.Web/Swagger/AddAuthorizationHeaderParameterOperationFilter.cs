@@ -76,7 +76,7 @@ namespace Eurofurence.App.Server.Web.Swagger
             operation.Description = "  * Requires authorization  \n";
 
             if (!operation.Responses.ContainsKey("401"))
-                operation.Responses.Add("401", new OpenApiResponse {Description = "Authorization required"});
+                operation.Responses.Add("401", new OpenApiResponse { Description = "Authorization required" });
 
             if (requiredRoles.Count > 0)
             {

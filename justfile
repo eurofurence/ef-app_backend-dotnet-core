@@ -20,6 +20,9 @@ default:
 # Initialize configuration files in root folder
 init: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json" "appsettings") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json" "firebase") (_create_from_sample "Eurofurence.App.Backoffice/wwwroot" "appsettings" "json" "appsettings-backoffice")
 
+# Initalize configurations files in their own project folders. This is required for running this project in a devcontainer
+init-devcontainer: (_create_from_sample "Eurofurence.App.Server.Web" "appsettings" "json" "src/Eurofurence.App.Server.Web/appsettings") (_create_from_sample "Eurofurence.App.Server.Web" "firebase" "json" "src/Eurofurence.App.Server.Web/firebase") (_create_from_sample "Eurofurence.App.Backoffice/wwwroot" "appsettings" "json" "src/Eurofurence.App.Backoffice/wwwroot/appsettings")
+
 # Start the docker compose stack
 up *ARGS: (init)
 	docker compose up {{ARGS}}
@@ -49,14 +52,9 @@ build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'): (_create_if_not_exi
 	dotnet restore
 	dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release
 	dotnet build src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --configuration Release
-	dotnet publish src/Eurofurence.App.Tools.CliToolBox/Eurofurence.App.Tools.CliToolBox.csproj --output "$(pwd)/artifacts/cli" --configuration Release
 	dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Server.Web
 	dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --output "$(pwd)/artifacts/backend" --configuration Release
 	dotnet publish src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --output "$(pwd)/artifacts/backoffice" --configuration Release
-
-# Build just CLI tools as single, self-contained executable
-build-cli:
-	dotnet publish src/Eurofurence.App.Tools.CliToolBox/Eurofurence.App.Tools.CliToolBox.csproj --output "$(pwd)/artifacts" --configuration Release --sc -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:GenerateDocumentationFile=false
 
 # Build release container for service using spec from docker-compose.yml and refresh service if stack is running
 containerize SERVICE="" *ARGS="":

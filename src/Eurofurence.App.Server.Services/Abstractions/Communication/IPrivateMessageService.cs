@@ -24,7 +24,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
             SendPrivateMessageByRegSysRequest request,
             string senderUid = "System",
             CancellationToken cancellationToken = default);
-        
+
         Task<Guid> SendPrivateMessageAsync(
             SendPrivateMessageByIdentityRequest request,
             string senderUid = "System",

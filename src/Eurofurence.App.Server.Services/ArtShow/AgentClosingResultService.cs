@@ -43,7 +43,7 @@ namespace Eurofurence.App.Server.Services.ArtShow
             try
             {
                 await _semaphore.WaitAsync();
-                
+
                 var csv = new CsvReader(logReader, CultureInfo.InvariantCulture);
 
                 csv.Context.RegisterClassMap<AgentClosingResultImportRowClassMap>();
