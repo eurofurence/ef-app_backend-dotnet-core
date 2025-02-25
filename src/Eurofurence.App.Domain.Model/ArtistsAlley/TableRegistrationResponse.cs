@@ -5,10 +5,8 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.ArtistsAlley;
 
 [DataContract]
-public class TableRegistrationResponse
+public record TableRegistrationResponse() : ResponseBase
 {
-    public Guid Id { get; set; }
-
     /// <summary>
     /// Preferred display name of artist.
     /// </summary>
