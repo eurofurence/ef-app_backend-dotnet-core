@@ -29,7 +29,7 @@ public class DeviceIdentityService(
         string regSysId,
         CancellationToken cancellationToken = default)
     {
-        return appDbContext.RegistrationIdentities
+        return appDbContext.Users
             .Where(x => x.RegSysId == regSysId)
             .Join(
                 appDbContext.DeviceIdentities,

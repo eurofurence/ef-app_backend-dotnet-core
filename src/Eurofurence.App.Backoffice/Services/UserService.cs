@@ -8,11 +8,11 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class UserService(HttpClient http) : IUserService
     {
-        public async Task<UserRecord> GetUserSelf()
+        public async Task<UserResponse> GetUserSelf()
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return await http.GetFromJsonAsync<UserRecord>("Users/:self", options) ?? new UserRecord();
+            return await http.GetFromJsonAsync<UserResponse>("Users/:self", options) ?? new UserResponse();
         }
 
         public async Task PutUserArtistAlleyStatusAsync(String userID, ArtistAlleyUserPenaltyChangeRequest changeRequest)

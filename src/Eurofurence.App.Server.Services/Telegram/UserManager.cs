@@ -20,7 +20,7 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task<TEnum> GetAclForUserAsync<TEnum>(string username) where TEnum : struct
         {
-            var record = await _appDbContext.Users
+            var record = await _appDbContext.TelegramUsers
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
 
@@ -31,18 +31,18 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public async Task SetAclForUserAsync<TEnum>(string username, TEnum acl)
         {
-            var record = await _appDbContext.Users.FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
+            var record = await _appDbContext.TelegramUsers.FirstOrDefaultAsync(a => a.Username.ToLower() == username.ToLower());
 
             if (record == null)
             {
-                record = new UserRecord()
+                record = new TelegramUserRecord()
                 {
                     Username = username
                 };
                 record.NewId();
                 record.Touch();
 
-                _appDbContext.Users.Add(record);
+                _appDbContext.TelegramUsers.Add(record);
                 await _appDbContext.SaveChangesAsync();
                 await SetAclForUserAsync(username, acl);
 
@@ -52,13 +52,13 @@ namespace Eurofurence.App.Server.Services.Telegram
             record.Acl = acl.ToString();
             record.Touch();
 
-            _appDbContext.Users.Update(record);
+            _appDbContext.TelegramUsers.Update(record);
             await _appDbContext.SaveChangesAsync();
         }
 
-        public IQueryable<UserRecord> GetUsers()
+        public IQueryable<TelegramUserRecord> GetUsers()
         {
-            return _appDbContext.Users;
+            return _appDbContext.TelegramUsers;
         }
     }
 }

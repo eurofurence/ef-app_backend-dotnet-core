@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Events;
 
 namespace Eurofurence.App.Domain.Model.PushNotifications;
 
-public class RegistrationIdentityRecord : EntityBase
+public class UserRecord : EntityBase
 {
     [Required]
     [DataMember]
@@ -12,4 +14,9 @@ public class RegistrationIdentityRecord : EntityBase
     [Required]
     [DataMember]
     public string IdentityId { get; set; }
+
+    [DataMember]
+    public string Nickname { get; set; }
+
+    public List<EventRecord> FavoriteEvents { get; set; } = new();
 }
