@@ -27,7 +27,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var numberOfAuthenticatedDevices = await devices
                 .Join(
-                    db.RegistrationIdentities,
+                    db.Users,
                     x => x.IdentityId,
                     x => x.IdentityId,
                     (x, _) => x
