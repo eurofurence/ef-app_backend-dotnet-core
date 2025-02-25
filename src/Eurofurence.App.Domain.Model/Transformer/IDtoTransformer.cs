@@ -7,7 +7,7 @@
 /// Furthermore, objects of <typeparamref name="TDestination"/> may be merged in the current instance.
 /// </summary>
 /// <typeparam name="TDestination">The destination type</typeparam>
-public interface IDtoTransformer<TDestination>
+public interface IDtoTransformer<out TDestination>
 {
     /// <summary>
     /// Transforms the current class to an instance of <typeparam name="TDestination"></typeparam>.

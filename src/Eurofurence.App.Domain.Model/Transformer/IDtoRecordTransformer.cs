@@ -1,6 +1,6 @@
 ﻿namespace Eurofurence.App.Server.Web.Controllers.Transformer;
 
-public interface IDtoRecordTransformer<TRequest, TResponse> : IDtoTransformer<TResponse>
+public interface IDtoRecordTransformer<in TRequest, TResponse> : IDtoTransformer<TResponse>
 {
     /// <summary>
     /// Merges the data from <paramref name="source"/> into the current instance.
