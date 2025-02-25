@@ -648,9 +648,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<string>("Tags")
                         .HasColumnType("longtext");
 
-                    b.Property<Guid?>("TelegramUserRecordId")
-                        .HasColumnType("char(36)");
-
                     b.Property<string>("Title")
                         .HasColumnType("longtext");
 
@@ -665,8 +662,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasIndex("ConferenceTrackId");
 
                     b.HasIndex("PosterImageId");
-
-                    b.HasIndex("TelegramUserRecordId");
 
                     b.ToTable("Events");
                 });
@@ -1110,6 +1105,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("CalendarToken")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("IdentityId")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -1169,9 +1167,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("RegsysID")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Username")
                         .HasColumnType("longtext");
@@ -1317,10 +1312,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "PosterImage")
                         .WithMany("EventPosters")
                         .HasForeignKey("PosterImageId");
-
-                    b.HasOne("Eurofurence.App.Domain.Model.Telegram.TelegramUserRecord", null)
-                        .WithMany("FavoriteEvents")
-                        .HasForeignKey("TelegramUserRecordId");
 
                     b.Navigation("BannerImage");
 
@@ -1497,11 +1488,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapRecord", b =>
                 {
                     b.Navigation("Entries");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Telegram.TelegramUserRecord", b =>
-                {
-                    b.Navigation("FavoriteEvents");
                 });
 #pragma warning restore 612, 618
         }
