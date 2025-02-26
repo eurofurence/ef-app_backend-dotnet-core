@@ -98,7 +98,7 @@ namespace Eurofurence.App.Server.Services.Events
 
             Calendar calendar = new Calendar();
             calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
-            //calendar.Name = "Eurofurence-Events";
+
             foreach (var item in favoriteEvents)
             {
                 CalendarEvent calendarEvent = new CalendarEvent()
@@ -109,7 +109,6 @@ namespace Eurofurence.App.Server.Services.Events
                     End = new CalDateTime(item.EndDateTimeUtc),
                 };
                 calendar.Events.Add(calendarEvent);
-
             }
 
             return calendar;

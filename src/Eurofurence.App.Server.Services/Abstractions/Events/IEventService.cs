@@ -45,8 +45,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         List<EventRecord> GetFavoriteEventsFromUser([NotNull] ClaimsPrincipal user);
 
         /// <summary>
-        /// Returns similar to <see cref="GetFavoriteEventsFromUser"/> all favorite events of a user.
-        /// In this case though, the events are returned in an iCal Calendar format.
+        /// Returns all favorite events of a user in an iCal Calendar format.
         /// </summary>
         /// <param name="user">The user whose events should be returned</param>
         /// <returns>A <see cref="Calendar"/> instance with all favorite events of the user </returns>

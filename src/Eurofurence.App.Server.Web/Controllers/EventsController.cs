@@ -12,6 +12,7 @@ using Eurofurence.App.Server.Web.Extensions;
 using Ical.Net;
 using Ical.Net.Serialization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -93,13 +94,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Favorites/:calendar-token")]
         public async Task<ActionResult> GetFavoritesUrl()
         {
-            var userId = User.GetSubject();
-
             var userToken = await _userService.GetOrCreateUserCalendarToken(User);
 
             if (userToken == null)
             {
-                return BadRequest("User is unknown. This should technically never happen.");
+                return BadRequest("User is unknown.");
             }
 
             return Ok(userToken);
@@ -126,7 +125,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             var serializedCalendar = serializer.SerializeToString(favoriteEvents);
 
             return File(Encoding.ASCII.GetBytes(serializedCalendar), "text/calendar", "calendar.ics");
-            //return Content(serializedCalendar, "text/iCal");
         }
 
         /// <summary>

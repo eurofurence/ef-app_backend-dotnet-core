@@ -42,7 +42,10 @@ namespace Eurofurence.App.Server.Web
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.WebHost.ConfigureKestrel(options => { options.ListenAnyIP(30001); });
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(30001);
+            });
 
             var connectionString = builder.Configuration.GetConnectionString("Eurofurence");
             var globalOptions = builder.Configuration.GetSection("Global").Get<GlobalOptions>();
@@ -103,11 +106,11 @@ namespace Eurofurence.App.Server.Web
             });
 
             builder.Services.AddMvc(options =>
-                {
-                    options.EnableEndpointRouting = false;
-                    options.MaxModelValidationErrors = 0;
-                    options.Filters.Add(new CustomValidationAttributesFilter());
-                })
+            {
+                options.EnableEndpointRouting = false;
+                options.MaxModelValidationErrors = 0;
+                options.Filters.Add(new CustomValidationAttributesFilter());
+            })
                 .AddJsonOptions(opt =>
                 {
                     opt.JsonSerializerOptions.PropertyNamingPolicy = null;
@@ -141,8 +144,7 @@ namespace Eurofurence.App.Server.Web
                             .Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>();
                         foreach (var apiKey in options.ApiKeys ?? [])
                         {
-                            logger.LogInformation(
-                                $"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
+                            logger.LogInformation($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
                         }
                     });
 
@@ -157,8 +159,7 @@ namespace Eurofurence.App.Server.Web
             builder.Services.AddDbContextPool<AppDbContext>(options =>
             {
                 var serverVersionString = Environment.GetEnvironmentVariable("MYSQL_VERSION");
-                if (string.IsNullOrEmpty(serverVersionString) ||
-                    !ServerVersion.TryParse(serverVersionString, out var serverVersion))
+                if (string.IsNullOrEmpty(serverVersionString) || !ServerVersion.TryParse(serverVersionString, out var serverVersion))
                 {
                     serverVersion = ServerVersion.AutoDetect(connectionString);
                 }
@@ -171,8 +172,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddApns();
 
-            builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions,
-                eventOptions);
+            builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions);
 
             builder.Services.AddMapper();
 

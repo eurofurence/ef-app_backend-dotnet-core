@@ -11,24 +11,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications;
 
-public class UserService : EntityServiceBase<UserRecord>,
-    IUserService
+public class UserService : EntityServiceBase<UserRecord>, IUserService
 {
     private readonly AppDbContext _appDbContext;
 
-    public UserService(AppDbContext appDbContext,
+    public UserService(
+        AppDbContext appDbContext,
         IStorageServiceFactory storageServiceFactory,
         AppDbContext dbContext,
-        bool useSoftDelete = true) : base(appDbContext, storageServiceFactory, useSoftDelete)
+        bool useSoftDelete = true
+    )
+        : base(appDbContext, storageServiceFactory, useSoftDelete)
     {
         _appDbContext = appDbContext;
     }
 
-
     public async Task<string> GetOrCreateUserCalendarToken(ClaimsPrincipal user)
     {
-        var userRecord =
-            await _appDbContext.Users.FirstOrDefaultAsync(record => record.IdentityId.Equals(user.GetSubject()));
+        var userRecord = await _appDbContext.Users.FirstOrDefaultAsync(record =>
+            record.IdentityId.Equals(user.GetSubject())
+        );
         if (userRecord == null)
         {
             return null;
