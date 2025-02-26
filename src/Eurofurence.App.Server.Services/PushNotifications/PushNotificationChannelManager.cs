@@ -24,7 +24,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
     public class PushNotificationChannelManager : IPushNotificationChannelManager
     {
         private readonly IDeviceIdentityService _deviceService;
-        private readonly IRegistrationIdentityService _registrationService;
+        private readonly IUserService _userService;
         private readonly AppDbContext _appDbContext;
         private readonly GlobalOptions _globalOptions;
         private readonly FirebaseOptions _firebaseOptions;
@@ -36,7 +36,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public PushNotificationChannelManager(
             IDeviceIdentityService deviceService,
-            IRegistrationIdentityService registrationService,
+            IUserService userService,
             AppDbContext appDbContext,
             IOptions<FirebaseOptions> options,
             IOptions<GlobalOptions> globalOptions,
@@ -46,7 +46,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             ILoggerFactory loggerFactory)
         {
             _deviceService = deviceService;
-            _registrationService = registrationService;
+            _userService = userService;
             _appDbContext = appDbContext;
             _firebaseOptions = options.Value;
             _globalOptions = globalOptions.Value;
@@ -223,7 +223,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             var set = new HashSet<string>(regSysIds);
 
-            foreach (var id in await _registrationService
+            foreach (var id in await _userService
                          .FindAll(x => set.Contains(x.RegSysId))
                          .Select(x => x.RegSysId)
                          .ToListAsync(cancellationToken))
@@ -231,7 +231,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 set.Remove(id);
             }
 
-            await _registrationService.InsertMultipleAsync(set.Select(x => new UserRecord
+            await _userService.InsertMultipleAsync(set.Select(x => new UserRecord
             {
                 RegSysId = x,
                 IdentityId = identityId

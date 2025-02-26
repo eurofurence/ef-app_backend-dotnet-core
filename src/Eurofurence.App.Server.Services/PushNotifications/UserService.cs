@@ -11,12 +11,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications;
 
-public class RegistrationIdentityService : EntityServiceBase<UserRecord>,
-    IRegistrationIdentityService
+public class UserService : EntityServiceBase<UserRecord>,
+    IUserService
 {
     private readonly AppDbContext _appDbContext;
 
-    public RegistrationIdentityService(AppDbContext appDbContext,
+    public UserService(AppDbContext appDbContext,
         IStorageServiceFactory storageServiceFactory,
         AppDbContext dbContext,
         bool useSoftDelete = true) : base(appDbContext, storageServiceFactory, useSoftDelete)

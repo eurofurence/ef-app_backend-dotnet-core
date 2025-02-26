@@ -4,9 +4,10 @@ using Eurofurence.App.Domain.Model.PushNotifications;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
-public interface IRegistrationIdentityService :
+public interface IUserService :
     IEntityServiceOperations<UserRecord>,
     IPatchOperationProcessor<UserRecord>
 {
+    
     Task<string> GetOrCreateUserCalendarToken(ClaimsPrincipal user);
 }

@@ -24,14 +24,14 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IEventService _eventService;
         private readonly IImageService _imageService;
-        private readonly IRegistrationIdentityService _registrationIdentityService;
+        private readonly IUserService _userService;
 
         public EventsController(IEventService eventService,
-            IImageService imageService, IRegistrationIdentityService registrationIdentityService)
+            IImageService imageService, IUserService userService)
         {
             _eventService = eventService;
             _imageService = imageService;
-            _registrationIdentityService = registrationIdentityService;
+            _userService = userService;
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var userId = User.GetSubject();
 
-            var userToken = await _registrationIdentityService.GetOrCreateUserCalendarToken(User);
+            var userToken = await _userService.GetOrCreateUserCalendarToken(User);
 
             if (userToken == null)
             {
@@ -113,7 +113,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return Unauthorized("Token is required.");
             }
 
-            if (await _registrationIdentityService.FindAll(record => record.CalendarToken == token)
+            if (await _userService.FindAll(record => record.CalendarToken == token)
                     .Include(record => record.FavoriteEvents)
                     .FirstOrDefaultAsync() is not { } userRecord)
             {
