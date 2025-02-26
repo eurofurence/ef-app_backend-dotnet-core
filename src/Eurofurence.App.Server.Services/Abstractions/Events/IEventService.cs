@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.PushNotifications;
+using Ical.Net;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
@@ -41,5 +43,13 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         /// <param name="user"></param>
         /// <returns></returns>
         List<EventRecord> GetFavoriteEventsFromUser([NotNull] ClaimsPrincipal user);
+
+        /// <summary>
+        /// Returns similar to <see cref="GetFavoriteEventsFromUser"/> all favorite events of a user.
+        /// In this case though, the events are returned in an iCal Calendar format.
+        /// </summary>
+        /// <param name="user">The user whose events should be returned</param>
+        /// <returns>A <see cref="Calendar"/> instance with all favorite events of the user </returns>
+        Calendar GetFavoriteEventsFromUserAsIcal([NotNull] UserRecord user);
     }
 }

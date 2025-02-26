@@ -19,8 +19,11 @@ using System.Net.Http;
 using System.Security.Claims;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Ical.Net.CalendarComponents;
+using Ical.Net.DataTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Calendar = Ical.Net.Calendar;
 
 namespace Eurofurence.App.Server.Services.Events
 {
@@ -73,7 +76,6 @@ namespace Eurofurence.App.Server.Services.Events
             }
 
             await _dbContext.SaveChangesAsync();
-
         }
 
         /// <summary>
@@ -83,12 +85,34 @@ namespace Eurofurence.App.Server.Services.Events
         /// <returns>A list of all the events of the user</returns>
         public List<EventRecord> GetFavoriteEventsFromUser(ClaimsPrincipal user)
         {
-
             return _dbContext.Users
                 .AsNoTracking()
                 .Include(x => x.FavoriteEvents)
                 .Where(x => x.IdentityId == user.GetSubject())
                 .Select(x => x.FavoriteEvents).FirstOrDefault();
+        }
+
+        public Calendar GetFavoriteEventsFromUserAsIcal(UserRecord user)
+        {
+            var favoriteEvents = user.FavoriteEvents;
+
+            Calendar calendar = new Calendar();
+            calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
+            //calendar.Name = "Eurofurence-Events";
+            foreach (var item in favoriteEvents)
+            {
+                CalendarEvent calendarEvent = new CalendarEvent()
+                {
+                    Summary = item.Title,
+                    Description = item.Description,
+                    Start = new CalDateTime(item.StartDateTimeUtc),
+                    End = new CalDateTime(item.EndDateTimeUtc),
+                };
+                calendar.Events.Add(calendarEvent);
+
+            }
+
+            return calendar;
         }
 
         public async Task RemoveEventFromFavoritesIfExist(ClaimsPrincipal user, EventRecord eventRecord)
@@ -105,7 +129,8 @@ namespace Eurofurence.App.Server.Services.Events
             await _dbContext.SaveChangesAsync();
         }
 
-        public IQueryable<EventRecord> FindConflicts(DateTime conflictStartTime, DateTime conflictEndTime, TimeSpan tolerance)
+        public IQueryable<EventRecord> FindConflicts(DateTime conflictStartTime, DateTime conflictEndTime,
+            TimeSpan tolerance)
         {
             var queryConflictEndTime = conflictEndTime + tolerance;
             var queryConflictStartTime = conflictStartTime - tolerance;
@@ -127,11 +152,13 @@ namespace Eurofurence.App.Server.Services.Events
                 var fileStream = await httpClient.GetStreamAsync(_eventOptions.Url);
                 TextReader reader = new StreamReader(fileStream);
 
-                using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
+                using var csv = new CsvReader(reader,
+                    new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
                 csv.Context.RegisterClassMap<EventImportRowClassMap>();
                 var csvRecords = csv.GetRecords<EventImportRow>().ToList();
                 csvRecords = csvRecords
-                    .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                    .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase))
+                    .ToList();
 
                 if (csvRecords.Count == 0) return;
 
@@ -147,7 +174,9 @@ namespace Eurofurence.App.Server.Services.Events
                     .Distinct().OrderBy(a => a).ToList();
 
                 var conferenceDays = csvRecords.Select(a =>
-                        new Tuple<DateTime, string>(DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture), DateTimeKind.Utc),
+                        new Tuple<DateTime, string>(
+                            DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture),
+                                DateTimeKind.Utc),
                             a.ConferenceDayName))
                     .Distinct().OrderBy(a => a).ToList();
 
@@ -162,7 +191,8 @@ namespace Eurofurence.App.Server.Services.Events
                     eventConferenceDays,
                     ref modifiedRecords);
 
-                _logger.LogInformation(LogEvents.Import, $"Event import finished successfully modifying {modifiedRecords} record(s).");
+                _logger.LogInformation(LogEvents.Import,
+                    $"Event import finished successfully modifying {modifiedRecords} record(s).");
             }
             finally
             {
@@ -229,15 +259,15 @@ namespace Eurofurence.App.Server.Services.Events
             patch
                 .Map(s => s, t => t.Name)
                 .Map(s =>
-                {
-                    if (roomShortNameRegex.IsMatch(s))
                     {
-                        var matches = roomShortNameRegex.Matches(s);
-                        return matches[0].Groups[1].Value.Trim();
-                    }
-                    else
-                        return s;
-                },
+                        if (roomShortNameRegex.IsMatch(s))
+                        {
+                            var matches = roomShortNameRegex.Matches(s);
+                            return matches[0].Groups[1].Value.Trim();
+                        }
+                        else
+                            return s;
+                    },
                     t => t.ShortName);
 
             var diff = patch.Patch(importConferenceRooms, eventConferenceRoomRecords);
@@ -286,7 +316,8 @@ namespace Eurofurence.App.Server.Services.Events
                         .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc),
                     t => t.EndDateTimeUtc)
                 .Map(s => s.PanelHosts, t => t.PanelHosts)
-                .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase), t => t.IsAcceptingFeedback)
+                .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase),
+                    t => t.IsAcceptingFeedback)
                 .Map(s => s.CalculateTags(), t => t.Tags);
 
             var diff = patch.Patch(importEventEntries, eventRecords);
