@@ -107,6 +107,7 @@ namespace Eurofurence.App.Server.Services.Events
                     Description = item.Description,
                     Start = new CalDateTime(item.StartDateTimeUtc),
                     End = new CalDateTime(item.EndDateTimeUtc),
+                    Location = item.ConferenceRoom?.Name,
                 };
                 calendar.Events.Add(calendarEvent);
             }

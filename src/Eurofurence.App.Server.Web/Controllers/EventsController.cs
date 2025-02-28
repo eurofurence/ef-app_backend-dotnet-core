@@ -114,6 +114,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             if (await _userService.FindAll(record => record.CalendarToken == token)
                     .Include(record => record.FavoriteEvents)
+                    .ThenInclude(record => record.ConferenceRoom)
                     .FirstOrDefaultAsync() is not { } userRecord)
             {
                 return Unauthorized("Token is invalid.");
