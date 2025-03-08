@@ -1,7 +1,10 @@
 ﻿using Eurofurence.App.Domain.Model.Images;
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Telegram;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
@@ -89,5 +92,8 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [JsonIgnore]
         public virtual EventConferenceRoomRecord ConferenceRoom { get; set; }
+
+        [JsonIgnore]
+        public List<UserRecord> FavoredBy { get; set; } = new();
     }
 }
