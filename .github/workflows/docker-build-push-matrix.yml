@@ -30,7 +30,7 @@ jobs:
             image-name: ${{ github.repository }}
           - dockerfile: Dockerfile-backoffice
             image-name: ${{ github.repository }}-backoffice
-    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml
+    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@main
     with:
       dockerfile: ${{ matrix.dockerfile }}
       image-name: ${{ matrix.image-name }}
