@@ -66,11 +66,6 @@ public class RolesClaimsTransformation(
                 roles.Add("MapEditor");
             }
 
-            if (authorizationOptions.Value.FursuitBadgeSystem.Contains(claim.Value))
-            {
-                roles.Add("FursuitBadgeSystem");
-            }
-
             if (authorizationOptions.Value.Admin.Contains(claim.Value))
             {
                 roles.Add("Admin");

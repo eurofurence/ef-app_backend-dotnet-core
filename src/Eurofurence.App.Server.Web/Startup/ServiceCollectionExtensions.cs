@@ -5,7 +5,6 @@ using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Eurofurence.App.Server.Services.Abstractions.Fursuits;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
@@ -24,7 +23,6 @@ using Eurofurence.App.Server.Services.ArtShow;
 using Eurofurence.App.Server.Services.Communication;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
-using Eurofurence.App.Server.Services.Fursuits;
 using Eurofurence.App.Server.Services.Images;
 using Eurofurence.App.Server.Services.Knowledge;
 using Eurofurence.App.Server.Services.Lassie;
@@ -58,7 +56,6 @@ namespace Eurofurence.App.Server.Web.Startup
         {
             services.AddTransient<IAgentClosingResultService, AgentClosingResultService>();
             services.AddTransient<IAnnouncementService, AnnouncementService>();
-            services.AddTransient<ICollectingGameService, CollectingGameService>();
             services.AddTransient<IDealerService, DealerService>();
             services.AddTransient<IEventConferenceDayService, EventConferenceDayService>();
             services.AddTransient<IEventConferenceRoomService, EventConferenceRoomService>();
@@ -66,7 +63,6 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IEventFeedbackService, EventFeedbackService>();
             services.AddTransient<IEventService, EventService>();
             services.AddTransient<IPushNotificationChannelManager, PushNotificationChannelManager>();
-            services.AddTransient<IFursuitBadgeService, FursuitBadgeService>();
             services.AddTransient<IHtmlSanitizer, GanssHtmlSanitizer>();
             services.AddTransient<IImageService, ImageService>();
             services.AddTransient<IItemActivityService, ItemActivityService>();
@@ -247,22 +243,6 @@ namespace Eurofurence.App.Server.Web.Startup
                                     s.RepeatForever();
                                 }));
                     }
-                }
-
-                if (jobsOptions.UpdateFursuitCollectionGameParticipation.Enabled)
-                {
-                    var updateFursuitCollectionGameParticipationKey =
-                        new JobKey(nameof(UpdateFursuitCollectionGameParticipationJob));
-                    q.AddJob<UpdateFursuitCollectionGameParticipationJob>(opts =>
-                        opts.WithIdentity(updateFursuitCollectionGameParticipationKey));
-                    q.AddTrigger(t =>
-                        t.ForJob(updateFursuitCollectionGameParticipationKey)
-                            .WithSimpleSchedule(s =>
-                            {
-                                s.WithIntervalInSeconds(jobsOptions.UpdateFursuitCollectionGameParticipation
-                                    .SecondsInterval);
-                                s.RepeatForever();
-                            }));
                 }
 
                 if (jobsOptions.UpdateLostAndFound.Enabled)

@@ -14,9 +14,6 @@ namespace Eurofurence.App.Domain.Model.Images
         public List<Guid> KnowledgeEntryIds { get; set; } = new();
 
         [DataMember]
-        public List<Guid> FursuitBadgeIds { get; set; } = new();
-
-        [DataMember]
         public List<Guid> TableRegistrationIds { get; set; } = new();
 
         [DataMember]
