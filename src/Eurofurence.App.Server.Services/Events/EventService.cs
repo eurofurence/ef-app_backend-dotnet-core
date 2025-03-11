@@ -101,10 +101,12 @@ namespace Eurofurence.App.Server.Services.Events
 
             foreach (var item in favoriteEvents)
             {
+                // Include for each event the title, start time/end time and the description of the event including
+                // the organizer of the panel.
                 CalendarEvent calendarEvent = new CalendarEvent()
                 {
                     Summary = item.Title,
-                    Description = item.Description,
+                    Description = item.Description + "\n" + $"Held by: {item.PanelHosts ?? "unknown fluff"}",
                     Start = new CalDateTime(item.StartDateTimeUtc),
                     End = new CalDateTime(item.EndDateTimeUtc),
                     Location = item.ConferenceRoom?.Name,
