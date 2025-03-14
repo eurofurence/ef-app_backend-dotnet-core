@@ -82,7 +82,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IUserManager, UserManager>();
             services.AddTransient<IDealerApiClient, DealerApiClient>();
             services.AddTransient<IDeviceIdentityService, DeviceIdentityService>();
-            services.AddTransient<IRegistrationIdentityService, RegistrationIdentityService>();
+            services.AddTransient<IUserService, UserService>();
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddSingleton<ITelegramMessageBroker, TelegramMessageBroker>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();

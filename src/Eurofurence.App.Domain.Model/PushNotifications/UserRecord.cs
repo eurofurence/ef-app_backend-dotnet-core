@@ -19,4 +19,7 @@ public class UserRecord : EntityBase
     public string Nickname { get; set; }
 
     public List<EventRecord> FavoriteEvents { get; set; } = new();
+
+#nullable enable
+    public string? CalendarToken { get; set; }
 }
