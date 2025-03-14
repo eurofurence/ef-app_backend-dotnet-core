@@ -4,6 +4,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250225212508_AddUserCalendarToken")]
+    partial class AddUserCalendarToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -311,6 +314,42 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasIndex("TableRegistrationRecordId");
 
                     b.ToTable("StateChangeRecord");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.CollectionGame.CollectionEntryRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("EventDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("FursuitParticipationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("FursuitParticipationRecordId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PlayerParticipationId")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("PlayerParticipationRecordId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FursuitParticipationRecordId");
+
+                    b.HasIndex("PlayerParticipationRecordId");
+
+                    b.ToTable("CollectionEntries");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Communication.PrivateMessageRecord", b =>
@@ -670,6 +709,156 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasIndex("MapEntryRecordId");
 
                     b.ToTable("LinkFragments");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.FursuitParticipationRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("CollectionCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("FursuitBadgeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("LastCollectionDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OwnerUid")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("TokenRegistrationDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TokenValue")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FursuitParticipations");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.PlayerParticipationRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("CollectionCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Karma")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("LastCollectionDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PlayerUid")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlayerParticipations");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.TokenRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsLinked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("LinkDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("LinkedFursuitParticipantUid")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tokens");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.FursuitBadgeRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("CollectionCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ExternalReference")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("ImageId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OwnerUid")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Species")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("WornBy")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageId");
+
+                    b.ToTable("FursuitBadges");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>
@@ -1056,6 +1245,17 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasForeignKey("TableRegistrationRecordId");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.CollectionGame.CollectionEntryRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.FursuitParticipationRecord", null)
+                        .WithMany("CollectionEntries")
+                        .HasForeignKey("FursuitParticipationRecordId");
+
+                    b.HasOne("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.PlayerParticipationRecord", null)
+                        .WithMany("CollectionEntries")
+                        .HasForeignKey("PlayerParticipationRecordId");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Dealers.DealerRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "ArtPreviewImage")
@@ -1140,6 +1340,15 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasOne("Eurofurence.App.Domain.Model.Maps.MapEntryRecord", null)
                         .WithMany("Links")
                         .HasForeignKey("MapEntryRecordId");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.FursuitBadgeRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Images.ImageRecord", "Image")
+                        .WithMany("FursuitBadges")
+                        .HasForeignKey("ImageId");
+
+                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", b =>
@@ -1233,6 +1442,16 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("Events");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.FursuitParticipationRecord", b =>
+                {
+                    b.Navigation("CollectionEntries");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Fursuits.CollectingGame.PlayerParticipationRecord", b =>
+                {
+                    b.Navigation("CollectionEntries");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>
                 {
                     b.Navigation("Announcements");
@@ -1246,6 +1465,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("EventBanners");
 
                     b.Navigation("EventPosters");
+
+                    b.Navigation("FursuitBadges");
 
                     b.Navigation("Maps");
 
