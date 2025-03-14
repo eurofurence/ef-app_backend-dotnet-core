@@ -249,5 +249,19 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             return request;
         }
+
+        public async Task DeleteLatestRegistrationByUidAsync(string userUid)
+        {
+            TableRegistrationRecord tableRegistrationRecord = await _appDbContext.TableRegistrations
+                .OrderByDescending(a => a.CreatedDateTimeUtc)
+                .FirstOrDefaultAsync(a => a.OwnerUid == userUid);
+
+            if (tableRegistrationRecord == null)
+            {
+                throw new ArgumentException("User has not been registered yet.");
+            }
+
+            await DeleteOneAsync(tableRegistrationRecord.Id);
+        }
     }
 }

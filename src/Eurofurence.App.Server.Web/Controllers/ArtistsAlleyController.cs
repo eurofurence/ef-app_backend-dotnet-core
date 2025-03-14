@@ -89,6 +89,28 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
+        /// Performs a checkout of the user out of the artist alley.
+        /// This will delete the registration of the current authenticated user.
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles = "AttendeeCheckedIn")]
+        [HttpDelete("TableRegistration/:my-latest")]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(204)]
+        public async Task<ActionResult> ArtistAlleyCheckoutAsync()
+        {
+            try
+            {
+                await _tableRegistrationService.DeleteLatestRegistrationByUidAsync(User.GetSubject());
+            }
+            catch (ArgumentException)
+            {
+                return NotFound("User has not been registered yet.");
+            }
+            return NoContent();
+        }
+
+        /// <summary>
         ///     Submits a new table registration for review in the name of the currently signed in user.
         /// </summary>
         /// <param name="request">details of the table registration</param>
