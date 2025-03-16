@@ -57,6 +57,7 @@ public record AnnouncementResponse : ResponseBase
     [Required]
     public string Content { get; set; }
 
+
     /// <summary>
     /// ID of an image to be displayed with the announcement, uploaded via the POST endpoint for images.
     /// </summary>
