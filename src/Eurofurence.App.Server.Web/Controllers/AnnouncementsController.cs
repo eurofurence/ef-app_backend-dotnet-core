@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,9 +35,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<AnnouncementRecord>), 200)]
-        public IEnumerable<AnnouncementRecord> GetAnnouncementEntries()
+        public IEnumerable<AnnouncementResponse> GetAnnouncementEntries()
         {
-            return _announcementService.FindAll();
+            return _announcementService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
@@ -93,7 +95,18 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             return Ok(record.Id);
         }
-
+        interface IA
+        {
+            void M() { WriteLine("IA.M"); }
+            void WriteLine(string iaM);
+        }
+        class C : IA
+        {
+            public void WriteLine(string iaM)
+            {
+                throw new NotImplementedException();
+            }
+        } // OK
         /// <summary>
         /// Updates and existing announcement and requests all devices to sync their data.
         /// </summary>
@@ -106,11 +119,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> PutAnnouncementAsync([FromRoute] Guid id,
             [EnsureNotNull][FromBody] AnnouncementRequest request)
         {
+
+
+
+            IA i = new C();
+            i.M(); // prints "IA.M"
+
             if (await _announcementService.FindOneAsync(id) is not { } announcementRecord)
             {
                 return NotFound();
             }
-
             announcementRecord.Merge(request);
             // if (record == null) return BadRequest("Error parsing Record");
             // if (record.Id == Guid.Empty) return BadRequest("Error parsing Record.Id");

@@ -1,11 +1,15 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Communication
 {
     [DataContract]
-    public class PrivateMessageRecord : EntityBase
+    public class PrivateMessageRecord : EntityBase,
+        IDtoRecordTransformable<SendPrivateMessageByRegSysRequest, PrivateMessageResponse>,
+        IDtoRecordTransformable<SendPrivateMessageByIdentityRequest, PrivateMessageResponse>
     {
         [DataMember]
         public string RecipientRegSysId { get; set; }

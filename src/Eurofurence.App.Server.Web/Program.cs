@@ -39,6 +39,8 @@ namespace Eurofurence.App.Server.Web
     {
         public static void Main(string[] args)
         {
+            TypeAdapterConfig.GlobalSettings.RequireDestinationMemberSource = true;
+
             var builder = WebApplication.CreateBuilder(args);
 
             builder.WebHost.ConfigureKestrel(options =>
@@ -217,6 +219,9 @@ namespace Eurofurence.App.Server.Web
                 c.InjectStylesheet("/css/swagger.css");
                 c.EnableDeepLinking();
             });
+
+            logger.LogInformation("Compiling type mappings");
+            TypeAdapterConfig.GlobalSettings.Compile();
 
             logger.LogInformation($"Startup complete ({builder.Environment.EnvironmentName})");
 

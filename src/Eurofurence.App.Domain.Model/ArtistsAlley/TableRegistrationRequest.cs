@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Eurofurence.App.Server.Web.Controllers.Transformer;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
-    public class TableRegistrationRequest : IDtoTransformer<TableRegistrationRecord>
+    public class TableRegistrationRequest : IDtoTransformable<TableRegistrationRecord>
     {
         /// <summary>
         /// Preferred display name of artist.
@@ -33,17 +34,5 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         /// Optional Telegram handle (prefixed @ will be removed automatically).
         /// </summary>
         public string TelegramHandle { get; set; }
-
-        public TableRegistrationRecord Transform()
-        {
-            return new TableRegistrationRecord()
-            {
-                DisplayName = DisplayName,
-                WebsiteUrl = WebsiteUrl,
-                ShortDescription = ShortDescription,
-                Location = Location,
-                TelegramHandle = TelegramHandle
-            };
-        }
     }
 }

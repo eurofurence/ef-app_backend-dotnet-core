@@ -4,11 +4,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
-using Eurofurence.App.Server.Web.Controllers.Transformer;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
-    public class TableRegistrationRecord : EntityBase, IDtoRecordTransformer<TableRegistrationRequest, TableRegistrationResponse>
+    public class TableRegistrationRecord : EntityBase, IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse>
     {
         public class StateChangeRecord : EntityBase
         {
@@ -134,30 +135,6 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
             State = newState;
 
             return stateChange;
-        }
-
-        public TableRegistrationResponse Transform()
-        {
-            return new TableRegistrationResponse
-            {
-                Id = Id,
-                Location = Location,
-                DisplayName = DisplayName,
-                WebsiteUrl = WebsiteUrl,
-                ShortDescription = ShortDescription,
-                TelegramHandle = TelegramHandle,
-            };
-        }
-
-        public void Merge(TableRegistrationRequest source)
-        {
-            Location = source.Location;
-            DisplayName = source.DisplayName;
-            WebsiteUrl = source.WebsiteUrl;
-            ShortDescription = source.ShortDescription;
-            TelegramHandle = source.TelegramHandle;
-
-            throw new NotImplementedException();
         }
     }
 }
