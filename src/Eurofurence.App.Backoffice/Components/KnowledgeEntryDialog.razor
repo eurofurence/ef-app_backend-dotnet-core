@@ -15,19 +15,19 @@
                 <MudContainer Style="height: 60vh" Class="overflow-scroll pr-4">
                     <MudTabPanel Icon="@Icons.Material.Outlined.Info" Text="General">
                         <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
-                            <MudSelect Required="true" T="KnowledgeGroupRecord" Label="Group"
-                                ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
+                            <MudTextField Disabled="true" Value="Record.Id" Label="ID"/>
+                            <MudTextField Class="mt-2" @bind-Value="Record.Title" Required="true" RequiredError="Title is required."
+                                          Label="Title"/>
+                            <MudSelect Class="mt-2" Required="true" T="KnowledgeGroupRecord" Label="Group"
+                                       ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
                                 @foreach (var knowledgeGroup in _knowledgeGroups)
                                 {
                                     <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
                                 }
                             </MudSelect>
-                            <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
-                            <MudTextField @bind-Value="Record.Title" Required="true" RequiredError="Title is required."
-                                Label="Title" />
-                            <MudNumericField @bind-Value="Record.Order" Required="true"
-                                RequiredError="Order number is required." Label="Order Number" />
-                            <TinyMarkdownEditor @bind-Value="@Record.Text" Title="Text"></TinyMarkdownEditor>
+                            <MudNumericField Class="mt-2 mb-4" @bind-Value="Record.Order" Required="true"
+                                             RequiredError="Order number is required." Label="Order Number"/>
+                            <TinyMarkdownEditor @bind-Value="@Record.Text"></TinyMarkdownEditor>
                         </MudForm>
                     </MudTabPanel>
                     <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
@@ -55,7 +55,7 @@
                                     <PropertyColumn Title="Name" Property="image => image.InternalReference" />
                                     <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
                                     <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
-                                    <TemplateColumn>
+                                    <TemplateColumn StickyRight="true">
                                         <CellTemplate>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                 OnClick="@(() => DeleteImage(@context.Item.Id))" />
@@ -80,7 +80,7 @@
                                     <PropertyColumn Title="Name" Property="link => link.Name" />
                                     <PropertyColumn Title="Type" Property="link => link.FragmentType" />
                                     <PropertyColumn Title="Target" Property="link => link.Target" />
-                                    <TemplateColumn CellClass="d-flex justify-end">
+                                    <TemplateColumn StickyRight="true">
                                         <CellTemplate>
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                            OnClick="@(() => UpdateLink(context.Item))" />
@@ -103,7 +103,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] private MudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
 
     [Parameter] public KnowledgeEntryRecord? Record { get; set; }
 
