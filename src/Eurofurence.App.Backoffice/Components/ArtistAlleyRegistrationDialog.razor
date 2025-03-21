@@ -8,87 +8,92 @@
 
 <MudDialog>
     <DialogContent>
-        <MudContainer Class="overflow-scroll pr-4">
-            <MudGrid>
-                @if (Record.Image != null && !string.IsNullOrEmpty(Record.Image.Url))
-                {
-                    <MudItem xs="6">
-                        <MudLink Href="@Record.Image.Url">
-                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2"
-                                      Src="@Record.Image.Url"/>
-                        </MudLink>
-                    </MudItem>
-                }
+        <MudGrid>
+            <MudItem xs="12" md="8" Class="d-flex justify-center align-center" Style="height:500px;">
+                <MudLink Href="@Record.Image.Url">
+                    <MudImage Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Image.Url" Elevation="25" Class="rounded-lg">
+                        @if (string.IsNullOrEmpty(@Record.Image.Url))
+                        {
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                        }
+                    </MudImage>
+                </MudLink>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0">
+                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz" Class="mt-2" />
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID" Class="mt-2" />
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username" Class="mt-2" />
+                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website" Class="mt-2" />
+                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description" Class="mt-2" />
+                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle" Class="mt-2" />
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mt-2" />
+                    <div Class="mt-2">
+                        @switch (Record.State)
+                        {
+                            case TableRegistrationRecord.RegistrationStateEnum.Pending:
+                                <MudAlert Severity="Severity.Info">Pending</MudAlert>
+                                break;
+                            case TableRegistrationRecord.RegistrationStateEnum.Accepted:
+                                <MudAlert Severity="Severity.Success">Accepted</MudAlert>
+                                break;
+                            case TableRegistrationRecord.RegistrationStateEnum.Rejected:
+                                <MudAlert Severity="Severity.Error">Rejected</MudAlert>
+                                break;
+                            case TableRegistrationRecord.RegistrationStateEnum.Published:
+                                <MudAlert Severity="Severity.Success">Published</MudAlert>
+                                break;
+                        }
+                    </div>
+                    
+                    <MudButtonGroup Class="mt-2" Variant="Variant.Outlined" Color="Color.Success">
+                        @if (Record.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                                       @onclick="ApproveRegistration">
+                                Approve
+                            </MudButton>
+                            <AuthorizeView Policy="RequireArtistAlleyModerator">
+                                <MudButtonGroup Class="ml-2" Variant="Variant.Outlined" Color="Color.Warning">
+                                    <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                               @onclick="() => RejectRegistration(false)">
+                                        Reject
+                                    </MudButton>
+                                    <AuthorizeView Policy="RequireArtistAlleyAdmin" Context="otherContext">
+                                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                                            <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
+                                                         OnClick="args => RejectRegistration(true)">
+                                                Reject and Ban user
+                                            </MudMenuItem>
+                                        </MudMenu>
+                                    </AuthorizeView>
+                                </MudButtonGroup>
+                            </AuthorizeView>
+                        }
+                        @*Show the delete button only for admins*@
+                        <AuthorizeView Policy="RequireArtistAlleyAdmin">
+                            <Authorized>
+                                <MudButtonGroup Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
 
-                <MudItem xs="6">
-                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID"/>
-                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz"/>
-                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID"/>
-                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username"/>
-                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website"/>
-                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description"/>
-                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle"/>
-                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mb-4"/>
-                    @switch (Record.State)
-                    {
-                        case TableRegistrationRecord.RegistrationStateEnum.Pending:
-                            <MudAlert Severity="Severity.Info">Pending</MudAlert>
-                            break;
-                        case TableRegistrationRecord.RegistrationStateEnum.Accepted:
-                            <MudAlert Severity="Severity.Success">Accepted</MudAlert>
-                            break;
-                        case TableRegistrationRecord.RegistrationStateEnum.Rejected:
-                            <MudAlert Severity="Severity.Error">Rejected</MudAlert>
-                            break;
-                        case TableRegistrationRecord.RegistrationStateEnum.Published:
-                            <MudAlert Severity="Severity.Success">Published</MudAlert>
-                            break;
-                    }
-                    @if (Record.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
-                    {
+                                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(false)">
+                                        Delete
+                                    </MudButton>
 
-                        <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
-                                   @onclick="() => ApproveRegistration()">
-                            Approve
-                        </MudButton>
-                        <AuthorizeView Policy="RequireArtistAlleyModerator">
-                            <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Warning">
-                                <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                           @onclick="() => RejectRegistration(false)">
-                                    Reject
-                                </MudButton>
-                                <AuthorizeView Policy="RequireArtistAlleyAdmin" Context="otherContext">
-                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" T AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
-                                        <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
-                                                     OnClick="args => RejectRegistration(true)">
-                                            Reject and Ban user
+                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                                        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
+                                                     OnClick="args => DeleteRegistration(true)">
+                                            Delete and Ban user
                                         </MudMenuItem>
                                     </MudMenu>
-                                </AuthorizeView>
-                            </MudButtonGroup>
+                                </MudButtonGroup>
+                            </Authorized>
                         </AuthorizeView>
-                    }
-                    @*Show the delete button only for admins*@
-                    <AuthorizeView Policy="RequireArtistAlleyAdmin">
-                        <Authorized>
-                            <MudButtonGroup Variant="Variant.Outlined" Class="ma-1" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
+                    </MudButtonGroup >
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
 
-                                <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(false)">
-                                    Delete
-                                </MudButton>
-
-                                <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
-                                    <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
-                                                 OnClick="args => DeleteRegistration(true)">
-                                        Delete and Ban user
-                                    </MudMenuItem>
-                                </MudMenu>
-                            </MudButtonGroup>
-                        </Authorized>
-                    </AuthorizeView>
-                </MudItem>
-            </MudGrid >
-        </MudContainer >
     </DialogContent >
 </MudDialog >
 
