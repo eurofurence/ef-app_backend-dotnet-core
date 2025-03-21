@@ -1,8 +1,12 @@
-﻿using Mapster;
+﻿using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
 
-namespace Eurofurence.App.Server.Web.Controllers.Transformers;
+namespace Eurofurence.App.Domain.Model.Transformers;
 
-public interface IDtoRecordTransformable<in TRequest, TResponse> : IDtoTransformable<TResponse> where TRequest : class
+public interface IDtoRecordTransformable<in TRequest, out TResponse, TRecord> : IDtoTransformable<TResponse>
+    where TRequest : class, IDtoTransformable<TRecord>
+    where TResponse : class
+    where TRecord : class
 {
     /// <summary>
     /// Merges the data from <paramref name="source"/> into the current instance.
@@ -12,8 +16,8 @@ public interface IDtoRecordTransformable<in TRequest, TResponse> : IDtoTransform
     /// Note that not all data may be affected from that.
     /// </summary>
     /// <param name="source">An object (likely a DTO or record) whose data will be applied.</param>
-    void Merge(TRequest source)
+    void MergeDto(TRequest source)
     {
-        source = source.Adapt(this as TRequest);
+        source.Adapt(this as TRecord);
     }
 }

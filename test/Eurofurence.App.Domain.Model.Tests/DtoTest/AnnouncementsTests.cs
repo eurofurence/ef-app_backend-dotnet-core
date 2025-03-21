@@ -63,7 +63,7 @@ public class AnnouncementsTests
         _request.Content = "Something totally different";
         _request.ImageId = Guid.NewGuid();
 
-        // _record = _request.Adapt(_record);
+        //_request.Adapt(_record);
         _record.Merge(_request);
         Assert.Equal(oldGuid, _record.Id);
         AreEqual(_record, _request);

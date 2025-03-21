@@ -73,7 +73,7 @@ public class CommunicationTests
         _ipdRequest.ToastTitle = "Something totally different";
         _ipdRequest.ToastMessage = "Something totally different";
 
-        recordIdp.Merge(_ipdRequest);
+        recordIdp.Merge<SendPrivateMessageByIdentityRequest, PrivateMessageResponse, PrivateMessageRecord>(_ipdRequest);
 
         _regSysRequest.Message = "Something totally different";
         _regSysRequest.AuthorName = "Something totally different";
@@ -82,7 +82,7 @@ public class CommunicationTests
         _regSysRequest.ToastTitle = "Something totally different";
         _regSysRequest.ToastMessage = "Something totally different";
 
-        recordReg.Merge(_regSysRequest);
+        recordReg.Merge<SendPrivateMessageByRegSysRequest, PrivateMessageResponse, PrivateMessageRecord>(_regSysRequest);
 
         Assert.Equal(oldGuidIpd, recordIdp.Id);
         Assert.Equal(oldGuidReg, recordReg.Id);

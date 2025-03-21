@@ -100,9 +100,9 @@ public class DealersTest
     [Fact]
     public void TestRequestMergeIntoRecord()
     {
-        DealerRecord record = _request.Transform(); ;
+        DealerRecord record = _request.Transform();
 
-        var oldGuid = record.Id;
+        var oldGuid = _record.Id;
 
         _request.DisplayName = "Something totally different";
         _request.Merchandise = "Something totally different";
@@ -114,11 +114,41 @@ public class DealersTest
         _request.DiscordHandle = "Something totally different";
         _request.MastodonHandle = "Something totally different";
 
-        record.Merge(_request);
+        _record.Merge(_request);
 
-        Assert.Equal(oldGuid, record.Id);
-        AreEqual(record, _request);
+        Assert.Equal(oldGuid, _record.Id);
+        AreEqual(_record, _request);
     }
+
+    [Fact]
+    public void TestRecordIntoResponse()
+    {
+        var res = _record.Transform();
+
+        Assert.Equal(_record.Id, res.Id);
+        Assert.Equal(_record.DisplayName, res.DisplayName);
+        Assert.Equal(_record.Merchandise, res.Merchandise);
+        Assert.Equal(_record.ShortDescription, res.ShortDescription);
+        Assert.Equal(_record.AboutTheArtistText, res.AboutTheArtistText);
+        Assert.Equal(_record.AboutTheArtText, res.AboutTheArtText);
+        Assert.Equal(_record.Links, res.Links);
+        Assert.Equal(_record.TwitterHandle, res.TwitterHandle);
+        Assert.Equal(_record.TelegramHandle, res.TelegramHandle);
+        Assert.Equal(_record.DiscordHandle, res.DiscordHandle);
+        Assert.Equal(_record.MastodonHandle, res.MastodonHandle);
+        Assert.Equal(_record.BlueskyHandle, res.BlueskyHandle);
+        Assert.Equal(_record.AttendsOnThursday, res.AttendsOnThursday);
+        Assert.Equal(_record.AttendsOnFriday, res.AttendsOnFriday);
+        Assert.Equal(_record.AttendsOnSaturday, res.AttendsOnSaturday);
+        Assert.Equal(_record.ArtPreviewCaption, res.ArtPreviewCaption);
+        Assert.Equal(_record.ArtistThumbnailImageId, res.ArtistThumbnailImageId);
+        Assert.Equal(_record.ArtistImageId, res.ArtistImageId);
+        Assert.Equal(_record.ArtPreviewImageId, res.ArtPreviewImageId);
+        Assert.Equal(_record.IsAfterDark, res.IsAfterDark);
+        Assert.Equal(_record.Categories, res.Categories);
+        Assert.Equal(_record.Keywords, res.Keywords);
+    }
+
 
     private void AreEqual(DealerRecord record, DealerRequest request)
     {

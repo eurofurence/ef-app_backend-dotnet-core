@@ -1,3 +1,4 @@
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 
 namespace Eurofurence.App.Server.Web.Controllers.Transformers;
@@ -25,12 +26,15 @@ public static class DtoTransformerExtensions
     /// <param name="transformable">The Transformer which should be used for this dto transformation</param>
     /// <param name="source">The source object which fields should be copied into the <paramref name="transformable"/> object</param>
     /// <typeparam name="TRecord">The type of object which should be merged</typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
     /// <returns></returns>
-    public static void Merge<TRecord>(this object transformable, TRecord source)
+    public static void Merge<TRequest, TResponse, TRecord>(this IDtoRecordTransformable<TRequest, TResponse, TRecord> transformable,
+        TRequest source)
+        where TRequest : class, IDtoTransformable<TRecord>
         where TRecord : class
+        where TResponse : class
     {
-        //transformable.Merge(source);
-        source.Adapt(transformable);
-        //source.Adapt(transformable as TRecord);
+        transformable.MergeDto(source);
     }
 }

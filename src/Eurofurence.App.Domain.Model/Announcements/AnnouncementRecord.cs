@@ -3,13 +3,15 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRecord : EntityBase, IDtoRecordTransformable<AnnouncementRequest, AnnouncementResponse>
+    public class AnnouncementRecord : EntityBase,
+        IDtoRecordTransformable<AnnouncementRequest, AnnouncementResponse, AnnouncementRecord>
     {
         /// <summary>
         /// When does this announcement start to be valid?
@@ -100,6 +102,5 @@ namespace Eurofurence.App.Domain.Model.Announcements
         // {
         //     source.Adapt(this);
         // }
-
     }
 }
