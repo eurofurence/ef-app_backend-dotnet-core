@@ -8,6 +8,9 @@ namespace Eurofurence.App.Domain.Model.Events;
 public class EventResponse
 {
     [DataMember]
+    public Guid Id { get; set; }
+
+    [DataMember]
     public string? Slug { get; set; }
 
     [DataMember]

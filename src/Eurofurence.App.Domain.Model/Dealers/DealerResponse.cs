@@ -9,6 +9,8 @@ namespace Eurofurence.App.Domain.Model.Dealers;
 
 public class DealerResponse
 {
+    [DataMember]
+    public Guid Id { get; set; }
 
     /// <summary>
     /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand. 

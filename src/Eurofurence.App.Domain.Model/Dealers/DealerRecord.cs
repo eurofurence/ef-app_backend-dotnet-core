@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Dealers
@@ -19,7 +20,7 @@ namespace Eurofurence.App.Domain.Model.Dealers
     /// by it is provided directly by the attendee during or after dealer registration.
     /// </summary>
     [DataContract]
-    public class DealerRecord : EntityBase, IDtoRecordTransformable<DealerRequest, DealerResponse>
+    public class DealerRecord : EntityBase, IDtoRecordTransformable<DealerRequest, DealerResponse, DealerRecord>
     {
         /// <summary>
         /// Registration number (as on badge) of the attendee that acts on behalf/represents this dealer.

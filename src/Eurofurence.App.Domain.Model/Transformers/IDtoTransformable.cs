@@ -9,16 +9,17 @@ namespace Eurofurence.App.Server.Web.Controllers.Transformers;
 /// Furthermore, objects of <typeparamref name="TDestination"/> may be merged in the current instance.
 /// </summary>
 /// <typeparam name="TDestination">The destination type</typeparam>
-public interface IDtoTransformable<TDestination> {
+public interface IDtoTransformable<out TDestination>
+    where TDestination : class
+{
     /// <summary>
     /// Transforms the current class to an instance of <typeparam name="TDestination"></typeparam>.
     ///
     /// Note that some data may be lost in that process.
     /// </summary>
     /// <returns></returns>
-    virtual TDestination Transform()
+    TDestination Transform()
     {
         return this.Adapt<TDestination>();
     }
 }
-
