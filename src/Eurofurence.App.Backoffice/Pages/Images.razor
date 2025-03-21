@@ -12,10 +12,10 @@
     <MudText Typo="Typo.h6">Images</MudText>
     <MudSpacer />
     <MudSpacer />
-    <MudTextField T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               @onclick="AddImage">New image</MudButton>
+    <MudTextField Class="ml-4" T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
         Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
-    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-        @onclick="AddImage">New image</MudButton>
 </MudToolBar>
 <MudDataGrid T="ImageWithRelationsResponse" @ref="_dataGrid" LoadingProgressColor="Color.Primary"
     ServerData="@GetImages" SortMode="@SortMode.None" Groupable="false">
@@ -92,7 +92,7 @@
                 }
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn>
+        <TemplateColumn StickyRight="true">
             <CellTemplate>
                 @if (context.Item != null)
                 {
@@ -158,7 +158,7 @@
         var parameters = new DialogParameters<ImageDialog> { { x => x.Record, null } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
-        var dialog = await DialogService.ShowAsync<ImageDialog>("New image", parameters, options);
+        var dialog = await DialogService.ShowAsync<ImageDialog>("New Image", parameters, options);
 
         await dialog.Result;
 
@@ -172,7 +172,7 @@
         var parameters = new DialogParameters<ImageDialog> { { x => x.Record, record } };
         var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
 
-        var dialog = await DialogService.ShowAsync<ImageDialog>("Update image", parameters, options);
+        var dialog = await DialogService.ShowAsync<ImageDialog>("Update Image", parameters, options);
         await dialog.Result;
 
         await LoadImagesAsync();
