@@ -4,10 +4,20 @@
 <AuthorizeView>
     <Authorized>
         Hello, @context.User.Identity?.Name!
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut">Log out</MudButton>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+            <MudIconButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut"></MudIconButton>
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut">Log out</MudButton>
+        </MudHidden>
     </Authorized>
     <NotAuthorized>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="authentication/login">Log in</MudButton>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Login" Href="authentication/login">Log in</MudIconButton>
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="authentication/login">Log in</MudButton>
+        </MudHidden>
     </NotAuthorized>
 </AuthorizeView>
 

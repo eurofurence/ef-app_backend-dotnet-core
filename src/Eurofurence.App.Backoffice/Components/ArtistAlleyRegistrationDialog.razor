@@ -9,9 +9,9 @@
 <MudDialog>
     <DialogContent>
         <MudGrid>
-            <MudItem xs="12" md="8" Class="d-flex justify-center align-center" Style="height:500px;">
+            <MudItem xs="12" md="8" Class="d-flex justify-center align-center" Style="height: 500px;">
                 <MudLink Href="@Record.Image.Url">
-                    <MudImage Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Image.Url" Elevation="25" Class="rounded-lg">
+                    <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Image.Url" Elevation="25" Class="rounded-lg">
                         @if (string.IsNullOrEmpty(@Record.Image.Url))
                         {
                             <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
@@ -21,14 +21,14 @@
             </MudItem>
             <MudItem xs="12" md="4">
                 <MudPaper Elevation="0">
-                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" />
-                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz" Class="mt-2" />
-                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID" Class="mt-2" />
-                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username" Class="mt-2" />
-                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website" Class="mt-2" />
-                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description" Class="mt-2" />
-                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle" Class="mt-2" />
-                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mt-2" />
+                    <MudTextField ReadOnly="true" Value="Record.Id" Label="ID" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" Value="Record.CreatedDateTimeUtc" Label="Application submitted at" Format="yyyy-MM-dd HH:mm:ss zzz" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUid" Label="Applicant UID" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" Value="Record.OwnerUsername" Label="Applicant's username" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" Value="Record.WebsiteUrl" Label="Applicants Website" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" AutoGrow Value="Record.ShortDescription" Label="Short Description" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" Value="Record.TelegramHandle" Label="Applicant's Telegram handle" Class="mt-2"/>
+                    <MudTextField ReadOnly="true" Value="Record.Location" Label="Location" Class="mt-2"/>
                     <div Class="mt-2">
                         @switch (Record.State)
                         {
@@ -46,50 +46,56 @@
                                 break;
                         }
                     </div>
-                    
-                    <MudButtonGroup Class="mt-2" Variant="Variant.Outlined" Color="Color.Success">
+
+                    <MudGrid Class="mt-2">
                         @if (Record.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
                         {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
-                                       @onclick="ApproveRegistration">
-                                Approve
-                            </MudButton>
-                            <AuthorizeView Policy="RequireArtistAlleyModerator">
-                                <MudButtonGroup Class="ml-2" Variant="Variant.Outlined" Color="Color.Warning">
-                                    <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
-                                               @onclick="() => RejectRegistration(false)">
-                                        Reject
-                                    </MudButton>
-                                    <AuthorizeView Policy="RequireArtistAlleyAdmin" Context="otherContext">
+                            <MudItem sm="4">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                                           @onclick="ApproveRegistration">
+                                    Approve
+                                </MudButton>
+                            </MudItem>
+                            <MudItem sm="4">
+                                <AuthorizeView Policy="RequireArtistAlleyModerator">
+                                    <MudButtonGroup Variant="Variant.Outlined" Color="Color.Warning">
+                                        <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Cancel"
+                                                   @onclick="() => RejectRegistration(false)">
+                                            Reject
+                                        </MudButton>
+                                        <AuthorizeView Policy="RequireArtistAlleyAdmin" Context="otherContext">
+                                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                                                <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
+                                                             OnClick="args => RejectRegistration(true)">
+                                                    Reject and Ban user
+                                                </MudMenuItem>
+                                            </MudMenu>
+                                        </AuthorizeView>
+                                    </MudButtonGroup>
+                                </AuthorizeView>
+                            </MudItem>
+                        }
+                        <MudItem sm="4">
+                            @*Show the delete button only for admins*@
+                            <AuthorizeView Policy="RequireArtistAlleyAdmin">
+                                <Authorized>
+                                    <MudButtonGroup Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
+
+                                        <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(false)">
+                                            Delete
+                                        </MudButton>
+
                                         <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
-                                            <MudMenuItem IconColor="Color.Warning" Icon="@Icons.Material.Outlined.BackHand"
-                                                         OnClick="args => RejectRegistration(true)">
-                                                Reject and Ban user
+                                            <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
+                                                         OnClick="args => DeleteRegistration(true)">
+                                                Delete and Ban user
                                             </MudMenuItem>
                                         </MudMenu>
-                                    </AuthorizeView>
-                                </MudButtonGroup>
+                                    </MudButtonGroup>
+                                </Authorized>
                             </AuthorizeView>
-                        }
-                        @*Show the delete button only for admins*@
-                        <AuthorizeView Policy="RequireArtistAlleyAdmin">
-                            <Authorized>
-                                <MudButtonGroup Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
-
-                                    <MudButton Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="args => DeleteRegistration(false)">
-                                        Delete
-                                    </MudButton>
-
-                                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
-                                        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.BackHand"
-                                                     OnClick="args => DeleteRegistration(true)">
-                                            Delete and Ban user
-                                        </MudMenuItem>
-                                    </MudMenu>
-                                </MudButtonGroup>
-                            </Authorized>
-                        </AuthorizeView>
-                    </MudButtonGroup >
+                        </MudItem>
+                    </MudGrid>
                 </MudPaper>
             </MudItem>
         </MudGrid>
@@ -99,8 +105,7 @@
 
 @code {
 
-    [Parameter]
-    public TableRegistrationRecord? Record { get; set; }
+    [Parameter] public TableRegistrationRecord? Record { get; set; }
 
 
     private async Task DeleteRegistration(bool banUser)
@@ -126,14 +131,11 @@
                 await TableRegService.DeleteTableRegistrationAsync(Record);
                 ReloadDataAndSendSnackbar("Registration was deleted");
             }
-
         }
-
     }
 
     private async Task<(bool, string)> PromptConfirmTextDialog(string dialogText, string textFieldText)
     {
-
         DialogParameters<ConfirmDialogWithTextInput> dialogUserban = new()
         {
             {
@@ -206,7 +208,6 @@
                 await TableRegService.PutTableRegistrationStatusAsync(Record, TableRegistrationRecord.RegistrationStateEnum.Rejected);
                 ReloadDataAndSendSnackbar("Registration was rejected");
             }
-
         }
     }
 
@@ -215,6 +216,7 @@
         StateHasChanged();
         Snackbar.Add(snackbarText, Severity.Success);
     }
+
     private async void ApproveRegistration()
     {
         if (await PromptConfirmDialog("Are you sure you want to accept this registration?"))
@@ -223,4 +225,5 @@
             ReloadDataAndSendSnackbar("Registration was accepted");
         }
     }
+
 }

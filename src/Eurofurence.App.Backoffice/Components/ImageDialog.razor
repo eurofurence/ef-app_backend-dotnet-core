@@ -10,7 +10,7 @@
             <MudGrid>
                 <MudItem xs="12" md="8" Class="d-flex justify-center align-center" Style="height: 500px;">
                     <MudLink Href="@Record.Url">
-                        <MudImage Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Url" Elevation="25" Class="rounded-lg">
+                        <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Url" Elevation="25" Class="rounded-lg">
                             @if (string.IsNullOrEmpty(@Record.Url))
                             {
                                 <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
@@ -22,7 +22,7 @@
                     <MudPaper Elevation="0">
                         <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
                             <ActivatorContent>
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
                                            StartIcon="@Icons.Material.Filled.CloudUpload">
                                     Upload Image
                                 </MudButton>
