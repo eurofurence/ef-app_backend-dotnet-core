@@ -5,7 +5,7 @@
     <Authorized>
         Hello, @context.User.Identity?.Name!
         <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
-            <MudIconButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut"></MudIconButton>
+            <MudIconButton Class="ml-1" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut"></MudIconButton>
         </MudHidden>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut">Log out</MudButton>
