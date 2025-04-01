@@ -7,41 +7,41 @@
     <DialogContent>
         @if (Record != null)
         {
-            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                <MudContainer Style="height: 600px" Class="overflow-scroll pr-4">
-                    <MudGrid>
-                        <MudItem xs="6">
-                            <MudImage ObjectFit="ObjectFit.Contain" Height="500" Width="500" Class="ml-2" Src="@Record.Url">
-                                @if (string.IsNullOrEmpty(@Record.Url))
-                                {
-                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                                }
-                            </MudImage>
+            <MudGrid>
+                <MudItem xs="12" md="8" Class="d-flex justify-center align-center" Style="height: 500px;">
+                    <MudLink Href="@Record.Url">
+                        <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Url" Elevation="25" Class="rounded-lg">
+                            @if (string.IsNullOrEmpty(@Record.Url))
+                            {
+                                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                            }
+                        </MudImage>
+                    </MudLink>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Elevation="0">
+                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
+                            <ActivatorContent>
+                                <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Image
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                        <MudTextField Value="Record.Id" Label="ID" ReadOnly="true" Class="mt-2"/>
+                        <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true" Class="mt-2"/>
+                        <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true" Class="mt-2"/>
+                        <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true" Class="mt-2"/>
+                        <MudCheckBox Value="Record.IsRestricted" Label="Restricted to Admins" ReadOnly="true" Class="mt-2"/>
+                        <MudItem sm="3" Class="mt-2">
+                            <MudTextField Value="Record.Width" Label="Width" ReadOnly="true"/>
                         </MudItem>
-                        <MudItem xs="6">
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
-                                <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                        StartIcon="@Icons.Material.Filled.CloudUpload" Class="mb-2">
-                                        Upload Image
-                                    </MudButton>
-                                </ActivatorContent>
-                            </MudFileUpload>
-                            <MudTextField Value="Record.Id" Label="ID" ReadOnly="true" />
-                            <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true" />
-                            <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true" />
-                            <MudTextField Value="Record.MimeType" Label="Mime type" ReadOnly="true" />
-                            <MudTextField Value="Record.IsRestricted" Label="Is restricted?" ReadOnly="true" />
-                            <MudItem xs="3">
-                                <MudTextField Value="Record.Width" Label="Width" ReadOnly="true" />
-                            </MudItem>
-                            <MudItem xs="3">
-                                <MudTextField Value="Record.Height" Label="Height" ReadOnly="true" />
-                            </MudItem>
+                        <MudItem sm="3" Class="mt-2">
+                            <MudTextField Value="Record.Height" Label="Height" ReadOnly="true"/>
                         </MudItem>
-                    </MudGrid>
-                </MudContainer>
-            </MudTabs>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
         }
     </DialogContent>
     <DialogActions>

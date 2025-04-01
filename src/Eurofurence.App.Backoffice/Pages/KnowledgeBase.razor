@@ -14,142 +14,139 @@
 
 <link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
 
-<MudGrid>
-    <MudItem xs="3">
-        <MudToolBar>
-            <MudText Typo="Typo.h6">Groups</MudText>
-            <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Href="@GetWebPreviewUrl(["KnowledgeGroups"])">
-            </MudIconButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                @onclick="AddKnowledgeGroup">New Group</MudButton>
-        </MudToolBar>
-        <MudList T="string" Clickable="true">
-            <MudListItem @onclick="() => _selectedGroup = null">
-                <MudCard Style="background-color: transparent">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Show All</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudText>Select group below to filter.</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudListItem>
-            @if (Loading)
-            {
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-            }
-            @foreach (var knowledgeGroup in _knowledgeGroups.Values)
-            {
-                <MudListItem @onclick="() => _selectedGroup = knowledgeGroup">
-                    <MudCard Style="background-color: transparent">
-                        <MudBadge Content="@("#" + knowledgeGroup.Order)" Origin="Origin.TopLeft" Overlap="true">
-                            <MudCardHeader>
-                                <CardHeaderAvatar>
-                                    <MudIcon Icon="@("fas fa-" + knowledgeGroup.FontAwesomeIconName)"></MudIcon>
-                                </CardHeaderAvatar>
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
-                                </CardHeaderContent>
-                                <CardHeaderActions>
+<MudToolBar>
+    <MudText Typo="Typo.h6">Knowledge Base</MudText>
+    <MudSpacer/>
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@GetWebPreviewUrl(["KnowledgeGroups"])">
+            Web Preview
+        </MudButton>
+        <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
+                   @onclick="EditKnowledgeGroups">
+            Edit Groups
+        </MudButton>
+        <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeEntry">
+            New entry
+        </MudButton>
+    </MudHidden>
+    
+    <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                 AriaLabel="Options">
+            <MudMenuItem Icon="@Icons.Material.Filled.OpenInNew" Label="Web Preview" Href="@GetWebPreviewUrl(["KnowledgeGroups"])" />
+            <MudMenuItem Icon="@Icons.Material.Filled.Edit" Label="Edit Groups" @onclick="EditKnowledgeGroups" />
+            <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="New entry" @onclick="AddKnowledgeEntry" />
+        </MudMenu>
+    </MudHidden>
+    
+    <MudTextField Class="ml-4" @bind-Value="_knowledgeEntrySearch" Label="Search" Variant="Variant.Outlined"
+                  Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                  AdornmentColor="Color.Secondary"/>
+</MudToolBar>
+
+@if (Loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+}
+
+<MudExpansionPanels>
+    @foreach (var knowledgeGroup in GetKnowledgeGroups())
+    {
+        <MudExpansionPanel>
+            <TitleContent>
+                <div class="d-flex">
+                    @if (!string.IsNullOrEmpty(knowledgeGroup.FontAwesomeIconName))
+                    {
+                        <MudIcon Class="mr-4 d-flex align-center justify-center" Icon="@("fas fa-" + knowledgeGroup.FontAwesomeIconName)"></MudIcon>
+                    }
+                    <MudText Typo="Typo.h6">@knowledgeGroup.Name</MudText>
+
+                    @if (!string.IsNullOrEmpty(_knowledgeEntrySearch))
+                    {
+                        <MudSpacer></MudSpacer>
+
+                        <MudText Class="d-flex align-center" Typo="Typo.caption">
+                            @(GetKnowledgeEntities().Count(ke => ke.KnowledgeGroupId == knowledgeGroup.Id))
+                            Results
+                        </MudText>
+                    }
+                </div>
+            </TitleContent>
+
+            <ChildContent>
+                <MudText Typo="Typo.subtitle1">
+                    @knowledgeGroup.Description
+                </MudText>
+
+                <MudExpansionPanels Class="mt-4">
+                    @foreach (var knowledgeEntry in GetKnowledgeEntities().Where(ke => ke.KnowledgeGroupId == knowledgeGroup.Id))
+                    {
+                        <MudExpansionPanel Text="@knowledgeEntry.Title">
+                            <TitleContent>
+                                <div class="d-flex">
+                                    <MudChip T="string" Class="d-flex justify-center mt-3" Size="Size.Small" Color="Color.Secondary">@("#" + knowledgeEntry.Order)</MudChip>
+
+                                    <MudText Class="ml-4 mt-2" Typo="Typo.h6">@knowledgeEntry.Title</MudText>
+
+                                    <MudSpacer></MudSpacer>
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                   Href="@GetWebPreviewUrl(["KnowledgeEntries", knowledgeEntry.Id.ToString()])"
+                                                   Target="_blank">
+                                    </MudIconButton>
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   @onclick="() => UpdateKnowledgeGroup(knowledgeGroup)">
-                                    </MudIconButton>
+                                                   @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   @onclick="() => DeleteKnowledgeGroup(knowledgeGroup.Id)">
-                                    </MudIconButton>
-                                </CardHeaderActions>
-                            </MudCardHeader>
-                        </MudBadge>
-                        <MudCardContent>
-                            <MudText>@knowledgeGroup.Description</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudListItem>
-            }
-        </MudList>
-    </MudItem>
+                                                   @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)" />
+                                </div>
+                            </TitleContent>
 
-    <MudItem xs="9">
-        <MudToolBar>
-            @if (_selectedGroup != null)
-            {
-                <MudText Typo="Typo.h6">Entries: @_selectedGroup.Name</MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.h6">All Entries</MudText>
-            }
-            <MudSpacer />
-            <MudSpacer />
-            <MudTextField @bind-Value="_knowledgeEntrySearch" Label="Search" Variant="Variant.Outlined"
-                Margin="Margin.Dense" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
-                AdornmentColor="Color.Secondary" />
-            <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary"
-                StartIcon="@Icons.Material.Filled.Add" @onclick="AddKnowledgeEntry">New entry</MudButton>
-        </MudToolBar>
-        @if (Loading)
-        {
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-        }
-        <MudContainer>
-            @foreach (var knowledgeEntry in GetKnowledgeEntities())
-            {
-                <MudCard Class="mt-4">
-                    <MudBadge Content="@("#" + knowledgeEntry.Order)" Origin="Origin.TopLeft" Overlap="true">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.caption" HtmlTag="h5">@knowledgeEntry.KnowledgeGroup.Name</MudText>
-                                <MudText Typo="Typo.h6">@knowledgeEntry.Title</MudText>
-                            </CardHeaderContent>
-                            <CardHeaderActions>
-                                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                    Href="@GetWebPreviewUrl(["KnowledgeEntries", knowledgeEntry.Id.ToString()])"
-                                    Target="_blank">
-                                </MudIconButton>
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                    @onclick="() => UpdateKnowledgeEntry(knowledgeEntry)"/>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                    @onclick="() => DeleteKnowledgeEntry(knowledgeEntry.Id)"/>
-                            </CardHeaderActions>
-                        </MudCardHeader>
-                    </MudBadge>
-                    <MudCardContent>
-                        <MarkdownRenderer Text="@knowledgeEntry.Text"></MarkdownRenderer>
+                            <ChildContent>
+                                <MudItem>
+                                    <MarkdownRenderer Text="@knowledgeEntry.Text"></MarkdownRenderer>
+                                </MudItem>
 
-                        @foreach (var image in knowledgeEntry.Images)
-                        {
-                            <MudImage Class="ml-2" Height="100" ObjectFit="ObjectFit.Contain" Src="@image.Url" />
-                        }
-                    </MudCardContent>
-                    <MudCardActions>
-                        @foreach (var link in knowledgeEntry.Links)
-                        {
-                            @if (link.FragmentType == LinkFragment.FragmentTypeEnum.WebExternal)
-                            {
-                                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@link.Target" Target="_blank">
-                                    @link.Name</MudButton>
-                            }
-                            else
-                            {
-                                <MudButton Disabled="true" Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
-                            }
-                        }
-                    </MudCardActions>
-                </MudCard>
-            }
-        </MudContainer>
-    </MudItem>
-</MudGrid>
+                                <MudItem>
+                                    @foreach (var image in knowledgeEntry.Images)
+                                    {
+                                        <MudImage Class="ml-2" Height="100" ObjectFit="ObjectFit.Contain" Src="@image.Url"/>
+                                    }
+                                </MudItem>
+
+                                <MudItem>
+                                    @foreach (var link in knowledgeEntry.Links)
+                                    {
+                                        @if (link.FragmentType == LinkFragment.FragmentTypeEnum.WebExternal)
+                                        {
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@link.Target" Target="_blank">
+                                                @link.Name
+                                            </MudButton>
+                                        }
+                                        else
+                                        {
+                                            <MudButton Disabled="true" Variant="Variant.Text" Color="Color.Primary">@link.Name</MudButton>
+                                        }
+                                    }
+                                </MudItem>
+
+
+                            </ChildContent>
+                        </MudExpansionPanel>
+                    }
+                </MudExpansionPanels>
+            </ChildContent>
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>
 
 @code {
     public bool Loading = true;
     private string? _knowledgeEntrySearch;
-    private KnowledgeGroupRecord? _selectedGroup;
-    private Dictionary<Guid, KnowledgeGroupRecord> _knowledgeGroups = new();
+    private List<KnowledgeGroupRecord> _knowledgeGroups = [];
     private List<KnowledgeEntryRecord> _knowledgeEntries = [];
+
+    readonly Func<KnowledgeEntryRecord, object> _groupBy = x => x.KnowledgeGroup.Name;
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,40 +159,40 @@
         Loading = true;
         _knowledgeEntries = [];
 
-        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => _knowledgeGroups.FirstOrDefault(kg => kg.Key == ke.KnowledgeGroupId).Value.Order).ThenBy(ke => ke.Order);
-        
+        var responses = (await KnowledgeService.GetKnowledgeEntriesAsync()).OrderBy(ke => _knowledgeGroups.FirstOrDefault(kg => kg.Id == ke.KnowledgeGroupId)?.Order).ThenBy(ke => ke.Order);
+
         foreach (var response in responses)
         {
-            var record = new KnowledgeEntryRecord()
-                {
-                    Id = response.Id,
-                    KnowledgeGroupId = response.KnowledgeGroupId,
-                    KnowledgeGroup = _knowledgeGroups[response.KnowledgeGroupId],
-                    Title = response.Title,
-                    Text = response.Text,
-                    Order = response.Order,
-                    LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
-                    IsDeleted = response.IsDeleted,
-                    Links = response.Links
-                };
+            var record = new KnowledgeEntryRecord
+            {
+                Id = response.Id,
+                KnowledgeGroupId = response.KnowledgeGroupId,
+                    KnowledgeGroup = _knowledgeGroups.FirstOrDefault(kg => kg.Id == response.KnowledgeGroupId),
+                Title = response.Title,
+                Text = response.Text,
+                Order = response.Order,
+                LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
+                IsDeleted = response.IsDeleted,
+                Links = response.Links
+            };
             foreach (var imageId in response.ImageIds)
             {
                 var image = await ImageService.GetImageAsync(imageId);
                 if (image != null)
                 {
                     record.Images.Add(new ImageRecord()
-                        {
-                            Id = image.Id,
-                            Url = image.Url,
-                            Height = image.Height,
-                            Width = image.Width,
-                            ContentHashSha1 = image.ContentHashSha1,
-                            InternalReference = image.InternalReference,
-                            MimeType = image.MimeType,
-                            SizeInBytes = image.SizeInBytes,
-                            LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
-                            IsDeleted = image.IsDeleted
-                        });
+                    {
+                        Id = image.Id,
+                        Url = image.Url,
+                        Height = image.Height,
+                        Width = image.Width,
+                        ContentHashSha1 = image.ContentHashSha1,
+                        InternalReference = image.InternalReference,
+                        MimeType = image.MimeType,
+                        SizeInBytes = image.SizeInBytes,
+                        LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
+                        IsDeleted = image.IsDeleted
+                    });
                 }
             }
 
@@ -208,35 +205,51 @@
     private async Task LoadKnowledgeGroups()
     {
         Loading = true;
-        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToDictionary(kg => kg.Id);
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToList();
         Loading = false;
+    }
+
+    private IEnumerable<KnowledgeGroupRecord> GetKnowledgeGroups()
+    {
+        if (string.IsNullOrEmpty(_knowledgeEntrySearch))
+        {
+            return _knowledgeGroups;
+        }
+
+        var filteredKnowledgeEntries = GetKnowledgeEntities();
+
+        return _knowledgeGroups.Where(kg => filteredKnowledgeEntries.Any(ke => ke.KnowledgeGroupId == kg.Id));
     }
 
     private IEnumerable<KnowledgeEntryRecord> GetKnowledgeEntities()
     {
-        if (_selectedGroup == null)
-        {
-            return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch);
-        }
-
-        return FilterKnowledgeEntries(_knowledgeEntries, _knowledgeEntrySearch).Where(ke => ke.KnowledgeGroupId ==
-        _selectedGroup.Id);
+        return string.IsNullOrEmpty(_knowledgeEntrySearch)
+            ? _knowledgeEntries
+            : _knowledgeEntries.Where(entry =>
+                entry.Title.ToLower().Contains(_knowledgeEntrySearch.ToLower()) || entry.Text.ToLower().Contains(_knowledgeEntrySearch.ToLower()));
     }
 
-    private IEnumerable<KnowledgeEntryRecord> FilterKnowledgeEntries(IEnumerable<KnowledgeEntryRecord> entries, string?
-    searchString)
+    private async Task EditKnowledgeGroups()
     {
-        return string.IsNullOrEmpty(searchString) ? entries : entries.Where(entry =>
-        entry.Title.ToLower().Contains(searchString.ToLower()) || entry.Text.ToLower().Contains(searchString.ToLower()));
-    }
+        var parameters = new DialogParameters<KnowledgeGroupsDialog>();
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
 
+        var dialog = await DialogService.ShowAsync<KnowledgeGroupsDialog>(null, parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Loading = true;
+            await LoadKnowledgeGroups();
+        }
+    }
 
     private async Task AddKnowledgeEntry()
     {
         var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, null } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
-        var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("New knowledge base entry", parameters, options);
+        var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("New Knowledge Base Entry", parameters, options);
         var result = await dialog.Result;
 
         if (result is { Canceled: false })
@@ -251,7 +264,7 @@
         var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, record } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
-        var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("Update knowledge base entry", parameters, options);
+        var dialog = await DialogService.ShowAsync<KnowledgeEntryDialog>("Update Knowledge Base Entry", parameters, options);
         await dialog.Result;
 
         Loading = true;
@@ -261,13 +274,13 @@
     private async Task DeleteKnowledgeEntry(Guid id)
     {
         DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
+        {
+            { x => x.ContentText, $"Are you sure you want to delete this knowledge base entry?" },
+            { x => x.ActionButtonText, "Confirm" }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult dialogResult = await dialogRef.Result;
+        var dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
+        var dialogResult = await dialogRef.Result;
 
         if (!dialogResult.Canceled)
         {
@@ -280,6 +293,7 @@
             {
                 Snackbar.Add("Error deleting knowledge entry.", Severity.Error);
             }
+
             await LoadKnowledgeEntries();
         }
     }
@@ -288,65 +302,6 @@
     {
         var webPreviewUrl = $"{Configuration.GetValue<string>("BackendBaseUrl")?.TrimEnd('/') ?? string.Empty}/Web";
         return paths.Aggregate(webPreviewUrl, (current, path) => $"{current}/{path.TrimStart('/')}");
-    }
-
-    private async Task AddKnowledgeGroup()
-    {
-        var parameters = new DialogParameters<KnowledgeGroupDialog> { { x => x.Record, null } };
-        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
-
-        var dialog = await DialogService.ShowAsync<KnowledgeGroupDialog>("New knowledge base group", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result?.Canceled ?? false)
-        {
-            Loading = true;
-            await LoadKnowledgeGroups();
-            await LoadKnowledgeEntries();
-        }
-    }
-
-    private async Task UpdateKnowledgeGroup(KnowledgeGroupRecord record)
-    {
-        var parameters = new DialogParameters<KnowledgeGroupDialog> { { x => x.Record, record } };
-        var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
-
-        var dialog = await DialogService.ShowAsync<KnowledgeGroupDialog>("Update knowledge base group", parameters, options);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false })
-        {
-            Loading = true;
-            await LoadKnowledgeGroups();
-            await LoadKnowledgeEntries();
-        }
-    }
-
-    private async Task DeleteKnowledgeGroup(Guid id)
-    {
-        DialogParameters<ConfirmDialog> dialog = new()
-{
-{ x => x.ContentText, $"Are you sure you want to delete this knowledge base group?" },
-{ x => x.ActionButtonText, "Confirm" }
-};
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialog, options);
-        DialogResult dialogResult = await dialogRef.Result;
-
-        if (!dialogResult.Canceled)
-        {
-            var result = await KnowledgeService.DeleteKnowledgeGroupAsync(id);
-            if (result)
-            {
-                Snackbar.Add("Knowledge group deleted.", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add("Error deleting knowledge group.", Severity.Error);
-            }
-            await LoadKnowledgeGroups();
-            await LoadKnowledgeEntries();
-        }
     }
 
 }
