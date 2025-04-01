@@ -8,11 +8,12 @@ using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Images
 {
     [DataContract]
-    public class ImageRecord : EntityBase
+    public class ImageRecord : EntityBase, IDtoRecordTransformable<ImageRequest, ImageResponse, ImageRecord>
     {
         [Required]
         [DataMember]
