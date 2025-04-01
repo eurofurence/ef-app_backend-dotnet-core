@@ -1,18 +1,49 @@
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
-<MudThemeProvider Theme="@EFMudTheme" />
-<MudDialogProvider />
-<MudSnackbarProvider />
-<MudPopoverProvider />
+<MudThemeProvider Theme="@EFMudTheme"/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+<MudPopoverProvider/>
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudImage Src="img/ef-logo.svg" Alt="Eurofurence Logo" Height="50" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
+        <MudImage Src="img/ef-logo.svg" Alt="Eurofurence Logo" Height="50"/>
         <MudText Typo="Typo.h5" Class="ml-3">Backoffice</MudText>
-        <MudSpacer />
-        <LoginDisplay />
-        <MudIconButton Href="https://github.com/eurofurence/ef-app_backend-dotnet-core/" Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" />
+        <MudSpacer/>
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+            <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
+                     Color="Color.Primary"
+                     Size="Size.Large"
+                     AnchorOrigin="Origin.BottomRight"
+                     AriaLabel="Menu">
+                <AuthorizeView>
+                    <Authorized>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.AccountCircle" Label=@("Hello, " + @context.User.Identity?.Name! + "!")/>
+                        <MudDivider />
+                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" Label="Log out" @onclick="BeginLogOut"/>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Login" Label="Log in" Href="authentication/login"/>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </MudMenu>
+        </MudHidden>
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <AuthorizeView>
+                <Authorized>
+                    Hello, @context.User.Identity?.Name!
+                    <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Logout" @onclick="BeginLogOut">Log out</MudButton>
+                </Authorized>
+                <NotAuthorized>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="authentication/login">Log in</MudButton>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudHidden>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu/>
@@ -23,22 +54,29 @@
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+
 @code {
     bool _drawerOpen = true;
 
     MudTheme EFMudTheme = new()
+    {
+        PaletteLight = new PaletteLight
         {
-            PaletteLight = new PaletteLight
-            {
-                Primary = "#69a3a2",
-                Secondary = "#a2c5c4",
-                Tertiary = "#dedede",
-                AppbarBackground = "#005953",
-            }
-        };
+            Primary = "#69a3a2",
+            Secondary = "#a2c5c4",
+            Tertiary = "#dedede",
+            AppbarBackground = "#005953",
+        }
+    };
 
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
+
+    public void BeginLogOut()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+
 }

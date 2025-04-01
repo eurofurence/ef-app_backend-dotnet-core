@@ -1,4 +1,4 @@
-﻿<MudNavMenu>
+﻿<MudNavMenu Style="display: flex; flex-flow: column; height: inherit;">
     <MudNavLink Href="./" Icon="@Icons.Material.Outlined.Home" Match="NavLinkMatch.All">Home</MudNavLink>
     <AuthorizeView Policy="RequireKnowledgeBaseEditor">
         <MudNavLink Href="knowledgebase" Icon="@Icons.Material.Outlined.Info" Match="NavLinkMatch.Prefix">Knowledge Base
@@ -11,4 +11,6 @@
         <MudNavLink Href="artistAlleyModeration" Icon="@Icons.Material.Outlined.AddModerator">Artist Alley Moderation
         </MudNavLink>
     </AuthorizeView>
+    <MudDivider />
+    <MudNavLink Icon="@Icons.Custom.Brands.GitHub" Href="https://github.com/eurofurence/ef-app_backend-dotnet-core/">Source Code</MudNavLink>
 </MudNavMenu>
