@@ -5,11 +5,12 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeEntryRecord : EntityBase
+    public class KnowledgeEntryRecord : EntityBase, IDtoRecordTransformable<KnowledgeEntryRequest, KnowledgeEntryResponse, KnowledgeEntryRecord>
     {
         [Required]
         [DataMember]

@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeEntryRequest : EntityBase
+    public class KnowledgeEntryRequest : EntityBase, IDtoTransformable<KnowledgeEntryRecord>
     {
         [DataMember]
         public Guid KnowledgeGroupId { get; set; }
