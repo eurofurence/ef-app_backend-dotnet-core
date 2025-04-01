@@ -1,5 +1,6 @@
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Mapster;
 using Xunit;
@@ -44,7 +45,8 @@ public class DealersTest
             {
                 { "Art", new[] { "Digital", "Traditional" } },
                 { "Merchandise", new[] { "Prints", "Stickers" } }
-            }
+            },
+            ArtPreviewImage = new ImageRecord()
         };
 
         _request = new DealerRequest
@@ -103,6 +105,13 @@ public class DealersTest
         DealerRecord record = _request.Transform();
 
         var oldGuid = _record.Id;
+        var oldRegID = _record.RegistrationNumber;
+        var oldAttendeeNickname = _record.AttendeeNickname;
+        var oldArtistImage = _record.ArtistImage;
+        var oldArtistThumbnailImage = _record.ArtistThumbnailImage;
+
+        var oldArtPreviewImage = _record.ArtPreviewImage;
+        var oldDisplayName = _record.DisplayNameOrAttendeeNickname;
 
         _request.DisplayName = "Something totally different";
         _request.Merchandise = "Something totally different";
@@ -113,11 +122,34 @@ public class DealersTest
         _request.TelegramHandle = "Something totally different";
         _request.DiscordHandle = "Something totally different";
         _request.MastodonHandle = "Something totally different";
-
+        _request.ArtistImageId = Guid.NewGuid();
+        _request.ArtistThumbnailImageId = Guid.NewGuid();
         _record.Merge(_request);
 
         Assert.Equal(oldGuid, _record.Id);
+        Assert.Equal(oldRegID, _record.RegistrationNumber);
+        Assert.Equal(oldAttendeeNickname, _record.AttendeeNickname);
+        Assert.Equal(oldArtistImage, _record.ArtistImage);
+        Assert.Equal(oldArtistThumbnailImage, _record.ArtistThumbnailImage);
+        Assert.Equal(oldArtPreviewImage, _record.ArtPreviewImage);
+
         AreEqual(_record, _request);
+    }
+
+
+    [Fact]
+    public void TestRequestMergeIntoRecordUnaffectedByRecordChanges()
+    {
+        var oldArtistThumbnailImage = _record.ArtistThumbnailImage.Id;
+        var oldArtPreviewImage = _record.ArtPreviewImage.Id;
+
+        _record.ArtistImage = new ImageRecord();
+        _record.ArtPreviewImage = new ImageRecord();
+
+        _record.Merge(_request);
+
+        Assert.NotEqual(oldArtistThumbnailImage, _record.ArtistImage.Id);
+        Assert.NotEqual(oldArtPreviewImage, _record.ArtPreviewImage.Id);
     }
 
     [Fact]
