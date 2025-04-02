@@ -97,10 +97,5 @@ namespace Eurofurence.App.Domain.Model.Announcements
         {
             return this.Adapt<AnnouncementResponse>();
         }
-
-        // public void Merge(AnnouncementRequest source)
-        // {
-        //     source.Adapt(this);
-        // }
     }
 }

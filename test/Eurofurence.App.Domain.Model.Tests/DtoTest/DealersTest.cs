@@ -9,13 +9,14 @@ namespace Eurofurence.App.Domain.Model.Tests.DtoTest;
 
 public class DealersTest
 {
-    private DealerRecord _record;
-    private DealerRequest _request;
+    private readonly DealerRecord _record;
+    private readonly DealerRequest _request;
 
     public DealersTest()
     {
         _record = new DealerRecord
         {
+            Id = Guid.NewGuid(),
             RegistrationNumber = 12345,
             AttendeeNickname = "artist123",
             DisplayName = "Amazing Artworks",
@@ -25,7 +26,7 @@ public class DealersTest
             AboutTheArtText = "We offer a wide range of art styles and merchandise.",
             Links = new List<LinkFragment>
             {
-                new LinkFragment {  Target = "https://amazingartworks.com", Name = "Official Website" }
+                new LinkFragment { Target = "https://amazingartworks.com", Name = "Official Website" }
             },
             TwitterHandle = "@amazingartworks",
             TelegramHandle = "@amazingartworks",
@@ -46,7 +47,8 @@ public class DealersTest
                 { "Art", new[] { "Digital", "Traditional" } },
                 { "Merchandise", new[] { "Prints", "Stickers" } }
             },
-            ArtPreviewImage = new ImageRecord()
+            ArtistThumbnailImage = new ImageRecord(),
+            ArtPreviewImage = new ImageRecord(),
         };
 
         _request = new DealerRequest
@@ -58,7 +60,7 @@ public class DealersTest
             AboutTheArtText = "We offer a wide range of art styles and merchandise.",
             Links = new List<LinkFragment>
             {
-                new LinkFragment {  Target = "https://amazingartworks.com", Name = "Official Website" }
+                new LinkFragment { Target = "https://amazingartworks.com", Name = "Official Website" }
             },
             TwitterHandle = "@amazingartworks",
             TelegramHandle = "@amazingartworks",
@@ -85,10 +87,20 @@ public class DealersTest
     [Fact]
     public void ValidateTypeAdapterConfiguration()
     {
-        var config = TypeAdapterConfig<DealerRequest, DealerRecord>.NewConfig();
-        config.Compile();
-        var config2 = TypeAdapterConfig<DealerRecord, DealerResponse>.NewConfig();
-        config2.Compile();
+        var exception1 = Record.Exception(() =>
+        {
+            var config = TypeAdapterConfig<DealerRequest, DealerRecord>.NewConfig();
+            config.Compile();
+        });
+
+        var exception2 = Record.Exception(() =>
+        {
+            var config2 = TypeAdapterConfig<DealerRecord, DealerResponse>.NewConfig();
+            config2.Compile();
+        });
+
+        Assert.Null(exception1);
+        Assert.Null(exception2);
     }
 
     [Fact]
@@ -96,13 +108,14 @@ public class DealersTest
     {
         var record = _request.Adapt<DealerRecord>();
         AreEqual(record, _request);
+        Assert.Equal(record.DisplayNameOrAttendeeNickname, _request.DisplayName);
     }
 
 
     [Fact]
     public void TestRequestMergeIntoRecord()
     {
-        DealerRecord record = _request.Transform();
+        _request.Transform();
 
         var oldGuid = _record.Id;
         var oldRegID = _record.RegistrationNumber;
@@ -111,7 +124,6 @@ public class DealersTest
         var oldArtistThumbnailImage = _record.ArtistThumbnailImage;
 
         var oldArtPreviewImage = _record.ArtPreviewImage;
-        var oldDisplayName = _record.DisplayNameOrAttendeeNickname;
 
         _request.DisplayName = "Something totally different";
         _request.Merchandise = "Something totally different";
@@ -182,7 +194,7 @@ public class DealersTest
     }
 
 
-    private void AreEqual(DealerRecord record, DealerRequest request)
+    private static void AreEqual(DealerRecord record, DealerRequest request)
     {
         Assert.Equal(record.DisplayName, request.DisplayName);
         Assert.Equal(record.Merchandise, request.Merchandise);
@@ -205,6 +217,5 @@ public class DealersTest
         Assert.Equal(record.IsAfterDark, request.IsAfterDark);
         Assert.Equal(record.Categories, request.Categories);
         Assert.Equal(record.Keywords, request.Keywords);
-
     }
 }
