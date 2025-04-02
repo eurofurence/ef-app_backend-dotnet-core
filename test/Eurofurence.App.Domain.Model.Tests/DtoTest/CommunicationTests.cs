@@ -6,9 +6,9 @@ namespace Eurofurence.App.Domain.Model.Tests.DtoTest;
 
 public class CommunicationTests
 {
-    private PrivateMessageRecord _record;
-    private SendPrivateMessageByIdentityRequest _ipdRequest;
-    private SendPrivateMessageByRegSysRequest _regSysRequest;
+    private readonly PrivateMessageRecord _record;
+    private readonly SendPrivateMessageByIdentityRequest _ipdRequest;
+    private readonly SendPrivateMessageByRegSysRequest _regSysRequest;
 
     public CommunicationTests()
     {
@@ -50,11 +50,28 @@ public class CommunicationTests
     [Fact]
     public void TestRequestToRecord()
     {
+        string oldId = (string)_ipdRequest.RecipientUid.Clone();
+        string oldToastTitle = (string)_ipdRequest.ToastTitle.Clone();
+        string oldToastMessage = (string)_ipdRequest.ToastMessage.Clone();
+
+
+
+        string oldIdSys = (string)_regSysRequest.RecipientUid.Clone();
+        string oldToastTitleSys = (string)_regSysRequest.ToastTitle.Clone();
+        string oldToastMessageSys = (string)_regSysRequest.ToastMessage.Clone();
+
         var record1 = _ipdRequest.Transform();
         var record2 = _regSysRequest.Transform();
 
         AreEqual(record1, _ipdRequest);
         AreEqual(record2, _regSysRequest);
+        // Assert that the original request's distinct fields are not modified
+        Assert.Equal(oldId, _ipdRequest.RecipientUid);
+        Assert.Equal(oldToastTitle, _ipdRequest.ToastTitle);
+        Assert.Equal(oldToastMessage, _ipdRequest.ToastMessage);
+        Assert.Equal(oldIdSys, _regSysRequest.RecipientUid);
+        Assert.Equal(oldToastTitleSys, _regSysRequest.ToastTitle);
+        Assert.Equal(oldToastMessageSys, _regSysRequest.ToastMessage);
     }
 
     [Fact]
@@ -107,14 +124,14 @@ public class CommunicationTests
         Assert.Equal(_record.ReadDateTimeUtc, res.ReadDateTimeUtc);
     }
 
-    private void AreEqual(PrivateMessageRecord record, SendPrivateMessageByIdentityRequest ipdRequest)
+    private static void AreEqual(PrivateMessageRecord record, SendPrivateMessageByIdentityRequest ipdRequest)
     {
         Assert.Equal(record.Message, ipdRequest.Message);
         Assert.Equal(record.AuthorName, ipdRequest.AuthorName);
         Assert.Equal(record.Subject, ipdRequest.Subject);
     }
 
-    private void AreEqual(PrivateMessageRecord record, SendPrivateMessageByRegSysRequest regRequest)
+    private static void AreEqual(PrivateMessageRecord record, SendPrivateMessageByRegSysRequest regRequest)
     {
         Assert.Equal(record.Message, regRequest.Message);
         Assert.Equal(record.AuthorName, regRequest.AuthorName);
