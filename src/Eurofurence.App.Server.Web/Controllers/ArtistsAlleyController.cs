@@ -67,6 +67,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
+        /// Returns a list of all registrations including pending or rejected.
+        /// Unlike the regular /ArtistAlley GET endpoint, this endpoint is only accessible to admins and moderators.
+        /// </summary>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
+        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
+        [HttpGet("all")]
+        public IEnumerable<TableRegistrationRecord> GetAllTableRegistrationRecords()
+        {
+            return _tableRegistrationService.GetRegistrations(null);
+        }
+
+        /// <summary>
         ///     Retrieves a list of all table registrations.
         ///     Pending or rejected registrations are only visible to admins and moderators.
         ///     Checked-in attendees may only see accepted registrations.
@@ -74,17 +88,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
+        [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpGet]
         public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
         {
-            var isAdminOrModerator = User.IsInRole(AdminRoleName) ||
-                                     User.IsInRole(ArtistAlleyModeratorName) ||
-                                     User.IsInRole(ArtistAlleyAdminName);
-
-            return _tableRegistrationService.GetRegistrations(
-                isAdminOrModerator ? null : TableRegistrationRecord.RegistrationStateEnum.Accepted
-            );
+            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted);
         }
 
         /// <summary>
