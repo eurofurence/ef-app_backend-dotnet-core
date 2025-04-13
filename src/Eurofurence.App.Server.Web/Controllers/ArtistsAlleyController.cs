@@ -25,7 +25,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+        private const string AdminRoleName = "Admin";
+        private const string ArtistAlleyModeratorName = "ArtistAlleyModerator";
+        private const string ArtistAlleyAdminName = "ArtistAlleyAdmin";
+
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,
+            IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService,
+            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
@@ -62,15 +68,23 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         /// <summary>
         ///     Retrieves a list of all table registrations.
+        ///     Pending or rejected registrations are only visible to admins and moderators.
+        ///     Checked-in attendees may only see accepted registrations.
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
+        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
         [HttpGet]
         public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(null);
+            var isAdminOrModerator = User.IsInRole(AdminRoleName) ||
+                                     User.IsInRole(ArtistAlleyModeratorName) ||
+                                     User.IsInRole(ArtistAlleyAdminName);
+
+            return _tableRegistrationService.GetRegistrations(
+                isAdminOrModerator ? null : TableRegistrationRecord.RegistrationStateEnum.Accepted
+            );
         }
 
         /// <summary>
