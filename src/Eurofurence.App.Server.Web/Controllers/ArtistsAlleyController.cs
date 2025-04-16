@@ -25,7 +25,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,
+            IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService,
+            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
@@ -61,16 +63,30 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        ///     Retrieves a list of all table registrations.
+        /// Returns a list of all registrations including pending or rejected.
+        /// Unlike the regular /ArtistAlley GET endpoint, this endpoint is only accessible to admins and moderators.
+        /// </summary>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
+        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
+        [HttpGet("all")]
+        public IEnumerable<TableRegistrationRecord> GetAllTableRegistrationRecords()
+        {
+            return _tableRegistrationService.GetRegistrations(null);
+        }
+
+        /// <summary>
+        ///     Retrieves a list of all accepted table registrations.
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
+        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
         [HttpGet]
         public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(null);
+            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted);
         }
 
         /// <summary>
