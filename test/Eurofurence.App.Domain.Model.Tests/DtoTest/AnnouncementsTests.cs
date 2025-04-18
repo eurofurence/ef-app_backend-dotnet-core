@@ -1,5 +1,5 @@
 using Eurofurence.App.Domain.Model.Announcements;
-using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Mapster;
 using Xunit;
@@ -19,7 +19,7 @@ public class AnnouncementsTests
             Author = "Dr. Gordon Freeman",
             Title = "Zen cristal experiment",
             Content = "Please report all of your results to Dr. Breen",
-            ImageId = Guid.NewGuid()
+            ImageId = Guid.NewGuid(),
         };
 
         _record = new AnnouncementRecord()
@@ -29,17 +29,32 @@ public class AnnouncementsTests
             Title = "Zen cristal experiment",
             Content = "Please report all of your results to Dr. Breen",
             ImageId = Guid.NewGuid(),
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            ValidFromDateTimeUtc = new DateTime(),
+            ValidUntilDateTimeUtc = new DateTime(),
+            ExternalReference = "asdf",
+            Image = new ImageRecord(),
+
         };
     }
 
     [Fact]
     public void ValidateTypeAdapterConfiguration()
     {
-        var config = TypeAdapterConfig<AnnouncementRequest, AnnouncementRecord>.NewConfig();
-        config.Compile();
-        var config2 = TypeAdapterConfig<AnnouncementRecord, AnnouncementResponse>.NewConfig();
-        config2.Compile();
+        var exception1 = Record.Exception((() =>
+        {
+            var config = TypeAdapterConfig<AnnouncementRequest, AnnouncementRecord>.NewConfig();
+            config.Compile();
+        }));
+
+        var exception2 = Record.Exception((() =>
+         {
+             var config2 = TypeAdapterConfig<AnnouncementRecord, AnnouncementResponse>.NewConfig();
+             config2.Compile();
+         }));
+
+        Assert.Null(exception1);
+        Assert.Null(exception2);
     }
 
     [Fact]
@@ -63,7 +78,7 @@ public class AnnouncementsTests
         _request.Content = "Something totally different";
         _request.ImageId = Guid.NewGuid();
 
-        //_request.Adapt(_record);
+
         _record.Merge(_request);
         Assert.Equal(oldGuid, _record.Id);
         AreEqual(_record, _request);

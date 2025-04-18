@@ -6,6 +6,8 @@ using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Mapper;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
@@ -36,5 +38,20 @@ namespace Eurofurence.App.Domain.Model.Knowledge
 
         [JsonIgnore]
         public virtual List<ImageRecord> Images { get; set; } = new();
+
+
+        public void MergeDto(KnowledgeEntryRequest source)
+        {
+            var cfg = TypeAdapterConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>.NewConfig();
+            new KnowledgeEntryResponseRegister().Register(cfg.Config);
+            this.Adapt(source, cfg.Config);
+        }
+
+        public KnowledgeEntryResponse Transform()
+        {
+            var cfg = TypeAdapterConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>.NewConfig();
+            new KnowledgeEntryResponseRegister().Register(cfg.Config);
+            return this.Adapt<KnowledgeEntryRecord, KnowledgeEntryResponse>(cfg.Config);
+        }
     }
 }
