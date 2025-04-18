@@ -136,6 +136,7 @@ public class DealersTest
         _request.MastodonHandle = "Something totally different";
         _request.ArtistImageId = Guid.NewGuid();
         _request.ArtistThumbnailImageId = Guid.NewGuid();
+
         _record.Merge(_request);
 
         Assert.Equal(oldGuid, _record.Id);

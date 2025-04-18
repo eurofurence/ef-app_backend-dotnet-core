@@ -4,11 +4,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Maps
 {
     [DataContract]
-    public class MapEntryRecord
+    public class MapEntryRecord : IDtoRecordTransformable<MapEntryRequest, MapEntryResponse, MapEntryRecord>
     {
         [DataMember]
         [Required]

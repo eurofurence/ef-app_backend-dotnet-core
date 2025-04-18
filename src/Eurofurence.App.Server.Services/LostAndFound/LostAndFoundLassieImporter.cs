@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using LostAndFoundResponse = Eurofurence.App.Server.Services.Abstractions.Lassie.LostAndFoundResponse;
 
 namespace Eurofurence.App.Server.Services.LostAndFound
 {

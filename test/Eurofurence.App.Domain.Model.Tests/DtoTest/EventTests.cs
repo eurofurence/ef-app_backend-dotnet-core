@@ -1,5 +1,7 @@
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Mapster;
 using Xunit;
@@ -57,16 +59,33 @@ public class EventTests
             Tags = ["Tag1", "Tag2"],
             BannerImageId = Guid.NewGuid(),
             PosterImageId = Guid.NewGuid(),
+            SourceEventId = 1,
+            BannerImage = new ImageRecord(),
+            PosterImage = new ImageRecord(),
+            ConferenceTrack = new EventConferenceTrackRecord(),
+            ConferenceDay = new EventConferenceDayRecord(),
+            ConferenceRoom = new EventConferenceRoomRecord(),
+            FavoredBy = new List<UserRecord>(),
         };
     }
 
     [Fact]
     public void ValidateTypeAdapterConfiguration()
     {
-        var config = TypeAdapterConfig<EventRequest, EventRecord>.NewConfig();
-        config.Compile();
-        var config2 = TypeAdapterConfig<EventRecord, EventResponse>.NewConfig();
-        config2.Compile();
+        var exception1 = Record.Exception(() =>
+        {
+            var config = TypeAdapterConfig<EventRequest, EventRecord>.NewConfig();
+            config.Compile();
+        });
+
+        var exception2 = Record.Exception(() =>
+        {
+            var config2 = TypeAdapterConfig<EventRecord, EventResponse>.NewConfig();
+            config2.Compile();
+        });
+
+        Assert.Null(exception1);
+        Assert.Null(exception2);
     }
 
 
@@ -83,6 +102,14 @@ public class EventTests
         EventRecord record = _request.Transform();
 
         var oldGuid = _record.Id;
+
+        var oldSourceEventId = _record.SourceEventId;
+        var oldBannerImage = _record.BannerImage;
+        var oldPosterImage = _record.PosterImage;
+        var oldConferenceTrack = _record.ConferenceTrack;
+        var oldConferenceDay = _record.ConferenceDay;
+        var oldConferenceRoom = _record.ConferenceRoom;
+        var oldFavoredBy = _record.FavoredBy;
 
         _request.Title = "Something totally different";
         _request.Abstract = "Something totally different";
@@ -107,6 +134,15 @@ public class EventTests
         _record.Merge(_request);
 
         Assert.Equal(oldGuid, _record.Id);
+
+        Assert.Equal(oldSourceEventId, _record.SourceEventId);
+        Assert.Equal(oldBannerImage, _record.BannerImage);
+        Assert.Equal(oldPosterImage, _record.PosterImage);
+        Assert.Equal(oldConferenceTrack, _record.ConferenceTrack);
+        Assert.Equal(oldConferenceDay, _record.ConferenceDay);
+        Assert.Equal(oldConferenceRoom, _record.ConferenceRoom);
+        Assert.Equal(oldFavoredBy, _record.FavoredBy);
+
         AreEqual(_record, _request);
     }
 
