@@ -1,4 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.Users;
+﻿using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -6,10 +6,10 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
 {
     public interface IIdentityService
     {
-        public Task ReadUserInfo(ClaimsIdentity identity, string token);
+        public Task ReadUserInfo(ClaimsIdentity identity);
 
-        public Task ReadRegSys(ClaimsIdentity identity, string token);
+        public Task ReadRegSys(ClaimsIdentity identity);
 
-        public Task<UserRegistrationStatus> GetRegistrationStatus(string regSysUrl, string token, string id);
+        public Task<List<string>> GetGroupMembers(ClaimsIdentity identity, string role);
     }
 }

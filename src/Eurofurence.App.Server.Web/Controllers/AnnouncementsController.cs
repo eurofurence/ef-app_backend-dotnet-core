@@ -93,7 +93,15 @@ namespace Eurofurence.App.Server.Web.Controllers
             };
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
-            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+
+            if (string.IsNullOrEmpty(request.GroupId))
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+            }
+            else
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(record, request.GroupId);
+            }
 
             return Ok(record.Id);
         }

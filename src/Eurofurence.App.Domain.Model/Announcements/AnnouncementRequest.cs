@@ -62,5 +62,12 @@ namespace Eurofurence.App.Domain.Model.Announcements
         /// </summary>
         [DataMember]
         public Guid? ImageId { get; set; }
+
+        /// <summary>
+        /// Optional id for a group in the identity provider.
+        /// If provided, the announcement will only be sent to members of that group.
+        /// </summary>
+        [DataMember]
+        public string GroupId { get; set; }
     }
 }

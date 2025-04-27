@@ -4,8 +4,10 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Domain.Model.PushNotifications;
@@ -37,8 +39,13 @@ namespace Eurofurence.App.Server.Services.Identity
             _cache = cache;
         }
 
-        public async Task ReadUserInfo(ClaimsIdentity identity, string token)
+        public async Task ReadUserInfo(ClaimsIdentity identity)
         {
+            if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
+            {
+                return;
+            }
+
             if (await _cache.GetStringAsync($"{token}_userinfo") is { Length: > 0 } cached)
             {
                 foreach (var claim in JsonSerializer.Deserialize<List<CachedClaim>>(cached))
@@ -73,8 +80,13 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        public async Task ReadRegSys(ClaimsIdentity identity, string token)
+        public async Task ReadRegSys(ClaimsIdentity identity)
         {
+            if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
+            {
+                return;
+            }
+
             if (string.IsNullOrEmpty(_identityOptionsMonitor.CurrentValue.RegSysUrl))
             {
                 return;
@@ -119,7 +131,7 @@ namespace Eurofurence.App.Server.Services.Identity
             var registrations = (await Task.WhenAll(
                 json.RootElement.TryGetStringArray("ids").ToDictionary(id => id, async id =>
                 {
-                    var status = await GetRegistrationStatus(_identityOptionsMonitor.CurrentValue.RegSysUrl, token, id);
+                    var status = await GetRegistrationStatus(token, id);
 
                     identity.AddClaim(new Claim(UserRegistrationClaims.Id, id));
                     identity.AddClaim(new Claim(UserRegistrationClaims.Status(id), status.ToString()));
@@ -161,12 +173,32 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        public async Task<UserRegistrationStatus> GetRegistrationStatus(string regSysUrl, string token, string id)
+        public async Task<List<string>> GetGroupMembers(ClaimsIdentity identity, string groupId)
+        {
+            if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
+            {
+                return null;
+            }
+
+            using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var uri = new Uri(System.IO.Path.Combine(_identityOptionsMonitor.CurrentValue.GroupsEndpoint,
+                $"{groupId}/users"));
+            using var response = await client.GetAsync(uri);
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<GroupMembersResponse>();
+
+            return result.Data.Select(d => d.UserId).ToList();
+        }
+
+        private async Task<UserRegistrationStatus> GetRegistrationStatus(string token, string id)
         {
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
             var statusRequest = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(new Uri($"{regSysUrl.TrimEnd('/')}/"), $"attsrv/api/rest/v1/attendees/{id}/status"));
+                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"), $"attsrv/api/rest/v1/attendees/{id}/status"));
             statusRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             using var statusResponse = await client.SendAsync(statusRequest);
 
@@ -221,6 +253,25 @@ namespace Eurofurence.App.Server.Services.Identity
                 Type = type;
                 Value = value;
             }
+        }
+
+        public class GroupMembersResponse : ProtocolResponse
+        {
+            [JsonPropertyName("data")]
+            public GroupMemberResponseData[] Data { get; set; }
+        }
+
+        public class GroupMemberResponseData
+        {
+            [JsonPropertyName("group_id")]
+            public string GroupId { get; set; }
+
+            [JsonPropertyName("user_id")]
+
+            public string UserId { get; set; }
+
+            [JsonPropertyName("level")]
+            public string Level { get; set; }
         }
     }
 }

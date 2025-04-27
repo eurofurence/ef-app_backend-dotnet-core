@@ -25,9 +25,9 @@ public class RolesClaimsTransformation(
             return principal;
         }
 
-        await identityService.ReadUserInfo(identity, token);
+        await identityService.ReadUserInfo(identity);
 
-        await identityService.ReadRegSys(identity, token);
+        await identityService.ReadRegSys(identity);
 
         var roles = new HashSet<string>();
 

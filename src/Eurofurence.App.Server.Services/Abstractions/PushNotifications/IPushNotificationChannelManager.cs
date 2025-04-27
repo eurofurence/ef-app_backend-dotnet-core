@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using JetBrains.Annotations;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 {
@@ -19,6 +20,11 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
 
         Task PushAnnouncementNotificationAsync(
             AnnouncementRecord announcement,
+            CancellationToken cancellationToken = default);
+
+        Task PushAnnouncementNotificationToGroupAsync(
+            AnnouncementRecord announcement,
+            string groupId,
             CancellationToken cancellationToken = default);
 
         Task PushPrivateMessageNotificationToIdentityIdAsync(
