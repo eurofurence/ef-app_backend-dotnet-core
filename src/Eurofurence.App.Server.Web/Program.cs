@@ -29,6 +29,7 @@ using Serilog;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;

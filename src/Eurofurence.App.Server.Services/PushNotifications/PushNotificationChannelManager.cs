@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,10 +12,13 @@ using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+using IdentityModel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,6 +29,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
     {
         private readonly IDeviceIdentityService _deviceService;
         private readonly IUserService _userService;
+        private readonly IIdentityService _identityService;
         private readonly AppDbContext _appDbContext;
         private readonly GlobalOptions _globalOptions;
         private readonly FirebaseOptions _firebaseOptions;
@@ -33,20 +38,24 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly ExpoOptions _expoOptions;
         private readonly IApnsService _apnsService;
         private readonly ILogger _logger;
+        private readonly HttpContext _httpContext;
 
         public PushNotificationChannelManager(
             IDeviceIdentityService deviceService,
             IUserService userService,
+            IIdentityService identityService,
             AppDbContext appDbContext,
             IOptions<FirebaseOptions> options,
             IOptions<GlobalOptions> globalOptions,
             IOptions<ExpoOptions> expoOptions,
             IOptions<ApnsOptions> apnsOptions,
             IApnsService apnsService,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IHttpContextAccessor httpContextAccessor)
         {
             _deviceService = deviceService;
             _userService = userService;
+            _identityService = identityService;
             _appDbContext = appDbContext;
             _firebaseOptions = options.Value;
             _globalOptions = globalOptions.Value;
@@ -54,6 +63,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _apnsOptions = apnsOptions.Value;
             _apnsService = apnsService;
             _logger = loggerFactory.CreateLogger(GetType());
+            _httpContext = httpContextAccessor.HttpContext;
 
             if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile)) return;
 
@@ -91,6 +101,57 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 ));
                 var apnsResults = await Task.WhenAll(apnsTasks);
                 await PruneInvalidApnsDevicesAsync(apnsResults);
+            }
+        }
+
+        public async Task PushAnnouncementNotificationToGroupAsync(
+            AnnouncementRecord announcement,
+            string groupId,
+            CancellationToken cancellationToken = default)
+        {
+            if (_httpContext.User.Identity is not ClaimsIdentity identity)
+            {
+                return;
+            }
+
+            var identityIds = await _identityService.GetGroupMembers(identity, groupId);
+
+            foreach (var identityId in identityIds)
+            {
+                var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
+
+                if (!string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile))
+                {
+                    var firebaseDeviceIdentities = devices.Where(d => d.DeviceType == DeviceType.Android);
+
+                    var firebaseTasks = firebaseDeviceIdentities.Select(async firebaseDeviceIdentity =>
+                    {
+                        var androidMessage = CreateAndroidFcmMessage(firebaseDeviceIdentity,
+                            PushEventType.Announcement, announcement.Title.RemoveMarkdown(),
+                            announcement.Content.RemoveMarkdown(), announcement.Id);
+
+                        await _firebaseMessaging.SendAsync(androidMessage, cancellationToken);
+                    });
+                    await Task.WhenAll(firebaseTasks);
+                }
+
+                if (!_apnsOptions.IsConfigured) continue;
+                {
+                    var apnsDeviceIdentities = devices.Where(d => d.DeviceType == DeviceType.Ios);
+
+                    var deviceIdentityRecords = apnsDeviceIdentities as DeviceIdentityRecord[] ?? apnsDeviceIdentities.ToArray();
+                    _logger.LogInformation($"Pushing announcement {announcement.Id} to {deviceIdentityRecords.Count()} devices on APNs…");
+
+                    var apnsTasks = deviceIdentityRecords.Select(apnsDeviceIdentity => PushApnsAsync(
+                        apnsDeviceIdentity,
+                        PushEventType.Announcement,
+                        announcement.Title.RemoveMarkdown(),
+                        announcement.Content.RemoveMarkdown(),
+                        announcement.Id
+                    ));
+                    var apnsResults = await Task.WhenAll(apnsTasks);
+                    await PruneInvalidApnsDevicesAsync(apnsResults);
+                }
             }
         }
 
@@ -174,7 +235,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 await PruneInvalidApnsDevicesAsync(apnsResults);
             }
         }
-
 
         public async Task RegisterDeviceAsync(
             string deviceToken,

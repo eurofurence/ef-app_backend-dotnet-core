@@ -18,7 +18,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IImageService _imageService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService, IPushNotificationChannelManager pushNotificationChannelManager)
+        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService,
+            IPushNotificationChannelManager pushNotificationChannelManager)
         {
             _announcementService = announcementService;
             _imageService = imageService;
@@ -93,7 +94,18 @@ namespace Eurofurence.App.Server.Web.Controllers
             };
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
-            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+
+            if (request.GroupIds is { Length: > 0 })
+            {
+                foreach (var groupId in request.GroupIds)
+                {
+                    await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(record, groupId);
+                }
+            }
+            else
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+            }
 
             return Ok(record.Id);
         }
