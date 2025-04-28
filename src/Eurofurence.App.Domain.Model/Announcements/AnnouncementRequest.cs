@@ -68,6 +68,6 @@ namespace Eurofurence.App.Domain.Model.Announcements
         /// If provided, the announcement will only be sent to members of that group.
         /// </summary>
         [DataMember]
-        public string GroupId { get; set; }
+        public string[] GroupIds { get; set; }
     }
 }
