@@ -20,6 +20,14 @@ public static class DtoTransformerExtensions
         return transformable.Transform();
     }
 
+    public static TDestination Transform<TDestination>(this IDtoTransformable<TDestination> transformable,
+        TypeAdapterConfig configuration)
+        where TDestination : class
+    {
+        return transformable.Transform(configuration);
+    }
+
+
     /// <summary>
     /// Performs a transformer merge action with the passed <paramref name="transformable"/>
     /// </summary>
@@ -29,12 +37,23 @@ public static class DtoTransformerExtensions
     /// <typeparam name="TRequest"></typeparam>
     /// <typeparam name="TResponse"></typeparam>
     /// <returns></returns>
-    public static void Merge<TRequest, TResponse, TRecord>(this IDtoRecordTransformable<TRequest, TResponse, TRecord> transformable,
+    public static void Merge<TRequest, TResponse, TRecord>(
+        this IDtoRecordTransformable<TRequest, TResponse, TRecord> transformable,
         TRequest source)
         where TRequest : class, IDtoTransformable<TRecord>
         where TRecord : class
         where TResponse : class
     {
         transformable.MergeDto(source);
+    }
+
+    public static void Merge<TRequest, TResponse, TRecord>(
+        this IDtoRecordTransformable<TRequest, TResponse, TRecord> transformable,
+        TRequest source, TypeAdapterConfig configuration)
+        where TRequest : class, IDtoTransformable<TRecord>
+        where TRecord : class
+        where TResponse : class
+    {
+        transformable.MergeDto(source, configuration);
     }
 }

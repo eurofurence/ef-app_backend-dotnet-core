@@ -20,4 +20,9 @@ public interface IDtoRecordTransformable<in TRequest, out TResponse, TRecord> : 
     {
         source.Adapt(this as TRecord);
     }
+
+    void MergeDto(TRequest source, TypeAdapterConfig configuration)
+    {
+        source.Adapt(this as TRecord, config: configuration);
+    }
 }

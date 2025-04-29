@@ -15,22 +15,15 @@ namespace Eurofurence.App.Server.Web.Mapper
         {
             config
                 .NewConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>()
-                .Map(dest => dest.ImageIds, src => src.Images.Select(ke => ke.Id));
+                .Map(dest => dest.Id, src => src.Id)
+                .Map(dest => dest.ImageIds, src => src.Images.Select(ke => ke.Id))
+                .IgnoreNonMapped(true)
+                .PreserveReference(true);
 
             // For some reason, the following mapping has to be defined manually
             config
-                .NewConfig<KnowledgeEntryRecord, KnowledgeEntryRequest>()
-                .Map(dest => dest.Title, src => src.Title)
-                .Map(dest => dest.Text, src => src.Text)
-                .Map(dest => dest.Order, src => src.Order)
-                .Map(dest => dest.Links, src => src.Links.Select(link => new LinkFragment
-                {
-                    Id = link.Id,
-                    Name = link.Name,
-                    Target = link.Target
-                }).ToList())
-                .Map(dest => dest
-                    .ImageIds.Select(id => new ImageRecord { Id = id }).ToList(), src => src.Images);
+                .NewConfig<KnowledgeEntryRequest, KnowledgeEntryRecord>()
+                .Map(dest => dest.Images, src => src.ImageIds.Select(x => new ImageRecord() { Id = x }));
         }
     }
 }

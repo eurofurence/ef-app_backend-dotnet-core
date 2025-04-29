@@ -24,4 +24,9 @@ public interface IDtoTransformable<out TDestination>
     {
         return this.Adapt<TDestination>();
     }
+
+    TDestination Transform(TypeAdapterConfig adapterConfig)
+    {
+        return this.Adapt<TDestination>(config: adapterConfig);
+    }
 }
