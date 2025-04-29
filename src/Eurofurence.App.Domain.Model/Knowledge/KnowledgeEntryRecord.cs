@@ -39,19 +39,5 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [JsonIgnore]
         public virtual List<ImageRecord> Images { get; set; } = new();
 
-
-        public void MergeDto(KnowledgeEntryRequest source)
-        {
-            var cfg = TypeAdapterConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>.NewConfig();
-            new KnowledgeEntryResponseRegister().Register(cfg.Config);
-            this.Adapt(source, cfg.Config);
-        }
-
-        public KnowledgeEntryResponse Transform()
-        {
-            var cfg = TypeAdapterConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>.NewConfig();
-            new KnowledgeEntryResponseRegister().Register(cfg.Config);
-            return this.Adapt<KnowledgeEntryRecord, KnowledgeEntryResponse>(cfg.Config);
-        }
     }
 }
