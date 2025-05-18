@@ -173,7 +173,7 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        public async Task<List<string>> GetGroupMembers(ClaimsIdentity identity, string groupId)
+        public async Task<List<string>> GetRoleMembers(ClaimsIdentity identity, string role)
         {
             if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
             {
@@ -184,7 +184,7 @@ namespace Eurofurence.App.Server.Services.Identity
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var uri = new Uri(System.IO.Path.Combine(_identityOptionsMonitor.CurrentValue.GroupsEndpoint,
-                $"{groupId}/users"));
+                $"{role}/users"));
             using var response = await client.GetAsync(uri);
             response.EnsureSuccessStatusCode();
 
@@ -205,7 +205,7 @@ namespace Eurofurence.App.Server.Services.Identity
             if (!statusResponse.IsSuccessStatusCode)
             {
                 return UserRegistrationStatus.Unknown;
-            };
+            }
 
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
             Enum.TryParse(statusJson.RootElement.TryGetString("status")?.Replace(" ", ""), true,
@@ -242,7 +242,7 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        private class CachedClaim
+        private sealed class CachedClaim
         {
             public string Type { get; set; }
 
@@ -255,13 +255,13 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        public class GroupMembersResponse : ProtocolResponse
+        private sealed class GroupMembersResponse : ProtocolResponse
         {
             [JsonPropertyName("data")]
             public GroupMemberResponseData[] Data { get; set; }
         }
 
-        public class GroupMemberResponseData
+        private sealed class GroupMemberResponseData
         {
             [JsonPropertyName("group_id")]
             public string GroupId { get; set; }

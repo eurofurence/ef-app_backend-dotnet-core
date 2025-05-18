@@ -17,7 +17,6 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using IdentityModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -104,9 +103,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
         }
 
-        public async Task PushAnnouncementNotificationToGroupAsync(
+        public async Task PushAnnouncementNotificationToRoleAsync(
             AnnouncementRecord announcement,
-            string groupId,
+            string role,
             CancellationToken cancellationToken = default)
         {
             if (_httpContext.User.Identity is not ClaimsIdentity identity)
@@ -114,7 +113,17 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 return;
             }
 
-            var identityIds = await _identityService.GetGroupMembers(identity, groupId);
+            List<string> identityIds;
+
+            try
+            {
+                identityIds = await _identityService.GetRoleMembers(identity, role);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error when trying to get members of IDP role {role}: {ex.Message}");
+                identityIds = [];
+            }
 
             foreach (var identityId in identityIds)
             {

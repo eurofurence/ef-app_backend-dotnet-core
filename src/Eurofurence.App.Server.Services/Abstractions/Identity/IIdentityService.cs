@@ -10,6 +10,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
 
         public Task ReadRegSys(ClaimsIdentity identity);
 
-        public Task<List<string>> GetGroupMembers(ClaimsIdentity identity, string role);
+        public Task<List<string>> GetRoleMembers(ClaimsIdentity identity, string role);
     }
 }

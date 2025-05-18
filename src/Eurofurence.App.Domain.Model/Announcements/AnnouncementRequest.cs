@@ -64,10 +64,10 @@ namespace Eurofurence.App.Domain.Model.Announcements
         public Guid? ImageId { get; set; }
 
         /// <summary>
-        /// Optional id for a group in the identity provider.
-        /// If provided, the announcement will only be sent to members of that group.
+        /// Optional ids for roles in the identity provider.
+        /// If provided, the announcement will only be sent to members of those roles.
         /// </summary>
         [DataMember]
-        public string[] GroupIds { get; set; }
+        public string[] Roles { get; set; }
     }
 }
