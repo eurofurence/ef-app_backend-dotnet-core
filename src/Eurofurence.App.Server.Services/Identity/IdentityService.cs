@@ -267,7 +267,6 @@ namespace Eurofurence.App.Server.Services.Identity
             public string GroupId { get; set; }
 
             [JsonPropertyName("user_id")]
-
             public string UserId { get; set; }
 
             [JsonPropertyName("level")]
