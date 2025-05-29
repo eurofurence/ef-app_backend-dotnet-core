@@ -1,10 +1,10 @@
 ﻿using Eurofurence.App.Domain.Model.Images;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Telegram;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
