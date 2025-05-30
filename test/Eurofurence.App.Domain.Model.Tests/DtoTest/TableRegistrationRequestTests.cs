@@ -7,9 +7,8 @@ namespace Eurofurence.App.Domain.Model.Tests.DtoTest;
 
 public class TableRegistrationRequestTests
 {
-    private TableRegistrationRequest _request;
-    private TableRegistrationRecord _record;
-
+    private readonly TableRegistrationRequest _request;
+    private readonly TableRegistrationRecord _record;
 
     public TableRegistrationRequestTests()
     {
@@ -83,6 +82,13 @@ public class TableRegistrationRequestTests
         Assert.Equal(_record.Location, tableRegistrationResponse.Location);
         Assert.Equal(_record.WebsiteUrl, tableRegistrationResponse.WebsiteUrl);
         Assert.Equal(_record.TelegramHandle, tableRegistrationResponse.TelegramHandle);
+        Assert.Equal(_record.ImageId, tableRegistrationResponse.ImageId);
+        Assert.Equal(_record.State, tableRegistrationResponse.State);
+        Assert.Equal(_record.Id, tableRegistrationResponse.Id);
+        Assert.Equal(_record.OwnerUid, tableRegistrationResponse.OwnerUid);
+        Assert.Equal(_record.OwnerUsername, tableRegistrationResponse.OwnerUsername);
+        Assert.Equal(_record.Image, tableRegistrationResponse.Image);
+        Assert.Equal(_record.ImageId, tableRegistrationResponse.ImageId);
     }
 
     private void AreEqual(TableRegistrationRecord record, TableRegistrationRequest req)
