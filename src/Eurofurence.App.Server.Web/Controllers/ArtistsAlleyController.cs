@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Users;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -68,9 +70,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet]
-        public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
+        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(null);
+            return _tableRegistrationService.GetRegistrations(null).Select(x => x.Transform());
         }
 
         /// <summary>
@@ -81,11 +83,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(TableRegistrationRecord), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet("{id}")]
-        public async Task<TableRegistrationRecord> GetTableRegistrationAsync(
+        public async Task<TableRegistrationResponse> GetTableRegistrationAsync(
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
 
         /// <summary>
@@ -123,10 +125,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpGet("TableRegistration/:my-latest")]
-        public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
+        public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext);
+            return record.Transform().Transient404(HttpContext);
         }
 
         /// <summary>

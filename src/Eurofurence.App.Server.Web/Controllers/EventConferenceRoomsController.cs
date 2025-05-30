@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,10 +26,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All events in the event schedule.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventConferenceRoomRecord>), 200)]
-        public IQueryable<EventConferenceRoomRecord> GetEventsAsync()
+        [ProducesResponseType(typeof(IEnumerable<EventConferenceRoomResponse>), 200)]
+        public IQueryable<EventConferenceRoomResponse> GetEventsAsync()
         {
-            return _eventConferenceRoomService.FindAll();
+            return _eventConferenceRoomService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
@@ -37,10 +38,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(EventConferenceRoomRecord), 200)]
-        public async Task<EventConferenceRoomRecord> GetEventAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(EventConferenceRoomResponse), 200)]
+        public async Task<EventConferenceRoomResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
     }
 }

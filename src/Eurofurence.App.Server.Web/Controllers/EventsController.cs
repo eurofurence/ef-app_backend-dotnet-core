@@ -8,6 +8,7 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Ical.Net;
 using Ical.Net.Serialization;
@@ -41,10 +42,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All events in the event schedule.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
-        public IQueryable<EventRecord> GetEventsAsync()
+        [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
+        public IQueryable<EventResponse> GetEventsAsync()
         {
-            return _eventService.FindAll();
+            return _eventService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
