@@ -2,11 +2,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
 
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 public interface IUserService :
-    IEntityServiceOperations<UserRecord>,
+    IEntityServiceOperations<UserRecord, UserResponse>,
     IPatchOperationProcessor<UserRecord>
 {
     /// <summary>

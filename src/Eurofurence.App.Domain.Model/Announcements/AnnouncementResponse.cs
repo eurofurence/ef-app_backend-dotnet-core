@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Announcements;
 
 [DataContract]
-public record AnnouncementResponse : ResponseBase
+public class AnnouncementResponse : ResponseBase
 {
     /// <summary>
     /// Type of announcement:

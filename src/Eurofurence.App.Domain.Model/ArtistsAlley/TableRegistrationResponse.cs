@@ -8,7 +8,7 @@ using Eurofurence.App.Domain.Model.Images;
 namespace Eurofurence.App.Domain.Model.ArtistsAlley;
 
 [DataContract]
-public record TableRegistrationResponse : ResponseBase
+public class TableRegistrationResponse : ResponseBase
 {
     /// <summary>
     /// Date and time at which the registration was submitted.

@@ -7,7 +7,7 @@ using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Domain.Model.Dealers;
 
-public class DealerResponse
+public class DealerResponse : ResponseBase
 {
     [DataMember]
     public Guid Id { get; set; }

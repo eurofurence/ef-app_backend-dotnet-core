@@ -5,11 +5,8 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Events;
 
 [DataContract]
-public class EventResponse
+public class EventResponse : ResponseBase
 {
-    [DataMember]
-    public Guid Id { get; set; }
-
     [DataMember]
     public string? Slug { get; set; }
 

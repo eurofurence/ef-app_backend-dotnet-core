@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeGroupResponse
+    public class KnowledgeGroupResponse : ResponseBase
     {
         [DataMember]
         public Guid Id { get; set; }

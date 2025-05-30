@@ -14,7 +14,7 @@ public class DeviceIdentityService(
     AppDbContext appDbContext,
     IStorageServiceFactory storageServiceFactory,
     bool useSoftDelete = true
-) : EntityServiceBase<DeviceIdentityRecord>(appDbContext, storageServiceFactory, useSoftDelete), IDeviceIdentityService
+) : EntityServiceBase<DeviceIdentityRecord, DeviceIdentityResponse>(appDbContext, storageServiceFactory, useSoftDelete), IDeviceIdentityService
 {
     public Task<List<DeviceIdentityRecord>> FindByIdentityId(
         string identityId,

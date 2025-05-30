@@ -5,11 +5,8 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Communication;
 
 [DataContract]
-public class PrivateMessageResponse
+public class PrivateMessageResponse : ResponseBase
 {
-    [DataMember]
-    public Guid Id { get; set; }
-
     [DataMember]
     public string RecipientRegSysId { get; set; }
 

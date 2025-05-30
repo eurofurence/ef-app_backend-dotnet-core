@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
@@ -13,7 +14,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
     /// Record for storing
     /// </summary>
     [Table("ArtistAlleyUserPenalties")]
-    public class ArtistAlleyUserPenaltyRecord : EntityBase
+    public class ArtistAlleyUserPenaltyRecord : EntityBase, IDtoTransformable<ArtistAlleyUserPenaltyResponse>
     {
         public ArtistAlleyUserPenaltyRecord()
         {
