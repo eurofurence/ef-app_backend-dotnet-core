@@ -20,6 +20,11 @@ public class ImageTests
 
     public ImageTests()
     {
+        TypeAdapterConfig typeAdapterConfig;
+        typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
+        typeAdapterConfig.Default.PreserveReference(true);
+        typeAdapterConfig.Scan(typeof(ImageRecord).Assembly);
+
         _request = new ImageRequest()
         {
             InternalReference = "InternalReference",
@@ -191,7 +196,7 @@ public class ImageTests
         _request.Url = "Something totally different";
         _request.IsRestricted = false;
 
-        _record.Merge(_request);
+        _record.Merge<ImageRequest, ImageWithRelationsResponse, ImageRecord>(_request);
 
         Assert.Equal(oldGuid, _record.Id);
         Assert.Equal(oldAnnouncements, _record.Announcements);
@@ -211,7 +216,7 @@ public class ImageTests
     [Fact]
     public void TestRecordIntoResponse()
     {
-        var res = _record.Transform();
+        var res = _record.Transform<ImageWithRelationsResponse>();
 
         Assert.Equal(_record.Id, res.Id);
         Assert.Equal(_record.InternalReference, res.InternalReference);

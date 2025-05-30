@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
@@ -5,6 +6,9 @@ namespace Eurofurence.App.Domain.Model.Images;
 
 public class ImageResponse
 {
+    [DataMember]
+    public Guid Id { get; set; }
+
     [Required]
     [DataMember]
     public string InternalReference { get; set; }

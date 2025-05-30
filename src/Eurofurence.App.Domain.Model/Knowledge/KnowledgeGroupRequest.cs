@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
-using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeGroupRecord : EntityBase, IDtoRecordTransformable<KnowledgeGroupRequest, KnowledgeGroupResponse, KnowledgeGroupRecord>
+    public class KnowledgeGroupRequest : IDtoTransformable<KnowledgeGroupRecord>
     {
         [Required]
         [DataMember]
@@ -26,8 +25,5 @@ namespace Eurofurence.App.Domain.Model.Knowledge
 
         [DataMember]
         public string FontAwesomeIconName { get; set; }
-
-        [JsonIgnore]
-        public List<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
     }
 }
