@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,15 +58,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All events in the event schedule that conflict with a specified start/endtime + tolerance.</returns>
         [HttpGet(":conflicts")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
-        public IQueryable<EventRecord> GetConflictingEventsAsync(
+        [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
+        public IQueryable<EventResponse> GetConflictingEventsAsync(
             DateTime conflictStartTime,
             DateTime conflictEndTime,
             int toleranceInMinutes
         )
         {
             return _eventService.FindConflicts(conflictStartTime, conflictEndTime,
-                TimeSpan.FromMinutes(toleranceInMinutes));
+                TimeSpan.FromMinutes(toleranceInMinutes)).Select(x => x.Transform());
         }
 
         /// <summary>
@@ -73,10 +75,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(EventRecord), 200)]
-        public async Task<EventRecord> GetEventAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(EventResponse), 200)]
+        public async Task<EventResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _eventService.FindOneAsync(id)).Transient404(HttpContext)
+                .Transform();
         }
 
         /// <summary>
@@ -85,14 +88,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>A list of <see cref="EventRecord"/> marked as favorite</returns>
         [Authorize]
         [HttpGet("Favorites")]
-        [ProducesResponseType(200)]
-        public Task<ActionResult> GetMyFavorites()
+        [ProducesResponseType<EventResponse>(200)]
+        public ActionResult GetMyFavorites()
         {
-            return Task.FromResult<ActionResult>(Ok(_eventService.GetFavoriteEventsFromUser(User)));
+            return Ok(_eventService.GetFavoriteEventsFromUser(User).Select(x => x.Transform()));
         }
 
         [Authorize]
         [HttpGet("Favorites/:calendar-token")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType<string>(200)]
         public async Task<ActionResult> GetFavoritesUrl()
         {
             var userToken = await _userService.GetOrCreateUserCalendarToken(User);
@@ -106,6 +111,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("Favorites/calendar.ics/")]
+        [ProducesResponseType(401)]
+        [ProducesResponseType<FileContentResult>(200)]
         public async Task<ActionResult> FavoritesCalendar([FromQuery, BindRequired] string token)
         {
             if (token == null)

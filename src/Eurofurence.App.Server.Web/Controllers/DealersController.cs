@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using MapsterMapper;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -33,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All dealer Entries.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<DealerRecord>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<DealerResponse>), 200)]
         public IQueryable<DealerResponse> GetDealerEntriesAsync()
         {
             return _dealerService.FindAll().Select(x => x.Transform());
@@ -45,7 +46,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(DealerRecord), 200)]
+        [ProducesResponseType(typeof(DealerResponse), 200)]
         public async Task<DealerResponse> GetDealerAsync([FromRoute] Guid id)
         {
             return (await _dealerService.FindOneAsync(id)).Transient404(HttpContext).Transform();
@@ -86,16 +87,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Create a new dealer.
         /// </summary>
-        /// <param name="record"></param>
+        /// <param name="request"></param>
         /// <returns>Id of the newly created dealer</returns>
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(400)]
         [HttpPost("")]
         public async Task<ActionResult> PostDealerAsync(
-            [EnsureNotNull][FromBody] DealerRecord record
+            [EnsureNotNull][FromBody] DealerRequest request
         )
         {
+            DealerRecord record = request.Transform();
             record.NewId();
             record.Touch();
 

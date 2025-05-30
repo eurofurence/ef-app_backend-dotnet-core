@@ -35,9 +35,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>A list of all private messages for the authorized attendee</returns>
         [Authorize(Roles = "Attendee")]
         [HttpGet("PrivateMessages")]
-        [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
-        public async Task<IEnumerable<PrivateMessageResponse>> GetMyPrivateMessagesAsync(
-            CancellationToken cancellationToken = default)
+        [ProducesResponseType(typeof(IEnumerable<PrivateMessageResponse>), 200)]
+        public async Task<IEnumerable<PrivateMessageResponse>> GetMyPrivateMessagesAsync(CancellationToken cancellationToken = default)
         {
             return (await _privateMessageService.GetPrivateMessagesForRecipientAsync(
                 User.GetRegSysIds(),
@@ -171,8 +170,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<IEnumerable<PrivateMessageResponse>> GetMySentPrivateMessagesAsync(
             CancellationToken cancellationToken = default)
         {
-            return (await _privateMessageService.GetPrivateMessagesForSenderAsync(User.GetSubject(), cancellationToken))
-                .Select(x => x.Transform());
+            return (await _privateMessageService.GetPrivateMessagesForSenderAsync(User.GetSubject(), cancellationToken)).Select(x => x.Transform());
         }
 
         [HttpGet("NotificationQueue/Count")]

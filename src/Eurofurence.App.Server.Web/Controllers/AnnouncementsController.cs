@@ -47,9 +47,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(AnnouncementRecord), 200)]
-        public async Task<AnnouncementRecord> GetAnnouncementAsync([FromRoute] Guid id)
+        public async Task<AnnouncementResponse> GetAnnouncementAsync([FromRoute] Guid id)
         {
-            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
 
         /// <summary>
@@ -95,18 +95,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             return Ok(record.Id);
         }
-        interface IA
-        {
-            void M() { WriteLine("IA.M"); }
-            void WriteLine(string iaM);
-        }
-        class C : IA
-        {
-            public void WriteLine(string iaM)
-            {
-                throw new NotImplementedException();
-            }
-        } // OK
+
         /// <summary>
         /// Updates and existing announcement and requests all devices to sync their data.
         /// </summary>
@@ -119,23 +108,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> PutAnnouncementAsync([FromRoute] Guid id,
             [EnsureNotNull][FromBody] AnnouncementRequest request)
         {
-
-
-
-            IA i = new C();
-            i.M(); // prints "IA.M"
+            if (request == null)
+            {
+                return BadRequest("Error parsing request");
+            }
 
             if (await _announcementService.FindOneAsync(id) is not { } announcementRecord)
             {
                 return NotFound();
             }
-            announcementRecord.Merge(request);
-            // if (record == null) return BadRequest("Error parsing Record");
-            // if (record.Id == Guid.Empty) return BadRequest("Error parsing Record.Id");
-            //
-            // var existingRecord = await _announcementService.FindOneAsync(record.Id);
-            // if (existingRecord == null) return NotFound($"No record found with it {record.Id}");
 
+            announcementRecord.Merge(request);
             announcementRecord.Touch();
 
             await _announcementService.ReplaceOneAsync(announcementRecord);

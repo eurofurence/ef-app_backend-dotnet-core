@@ -9,13 +9,15 @@ using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Mapper;
 using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Images
 {
     [DataContract]
-    public class ImageRecord : EntityBase, IDtoRecordTransformable<ImageRequest, ImageWithRelationsResponse, ImageRecord>
+    public class ImageRecord : EntityBase, IDtoRecordTransformable<ImageRequest, ImageWithRelationsResponse, ImageRecord>,
+        IDtoRecordTransformable<ImageRequest, ImageResponse, ImageRecord>
     {
         [Required]
         [DataMember]
@@ -80,11 +82,11 @@ namespace Eurofurence.App.Domain.Model.Images
         [JsonIgnore]
         public virtual List<DealerRecord> DealerArtPreviews { get; set; } = new();
 
-        public ImageWithRelationsResponse Transform()
-        {
-            var cfg = TypeAdapterConfig<ImageRecord, ImageWithRelationsResponse>.NewConfig();
-            new ImageWithRelationsResponseRegister().Register(cfg.Config);
-            return this.Adapt<ImageRecord, ImageWithRelationsResponse>(cfg.Config);
-        }
+        // public ImageWithRelationsResponse Transform()
+        // {
+        //     var cfg = TypeAdapterConfig<ImageRecord, ImageWithRelationsResponse>.NewConfig();
+        //     new ImageWithRelationsResponseRegister().Register(cfg.Config);
+        //     return this.Adapt<ImageRecord, ImageWithRelationsResponse>(cfg.Config);
+        // }
     }
 }

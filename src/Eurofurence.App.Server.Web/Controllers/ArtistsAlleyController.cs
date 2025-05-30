@@ -14,7 +14,6 @@ using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -27,7 +26,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
 
-        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService, IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService, IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+        public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,
+            IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService,
+            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
@@ -67,7 +68,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet]
         public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
@@ -80,7 +81,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(TableRegistrationRecord), 200)]
+        [ProducesResponseType(typeof(TableRegistrationResponse), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet("{id}")]
         public async Task<TableRegistrationResponse> GetTableRegistrationAsync(
@@ -97,16 +98,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="requestImageFile">mandatory image to be attached to the registration</param>
         [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync(
+            [EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
             if (!_artistAlleyOptions.RegistrationEnabled)
             {
-                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
+                return StatusCode(403,
+                    "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
-            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
+            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) ==
+                ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
             {
-                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
+                return StatusCode(403,
+                    "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
             try
@@ -114,12 +119,14 @@ namespace Eurofurence.App.Server.Web.Controllers
                 using var imageStream = new MemoryStream();
                 if (requestImageFile != null)
                     await requestImageFile.CopyToAsync(imageStream);
-                await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
+                await _tableRegistrationService.RegisterTableAsync(User, request,
+                    requestImageFile == null ? null : imageStream);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
+
             return NoContent();
         }
 
@@ -128,7 +135,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transform().Transient404(HttpContext);
+            return record.Transient404(HttpContext).Transform();
         }
 
         /// <summary>
