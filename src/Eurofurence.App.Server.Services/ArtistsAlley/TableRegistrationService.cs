@@ -23,7 +23,7 @@ using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
-    public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord>, ITableRegistrationService
+    public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord, TableRegistrationResponse>, ITableRegistrationService
     {
         private readonly AppDbContext _appDbContext;
         private readonly ArtistAlleyOptions _artistAlleyOptions;

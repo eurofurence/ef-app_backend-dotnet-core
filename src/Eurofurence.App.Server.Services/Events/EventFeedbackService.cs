@@ -5,7 +5,7 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 
 namespace Eurofurence.App.Server.Services.Events
 {
-    public class EventFeedbackService : EntityServiceBase<EventFeedbackRecord>,
+    public class EventFeedbackService : EntityServiceBase<EventFeedbackRecord, EventFeedbackResponse>,
         IEventFeedbackService
     {
         public EventFeedbackService(

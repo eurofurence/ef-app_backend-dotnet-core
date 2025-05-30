@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Eurofurence.App.Domain.Model.Events;
 
 [DataContract]
-public class EventConferenceDayResponse
+public class EventConferenceDayResponse : ResponseBase
 {
     [DataMember]
     public string Name { get; set; }

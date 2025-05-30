@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.LostAndFound;
 
 [DataContract]
-public class LostAndFoundResponse
+public class LostAndFoundResponse : ResponseBase
 {
     public Guid Id { get; set; }
 

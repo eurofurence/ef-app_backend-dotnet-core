@@ -9,14 +9,16 @@ using Eurofurence.App.Domain.Model;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services
 {
-    public class EntityServiceBase<T> :
-        IEntityServiceOperations<T>,
+    public class EntityServiceBase<T, TResponse> :
+        IEntityServiceOperations<T, TResponse>,
         IPatchOperationProcessor<T>
-        where T : EntityBase
+        where T : EntityBase, IDtoTransformable<TResponse>
+        where TResponse : ResponseBase
     {
         private readonly AppDbContext _appDbContext;
         private readonly IStorageService _storageService;
@@ -152,12 +154,12 @@ namespace Eurofurence.App.Server.Services
             return _storageService.GetStorageInfoAsync(cancellationToken);
         }
 
-        public virtual async Task<DeltaResponse<T>> GetDeltaResponseAsync(
+        public virtual async Task<DeltaResponse<TResponse>> GetDeltaResponseAsync(
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default)
         {
             var storageInfo = await GetStorageInfoAsync(cancellationToken);
-            var response = new DeltaResponse<T>
+            var response = new DeltaResponse<TResponse>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
                 StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
@@ -168,7 +170,7 @@ namespace Eurofurence.App.Server.Services
                 response.RemoveAllBeforeInsert = true;
                 response.DeletedEntities = Array.Empty<Guid>();
                 response.ChangedEntities = await
-                    _appDbContext.Set<T>().Where(entity => entity.IsDeleted == 0).ToArrayAsync(cancellationToken);
+                    _appDbContext.Set<T>().Where(entity => entity.IsDeleted == 0).Select(x => x.Transform()).ToArrayAsync(cancellationToken);
             }
             else
             {
@@ -178,6 +180,7 @@ namespace Eurofurence.App.Server.Services
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)
+                    .Select(x => x.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
                     .Where(a => a.IsDeleted == 1)

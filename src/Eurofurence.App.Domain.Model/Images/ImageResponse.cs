@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Images;
 
-public class ImageResponse
+public class ImageResponse : ResponseBase
 {
     [DataMember]
     public Guid Id { get; set; }

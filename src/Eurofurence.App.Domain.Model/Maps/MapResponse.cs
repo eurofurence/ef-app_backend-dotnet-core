@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Maps;
 
 [DataContract]
-public class MapResponse
+public class MapResponse : ResponseBase
 {
     [DataMember]
     [Required]

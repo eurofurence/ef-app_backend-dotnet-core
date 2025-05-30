@@ -9,11 +9,12 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Knowledge
 {
-    public class KnowledgeEntryService : EntityServiceBase<KnowledgeEntryRecord>, IKnowledgeEntryService
+    public class KnowledgeEntryService : EntityServiceBase<KnowledgeEntryRecord, KnowledgeEntryResponse>, IKnowledgeEntryService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IStorageService _storageService;
@@ -134,12 +135,12 @@ namespace Eurofurence.App.Server.Services.Knowledge
             return existingEntity;
         }
 
-        public override async Task<DeltaResponse<KnowledgeEntryRecord>> GetDeltaResponseAsync(
+        public override async Task<DeltaResponse<KnowledgeEntryResponse>> GetDeltaResponseAsync(
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default)
         {
             var storageInfo = await GetStorageInfoAsync(cancellationToken);
-            var response = new DeltaResponse<KnowledgeEntryRecord>
+            var response = new DeltaResponse<KnowledgeEntryResponse>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
                 StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
@@ -154,6 +155,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
                         .Include(ke => ke.Links)
                         .Include(ke => ke.Images)
                         .Where(entity => entity.IsDeleted == 0)
+                        .Select(x => x.Transform())
                         .ToArrayAsync(cancellationToken);
             }
             else
@@ -168,6 +170,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)
+                    .Select(x => x.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
                     .Where(a => a.IsDeleted == 1)
