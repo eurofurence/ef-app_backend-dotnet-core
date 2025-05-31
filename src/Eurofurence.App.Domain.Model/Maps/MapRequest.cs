@@ -22,7 +22,7 @@ public class MapRequest : IDtoTransformable<MapRecord>
     public bool IsBrowseable { get; set; }
 
     [DataMember]
-    public IList<MapEntryRequest>? Entries { get; set; } = new List<MapEntryRequest>();
+    public IList<MapEntryRequest> Entries { get; set; } = new List<MapEntryRequest>();
 
     [DataMember]
     public Guid? ImageId { get; set; }

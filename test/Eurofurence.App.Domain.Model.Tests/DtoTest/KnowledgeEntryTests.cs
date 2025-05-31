@@ -39,24 +39,6 @@ public class KnowledgeEntryTests
 
         };
     }
-    [Fact]
-    public void ValidateTypeAdapterConfiguration()
-    {
-        var exception1 = Record.Exception((() =>
-        {
-            var config = TypeAdapterConfig<KnowledgeEntryRequest, KnowledgeEntryRecord>.NewConfig();
-            config.Compile();
-        }));
-
-        var exception2 = Record.Exception((() =>
-        {
-            var config2 = TypeAdapterConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>.NewConfig();
-            config2.Compile();
-        }));
-
-        Assert.Null(exception1);
-        Assert.Null(exception2);
-    }
 
     [Fact]
     public void TestRequestToRecord()

@@ -1,4 +1,5 @@
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Mapster;
 using Xunit;
@@ -12,6 +13,11 @@ public class TableRegistrationRequestTests
 
     public TableRegistrationRequestTests()
     {
+        TypeAdapterConfig typeAdapterConfig;
+        typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
+        typeAdapterConfig.Default.PreserveReference(true);
+        typeAdapterConfig.Scan(typeof(TableRegistrationRecord).Assembly);
+
         _request = new TableRegistrationRequest()
         {
             DisplayName = "John Doe",
@@ -31,6 +37,18 @@ public class TableRegistrationRequestTests
             ImageId = Guid.NewGuid(),
             Id = Guid.NewGuid(),
             State = TableRegistrationRecord.RegistrationStateEnum.Pending,
+            Image = new ImageRecord()
+            {
+                Id = Guid.NewGuid(),
+                InternalReference = "image-internal-reference",
+                Width = 100,
+                Height = 100,
+                SizeInBytes = 1024,
+                MimeType = "image/png",
+                ContentHashSha1 = "sha1hash",
+                Url = "https://example.com/image.png",
+                IsRestricted = false,
+            },
             OwnerUid = "bla bla",
             OwnerUsername = "doejohn",
         };
@@ -87,7 +105,7 @@ public class TableRegistrationRequestTests
         Assert.Equal(_record.Id, tableRegistrationResponse.Id);
         Assert.Equal(_record.OwnerUid, tableRegistrationResponse.OwnerUid);
         Assert.Equal(_record.OwnerUsername, tableRegistrationResponse.OwnerUsername);
-        Assert.Equal(_record.Image, tableRegistrationResponse.Image);
+        Assert.Equal(tableRegistrationResponse.Image, _record.Image.Transform<ImageResponse>());
         Assert.Equal(_record.ImageId, tableRegistrationResponse.ImageId);
     }
 

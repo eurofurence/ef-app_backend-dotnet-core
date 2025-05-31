@@ -1,3 +1,4 @@
+#nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
@@ -6,7 +7,7 @@ namespace Eurofurence.App.Domain.Model.PushNotifications
     public class DeviceIdentityResponse : ResponseBase
     {
         [DataMember]
-        public string IdentityId { get; set; }
+        public string? IdentityId { get; set; }
 
         [Required]
         [DataMember]
