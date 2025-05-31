@@ -6,9 +6,9 @@ using Eurofurence.App.Domain.Model.Sync;
 
 namespace Eurofurence.App.Server.Services.Abstractions
 {
-    public interface IEntityServiceStorageOperations<TEntity> where TEntity : ResponseBase
+    public interface IEntityServiceStorageOperations<TResponse> where TResponse : ResponseBase
     {
-        Task<DeltaResponse<TEntity>> GetDeltaResponseAsync(
+        Task<DeltaResponse<TResponse>> GetDeltaResponseAsync(
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default);
 

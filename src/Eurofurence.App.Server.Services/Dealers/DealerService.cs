@@ -140,26 +140,31 @@ namespace Eurofurence.App.Server.Services.Dealers
             {
                 response.RemoveAllBeforeInsert = true;
                 response.DeletedEntities = Array.Empty<Guid>();
-                response.ChangedEntities = (await
+                response.ChangedEntities = await
                     _appDbContext.Dealers
+                        .AsNoTracking()
                         .Include(d => d.Links)
                         .Where(entity => entity.IsDeleted == 0)
-                        .ToArrayAsync(cancellationToken)).Select(x => x.Transform()).ToArray();
+                        .Select(x => x.Transform())
+                        .ToArrayAsync(cancellationToken);
             }
             else
             {
                 response.RemoveAllBeforeInsert = false;
 
                 var entities = _appDbContext.Dealers
+                    .AsNoTracking()
                     .Include(d => d.Links)
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities
+                    .AsNoTracking()
                     .Where(a => a.IsDeleted == 0)
                     .Select(x => x.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
+                    .AsNoTracking()
                     .Where(a => a.IsDeleted == 1)
                     .Select(a => a.Id)
                     .ToArrayAsync(cancellationToken);

@@ -134,20 +134,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="requestImageFile">mandatory image to be attached to the registration</param>
         [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpPost("TableRegistrationRequest")]
-        public async Task<ActionResult> PostTableRegistrationRequestAsync(
-            [EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
+        public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
             if (!_artistAlleyOptions.RegistrationEnabled)
             {
-                return StatusCode(403,
-                    "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
+                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
-            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) ==
-                ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
+            if (await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(User.GetSubject()) == ArtistAlleyUserPenaltyRecord.PenaltyStatus.BANNED)
             {
-                return StatusCode(403,
-                    "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
+                return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
             try
@@ -155,8 +151,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 using var imageStream = new MemoryStream();
                 if (requestImageFile != null)
                     await requestImageFile.CopyToAsync(imageStream);
-                await _tableRegistrationService.RegisterTableAsync(User, request,
-                    requestImageFile == null ? null : imageStream);
+                await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
             }
             catch (ArgumentException ex)
             {

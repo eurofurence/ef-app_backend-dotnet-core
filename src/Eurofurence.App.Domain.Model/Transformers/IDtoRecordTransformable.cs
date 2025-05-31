@@ -23,7 +23,7 @@ public interface IDtoRecordTransformable<in TRequest, out TResponse, TRecord> : 
     /// <summary>
     /// Merges the data from <paramref name="source"/> into the current instance.
     /// </summary>
-    /// <param name="source">An object (likely a DTO or record) whose data will be applied.</param>
+    /// <param name="source">An object whose data will be applied.</param>
     void MergeDto(TRequest source)
     {
         source.Adapt(this as TRecord);
@@ -32,7 +32,7 @@ public interface IDtoRecordTransformable<in TRequest, out TResponse, TRecord> : 
     /// <summary>
     /// Merges the data from <paramref name="source"/> into the current instance with a configuration.
     /// </summary>
-    /// <param name="source">An object (likely a DTO or record) whose data will be applied.</param>
+    /// <param name="source">An object whose data will be applied.</param>
     /// <param name="configuration">The configuration to use.</param>
     void MergeDto(TRequest source, TypeAdapterConfig configuration)
     {

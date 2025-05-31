@@ -90,10 +90,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="cancellationToken">Token for Cancelling the operation.</param>
         /// <returns>The `ID` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(
-            AuthenticationSchemes =
-                $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}",
-            Roles = "Admin,PrivateMessageSender")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages")]
         [HttpPost("PrivateMessages/:byRegistrationId")]
         [ProducesResponseType(typeof(Guid), 200)]
@@ -124,14 +121,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     with the same recipient uid, it will push a toast message to those devices.
         ///     The toast message content is defined by the `ToastTitle` and `ToastMessage` properties.
         /// </remarks>
-        /// <param name="request"></param>
+        /// <param name="reqsuest"></param>
         /// <param name="cancellationToken">Token for Cancelling the operation.</param>
         /// <returns>The `ID` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(
-            AuthenticationSchemes =
-                $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}",
-            Roles = "Admin,PrivateMessageSender")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = "Admin,PrivateMessageSender")]
         [HttpPost("PrivateMessages/:byIdentityId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageIdentityAsync(

@@ -4,7 +4,7 @@ using Mapster;
 namespace Eurofurence.App.Server.Web.Controllers.Transformers;
 
 /// <summary>
-/// Extension class for working with our DtoTransformerables (<see cref="IDtoTransformable{TDestination}"/> and <see cref="IDtoRecordTransformable{TRequest,TResponse,TRecord}"/>)
+/// Extension class for working with <see cref="IDtoTransformable{TDestination}"/> and <see cref="IDtoRecordTransformable{TRequest,TResponse,TRecord}"/>.
 /// </summary>
 public static class DtoTransformerExtensions
 {

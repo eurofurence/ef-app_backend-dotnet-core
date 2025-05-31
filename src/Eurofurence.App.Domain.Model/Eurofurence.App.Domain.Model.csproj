@@ -21,12 +21,6 @@
     <PackageReference Include="Mapster" Version="7.4.2-pre02" />
     <PackageReference Include="Mapster.Core" Version="1.2.3-pre02" />
   </ItemGroup>
-  <ItemGroup>
-    <Generated Include="**\*.g.cs" />
-  </ItemGroup>
-  <Target Name="CleanGenerated">
-    <Delete Files="@(Generated)" />
-  </Target>
   <Target Name="Husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != 0">
     <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
     <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../.." />
