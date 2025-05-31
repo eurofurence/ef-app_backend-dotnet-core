@@ -69,7 +69,7 @@ public class TableRegistrationResponse : ResponseBase
     /// Metadata of the image attached to this registration.
     /// </summary>
     [DataMember]
-    public ImageRecord Image { get; set; }
+    public ImageResponse Image { get; set; }
 
     /// <summary>
     /// Current state of the registration (Pending, Accepted, Published, Rejected).

@@ -6,8 +6,6 @@ using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Mapper;
-using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {

@@ -169,8 +169,8 @@ namespace Eurofurence.App.Server.Services
             {
                 response.RemoveAllBeforeInsert = true;
                 response.DeletedEntities = Array.Empty<Guid>();
-                response.ChangedEntities = await
-                    _appDbContext.Set<T>().Where(entity => entity.IsDeleted == 0).Select(x => x.Transform()).ToArrayAsync(cancellationToken);
+                response.ChangedEntities = (await
+                    _appDbContext.Set<T>().Where(entity => entity.IsDeleted == 0).ToArrayAsync(cancellationToken)).Select(x => x.Transform()).ToArray();
             }
             else
             {

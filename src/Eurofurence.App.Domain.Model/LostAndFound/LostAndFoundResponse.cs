@@ -7,8 +7,6 @@ namespace Eurofurence.App.Domain.Model.LostAndFound;
 [DataContract]
 public class LostAndFoundResponse : ResponseBase
 {
-    public Guid Id { get; set; }
-
     [Required]
     [DataMember]
     public int ExternalId { get; set; }

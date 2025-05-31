@@ -9,21 +9,6 @@ namespace Eurofurence.App.Domain.Model.Events
     public class EventConferenceTrackRecord : EntityBase, IDtoTransformable<EventConferenceTrackResponse>
     {
         [DataMember]
-        public string ShortName { get; set; }
-
-        [DataMember]
-        public string LongName { get; set; }
-
-        [DataMember]
-        public string Color { get; set; }
-
-        [DataMember]
-        public string Icon { get; set; }
-
-        [DataMember]
-        public string IconColor { get; set; }
-
-        [DataMember]
         public string Name { get; set; }
 
         [JsonIgnore]
