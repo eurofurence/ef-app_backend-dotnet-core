@@ -64,20 +64,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Returns a list of all registrations including pending or rejected.
-        /// Unlike the regular /ArtistAlley GET endpoint, this endpoint is only accessible to admins and moderators.
-        /// </summary>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
-        [HttpGet]
-        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
-        {
-            return _tableRegistrationService.GetRegistrations(null).Select(x => x.Transform());
-        }
-
-        /// <summary>
         ///     Retrieves a list of all accepted table registrations.
         /// </summary>
         /// <returns>All table registrations.</returns>
@@ -88,21 +74,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
         {
             return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform());
-        }
-
-        /// <summary>
-        ///     Retrieve a single table registration.
-        /// </summary>
-        /// <param name="id">id of the requested entity</param>
-        [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(TableRegistrationResponse), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
-        [HttpGet("{id}")]
-        public async Task<TableRegistrationResponse> GetTableRegistrationAsync(
-            [EnsureNotNull][FromRoute] Guid id
-        )
-        {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
 
         /// <summary>
