@@ -91,11 +91,5 @@ namespace Eurofurence.App.Domain.Model.Announcements
 
         [JsonIgnore]
         public ImageRecord Image { get; set; }
-
-
-        public AnnouncementResponse Transform()
-        {
-            return this.Adapt<AnnouncementResponse>();
-        }
     }
 }

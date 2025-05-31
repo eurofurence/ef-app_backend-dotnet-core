@@ -81,12 +81,5 @@ namespace Eurofurence.App.Domain.Model.Images
 
         [JsonIgnore]
         public virtual List<DealerRecord> DealerArtPreviews { get; set; } = new();
-
-        // public ImageWithRelationsResponse Transform()
-        // {
-        //     var cfg = TypeAdapterConfig<ImageRecord, ImageWithRelationsResponse>.NewConfig();
-        //     new ImageWithRelationsResponseRegister().Register(cfg.Config);
-        //     return this.Adapt<ImageRecord, ImageWithRelationsResponse>(cfg.Config);
-        // }
     }
 }

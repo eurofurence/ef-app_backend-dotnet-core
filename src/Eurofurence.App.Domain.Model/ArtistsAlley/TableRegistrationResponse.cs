@@ -76,10 +76,4 @@ public class TableRegistrationResponse : ResponseBase
     /// </summary>
     [DataMember]
     public TableRegistrationRecord.RegistrationStateEnum State { get; set; } = TableRegistrationRecord.RegistrationStateEnum.Pending;
-
-    /// <summary>
-    /// Internal log of state changes this registration has undergone.
-    /// </summary>
-    [JsonIgnore]
-    public IList<ArtistAlleyUserPenaltyRecord.StateChangeRecord> StateChangeLog { get; set; }
 }

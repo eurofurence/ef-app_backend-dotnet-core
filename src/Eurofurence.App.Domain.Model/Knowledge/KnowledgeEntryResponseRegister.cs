@@ -20,7 +20,6 @@ namespace Eurofurence.App.Server.Web.Mapper
                 .IgnoreNonMapped(true)
                 .PreserveReference(true);
 
-            // For some reason, the following mapping has to be defined manually
             config
                 .NewConfig<KnowledgeEntryRequest, KnowledgeEntryRecord>()
                 .Map(dest => dest.Images, src => src.ImageIds.Select(x => new ImageRecord() { Id = x }));
