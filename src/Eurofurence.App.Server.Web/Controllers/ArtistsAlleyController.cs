@@ -69,12 +69,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns></returns>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
-        [HttpGet("all")]
-        public IEnumerable<TableRegistrationRecord> GetAllTableRegistrationRecords()
+        [HttpGet]
+        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(null);
+            return _tableRegistrationService.GetRegistrations(null).Select(x => x.Transform());
         }
 
         /// <summary>
