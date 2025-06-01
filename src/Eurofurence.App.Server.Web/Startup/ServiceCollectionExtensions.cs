@@ -1,5 +1,4 @@
-﻿using AngleSharp;
-using Eurofurence.App.Server.Services.Abstractions.Announcements;
+﻿using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -12,7 +11,6 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -31,13 +29,10 @@ using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
-using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Eurofurence.App.Server.Web.Identity;
-using Eurofurence.App.Server.Web.Telegram;
-using Telegram.Bot;
 using Eurofurence.App.Server.Web.Swagger;
 using Microsoft.OpenApi.Models;
 using System;
@@ -79,24 +74,11 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IStorageServiceFactory, StorageServiceFactory>();
             services.AddTransient<ITableRegistrationService, TableRegistrationService>();
             services.AddTransient<IHttpUriSanitizer, HttpUriSanitizer>();
-            services.AddTransient<IUserManager, UserManager>();
             services.AddTransient<IDealerApiClient, DealerApiClient>();
             services.AddTransient<IDeviceIdentityService, DeviceIdentityService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
-            services.AddSingleton<ITelegramMessageBroker, TelegramMessageBroker>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
-
-            return services;
-        }
-
-        public static IServiceCollection AddTelegramBot(this IServiceCollection services, TelegramOptions telegramOptions)
-        {
-            services.AddHostedService<BotService>();
-            services.AddSingleton<ITelegramBotClient>(sp => new TelegramBotClient(
-                telegramOptions.AccessToken
-            ));
-            services.AddTransient<AdminConversation>();
 
             return services;
         }
