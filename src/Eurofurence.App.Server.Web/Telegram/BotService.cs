@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sentry;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -178,6 +179,7 @@ public class BotService : BackgroundService, IUpdateHandler
         }
         catch (Exception ex)
         {
+            SentrySdk.CaptureException(ex);
             _logger.LogError(ex, "BotClientOnInlineQuery failed");
         }
     }
@@ -222,6 +224,7 @@ public class BotService : BackgroundService, IUpdateHandler
         }
         catch (Exception ex)
         {
+            SentrySdk.CaptureException(ex);
             _logger.LogError(ex, "BotClientOnCallbackQuery failed");
         }
     }
@@ -239,6 +242,7 @@ public class BotService : BackgroundService, IUpdateHandler
         }
         catch (Exception ex)
         {
+            SentrySdk.CaptureException(ex);
             _logger.LogError(ex, "BotClientOnMessage failed");
         }
     }

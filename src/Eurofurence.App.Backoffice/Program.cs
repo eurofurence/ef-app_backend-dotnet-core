@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Eurofurence.App.Backoffice;
 using Eurofurence.App.Backoffice.Authentication;
 using Eurofurence.App.Backoffice.Services;
@@ -10,6 +9,13 @@ using MudBlazor.Services;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+builder.UseSentry(options =>
+{
+    options.Dsn = "";
+    options.SendDefaultPii = !builder.HostEnvironment.IsProduction();
+    options.TracesSampleRate = builder.HostEnvironment.IsProduction() ? 0.25 : 1.0;
+});
 
 builder.Services.AddMudServices();
 
@@ -48,4 +54,5 @@ builder.Services.AddAuthorizationCore(config =>
 }
 );
 
+builder.Logging.AddSentry(o => o.InitializeSdk = false);
 await builder.Build().RunAsync();

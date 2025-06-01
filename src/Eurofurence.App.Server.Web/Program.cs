@@ -32,6 +32,7 @@ using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Sentry;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -40,6 +41,11 @@ namespace Eurofurence.App.Server.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.WebHost.UseSentry(options =>
+            {
+                options.SendDefaultPii = !builder.Environment.IsProduction();
+                options.TracesSampleRate = builder.Environment.IsProduction() ? 0.25 : 1.0;
+            });
 
             builder.WebHost.ConfigureKestrel(options =>
             {
@@ -128,6 +134,7 @@ namespace Eurofurence.App.Server.Web
             });
 
             builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            builder.Services.AddSingleton<ISentryUserFactory, SentryUserFactory>();
 
             builder.Services.AddSwagger(globalOptions);
 

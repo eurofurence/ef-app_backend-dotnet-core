@@ -47,6 +47,7 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 using Mapster;
 using MapsterMapper;
+using Quartz.Impl.Matchers;
 
 namespace Eurofurence.App.Server.Web.Startup
 {
@@ -167,6 +168,8 @@ namespace Eurofurence.App.Server.Web.Startup
         {
             services.AddQuartz(q =>
             {
+                q.AddJobListener<SentryJobListener>(GroupMatcher<JobKey>.AnyGroup());
+
                 if (jobsOptions.FlushPrivateMessageNotifications.Enabled)
                 {
                     var flushPrivateMessageNotificationsKey = new JobKey(nameof(FlushPrivateMessageNotificationsJob));
