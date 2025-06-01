@@ -19,19 +19,25 @@
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="dotAPNS" Version="4.5.0" />
     <PackageReference Include="dotAPNS.AspNetCore" Version="2.2.2" />
-    <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
-    <PackageReference Include="HtmlSanitizer" Version="8.1.870" />
+    <PackageReference Include="FirebaseAdmin" Version="3.2.0" />
+    <PackageReference Include="HtmlSanitizer" Version="9.0.884" />
     <PackageReference Include="Ical.Net" Version="4.3.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
-    <PackageReference Include="Minio" Version="6.0.3" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.16" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.10.0" />
+    <PackageReference Include="Minio" Version="6.0.4" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.10.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="System.Text.Json" Version="9.0.5" />
     <PackageReference Include="Telegram.Bot" Version="19.0.0" />
   </ItemGroup>
   <ItemGroup>
