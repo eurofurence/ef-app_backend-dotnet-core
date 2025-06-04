@@ -49,6 +49,10 @@ namespace Eurofurence.App.Domain.Model.Images
 
         [Required]
         [DataMember]
+        public string BlurHash { get; set; }
+
+        [Required]
+        [DataMember]
         public bool IsRestricted { get; set; }
 
         [Required]
