@@ -113,7 +113,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 return;
             }
 
-            List<string> identityIds;
+            IEnumerable<string> identityIds;
 
             try
             {

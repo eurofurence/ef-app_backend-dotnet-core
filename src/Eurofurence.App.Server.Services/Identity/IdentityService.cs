@@ -173,11 +173,11 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        public async Task<List<string>> GetRoleMembers(ClaimsIdentity identity, string role)
+        public async Task<IEnumerable<string>> GetRoleMembers(ClaimsIdentity identity, string role)
         {
             if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
             {
-                return null;
+                return [];
             }
 
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
@@ -190,7 +190,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
             var result = await response.Content.ReadFromJsonAsync<GroupMembersResponse>();
 
-            return result.Data.Select(d => d.UserId).ToList();
+            return result.Data.Select(d => d.UserId);
         }
 
         private async Task<UserRegistrationStatus> GetRegistrationStatus(string token, string id)
