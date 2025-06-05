@@ -7,7 +7,4 @@ public class EventConferenceRoomResponse : ResponseBase
 {
     [DataMember]
     public string Name { get; set; }
-
-    [DataMember]
-    public string ShortName { get; set; }
 }

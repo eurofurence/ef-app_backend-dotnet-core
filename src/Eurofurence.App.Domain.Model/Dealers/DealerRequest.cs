@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
-using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Dealers;
@@ -14,7 +12,7 @@ namespace Eurofurence.App.Domain.Model.Dealers;
 public class DealerRequest : IDtoTransformable<DealerRecord>
 {
     /// <summary>
-    /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand. 
+    /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand.
     /// </summary>
     [Required]
     [DataMember]

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 
 namespace Eurofurence.App.Domain.Model.Dealers;
@@ -13,7 +14,7 @@ public class DealerResponse : ResponseBase
     public Guid Id { get; set; }
 
     /// <summary>
-    /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand. 
+    /// **(pba)** Name under which this dealer is acting, e.G. name of the company or brand.
     /// </summary>
     [Required]
     [DataMember]
@@ -141,5 +142,18 @@ public class DealerResponse : ResponseBase
     /// </summary>
     [DataMember]
     public Dictionary<string, string[]>? Keywords { get; set; }
+
+    /// <summary>
+    /// Nickname number (as on badge) of the attendee that acts on behalf/represents this dealer.
+    /// </summary>
+    // TODO: Remove entirely for EF29
+    [Required]
+    [DataMember]
+    [JsonIgnore]
+    public string AttendeeNickname { get; set; } = "";
+
+    [DataMember]
+    public string DisplayNameOrAttendeeNickname =>
+        !string.IsNullOrWhiteSpace(DisplayName) ? DisplayName : AttendeeNickname;
 
 }

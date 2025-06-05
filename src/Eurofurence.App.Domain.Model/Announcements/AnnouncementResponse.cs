@@ -7,6 +7,21 @@ namespace Eurofurence.App.Domain.Model.Announcements;
 [DataContract]
 public class AnnouncementResponse : ResponseBase
 {
+
+    /// <summary>
+    /// When does this announcement start to be valid?
+    /// </summary>
+    [DataMember]
+    [Required]
+    public DateTime ValidFromDateTimeUtc { get; set; }
+
+    /// <summary>
+    /// Until when will the announcement be valid?
+    /// </summary>
+    [DataMember]
+    [Required]
+    public DateTime ValidUntilDateTimeUtc { get; set; }
+
     /// <summary>
     /// Type of announcement:
     /// <list type="bullet">

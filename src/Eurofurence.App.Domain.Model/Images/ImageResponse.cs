@@ -41,7 +41,11 @@ public class ImageResponse : ResponseBase
     [DataMember]
     public bool IsRestricted { get; set; }
 
-    protected bool Equals(ImageResponse other) => Id.Equals(other.Id) && InternalReference == other.InternalReference && Width == other.Width && Height == other.Height && SizeInBytes == other.SizeInBytes && MimeType == other.MimeType && ContentHashSha1 == other.ContentHashSha1 && Url == other.Url && IsRestricted == other.IsRestricted;
+    [Required]
+    [DataMember]
+    public string BlurHash { get; set; }
+
+    protected bool Equals(ImageResponse other) => Id.Equals(other.Id) && InternalReference == other.InternalReference && Width == other.Width && Height == other.Height && SizeInBytes == other.SizeInBytes && MimeType == other.MimeType && ContentHashSha1 == other.ContentHashSha1 && Url == other.Url && IsRestricted == other.IsRestricted && BlurHash == other.BlurHash;
     public override bool Equals(object obj)
     {
         if (obj is null) return false;
@@ -61,7 +65,7 @@ public class ImageResponse : ResponseBase
         hashCode.Add(ContentHashSha1);
         hashCode.Add(Url);
         hashCode.Add(IsRestricted);
+        hashCode.Add(BlurHash);
         return hashCode.ToHashCode();
     }
-
 }
