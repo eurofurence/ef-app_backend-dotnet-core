@@ -78,5 +78,12 @@ namespace Eurofurence.App.Domain.Model.Announcements
         /// </summary>
         [DataMember]
         public Guid? ImageId { get; set; }
+
+        /// <summary>
+        /// Optional ids for roles in the identity provider.
+        /// If provided, the announcement will only be sent to members of those roles.
+        /// </summary>
+        [DataMember]
+        public string[] Roles { get; set; }
     }
 }

@@ -20,7 +20,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IImageService _imageService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService, IPushNotificationChannelManager pushNotificationChannelManager)
+        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService,
+            IPushNotificationChannelManager pushNotificationChannelManager)
         {
             _announcementService = announcementService;
             _imageService = imageService;
@@ -88,7 +89,18 @@ namespace Eurofurence.App.Server.Web.Controllers
             var record = request.Transform();
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
-            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+
+            if (request.Roles is { Length: > 0 })
+            {
+                foreach (var role in request.Roles)
+                {
+                    await _pushNotificationChannelManager.PushAnnouncementNotificationToRoleAsync(record, role);
+                }
+            }
+            else
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+            }
 
             AnnouncementResponse resp = record.Transform();
 

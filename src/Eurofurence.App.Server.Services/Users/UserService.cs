@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.PushNotifications;
@@ -10,7 +9,7 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eurofurence.App.Server.Services.PushNotifications;
+namespace Eurofurence.App.Server.Services.Users;
 
 public class UserService : EntityServiceBase<UserRecord, UserResponse>, IUserService
 {
@@ -19,7 +18,6 @@ public class UserService : EntityServiceBase<UserRecord, UserResponse>, IUserSer
     public UserService(
         AppDbContext appDbContext,
         IStorageServiceFactory storageServiceFactory,
-        AppDbContext dbContext,
         bool useSoftDelete = true
     )
         : base(appDbContext, storageServiceFactory, useSoftDelete)
