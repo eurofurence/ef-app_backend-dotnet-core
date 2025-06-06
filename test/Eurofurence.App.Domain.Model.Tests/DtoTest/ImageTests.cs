@@ -142,6 +142,7 @@ public class ImageTests
                     ArtPreviewImage = new ImageRecord(),
                 }
             },
+            BlurHash = "BlurHashValue",
         };
     }
 
@@ -186,6 +187,7 @@ public class ImageTests
         var oldDealerArtistThumbnails = _record.DealerArtistThumbnails;
         var oldDealerArtPreviews = _record.DealerArtPreviews;
         var oldInternalFileName = _record.InternalFileName;
+        var oldBlurHash = _record.BlurHash;
 
         _request.InternalReference = "Something totally different";
         _request.Width = 200;
@@ -209,6 +211,7 @@ public class ImageTests
         Assert.Equal(oldDealerArtistThumbnails, _record.DealerArtistThumbnails);
         Assert.Equal(oldDealerArtPreviews, _record.DealerArtPreviews);
         Assert.Equal(oldInternalFileName, _record.InternalFileName);
+        Assert.Equal(oldBlurHash, _record.BlurHash);
 
         AreEqual(_record, _request);
     }
@@ -227,6 +230,7 @@ public class ImageTests
         Assert.Equal(_record.ContentHashSha1, res.ContentHashSha1);
         Assert.Equal(_record.Url, res.Url);
         Assert.Equal(_record.IsRestricted, res.IsRestricted);
+        Assert.Equal(_record.BlurHash, res.BlurHash);
 
         Assert.Equal(_record.Announcements.Select(x => x.Id), res.AnnouncementIds);
         Assert.Equal(_record.KnowledgeEntries.Select(x => x.Id), res.KnowledgeEntryIds);
