@@ -11,7 +11,7 @@ using Ical.Net;
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
     public interface IEventService :
-        IEntityServiceOperations<EventRecord>,
+        IEntityServiceOperations<EventRecord, EventResponse>,
         IPatchOperationProcessor<EventRecord>
     {
         IQueryable<EventRecord> FindConflicts(

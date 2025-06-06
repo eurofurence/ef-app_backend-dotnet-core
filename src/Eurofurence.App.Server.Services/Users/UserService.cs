@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Users;
 
-public class UserService : EntityServiceBase<UserRecord>, IUserService
+public class UserService : EntityServiceBase<UserRecord, UserResponse>, IUserService
 {
     private readonly AppDbContext _appDbContext;
 

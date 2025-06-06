@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Maps
 {
     [DataContract]
-    public class MapRecord : EntityBase
+    public class MapRecord : EntityBase, IDtoRecordTransformable<MapRequest, MapResponse, MapRecord>
     {
         [DataMember]
         [Required]
@@ -30,6 +31,5 @@ namespace Eurofurence.App.Domain.Model.Maps
 
         [JsonIgnore]
         public virtual ImageRecord Image { get; set; }
-
     }
 }

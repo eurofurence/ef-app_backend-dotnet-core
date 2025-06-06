@@ -9,10 +9,11 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Server.Services.Maps
 {
-    public class MapService : EntityServiceBase<MapRecord>, IMapService
+    public class MapService : EntityServiceBase<MapRecord, MapResponse>, IMapService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IStorageService _storageService;
@@ -44,12 +45,12 @@ namespace Eurofurence.App.Server.Services.Maps
                 .AsNoTracking();
         }
 
-        public override async Task<DeltaResponse<MapRecord>> GetDeltaResponseAsync(
+        public override async Task<DeltaResponse<MapResponse>> GetDeltaResponseAsync(
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default)
         {
             var storageInfo = await GetStorageInfoAsync(cancellationToken);
-            var response = new DeltaResponse<MapRecord>
+            var response = new DeltaResponse<MapResponse>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
                 StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
@@ -64,6 +65,7 @@ namespace Eurofurence.App.Server.Services.Maps
                         .Include(d => d.Entries)
                         .ThenInclude(me => me.Links)
                         .Where(entity => entity.IsDeleted == 0)
+                        .Select(x => x.Transform())
                         .ToArrayAsync(cancellationToken);
             }
             else
@@ -78,6 +80,7 @@ namespace Eurofurence.App.Server.Services.Maps
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)
+                    .Select(x => x.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
                     .Where(a => a.IsDeleted == 1)

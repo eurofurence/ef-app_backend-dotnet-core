@@ -8,7 +8,7 @@ using System.Threading;
 namespace Eurofurence.App.Server.Services.Abstractions.Maps
 {
     public interface IMapService :
-        IEntityServiceOperations<MapRecord>,
+        IEntityServiceOperations<MapRecord, MapResponse>,
         IPatchOperationProcessor<MapRecord>
     {
         public Task InsertOneEntryAsync(MapEntryRecord entity, CancellationToken cancellationToken = default);

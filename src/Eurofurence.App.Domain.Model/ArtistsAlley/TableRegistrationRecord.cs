@@ -4,10 +4,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
-    public class TableRegistrationRecord : EntityBase
+    public class TableRegistrationRecord : EntityBase,
+        IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse, TableRegistrationRecord>
     {
         public class StateChangeRecord : EntityBase
         {
@@ -26,14 +30,17 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
             /// Registration has been submitted and is pending review.
             /// </summary>
             Pending = 0,
+
             /// <summary>
             /// Registration has been reviewed and accepted, and may be published.
             /// </summary>
             Accepted = 1,
+
             /// <summary>
             /// Registration has been published to social media channels.
             /// </summary>
             Published = 2,
+
             /// <summary>
             /// Registration has been rejected and must be submitted again.
             /// </summary>

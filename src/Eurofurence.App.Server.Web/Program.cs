@@ -10,7 +10,6 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
-using Mapster;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,6 +32,7 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Mapster;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -218,6 +218,9 @@ namespace Eurofurence.App.Server.Web
                 c.InjectStylesheet("/css/swagger.css");
                 c.EnableDeepLinking();
             });
+
+            logger.LogInformation("Compiling type mappings");
+            TypeAdapterConfig.GlobalSettings.Compile();
 
             logger.LogInformation($"Startup complete ({builder.Environment.EnvironmentName})");
 

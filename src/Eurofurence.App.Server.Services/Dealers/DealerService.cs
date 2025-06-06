@@ -18,6 +18,7 @@ using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,7 +26,7 @@ using File = System.IO.File;
 
 namespace Eurofurence.App.Server.Services.Dealers
 {
-    public class DealerService : EntityServiceBase<DealerRecord>,
+    public class DealerService : EntityServiceBase<DealerRecord, DealerResponse>,
         IDealerService
     {
         private readonly AppDbContext _appDbContext;
@@ -124,12 +125,12 @@ namespace Eurofurence.App.Server.Services.Dealers
             await base.DeleteOneAsync(id, cancellationToken);
         }
 
-        public override async Task<DeltaResponse<DealerRecord>> GetDeltaResponseAsync(
+        public override async Task<DeltaResponse<DealerResponse>> GetDeltaResponseAsync(
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default)
         {
             var storageInfo = await GetStorageInfoAsync(cancellationToken);
-            var response = new DeltaResponse<DealerRecord>
+            var response = new DeltaResponse<DealerResponse>
             {
                 StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
                 StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
@@ -141,8 +142,10 @@ namespace Eurofurence.App.Server.Services.Dealers
                 response.DeletedEntities = Array.Empty<Guid>();
                 response.ChangedEntities = await
                     _appDbContext.Dealers
+                        .AsNoTracking()
                         .Include(d => d.Links)
                         .Where(entity => entity.IsDeleted == 0)
+                        .Select(x => x.Transform())
                         .ToArrayAsync(cancellationToken);
             }
             else
@@ -150,14 +153,18 @@ namespace Eurofurence.App.Server.Services.Dealers
                 response.RemoveAllBeforeInsert = false;
 
                 var entities = _appDbContext.Dealers
+                    .AsNoTracking()
                     .Include(d => d.Links)
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities
+                    .AsNoTracking()
                     .Where(a => a.IsDeleted == 0)
+                    .Select(x => x.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
+                    .AsNoTracking()
                     .Where(a => a.IsDeleted == 1)
                     .Select(a => a.Id)
                     .ToArrayAsync(cancellationToken);
@@ -240,21 +247,21 @@ namespace Eurofurence.App.Server.Services.Dealers
                         };
 
                         dealerRecord.ArtistImageId = await GetImageIdAsync(
-                            archive,
-                            $"artist_{csvRecords[i].RegNo}.",
-                            $"dealer:artist:{csvRecords[i].RegNo}",
-                            cancellationToken
+                        archive,
+                        $"artist_{csvRecords[i].RegNo}.",
+                        $"dealer:artist:{csvRecords[i].RegNo}",
+                        cancellationToken
                         );
                         dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(
-                            archive,
-                            $"thumbnail_{csvRecords[i].RegNo}.",
-                            $"dealer:thumbnail:{csvRecords[i].RegNo}",
-                            cancellationToken
+                        archive,
+                        $"thumbnail_{csvRecords[i].RegNo}.",
+                        $"dealer:thumbnail:{csvRecords[i].RegNo}",
+                        cancellationToken
                         );
                         dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive,
-                            $"art_{csvRecords[i].RegNo}.",
-                            $"dealer:art:{csvRecords[i].RegNo}",
-                            cancellationToken
+                        $"art_{csvRecords[i].RegNo}.",
+                        $"dealer:art:{csvRecords[i].RegNo}",
+                        cancellationToken
                         );
 
                         ImportLinks(dealerRecord, csvRecords[i].Website);
@@ -305,7 +312,7 @@ namespace Eurofurence.App.Server.Services.Dealers
 
                 File.Delete(dealerPackagePath);
                 _logger.LogInformation(LogEvents.Import,
-                    $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully with {diff.Count(a => a.Action == ActionEnum.NotModified)} unmodified.");
+                $"Dealers import with {diff.Count(p => p.Action == ActionEnum.Add)} addition(s), {diff.Count(p => p.Action == ActionEnum.Update)} update(s) and {diff.Count(p => p.Action == ActionEnum.Delete)} deletion(s) finished successfully with {diff.Count(a => a.Action == ActionEnum.NotModified)} unmodified.");
             }
             finally
             {
@@ -360,7 +367,10 @@ namespace Eurofurence.App.Server.Services.Dealers
 
             var sanitizedParts = websiteUrls
                 .Replace(" / ", ";")
-                .Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                .Split(new[]
+                {
+                    ' ', ',', ';'
+                }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var part in sanitizedParts)
             {
@@ -391,7 +401,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         {
             var imageEntry =
                 archive.Entries.SingleOrDefault(
-                    a => a.Name.StartsWith(fileNameStartsWith, StringComparison.InvariantCultureIgnoreCase));
+                a => a.Name.StartsWith(fileNameStartsWith, StringComparison.InvariantCultureIgnoreCase));
 
             if (imageEntry == null) return null;
 

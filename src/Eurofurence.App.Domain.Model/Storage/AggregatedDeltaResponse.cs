@@ -16,20 +16,20 @@ namespace Eurofurence.App.Domain.Model.Sync
         public DateTime CurrentDateTimeUtc { get; set; }
         public string State { get; set; }
 
-        public DeltaResponse<EventRecord> Events { get; set; }
-        public DeltaResponse<EventConferenceDayRecord> EventConferenceDays { get; set; }
-        public DeltaResponse<EventConferenceRoomRecord> EventConferenceRooms { get; set; }
-        public DeltaResponse<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
-        public DeltaResponse<KnowledgeGroupRecord> KnowledgeGroups { get; set; }
+        public DeltaResponse<EventResponse> Events { get; set; }
+        public DeltaResponse<EventConferenceDayResponse> EventConferenceDays { get; set; }
+        public DeltaResponse<EventConferenceRoomResponse> EventConferenceRooms { get; set; }
+        public DeltaResponse<EventConferenceTrackResponse> EventConferenceTracks { get; set; }
+        public DeltaResponse<KnowledgeGroupResponse> KnowledgeGroups { get; set; }
         public DeltaResponse<KnowledgeEntryResponse> KnowledgeEntries { get; set; }
-        public DeltaResponse<ImageRecord> Images { get; set; }
-        public DeltaResponse<DealerRecord> Dealers { get; set; }
-        public DeltaResponse<AnnouncementRecord> Announcements { get; set; }
-        public DeltaResponse<MapRecord> Maps { get; set; }
+        public DeltaResponse<ImageResponse> Images { get; set; }
+        public DeltaResponse<DealerResponse> Dealers { get; set; }
+        public DeltaResponse<AnnouncementResponse> Announcements { get; set; }
+        public DeltaResponse<MapResponse> Maps { get; set; }
     }
 
 
-    public class DeltaResponse<T> where T : EntityBase
+    public class DeltaResponse<T> where T : ResponseBase
     {
         public DateTime StorageLastChangeDateTimeUtc { get; set; }
         public DateTime StorageDeltaStartChangeDateTimeUtc { get; set; }

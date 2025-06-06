@@ -7,7 +7,7 @@ using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Images
 {
-    public interface IImageService : IEntityServiceOperations<ImageRecord>
+    public interface IImageService : IEntityServiceOperations<ImageRecord, ImageResponse>
     {
         Task<ImageRecord> InsertImageAsync(
             string internalReference,

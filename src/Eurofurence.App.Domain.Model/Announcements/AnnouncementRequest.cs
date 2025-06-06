@@ -1,12 +1,28 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRequest
+    public class AnnouncementRequest : IDtoTransformable<AnnouncementRecord>
     {
+
+        /// <summary>
+        /// When does this announcement start to be va lid?
+        /// </summary>
+        [DataMember]
+        [Required]
+        public DateTime ValidFromDateTimeUtc { get; set; }
+
+        /// <summary>
+        /// Until when will the announcement be valid?
+        /// </summary>
+        [DataMember]
+        [Required]
+        public DateTime ValidUntilDateTimeUtc { get; set; }
+
         /// <summary>
         /// Type of announcement:
         /// <list type="bullet">

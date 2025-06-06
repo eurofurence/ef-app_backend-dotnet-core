@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
-    public class TableRegistrationRequest
+    public class TableRegistrationRequest : IDtoTransformable<TableRegistrationRecord>
     {
         /// <summary>
         /// Preferred display name of artist.
