@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Users;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -81,12 +82,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
         [HttpGet]
-        public IEnumerable<TableRegistrationRecord> GetTableRegistrationsAsync()
+        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted);
+            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform());
         }
 
         /// <summary>
@@ -94,14 +95,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="id">id of the requested entity</param>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(TableRegistrationRecord), 200)]
+        [ProducesResponseType(typeof(TableRegistrationResponse), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
         [HttpGet("{id}")]
-        public async Task<TableRegistrationRecord> GetTableRegistrationAsync(
+        public async Task<TableRegistrationResponse> GetTableRegistrationAsync(
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
 
         /// <summary>
@@ -156,15 +157,16 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 return BadRequest(ex.Message);
             }
+
             return NoContent();
         }
 
         [Authorize(Roles = "AttendeeCheckedIn")]
         [HttpGet("TableRegistration/:my-latest")]
-        public async Task<TableRegistrationRecord> GetMyLatestTableRegistrationRequestAsync()
+        public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext);
+            return record.Transient404(HttpContext).Transform();
         }
 
         /// <summary>

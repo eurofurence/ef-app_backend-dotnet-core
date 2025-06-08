@@ -3,8 +3,7 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
     public interface IEventConferenceRoomService :
-        IEntityServiceOperations<EventConferenceRoomRecord>,
+        IEntityServiceOperations<EventConferenceRoomRecord, EventConferenceRoomResponse>,
         IPatchOperationProcessor<EventConferenceRoomRecord>
-    {
-    }
+    { }
 }

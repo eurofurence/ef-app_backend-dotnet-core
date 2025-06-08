@@ -6,15 +6,13 @@
       "version": "0.7.2",
       "commands": [
         "husky"
-      ],
-      "rollForward": false
+      ]
     },
     "dotnet-ef": {
       "version": "9.0.0",
       "commands": [
         "dotnet-ef"
-      ],
-      "rollForward": false
+      ]
     }
   }
 }

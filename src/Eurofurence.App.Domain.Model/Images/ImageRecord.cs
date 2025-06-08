@@ -8,11 +8,16 @@ using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Server.Web.Mapper;
+using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Images
 {
     [DataContract]
-    public class ImageRecord : EntityBase
+    public class ImageRecord : EntityBase, IDtoRecordTransformable<ImageRequest, ImageWithRelationsResponse, ImageRecord>,
+        IDtoRecordTransformable<ImageRequest, ImageResponse, ImageRecord>
     {
         [Required]
         [DataMember]
@@ -41,6 +46,10 @@ namespace Eurofurence.App.Domain.Model.Images
         [Required]
         [DataMember]
         public string Url { get; set; }
+
+        [Required]
+        [DataMember]
+        public string BlurHash { get; set; }
 
         [Required]
         [DataMember]

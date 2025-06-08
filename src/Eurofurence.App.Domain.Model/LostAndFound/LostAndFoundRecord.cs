@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.LostAndFound
 {
     [DataContract]
-    public class LostAndFoundRecord : EntityBase
+    public class LostAndFoundRecord : EntityBase,
+        IDtoRecordTransformable<LostAndFoundRequest, LostAndFoundResponse, LostAndFoundRecord>
     {
         public enum LostAndFoundStatusEnum
         {
@@ -33,12 +35,11 @@ namespace Eurofurence.App.Domain.Model.LostAndFound
 
         [DataMember]
         public DateTime? LostDateTimeUtc { get; set; }
+
         [DataMember]
         public DateTime? FoundDateTimeUtc { get; set; }
+
         [DataMember]
         public DateTime? ReturnDateTimeUtc { get; set; }
-
-
-
     }
 }

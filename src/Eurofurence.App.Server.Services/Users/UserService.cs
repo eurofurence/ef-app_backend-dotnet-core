@@ -1,24 +1,23 @@
 using System;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eurofurence.App.Server.Services.PushNotifications;
+namespace Eurofurence.App.Server.Services.Users;
 
-public class UserService : EntityServiceBase<UserRecord>, IUserService
+public class UserService : EntityServiceBase<UserRecord, UserResponse>, IUserService
 {
     private readonly AppDbContext _appDbContext;
 
     public UserService(
         AppDbContext appDbContext,
         IStorageServiceFactory storageServiceFactory,
-        AppDbContext dbContext,
         bool useSoftDelete = true
     )
         : base(appDbContext, storageServiceFactory, useSoftDelete)

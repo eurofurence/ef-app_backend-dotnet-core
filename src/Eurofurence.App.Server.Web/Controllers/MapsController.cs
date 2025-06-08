@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,10 +31,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Get all maps
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<MapRecord>), 200)]
-        public IEnumerable<MapRecord> GetMapsAsync()
+        [ProducesResponseType(typeof(IEnumerable<MapResponse>), 200)]
+        public IEnumerable<MapResponse> GetMapsAsync()
         {
-            return _mapService.FindAll();
+            return _mapService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
@@ -43,10 +44,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for `id`
         /// </response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(MapRecord), 200)]
-        public async Task<MapRecord> GetMapAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(MapResponse), 200)]
+        public async Task<MapResponse> GetMapAsync([FromRoute] Guid id)
         {
-            return await _mapService.FindOneAsync(id).Transient404(HttpContext);
+            return (await _mapService.FindOneAsync(id).Transient404(HttpContext)).Transform();
         }
 
 
@@ -57,10 +58,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for `id`
         /// </response>
         [HttpGet("{id}/Entries")]
-        [ProducesResponseType(typeof(IEnumerable<MapEntryRecord>), 200)]
-        public async Task<IEnumerable<MapEntryRecord>> GetMapEntriesAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(IEnumerable<MapEntryResponse>), 200)]
+        public async Task<IEnumerable<MapEntryResponse>> GetMapEntriesAsync([FromRoute] Guid id)
         {
-            return (await _mapService.FindOneAsync(id).Transient404(HttpContext))?.Entries;
+            return (await _mapService.FindOneAsync(id).Transient404(HttpContext))?.Entries.Select(x => x.Transform());
         }
 
         /// <summary>
@@ -71,10 +72,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No entry found for `entryId`on map
         /// </response>
         [HttpGet("{id}/Entries/{entryId}")]
-        [ProducesResponseType(typeof(MapEntryRecord), 200)]
-        public async Task<MapEntryRecord> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
+        [ProducesResponseType(typeof(MapEntryResponse), 200)]
+        public async Task<MapEntryResponse> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
-            var result = (await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId).Transient404(HttpContext);
+            var result = (await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId)
+                .Transient404(HttpContext).Transform();
 
             return result;
         }
@@ -82,15 +84,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Create a new map.
         /// </summary>
-        /// <param name="record"></param>
+        /// <param name="request"></param>
         /// <returns>Id of the newly created map</returns>
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Guid), 200)]
         [HttpPost("")]
         public async Task<ActionResult> PostMapAsync(
-            [EnsureNotNull][FromBody] MapRecord record
+            [EnsureNotNull][FromBody] MapRequest request
         )
         {
+            MapRecord record = request.Transform();
             await _mapService.InsertOneAsync(record);
             return Ok(record.Id);
         }
@@ -167,7 +170,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Create a new map entry in a specific map
         /// </summary>
         /// <remarks>If you can generate guids client-side, you can also use the PUT variant for both create and update.</remarks>
-        /// <param name="record">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
+        /// <param name="request">Do not specify the "Id" property. It will be auto-assigned and returned in the response.</param>
         /// <param name="id">"Id" of the map</param>
         /// <returns>The id of the new map entry (guid)</returns>
         /// <response code="400">
@@ -176,17 +179,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost("{id}/Entries")]
         [Authorize(Roles = "Admin,MapEditor")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id)
+        public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRequest request, [FromRoute] Guid id)
         {
-            if (record == null) return BadRequest("Error parsing request");
+            if (request == null) return BadRequest("Error parsing request");
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
 
-            foreach (var link in record.Links)
+            foreach (var link in request.Links)
             {
                 var linkValidation = await _linkFragmentValidator.ValidateAsync(link);
                 if (!linkValidation.IsValid) return BadRequest(linkValidation.ErrorMessage);
             }
-
+            MapEntryRecord record = request.Transform();
             record.MapId = id;
             await _mapService.InsertOneEntryAsync(record);
             return Ok(record.Id);
@@ -198,7 +201,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <remarks>
         ///     The id property of the model (request body) is optional, but if provided, it must match the {entryId} part of the uri.
         /// </remarks>
-        /// <param name="record">"Id" property must match the {EntryId} part of the uri</param>
+        /// <param name="request">"Id" property must match the {EntryId} part of the uri</param>
         /// <param name="id">"Id" of the map.</param>
         /// <param name="entryId">"Id" of the entry that gets inserted.</param>
         /// <response code="400">
@@ -209,12 +212,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPut("{id}/Entries/{entryId}")]
         [Authorize(Roles = "Admin,MapEditor")]
         [ProducesResponseType(typeof(Guid), 200)]
-        public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRecord record, [FromRoute] Guid id,
+        public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRequest request, [FromRoute] Guid id,
             [FromRoute] Guid entryId)
         {
-            if (record == null) return BadRequest("Error parsing Record");
+            if (request == null) return BadRequest("Error parsing Record");
             if (id == Guid.Empty) return BadRequest("Error parsing Id");
             if (entryId == Guid.Empty) return BadRequest("Error parsing EntryId");
+
+            MapEntryRecord record = request.Transform();
+
             if (record.Id != Guid.Empty && record.Id != entryId) return BadRequest("EntityId must match Record.Id");
 
             var map = await _mapService.FindOneAsync(id);

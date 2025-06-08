@@ -2,11 +2,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeGroupRecord : EntityBase
+    public class KnowledgeGroupRecord : EntityBase, IDtoRecordTransformable<KnowledgeGroupRequest, KnowledgeGroupResponse, KnowledgeGroupRecord>
     {
         [Required]
         [DataMember]
