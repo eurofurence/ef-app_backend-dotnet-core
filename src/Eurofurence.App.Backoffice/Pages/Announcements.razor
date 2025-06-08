@@ -1,0 +1,62 @@
+@page "/Announcements"
+@using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Announcements
+
+@inject IAnnouncementService AnnouncementService
+@inject IDialogService DialogService
+
+<MudToolBar>
+    <MudText Typo="Typo.h6">Announcements</MudText>
+    <MudSpacer/>
+    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" OnClick="OnClickNewAnnouncment">Add New</MudButton>
+</MudToolBar>
+
+
+<MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
+             FilterMode="@DataGridFilterMode.ColumnFilterMenu">
+    <Columns>
+        <PropertyColumn Title="Title" Property="arg => arg.Title"></PropertyColumn>
+        <PropertyColumn Title="Author" Property="arg => arg.Author"></PropertyColumn>
+        <PropertyColumn Title="Area" Property="arg => arg.Area"></PropertyColumn>
+        <PropertyColumn Title="Content" Property="arg => arg.Content"></PropertyColumn>
+        <PropertyColumn Title="ValidFromDateTimeUtc" Property="arg => arg.ValidFromDateTimeUtc"></PropertyColumn>
+        <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="AnnouncementResponse"/>
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+
+    private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
+
+    public async void OnClickNewAnnouncment()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AnnouncementDialog>("Create new Announcement", options);
+
+        await dialog.Result;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            _items = await AnnouncementService.GetAnnouncementsAsync();
+
+            //_dataGrid?.SetSortAsync(nameof(TableRegistrationRecord.State), SortDirection.Ascending, x => x.State);
+            StateHasChanged();
+        }
+    }
+
+}

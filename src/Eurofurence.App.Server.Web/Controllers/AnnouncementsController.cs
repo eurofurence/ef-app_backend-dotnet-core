@@ -90,7 +90,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
-            if (request.Roles is { Length: > 0 })
+            if (request.Roles.Any())
             {
                 foreach (var role in request.Roles)
                 {

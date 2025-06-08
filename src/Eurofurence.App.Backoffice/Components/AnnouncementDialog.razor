@@ -1,0 +1,103 @@
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Announcements
+@using Eurofurence.App.Domain.Model.Images
+
+@inject IImageService ImageService;
+@inject IAnnouncementService AnnouncementService;
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
+            <MudTextField Class="mt-2" T="string" @bind-Value="request.Title" Required="true"
+                          RequiredError="Name is required."
+                          Label="Title"/>
+            <MudTextField Class="mt-2" T="string" @bind-Value="request.Area" Required="true"
+                          RequiredError="Name is required."
+                          Label="Area"/>
+            <MudTextField Class="mt-2" T="string" @bind-Value="request.Content" Required="true"
+                          RequiredError="Name is required."
+                          Label="Content"/>
+            <MudSelect T="string" Label="Roles" MultiSelection="true" @bind-SelectedValues="request.Roles">
+                @foreach (string role in _roles)
+                {
+                    <MudSelectItem T="string">@role</MudSelectItem>
+                }
+
+            </MudSelect>
+            <MudText>ImageID: @request.ImageId.ToString()</MudText>
+            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
+                <ActivatorContent>
+                    <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload">
+                        Upload Image
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+        </MudForm>
+        <MudImage Src="">
+            @if (string.IsNullOrEmpty(@GetImageUrlAsync().Result))
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+            }
+        </MudImage>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Secondary" OnClick="OnClickedCancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OnClickedSubmit">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    #region Attributes
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+
+    private string[] _roles = new[]
+        { "Admin" };
+
+    private bool _formIsValid;
+    private MudForm? _form;
+
+    private AnnouncementRequest request = new AnnouncementRequest();
+
+    #endregion
+
+    private async Task<string> GetImageUrlAsync()
+    {
+        if (!request.ImageId.HasValue)
+        {
+            return "";
+        }
+        ImageRecord image = (await ImageService.GetImageAsync((Guid)request.ImageId))!;
+        return image.Url;
+    }
+
+    private async Task UploadImage(IBrowserFile? file)
+    {
+        if (file != null)
+        {
+            ImageRecord? image = await ImageService.PostImageAsync(file);
+            if (image != null)
+            {
+                Snackbar.Add("Image added.", Severity.Success);
+                request.ImageId = image.Id;
+            }
+            else
+            {
+                Snackbar.Add("Error adding image.", Severity.Error);
+            }
+        }
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized() {}
+    private void OnClickedCancel()
+    {
+        MudDialog?.Close(DialogResult.Cancel());
+    }
+    private void OnClickedSubmit(MouseEventArgs obj)
+    {
+        AnnouncementService.SubmitAnnouncementAsync(request);
+    }
+}
