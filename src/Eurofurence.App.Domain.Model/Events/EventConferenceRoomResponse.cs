@@ -7,4 +7,10 @@ public class EventConferenceRoomResponse : ResponseBase
 {
     [DataMember]
     public string Name { get; set; }
+
+    /// <summary>
+    /// Deep link to the location of this event room in the map system (e.g. EFNav)
+    /// </summary>
+    [DataMember]
+    public string MapLink { get; set; }
 }
