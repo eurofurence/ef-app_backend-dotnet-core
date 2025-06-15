@@ -53,5 +53,4 @@ builder.Services.AddAuthorizationCore(config =>
 }
 );
 
-builder.Logging.AddSentry(o => o.InitializeSdk = false);
 await builder.Build().RunAsync();
