@@ -9,7 +9,7 @@ using Eurofurence.App.Domain.Model.Images;
 namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
 {
     public interface ITableRegistrationService :
-        IEntityServiceOperations<TableRegistrationRecord>,
+        IEntityServiceOperations<TableRegistrationRecord, TableRegistrationResponse>,
         IPatchOperationProcessor<TableRegistrationRecord>
     {
         Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream);

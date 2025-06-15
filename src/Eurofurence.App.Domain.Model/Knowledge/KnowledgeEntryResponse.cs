@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeEntryResponse : EntityBase
+    public class KnowledgeEntryResponse : ResponseBase
     {
         [DataMember]
         public Guid KnowledgeGroupId { get; set; }

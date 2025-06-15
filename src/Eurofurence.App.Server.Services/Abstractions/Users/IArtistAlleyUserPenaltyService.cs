@@ -6,7 +6,7 @@ using Eurofurence.App.Domain.Model.ArtistsAlley;
 namespace Eurofurence.App.Server.Services.Abstractions.Users
 {
     public interface IArtistAlleyUserPenaltyService :
-        IEntityServiceOperations<ArtistAlleyUserPenaltyRecord>,
+        IEntityServiceOperations<ArtistAlleyUserPenaltyRecord, ArtistAlleyUserPenaltyResponse>,
         IPatchOperationProcessor<ArtistAlleyUserPenaltyRecord>
     {
         /// <summary>

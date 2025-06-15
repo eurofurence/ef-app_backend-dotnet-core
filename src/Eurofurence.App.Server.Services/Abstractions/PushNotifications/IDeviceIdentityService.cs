@@ -6,7 +6,7 @@ using Eurofurence.App.Domain.Model.PushNotifications;
 namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 
 public interface IDeviceIdentityService :
-    IEntityServiceOperations<DeviceIdentityRecord>,
+    IEntityServiceOperations<DeviceIdentityRecord, DeviceIdentityResponse>,
     IPatchOperationProcessor<DeviceIdentityRecord>
 {
     Task<List<DeviceIdentityRecord>> FindByIdentityId(string identityId, CancellationToken cancellationToken = default);

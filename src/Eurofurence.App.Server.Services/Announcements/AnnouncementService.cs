@@ -5,7 +5,7 @@ using Eurofurence.App.Server.Services.Abstractions.Announcements;
 
 namespace Eurofurence.App.Server.Services.Announcements
 {
-    public class AnnouncementService : EntityServiceBase<AnnouncementRecord>,
+    public class AnnouncementService : EntityServiceBase<AnnouncementRecord, AnnouncementResponse>,
         IAnnouncementService
     {
         public AnnouncementService(

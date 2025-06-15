@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Communication
 {
-    public class PrivateMessageService : EntityServiceBase<PrivateMessageRecord>, IPrivateMessageService
+    public class PrivateMessageService : EntityServiceBase<PrivateMessageRecord, PrivateMessageResponse>, IPrivateMessageService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;

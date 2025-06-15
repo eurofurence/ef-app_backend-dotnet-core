@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.Extensions.Options;
 
