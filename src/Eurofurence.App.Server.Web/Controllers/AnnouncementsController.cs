@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +20,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IImageService _imageService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService, IPushNotificationChannelManager pushNotificationChannelManager)
+        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService,
+            IPushNotificationChannelManager pushNotificationChannelManager)
         {
             _announcementService = announcementService;
             _imageService = imageService;
@@ -32,9 +35,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<AnnouncementRecord>), 200)]
-        public IEnumerable<AnnouncementRecord> GetAnnouncementEntries()
+        public IEnumerable<AnnouncementResponse> GetAnnouncementEntries()
         {
-            return _announcementService.FindAll();
+            return _announcementService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
@@ -44,9 +47,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(AnnouncementRecord), 200)]
-        public async Task<AnnouncementRecord> GetAnnouncementAsync([FromRoute] Guid id)
+        public async Task<AnnouncementResponse> GetAnnouncementAsync([FromRoute] Guid id)
         {
-            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
 
         /// <summary>
@@ -83,17 +86,23 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (request.ImageId is Guid imageId && (await _imageService.FindOneAsync(imageId)) is null)
                 return NotFound($"Unknown image ID {imageId}.");
 
-            var record = new AnnouncementRecord()
-            {
-                Area = request.Area,
-                Author = request.Author,
-                Title = request.Title,
-                Content = request.Content,
-                ImageId = request.ImageId,
-            };
+            var record = request.Transform();
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
-            await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+
+            if (request.Roles is { Length: > 0 })
+            {
+                foreach (var role in request.Roles)
+                {
+                    await _pushNotificationChannelManager.PushAnnouncementNotificationToRoleAsync(record, role);
+                }
+            }
+            else
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationAsync(record);
+            }
+
+            AnnouncementResponse resp = record.Transform();
 
             return Ok(record.Id);
         }
@@ -103,21 +112,27 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="record">Updated announcement record</param>
         /// <returns></returns>
-        [HttpPut]
+        [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        public async Task<ActionResult> PutAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRecord record)
+        public async Task<ActionResult> PutAnnouncementAsync([FromRoute] Guid id,
+            [EnsureNotNull][FromBody] AnnouncementRequest request)
         {
-            if (record == null) return BadRequest("Error parsing Record");
-            if (record.Id == Guid.Empty) return BadRequest("Error parsing Record.Id");
+            if (request == null)
+            {
+                return BadRequest("Error parsing request");
+            }
 
-            var existingRecord = await _announcementService.FindOneAsync(record.Id);
-            if (existingRecord == null) return NotFound($"No record found with it {record.Id}");
+            if (await _announcementService.FindOneAsync(id) is not { } announcementRecord)
+            {
+                return NotFound();
+            }
 
-            record.Touch();
+            announcementRecord.Merge(request);
+            announcementRecord.Touch();
 
-            await _announcementService.ReplaceOneAsync(record);
+            await _announcementService.ReplaceOneAsync(announcementRecord);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
             return NoContent();

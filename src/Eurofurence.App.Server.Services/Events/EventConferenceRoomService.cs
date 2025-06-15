@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Events
 {
-    public class EventConferenceRoomService : EntityServiceBase<EventConferenceRoomRecord>,
+    public class EventConferenceRoomService : EntityServiceBase<EventConferenceRoomRecord, EventConferenceRoomResponse>,
         IEventConferenceRoomService
     {
         private readonly AppDbContext _appDbContext;

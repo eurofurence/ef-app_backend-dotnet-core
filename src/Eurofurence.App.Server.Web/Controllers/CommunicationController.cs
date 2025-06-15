@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
@@ -34,14 +35,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>A list of all private messages for the authorized attendee</returns>
         [Authorize(Roles = "Attendee")]
         [HttpGet("PrivateMessages")]
-        [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
-        public Task<List<PrivateMessageRecord>> GetMyPrivateMessagesAsync(CancellationToken cancellationToken = default)
+        [ProducesResponseType(typeof(IEnumerable<PrivateMessageResponse>), 200)]
+        public async Task<IEnumerable<PrivateMessageResponse>> GetMyPrivateMessagesAsync(CancellationToken cancellationToken = default)
         {
-            return _privateMessageService.GetPrivateMessagesForRecipientAsync(
+            return (await _privateMessageService.GetPrivateMessagesForRecipientAsync(
                 User.GetRegSysIds(),
                 User.GetSubject(),
                 cancellationToken
-            );
+            )).Select(x => x.Transform());
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     with the same recipient uid, it will push a toast message to those devices.
         ///     The toast message content is defined by the `ToastTitle` and `ToastMessage` properties.
         /// </remarks>
-        /// <param name="request"></param>
+        /// <param name="reqsuest"></param>
         /// <param name="cancellationToken">Token for Cancelling the operation.</param>
         /// <returns>The `ID` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
@@ -159,11 +160,11 @@ namespace Eurofurence.App.Server.Web.Controllers
 
         [HttpGet("PrivateMessages/:sent-by-me")]
         [Authorize]
-        [ProducesResponseType(typeof(IEnumerable<PrivateMessageRecord>), 200)]
-        public async Task<List<PrivateMessageRecord>> GetMySentPrivateMessagesAsync(
+        [ProducesResponseType(typeof(IEnumerable<PrivateMessageResponse>), 200)]
+        public async Task<IEnumerable<PrivateMessageResponse>> GetMySentPrivateMessagesAsync(
             CancellationToken cancellationToken = default)
         {
-            return await _privateMessageService.GetPrivateMessagesForSenderAsync(User.GetSubject(), cancellationToken);
+            return (await _privateMessageService.GetPrivateMessagesForSenderAsync(User.GetSubject(), cancellationToken)).Select(x => x.Transform());
         }
 
         [HttpGet("NotificationQueue/Count")]

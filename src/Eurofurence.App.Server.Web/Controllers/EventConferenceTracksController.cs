@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,10 +26,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All events in the event schedule.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventConferenceTrackRecord>), 200)]
-        public IQueryable<EventConferenceTrackRecord> GetEventsAsync()
+        [ProducesResponseType(typeof(IEnumerable<EventConferenceTrackResponse>), 200)]
+        public IQueryable<EventConferenceTrackResponse> GetEventsAsync()
         {
-            return _eventConferenceTrackService.FindAll();
+            return _eventConferenceTrackService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
@@ -37,10 +38,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(EventConferenceTrackRecord), 200)]
-        public async Task<EventConferenceTrackRecord> GetEventAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(EventConferenceTrackResponse), 200)]
+        public async Task<EventConferenceTrackResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventConferenceTrackService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _eventConferenceTrackService.FindOneAsync(id)).Transient404(HttpContext).Transform();
         }
     }
 }

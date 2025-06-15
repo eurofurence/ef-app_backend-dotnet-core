@@ -27,9 +27,11 @@ using Serilog;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Mapster;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -209,6 +211,9 @@ namespace Eurofurence.App.Server.Web
                 c.InjectStylesheet("/css/swagger.css");
                 c.EnableDeepLinking();
             });
+
+            logger.LogInformation("Compiling type mappings");
+            TypeAdapterConfig.GlobalSettings.Compile();
 
             logger.LogInformation($"Startup complete ({builder.Environment.EnvironmentName})");
 

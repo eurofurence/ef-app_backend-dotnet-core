@@ -27,7 +27,7 @@ using Calendar = Ical.Net.Calendar;
 
 namespace Eurofurence.App.Server.Services.Events
 {
-    public class EventService : EntityServiceBase<EventRecord>,
+    public class EventService : EntityServiceBase<EventRecord, EventResponse>,
         IEventService
     {
         private readonly ILogger _logger;

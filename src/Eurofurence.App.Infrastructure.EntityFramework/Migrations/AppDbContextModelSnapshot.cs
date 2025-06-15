@@ -678,6 +678,10 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("BlurHash")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("ContentHashSha1")
                         .IsRequired()
                         .HasColumnType("longtext");

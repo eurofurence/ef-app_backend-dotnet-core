@@ -1,6 +1,9 @@
-﻿namespace Eurofurence.App.Domain.Model.Communication
+﻿using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Mapster;
+
+namespace Eurofurence.App.Domain.Model.Communication
 {
-    public class SendPrivateMessageByRegSysRequest
+    public class SendPrivateMessageByRegSysRequest : IDtoTransformable<PrivateMessageRecord>
     {
         public string RecipientUid { get; set; }
         public string AuthorName { get; set; }

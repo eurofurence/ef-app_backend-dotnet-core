@@ -9,6 +9,7 @@ using SixLabors.ImageSharp;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Blurhash.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
@@ -22,7 +23,7 @@ using Minio.DataModel.Args;
 
 namespace Eurofurence.App.Server.Services.Images
 {
-    public class ImageService : EntityServiceBase<ImageRecord>, IImageService
+    public class ImageService : EntityServiceBase<ImageRecord, ImageResponse>, IImageService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IMinioClient _minIoClient;
@@ -101,7 +102,7 @@ namespace Eurofurence.App.Server.Services.Images
             await stream.CopyToAsync(ms, cancellationToken);
             var byteArray = ms.ToArray();
             var hash = Hashing.ComputeHashSha1(byteArray);
-            var image = Image.Load(byteArray);
+            var image = Image.Load<Rgba32>(byteArray);
 
             var imageFormat = image.Metadata.DecodedImageFormat;
 
@@ -123,7 +124,8 @@ namespace Eurofurence.App.Server.Services.Images
                 Width = image.Width,
                 Height = image.Height,
                 SizeInBytes = stream.Length,
-                ContentHashSha1 = hash
+                ContentHashSha1 = hash,
+                BlurHash = Blurhasher.Encode(image, 9, 9)
             };
 
             await base.InsertOneAsync(record, cancellationToken);
@@ -161,7 +163,7 @@ namespace Eurofurence.App.Server.Services.Images
             await stream.CopyToAsync(ms, cancellationToken);
             var byteArray = ms.ToArray();
             var hash = Hashing.ComputeHashSha1(byteArray);
-            var image = Image.Load(byteArray);
+            var image = Image.Load<Rgba32>(byteArray);
 
             var imageFormat = image.Metadata.DecodedImageFormat;
 
@@ -194,6 +196,7 @@ namespace Eurofurence.App.Server.Services.Images
             existingRecord.Height = image.Height;
             existingRecord.SizeInBytes = stream.Length;
             existingRecord.ContentHashSha1 = hash;
+            existingRecord.BlurHash = Blurhasher.Encode(image, 9, 9);
 
             await UploadFileToMinIoAsync(
                 _minIoOptions.Bucket,

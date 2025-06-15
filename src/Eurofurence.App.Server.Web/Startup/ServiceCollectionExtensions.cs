@@ -36,6 +36,8 @@ using Eurofurence.App.Server.Web.Identity;
 using Eurofurence.App.Server.Web.Swagger;
 using Microsoft.OpenApi.Models;
 using System;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Eurofurence.App.Server.Services.Identity;
 using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Web.Jobs;
 using Microsoft.Extensions.Logging;
@@ -78,6 +80,8 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IDeviceIdentityService, DeviceIdentityService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
+            services.AddTransient<IIdentityService, IdentityService>();
+            services.AddSingleton<ITelegramMessageBroker, TelegramMessageBroker>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
 
             return services;
