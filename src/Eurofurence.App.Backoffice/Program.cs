@@ -12,7 +12,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.UseSentry(options =>
 {
-    options.Dsn = "";
     options.SendDefaultPii = !builder.HostEnvironment.IsProduction();
     options.TracesSampleRate = builder.HostEnvironment.IsProduction() ? 0.25 : 1.0;
 });
