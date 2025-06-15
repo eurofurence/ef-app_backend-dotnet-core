@@ -81,7 +81,6 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
-            services.AddSingleton<ITelegramMessageBroker, TelegramMessageBroker>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
 
             return services;
