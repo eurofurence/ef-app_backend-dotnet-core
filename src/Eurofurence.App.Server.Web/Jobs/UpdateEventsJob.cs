@@ -5,6 +5,7 @@ using Quartz;
 using System.Threading.Tasks;
 using System;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Sentry;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
@@ -32,6 +33,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
+                SentrySdk.CaptureException(e);
                 _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }
         }
