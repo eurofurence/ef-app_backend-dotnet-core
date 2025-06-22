@@ -27,6 +27,7 @@
                             </MudSelect>
                             <MudNumericField Class="mt-2 mb-4" @bind-Value="Record.Order" Required="true"
                                              RequiredError="Order number is required." Label="Order Number"/>
+                            <MudCheckBox @bind-Value="@Published" Color="Color.Primary" Label="Publish" Class="mt-2 mb-2"/>
                             <TinyMarkdownEditor @bind-Value="@Record.Text"></TinyMarkdownEditor>
                         </MudForm>
                     </MudTabPanel>
@@ -115,6 +116,8 @@
     private bool _formIsValid;
     private MudForm? _form;
 
+    private bool Published { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order);
@@ -130,6 +133,7 @@
         {
             Update = true;
             SelectedGroupRecord = _knowledgeGroups.FirstOrDefault(knowledgeGroup => knowledgeGroup.Id == Record?.KnowledgeGroupId);
+            Published = Record?.Published != null;
         }
     }
 
@@ -225,7 +229,17 @@
             return;
         }
 
-        if (SelectedGroupRecord != null) Record.KnowledgeGroupId = SelectedGroupRecord.Id;
+        if (SelectedGroupRecord != null)
+        {
+            Record.KnowledgeGroupId = SelectedGroupRecord.Id;
+        }
+
+        DateTime? publishedAt = null;
+
+        if (Published)
+        {
+            publishedAt = Record.Published ?? DateTime.Now;
+        }
 
         var request = new KnowledgeEntryRequest()
             {
@@ -233,6 +247,7 @@
                 Text = Record.Text,
                 KnowledgeGroupId = Record.KnowledgeGroupId,
                 Order = Record.Order,
+                Published = publishedAt,
                 Links = Record.Links,
                 ImageIds = Record.Images.Select(image => image.Id).ToList()
             };
