@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
@@ -44,6 +45,15 @@ namespace Eurofurence.App.Server.Web.Controllers
                 }).ToArray();
             }
             return result;
+        }
+
+        [Authorize]
+        [HttpGet(":self/matrix_code")]
+        [ProducesResponseType(typeof(string), 200)]
+        public ActionResult<string> GetUserDataMatrixCode()
+        {
+            return Ok(GetUsersSelf().Registrations
+                        .First(r => r.Status == UserRegistrationStatus.Paid).Id);
         }
 
         /// <summary>
