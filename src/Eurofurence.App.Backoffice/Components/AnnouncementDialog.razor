@@ -5,7 +5,7 @@
 @inject IImageService ImageService;
 @inject IAnnouncementService AnnouncementService;
 @inject ISnackbar Snackbar
-
+<MudPaper Class="pa-4">
 <MudDialog>
     <DialogContent>
         <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
@@ -25,7 +25,14 @@
                 }
 
             </MudSelect>
-            <MudText>ImageID: @request.ImageId.ToString()</MudText>
+            @if (request.ImageId != null)
+            {
+                <MudText> ImageID: @request.ImageId.ToString()</MudText>
+            }
+            else
+            {
+                <MudText> No image uploaded yet.</MudText>
+            }
             <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
                 <ActivatorContent>
                     <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
@@ -44,9 +51,20 @@
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Secondary" OnClick="OnClickedCancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OnClickedSubmit">Submit</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@submittionInProgress" OnClick="OnClickedSubmit">
+            @if (submittionInProgress)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Submit</MudText>
+            }
+        </MudButton>
     </DialogActions>
 </MudDialog>
+</MudPaper>
 
 @code {
 
@@ -57,9 +75,12 @@
         { "Admin" };
 
     private bool _formIsValid;
-    private MudForm? _form;
+    private MudForm _form;
 
     private AnnouncementRequest request = new AnnouncementRequest();
+
+    private bool submittionInProgress;
+
 
     #endregion
 
@@ -94,10 +115,26 @@
     protected override void OnInitialized() {}
     private void OnClickedCancel()
     {
+        if (request.ImageId != null)
+        {
+            // Delete otherwise dangling image.
+            ImageService.DeleteImageAsync((Guid)request.ImageId);
+        }
         MudDialog?.Close(DialogResult.Cancel());
     }
-    private void OnClickedSubmit(MouseEventArgs obj)
+    private async Task OnClickedSubmit(MouseEventArgs obj)
     {
-        AnnouncementService.SubmitAnnouncementAsync(request);
+        await _form.Validate();
+
+        if (!_formIsValid)
+        {
+            Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            return;
+        }
+        submittionInProgress = true;
+        await AnnouncementService.SubmitAnnouncementAsync(request);
+        submittionInProgress = false;
+        Snackbar.Add("Announcement successfully submitted", Severity.Success);
+        MudDialog?.Close(DialogResult.Ok(request));
     }
 }
