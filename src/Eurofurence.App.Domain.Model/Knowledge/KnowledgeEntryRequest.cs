@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
@@ -17,6 +18,9 @@ namespace Eurofurence.App.Domain.Model.Knowledge
 
         [DataMember]
         public string Text { get; set; }
+
+        [DataMember]
+        public DateTime? Published { get; set; }
 
         [DataMember]
         public int Order { get; set; }

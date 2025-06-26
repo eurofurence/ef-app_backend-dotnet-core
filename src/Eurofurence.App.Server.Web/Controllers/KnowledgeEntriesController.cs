@@ -31,11 +31,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<KnowledgeEntryResponse>), 200)]
-        public IEnumerable<KnowledgeEntryResponse> GetKnowledgeEntriesAsync()
+        public IEnumerable<KnowledgeEntryResponse> GetKnowledgeEntriesAsync(bool includeNonPublished = false)
         {
+            if (includeNonPublished && (User.IsInRole("KnowledgeBaseEditor") || User.IsInRole("Admin")))
+            {
+                return _mapper.Map<IEnumerable<KnowledgeEntryResponse>>(_knowledgeEntryService.FindAll()
+                    .Include(ke => ke.Images)
+                    .Include(ke => ke.Links));
+            }
+
             return _mapper.Map<IEnumerable<KnowledgeEntryResponse>>(_knowledgeEntryService.FindAll()
                 .Include(ke => ke.Images)
-                .Include(ke => ke.Links));
+                .Include(ke => ke.Links))
+                .Where(ke => ke.Published != null);
         }
 
         /// <summary>
@@ -47,10 +55,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(KnowledgeEntryResponse), 200)]
         public async Task<KnowledgeEntryResponse> GetKnowledgeEntryAsync([FromRoute] Guid id)
         {
+            if (User.IsInRole("KnowledgeBaseEditor") || User.IsInRole("Admin"))
+            {
+                return _mapper.Map<KnowledgeEntryResponse>(await _knowledgeEntryService.FindAll()
+                    .Include(ke => ke.Images)
+                    .Include(ke => ke.Links)
+                    .FirstOrDefaultAsync(ke => ke.Id == id)).Transient404(HttpContext);
+            }
+
             return _mapper.Map<KnowledgeEntryResponse>(await _knowledgeEntryService.FindAll()
                 .Include(ke => ke.Images)
                 .Include(ke => ke.Links)
-                .FirstOrDefaultAsync(entity => entity.Id == id)).Transient404(HttpContext);
+                .FirstOrDefaultAsync(ke => ke.Id == id && ke.Published != null)).Transient404(HttpContext);
         }
 
 
