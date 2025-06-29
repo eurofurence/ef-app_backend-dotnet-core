@@ -1,5 +1,4 @@
-﻿using AngleSharp;
-using Eurofurence.App.Server.Services.Abstractions.Announcements;
+﻿using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -45,10 +44,10 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Identity;
 using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Web.Jobs;
-using Microsoft.Extensions.Logging;
 using Quartz;
 using Mapster;
 using MapsterMapper;
+using Serilog;
 
 namespace Eurofurence.App.Server.Web.Startup
 {
@@ -166,7 +165,7 @@ namespace Eurofurence.App.Server.Web.Startup
             return services;
         }
 
-        public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger<Program> logger, JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions, AnnouncementOptions announcementOptions, EventOptions eventOptions)
+        public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger logger, JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions, AnnouncementOptions announcementOptions, EventOptions eventOptions)
         {
             services.AddQuartz(q =>
             {
@@ -189,7 +188,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(announcementOptions.Url))
                     {
-                        logger.LogError("Update announcements job can't be added: Empty source url");
+                        logger.Error("Update announcements job can't be added: Empty source url");
                     }
                     else
                     {
@@ -210,7 +209,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(dealerOptions.Url))
                     {
-                        logger.LogError("Update dealers job can't be added: Empty source url");
+                        logger.Error("Update dealers job can't be added: Empty source url");
                     }
                     else
                     {
@@ -231,7 +230,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(eventOptions.Url))
                     {
-                        logger.LogError("Update events job can't be added: Empty source url");
+                        logger.Error("Update events job can't be added: Empty source url");
                     }
                     else
                     {
@@ -252,7 +251,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl))
                     {
-                        logger.LogError("Update lost and found job can't be added: Empty source url");
+                        logger.Error("Update lost and found job can't be added: Empty source url");
                     }
                     else
                     {
