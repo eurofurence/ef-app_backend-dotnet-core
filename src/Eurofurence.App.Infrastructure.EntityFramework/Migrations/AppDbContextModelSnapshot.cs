@@ -17,7 +17,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.16")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -381,10 +381,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<Guid?>("ArtistThumbnailImageId")
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("AttendeeNickname")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("AttendsOnFriday")
                         .HasColumnType("tinyint(1)");
 
@@ -425,9 +421,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<string>("Merchandise")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<int>("RegistrationNumber")
-                        .HasColumnType("int");
 
                     b.Property<string>("ShortDescription")
                         .HasColumnType("longtext");
