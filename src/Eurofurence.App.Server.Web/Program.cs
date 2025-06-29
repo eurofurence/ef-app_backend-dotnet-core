@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Serialization;
 using System.Text.Json;
@@ -42,6 +41,18 @@ namespace Eurofurence.App.Server.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
+            Log.Logger = loggerConfiguration.CreateLogger();
+            var logger = Log.ForContext<Program>();
+            logger.Information($"Logging configured");
+
+            builder.Services.AddLogging(options =>
+            {
+                options.ClearProviders();
+                options.AddSerilog(dispose: true);
+            });
+
 
             builder.WebHost.ConfigureKestrel(options =>
             {
@@ -79,24 +90,6 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<LoggerFilterOptions>(options => { options.MinLevel = LogLevel.Trace; });
 
             builder.Services.AddServices();
-
-            builder.Services.AddLogging(options =>
-            {
-                options.ClearProviders();
-
-                if (builder.Environment.IsDevelopment())
-                {
-                    options.AddConsole();
-                }
-            });
-
-            var loggerFactory = LoggerFactory.Create(loggingBuilder =>
-            {
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddSerilog();
-            });
-
-            var logger = loggerFactory.CreateLogger<Program>();
 
             builder.Services.AddCors(options =>
             {
@@ -145,7 +138,7 @@ namespace Eurofurence.App.Server.Web
                             .Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>();
                         foreach (var apiKey in options.ApiKeys ?? [])
                         {
-                            logger.LogInformation($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
+                            logger.Information($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
                         }
                     });
 
@@ -180,11 +173,6 @@ namespace Eurofurence.App.Server.Web
             CidRouteBaseAttribute.Value = globalOptions.ConventionIdentifier;
 
             var app = builder.Build();
-
-            var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
-            Log.Logger = loggerConfiguration.CreateLogger();
-
-            logger.LogInformation($"Logging commences");
 
             app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
@@ -221,10 +209,10 @@ namespace Eurofurence.App.Server.Web
                 c.EnableDeepLinking();
             });
 
-            logger.LogInformation("Compiling type mappings");
+            logger.Information("Compiling type mappings");
             TypeAdapterConfig.GlobalSettings.Compile();
 
-            logger.LogInformation($"Startup complete ({builder.Environment.EnvironmentName})");
+            logger.Information($"Startup complete ({builder.Environment.EnvironmentName})");
 
             app.Run();
         }
