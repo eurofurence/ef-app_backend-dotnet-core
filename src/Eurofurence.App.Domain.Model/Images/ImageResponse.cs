@@ -6,9 +6,6 @@ namespace Eurofurence.App.Domain.Model.Images;
 
 public class ImageResponse : ResponseBase
 {
-    [DataMember]
-    public Guid Id { get; set; }
-
     [Required]
     [DataMember]
     public string InternalReference { get; set; }
