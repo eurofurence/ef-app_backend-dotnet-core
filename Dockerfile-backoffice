@@ -32,7 +32,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
 ENTRYPOINT dotnet artifacts/Eurofurence.App.Backoffice.dll http://*:30002
 EXPOSE 30002
 
-FROM nginx:1.27
+FROM nginx:1.29
 ENV BACKOFFICE_BASE_PATH=
 COPY --from=build /app/backoffice/wwwroot/ /usr/share/nginx/html/
 COPY ./docker/nginx/etc/ /etc/
