@@ -133,7 +133,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             var previewImageUrl = dealer.ArtistImage?.Url ?? dealer.ArtistImage?.Url ?? string.Empty;
 
             ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
-                .WithTitle(dealer.DisplayNameOrAttendeeNickname)
+                .WithTitle(dealer.DisplayName)
                 .WithDescription(dealer.ShortDescription)
                 .WithImage(previewImageUrl);
 

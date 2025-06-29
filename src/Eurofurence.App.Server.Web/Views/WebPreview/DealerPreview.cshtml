@@ -7,7 +7,7 @@
     var contentBaseUrl = ViewData[WebPreviewController.VIEWDATA_CONTENT_BASE_URL] as string;
     var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
 
-    var displayName  = Model.DisplayNameOrAttendeeNickname;
+    var displayName  = Model.DisplayName;
     var categories = string.Join(", ", Model.Categories);
 
     var mapEntries = ViewData["MapEntries"] as List<MapEntryRecord>;
@@ -31,7 +31,7 @@
 <header>
     @if (Model.ArtistImage != null)
     {
-        <img src="@Model.ArtistImage.Url" title="@Model.DisplayNameOrAttendeeNickname" 
+        <img src="@Model.ArtistImage.Url" title="@Model.DisplayName" 
              style="max-width: 256px;"
              />
     }

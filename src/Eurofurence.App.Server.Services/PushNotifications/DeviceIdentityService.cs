@@ -10,17 +10,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.PushNotifications;
 
-public class DeviceIdentityService(
-    AppDbContext appDbContext,
-    IStorageServiceFactory storageServiceFactory,
-    bool useSoftDelete = true
-) : EntityServiceBase<DeviceIdentityRecord, DeviceIdentityResponse>(appDbContext, storageServiceFactory, useSoftDelete), IDeviceIdentityService
+public class DeviceIdentityService : EntityServiceBase<DeviceIdentityRecord, DeviceIdentityResponse>, IDeviceIdentityService
 {
+    private readonly AppDbContext _appDbContext;
+
+    public DeviceIdentityService(
+        AppDbContext appDbContext,
+        IStorageServiceFactory storageServiceFactory,
+        bool useSoftDelete = true
+    ) : base(appDbContext, storageServiceFactory, useSoftDelete)
+    {
+        _appDbContext = appDbContext;
+    }
+
     public Task<List<DeviceIdentityRecord>> FindByIdentityId(
         string identityId,
         CancellationToken cancellationToken = default)
     {
-        return appDbContext.DeviceIdentities
+        return _appDbContext.DeviceIdentities
             .Where(x => x.IdentityId == identityId)
             .ToListAsync(cancellationToken);
     }
@@ -29,10 +36,10 @@ public class DeviceIdentityService(
         string regSysId,
         CancellationToken cancellationToken = default)
     {
-        return appDbContext.Users
+        return _appDbContext.Users
             .Where(x => x.RegSysId == regSysId)
             .Join(
-                appDbContext.DeviceIdentities,
+                _appDbContext.DeviceIdentities,
                 x => x.IdentityId,
                 x => x.IdentityId,
                 (_, x) => x

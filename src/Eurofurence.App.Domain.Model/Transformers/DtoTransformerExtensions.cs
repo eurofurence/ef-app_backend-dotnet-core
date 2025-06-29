@@ -9,11 +9,11 @@ namespace Eurofurence.App.Server.Web.Controllers.Transformers;
 public static class DtoTransformerExtensions
 {
     /// <summary>
-    /// Performs a transform with the passed <see cref="transformable"/>.
+    /// Performs a transform with the passed <paramref name="transformable"/>.
     /// </summary>
     /// <param name="transformable">The Transformer, which should be used for this dto transformation.</param>
     /// <typeparam name="TDestination">The destination to which the transformation be run for.</typeparam>
-    /// <returns>The transformed object of type <see cref="TDestination"/>.</returns>
+    /// <returns>The transformed object of type <typeparamref name="TDestination"/>.</returns>
     public static TDestination Transform<TDestination>(this IDtoTransformable<TDestination> transformable)
         where TDestination : class
     {
@@ -21,12 +21,12 @@ public static class DtoTransformerExtensions
     }
 
     /// <summary>
-    /// Performs a transform with the passed <see cref="transformable"/> and a custom configuration.
+    /// Performs a transform with the passed <paramref name="transformable"/> and a custom configuration.
     /// </summary>
     /// <param name="transformable">The Transformer, which should be used for this dto transformation.</param>
     /// <param name="configuration">The configuration to use.</param>
     /// <typeparam name="TDestination">The destination to which the transformation be run for.</typeparam>
-    /// <returns>The transformed object of type <see cref="TDestination"/>.</returns>
+    /// <returns>The transformed object of type <typeparamref name="TDestination"/>.</returns>
     public static TDestination Transform<TDestination>(this IDtoTransformable<TDestination> transformable,
         TypeAdapterConfig configuration)
         where TDestination : class

@@ -11,7 +11,7 @@ namespace Eurofurence.App.Domain.Model.PushNotifications
 
         [Required]
         [DataMember]
-        public string DeviceToken { get; set; }
+        public required string DeviceToken { get; set; }
 
         [Required]
         [DataMember]
