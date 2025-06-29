@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
     --mount=type=bind,source=./test/Eurofurence.App.Server.Services.Tests/Eurofurence.App.Server.Services.Tests.csproj,target=/app/test/Eurofurence.App.Server.Services.Tests/Eurofurence.App.Server.Services.Tests.csproj \
     --mount=type=bind,source=./test/Eurofurence.App.Server.Web.Tests/Eurofurence.App.Server.Web.Tests.csproj,target=/app/test/Eurofurence.App.Server.Web.Tests/Eurofurence.App.Server.Web.Tests.csproj \
     --mount=type=bind,source=./test/Eurofurence.App.Tests.Common/Eurofurence.App.Tests.Common.csproj,target=/app/test/Eurofurence.App.Tests.Common/Eurofurence.App.Tests.Common.csproj \
+    --mount=type=bind,source=./test/Eurofurence.App.Domain.Model.Tests/Eurofurence.App.Domain.Model.Tests.csproj,target=/app/test/Eurofurence.App.Domain.Model.Tests/Eurofurence.App.Domain.Model.Tests.csproj \
     dotnet nuget config set repositoryPath /dotnet/packages --configfile /app/NuGet.config \
     && dotnet nuget config set globalPackagesFolder /dotnet/global-packages --configfile /app/NuGet.config \
     && dotnet restore
@@ -34,7 +35,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
     && export PATH="$PATH:/root/.dotnet/tools" \
     && export ASPNETCORE_ENVIRONMENT="sample" \
     && dotnet ef migrations bundle -o "/app/artifacts/db-migration-bundle" -p src/Eurofurence.App.Infrastructure.EntityFramework
-ENTRYPOINT dotnet artifacts/Eurofurence.App.Server.Web.dll http://*:30001
+ENTRYPOINT ["dotnet", "artifacts/Eurofurence.App.Server.Web.dll", "http://*:30001"]
 EXPOSE 30001
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled AS prod
