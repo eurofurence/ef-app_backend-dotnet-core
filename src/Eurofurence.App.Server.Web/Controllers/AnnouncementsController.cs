@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
@@ -37,7 +38,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<AnnouncementRecord>), 200)]
         public IEnumerable<AnnouncementResponse> GetAnnouncementEntries()
         {
-            return _announcementService.FindAll().Select(x => x.Transform());
+            return _announcementService.FindAll().Select(x => ModelMapper.Map<AnnouncementResponse>(x));
         }
 
         /// <summary>

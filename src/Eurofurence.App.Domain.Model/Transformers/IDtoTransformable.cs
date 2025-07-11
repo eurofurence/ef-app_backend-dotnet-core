@@ -20,18 +20,6 @@ public interface IDtoTransformable<out TDestination>
     /// <returns></returns>
     TDestination Transform()
     {
-        return this.Adapt<TDestination>();
-    }
-
-    /// <summary>
-    /// Transforms the current class to an instance of <typeparam name="TDestination"></typeparam>.
-    ///
-    /// Note that some data may be lost in that process.
-    /// </summary>
-    /// <param name="adapterConfig">The configuration to use.</param>
-    /// <returns></returns>
-    TDestination Transform(TypeAdapterConfig adapterConfig)
-    {
-        return this.Adapt<TDestination>(config: adapterConfig);
+        return ModelMapper.Map<TDestination>(this);
     }
 }

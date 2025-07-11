@@ -43,7 +43,7 @@ public class KnowledgeEntryTests
     [Fact]
     public void TestRequestToRecord()
     {
-        KnowledgeEntryRecord record = _request.Transform(typeAdapterConfig);
+        KnowledgeEntryRecord record = _request.Transform();
         AreEqual(record, _request);
     }
 

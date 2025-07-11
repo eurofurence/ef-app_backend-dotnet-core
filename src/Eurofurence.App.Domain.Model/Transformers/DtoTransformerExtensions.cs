@@ -21,21 +21,6 @@ public static class DtoTransformerExtensions
     }
 
     /// <summary>
-    /// Performs a transform with the passed <see cref="transformable"/> and a custom configuration.
-    /// </summary>
-    /// <param name="transformable">The Transformer, which should be used for this dto transformation.</param>
-    /// <param name="configuration">The configuration to use.</param>
-    /// <typeparam name="TDestination">The destination to which the transformation be run for.</typeparam>
-    /// <returns>The transformed object of type <see cref="TDestination"/>.</returns>
-    public static TDestination Transform<TDestination>(this IDtoTransformable<TDestination> transformable,
-        TypeAdapterConfig configuration)
-        where TDestination : class
-    {
-        return transformable.Transform(configuration);
-    }
-
-
-    /// <summary>
     /// Performs a transformer merge action with the passed <paramref name="transformable"/>.
     /// </summary>
     /// <param name="transformable">The Transformer, which should be used for this dto transformation</param>
