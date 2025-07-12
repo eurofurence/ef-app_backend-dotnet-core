@@ -151,6 +151,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _artistAlleyOptions.Telegram.AdminGroupChatId,
             $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
 
+            await _appDbContext.SaveChangesAsync();
+
             await BroadcastAsync(record);
 
             var message = $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
@@ -167,7 +169,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
 
-            await _appDbContext.SaveChangesAsync();
+
         }
 
         private async Task BroadcastAsync(TableRegistrationRecord record)

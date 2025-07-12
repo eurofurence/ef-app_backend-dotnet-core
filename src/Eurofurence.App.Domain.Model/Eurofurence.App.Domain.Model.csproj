@@ -18,8 +18,6 @@
     <ProjectReference Include="..\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="7.4.2-pre02" />
-    <PackageReference Include="Mapster.Core" Version="1.2.3-pre02" />
     <PackageReference Include="Riok.Mapperly" Version="4.2.1" />
   </ItemGroup>
   <Target Name="Husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != 0">

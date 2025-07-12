@@ -166,6 +166,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+            if (record == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return null;
+            }
             return record.Transient404(HttpContext).Transform();
         }
 

@@ -7,7 +7,6 @@ using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
 using Xunit;
 
 namespace Eurofurence.App.Domain.Model.Tests.DtoTest;
@@ -20,11 +19,6 @@ public class ImageTests
 
     public ImageTests()
     {
-        TypeAdapterConfig typeAdapterConfig;
-        typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
-        typeAdapterConfig.Default.PreserveReference(true);
-        typeAdapterConfig.Scan(typeof(ImageRecord).Assembly);
-
         _request = new ImageRequest()
         {
             InternalReference = "InternalReference",
@@ -144,25 +138,6 @@ public class ImageTests
             },
             BlurHash = "BlurHashValue",
         };
-    }
-
-    [Fact]
-    public void ValidateTypeAdapterConfiguration()
-    {
-        var exception1 = Record.Exception(() =>
-        {
-            var config = TypeAdapterConfig<ImageRequest, ImageRecord>.NewConfig();
-            config.Compile();
-        });
-
-        var exception2 = Record.Exception(() =>
-        {
-            var config2 = TypeAdapterConfig<ImageRecord, ImageWithRelationsResponse>.NewConfig();
-            config2.Compile();
-        });
-
-        Assert.Null(exception1);
-        Assert.Null(exception2);
     }
 
     [Fact]

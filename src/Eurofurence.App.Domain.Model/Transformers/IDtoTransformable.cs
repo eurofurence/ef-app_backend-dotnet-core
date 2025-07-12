@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Eurofurence.App.Domain.Model.Transformers;
-using Mapster;
+﻿using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Server.Web.Controllers.Transformers;
 

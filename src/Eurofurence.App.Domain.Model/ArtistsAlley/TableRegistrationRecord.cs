@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
+
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
@@ -91,7 +89,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 
         /// <summary>
         /// Table number at which the artist has seated themselves in the Artist Alley.
-        /// Must be > 0 and may have optional, upper limit. 
+        /// Must be > 0 and may have optional, upper limit.
         /// </summary>
         [DataMember]
         public string Location { get; set; }

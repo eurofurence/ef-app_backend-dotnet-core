@@ -26,16 +26,9 @@ public interface IDtoRecordTransformable<in TRequest, out TResponse, TRecord> : 
     /// <param name="source">An object whose data will be applied.</param>
     void MergeDto(TRequest source)
     {
-        source.Adapt(this as TRecord);
+        ModelMapper.Merge(source, this as TRecord);
+
+        //source.Adapt(this as TRecord);
     }
 
-    /// <summary>
-    /// Merges the data from <paramref name="source"/> into the current instance with a configuration.
-    /// </summary>
-    /// <param name="source">An object whose data will be applied.</param>
-    /// <param name="configuration">The configuration to use.</param>
-    void MergeDto(TRequest source, TypeAdapterConfig configuration)
-    {
-        source.Adapt(this as TRecord, config: configuration);
-    }
 }

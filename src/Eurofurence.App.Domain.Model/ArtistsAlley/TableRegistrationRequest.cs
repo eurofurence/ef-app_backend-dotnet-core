@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
@@ -25,7 +24,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
 
         /// <summary>
         /// Table number at which the artist has seated themselves in the Artist Alley.
-        /// Must be > 0 and may have optional, upper limit. 
+        /// Must be > 0 and may have optional, upper limit.
         /// </summary>
         [Required]
         public string Location { get; set; }
