@@ -33,6 +33,7 @@ using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Mapster;
+using Microsoft.Extensions.Hosting;
 using Sentry;
 
 namespace Eurofurence.App.Server.Web
