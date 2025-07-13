@@ -24,6 +24,9 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [DataMember]
         public int Order { get; set; }
 
+        [DataMember]
+        public DateTime? Published { get; set; }
+
         [Required]
         [DataMember]
         public Guid KnowledgeGroupId { get; set; }

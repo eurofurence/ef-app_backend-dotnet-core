@@ -73,6 +73,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 Title = request.Title,
                 Text = HttpUtility.HtmlDecode(_htmlSanitizer.Sanitize(request.Text)),
                 Order = request.Order,
+                Published = request.Published,
                 Links = request.Links,
                 IsDeleted = 0
             };
@@ -100,6 +101,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
             existingEntity.Title = request.Title;
             existingEntity.Text = HttpUtility.HtmlDecode(_htmlSanitizer.Sanitize(request.Text));
             existingEntity.Order = request.Order;
+            existingEntity.Published = request.Published;
 
             foreach (var existingLink in existingEntity.Links)
             {

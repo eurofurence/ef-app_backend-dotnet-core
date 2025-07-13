@@ -11,7 +11,7 @@ namespace Eurofurence.App.Backoffice.Services
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return (await http.GetFromJsonAsync<KnowledgeEntryResponse[]>("knowledgeEntries", options))?.ToArray() ?? [];
+            return (await http.GetFromJsonAsync<KnowledgeEntryResponse[]>("knowledgeEntries?includeNonPublished=true", options))?.ToArray() ?? [];
         }
 
         public async Task<bool> PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record)
