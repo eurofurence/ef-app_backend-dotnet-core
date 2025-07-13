@@ -146,7 +146,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
-
+            await _appDbContext.SaveChangesAsync();
             await _telegramMessageSender.SendMarkdownMessageToChatAsync(
             _artistAlleyOptions.Telegram.AdminGroupChatId,
             $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
