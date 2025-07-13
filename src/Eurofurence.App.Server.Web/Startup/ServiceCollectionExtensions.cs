@@ -45,6 +45,7 @@ using Eurofurence.App.Server.Services.Identity;
 using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Web.Jobs;
 using Quartz;
+using Quartz.Impl.Matchers;
 using Mapster;
 using MapsterMapper;
 using Serilog;
@@ -169,6 +170,8 @@ namespace Eurofurence.App.Server.Web.Startup
         {
             services.AddQuartz(q =>
             {
+                q.AddJobListener<SentryJobListener>(GroupMatcher<JobKey>.AnyGroup());
+
                 if (jobsOptions.FlushPrivateMessageNotifications.Enabled)
                 {
                     var flushPrivateMessageNotificationsKey = new JobKey(nameof(FlushPrivateMessageNotificationsJob));
