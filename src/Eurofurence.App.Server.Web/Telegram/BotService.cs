@@ -117,11 +117,11 @@ public class BotService : BackgroundService, IUpdateHandler
         }
     }
 
-    private async Task OnTableRegistrationAsync(string chatId, TableRegistrationRecord record)
+    private async Task OnTableRegistrationAsync(string chatId, TableRegistrationRecord record, bool updated)
     {
         var message = await _client.SendTextMessageAsync(
             chatId,
-            $@"*New Request:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()})
+            $@"{(updated ? "*New Request:*" : "*Data updated:*")} {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()})
 
 *Display Name:* {record.DisplayName.EscapeMarkdown()}
 *Location:* {record.Location.RemoveMarkdown()}
