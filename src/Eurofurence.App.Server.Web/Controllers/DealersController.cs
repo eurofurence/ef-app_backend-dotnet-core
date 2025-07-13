@@ -9,8 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
-using MapsterMapper;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -35,9 +34,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<DealerResponse>), 200)]
-        public IQueryable<DealerResponse> GetDealerEntriesAsync()
+        public async Task<IEnumerable<DealerResponse>> GetDealerEntriesAsync()
         {
-            return _dealerService.FindAll().Select(x => x.Transform());
+            var result = await _dealerService.FindAll().Select(x => x.Transform()).ToListAsync();
+            result.ForEach(r => r.MapLink = _dealerService.GetMapLink(r.Id));
+            return result;
         }
 
         /// <summary>
@@ -49,7 +50,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(DealerResponse), 200)]
         public async Task<DealerResponse> GetDealerAsync([FromRoute] Guid id)
         {
-            return (await _dealerService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            var result = (await _dealerService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            result.MapLink = _dealerService.GetMapLink(result.Id);
+            return result;
         }
 
 

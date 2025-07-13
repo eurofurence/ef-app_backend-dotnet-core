@@ -15,6 +15,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
     --mount=type=bind,source=./test/Eurofurence.App.Server.Services.Tests/Eurofurence.App.Server.Services.Tests.csproj,target=/app/test/Eurofurence.App.Server.Services.Tests/Eurofurence.App.Server.Services.Tests.csproj \
     --mount=type=bind,source=./test/Eurofurence.App.Server.Web.Tests/Eurofurence.App.Server.Web.Tests.csproj,target=/app/test/Eurofurence.App.Server.Web.Tests/Eurofurence.App.Server.Web.Tests.csproj \
     --mount=type=bind,source=./test/Eurofurence.App.Tests.Common/Eurofurence.App.Tests.Common.csproj,target=/app/test/Eurofurence.App.Tests.Common/Eurofurence.App.Tests.Common.csproj \
+    --mount=type=bind,source=./test/Eurofurence.App.Domain.Model.Tests/Eurofurence.App.Domain.Model.Tests.csproj,target=/app/test/Eurofurence.App.Domain.Model.Tests/Eurofurence.App.Domain.Model.Tests.csproj \
     dotnet nuget config set repositoryPath /dotnet/packages --configfile /app/NuGet.config \
     && dotnet nuget config set globalPackagesFolder /dotnet/global-packages --configfile /app/NuGet.config \
     && dotnet restore
@@ -31,7 +32,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
 ENTRYPOINT dotnet artifacts/Eurofurence.App.Backoffice.dll http://*:30002
 EXPOSE 30002
 
-FROM nginx:1.27
+FROM nginx:1.29
 ENV BACKOFFICE_BASE_PATH=
 COPY --from=build /app/backoffice/wwwroot/ /usr/share/nginx/html/
 COPY ./docker/nginx/etc/ /etc/

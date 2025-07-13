@@ -144,6 +144,12 @@ public class DealerResponse : ResponseBase
     public Dictionary<string, string[]>? Keywords { get; set; }
 
     /// <summary>
+    /// Deep link to the location of this dealer in the map system (e.g. EFNav)
+    /// </summary>
+    [DataMember]
+    public string MapLink { get; set; }
+
+    /// <summary>
     /// Nickname number (as on badge) of the attendee that acts on behalf/represents this dealer.
     /// </summary>
     // TODO: Remove entirely for EF29

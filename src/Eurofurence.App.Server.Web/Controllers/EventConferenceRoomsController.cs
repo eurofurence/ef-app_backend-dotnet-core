@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -27,9 +28,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventConferenceRoomResponse>), 200)]
-        public IQueryable<EventConferenceRoomResponse> GetEventsAsync()
+        public async Task<IEnumerable<EventConferenceRoomResponse>> GetEventsAsync()
         {
-            return _eventConferenceRoomService.FindAll().Select(x => x.Transform());
+            var result = await _eventConferenceRoomService.FindAll().Select(x => x.Transform()).ToListAsync();
+            result.ForEach(r => r.MapLink = _eventConferenceRoomService.GetMapLink(r.Id));
+            return result;
         }
 
         /// <summary>
@@ -41,7 +44,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceRoomResponse), 200)]
         public async Task<EventConferenceRoomResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            var result = (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            result.MapLink = _eventConferenceRoomService.GetMapLink(result.Id);
+            return result;
         }
     }
 }
