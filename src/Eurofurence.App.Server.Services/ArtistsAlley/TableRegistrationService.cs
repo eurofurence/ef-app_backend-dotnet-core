@@ -108,7 +108,9 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             ValidateRegistrationRequest(request, imageStream);
             string subject = user.GetSubject();
 
-            TableRegistrationRecord record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(tr => tr.Id == id);
+            TableRegistrationRecord record = await _appDbContext
+                .TableRegistrations
+                .FirstOrDefaultAsync(tr => tr.Id == id);
 
             if (record == null)
             {
@@ -117,7 +119,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             record.Merge(request);
 
-            ImageRecord image = await _imageService.InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
+            ImageRecord image = await _imageService
+                .InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
             record.ImageId = image.Id;
 
             TableRegistrationRecord.StateChangeRecord stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Pending, $"Data-Updated-By-Artist: {subject}");
@@ -132,13 +135,13 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             ValidateRegistrationRequest(request, imageStream);
 
             var subject = user.GetSubject();
-            var activePendingRegistrations = await _appDbContext.TableRegistrations
+            var activeRegistrations = await _appDbContext.TableRegistrations
                 .Where(x =>
                     x.OwnerUid == subject &&
                     x.State == TableRegistrationRecord.RegistrationStateEnum.Pending)
                 .ToListAsync();
 
-            foreach (var registration in activePendingRegistrations)
+            foreach (var registration in activeRegistrations)
             {
                 if (registration.ImageId is { } imageId) await _imageService.DeleteOneAsync(imageId);
                 await DeleteOneAsync(registration.Id);
