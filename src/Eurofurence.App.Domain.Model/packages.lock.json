@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "Mapster": {
+        "type": "Direct",
+        "requested": "[7.4.2-pre02, )",
+        "resolved": "7.4.2-pre02",
+        "contentHash": "ry6YPGImX4aL0+Jj0rn46vqYOxzeyKOdlr6LUPvby1NLc68E5T2gRhDVWxvFexgZGOIW/U8NM87kygE4xl7Qvw==",
+        "dependencies": {
+          "Mapster.Core": "1.2.3-pre02"
+        }
+      },
+      "Mapster.Core": {
+        "type": "Direct",
+        "requested": "[1.2.3-pre02, )",
+        "resolved": "1.2.3-pre02",
+        "contentHash": "FDVPfGvCz1RRb1PYeoddiJftxo+ANAifiaqkZbH2kijZT2GcoR1w6byLQ8Czc9YBuNZqHHV4LKeXZA+eoFuCTw=="
+      },
+      "eurofurence.app.common": {
+        "type": "Project"
+      }
+    }
+  }
+}
