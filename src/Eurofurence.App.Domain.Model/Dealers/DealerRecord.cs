@@ -11,10 +11,8 @@ namespace Eurofurence.App.Domain.Model.Dealers
 {
     /// <summary>
     /// This record represents a 'dealer' that is offering goods/services at the dealers den.
-    /// All dealers are represented and registered by participating attendees.
-    /// 
-    /// Properties marked with indicate that its value or the content referenced
-    /// by it is provided directly by the attendee during or after dealer registration.
+    /// All dealers are represented and registered by participating attendees and data provided in
+    /// this record is provided by the attendee via the dealer registration.
     /// </summary>
     [DataContract]
     public class DealerRecord : EntityBase, IDtoRecordTransformable<DealerRequest, DealerResponse, DealerRecord>
