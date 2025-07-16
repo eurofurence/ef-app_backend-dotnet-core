@@ -1,5 +1,3 @@
-using System.Runtime.Serialization;
-
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     /// <summary>

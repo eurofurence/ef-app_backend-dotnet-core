@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers

@@ -9,7 +9,7 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Eurofurence.App.Domain.Model.Sync;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Server.Services.Maps
 {

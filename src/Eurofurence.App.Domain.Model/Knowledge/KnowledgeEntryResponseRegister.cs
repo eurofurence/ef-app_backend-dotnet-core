@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Mapster;

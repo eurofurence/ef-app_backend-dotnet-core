@@ -7,10 +7,9 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Text;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
