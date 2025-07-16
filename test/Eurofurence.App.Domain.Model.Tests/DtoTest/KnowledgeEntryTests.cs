@@ -1,6 +1,6 @@
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Knowledge;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 using Xunit;
 

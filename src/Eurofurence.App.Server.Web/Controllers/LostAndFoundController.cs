@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Eurofurence.App.Domain.Model.LostAndFound;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
