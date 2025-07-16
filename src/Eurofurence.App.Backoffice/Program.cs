@@ -10,6 +10,8 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+builder.Services.Configure<SentryBlazorOptions>(builder.Configuration.GetSection("Sentry"));
+
 builder.UseSentry(options =>
 {
     options.SendDefaultPii = !builder.HostEnvironment.IsProduction();
