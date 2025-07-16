@@ -13,7 +13,20 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
         IPatchOperationProcessor<TableRegistrationRecord>
     {
         Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream);
+
+        /// <summary>
+        /// Updates an existing table registration identified by the specified ID.
+        ///
+        /// This will set the status of the registration to back to "Pending".
+        /// </summary>
+        /// <param name="id">The unique identifier of the table registration to update</param>
+        /// <param name="request">The request object containing updated registration details</param>
+        /// <param name="imageStream">Stream containing the new image data for the table registration</param>
+        /// <returns>A task representing the asynchronous update operation</returns>
+        Task UpdateTableAsync(ClaimsPrincipal user, Guid id, TableRegistrationRequest request, Stream imageStream);
+
         IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state);
+
         Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid);
 
         /// <summary>
@@ -25,6 +38,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
         Task DeleteLatestRegistrationByUidAsync(string uid);
 
         Task ApproveByIdAsync(Guid id, string operatorUid);
+
         Task RejectByIdAsync(Guid id, string operatorUid);
     }
 }

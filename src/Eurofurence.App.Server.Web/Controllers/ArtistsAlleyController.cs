@@ -128,6 +128,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
+        /// Converts the provided image file into a MemoryStream.
+        /// </summary>
+        /// <param name="requestImageFile">The <see cref="IFormFile"/> from the request to convert into a stream</param>
+        /// <returns>A stream of the parameter <paramref name="requestImageFile"/></returns>
+        private static async Task<MemoryStream> GetImageStreamAsync(IFormFile requestImageFile)
+        {
+            var imageStream = new MemoryStream();
+            if (requestImageFile != null)
+                await requestImageFile.CopyToAsync(imageStream);
+            return imageStream;
+        }
+
+        /// <summary>
         ///     Submits a new table registration for review in the name of the currently signed in user.
         /// </summary>
         /// <param name="request">details of the table registration</param>
@@ -146,12 +159,23 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
+            TableRegistrationRecord latestRegistrationByUidAsync = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+
             try
             {
-                using var imageStream = new MemoryStream();
-                if (requestImageFile != null)
-                    await requestImageFile.CopyToAsync(imageStream);
-                await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
+                if (latestRegistrationByUidAsync?.State == TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                {
+                    // If the user already has an accepted registration, we update it instead of creating a new one.
+                    using MemoryStream imageStream = await GetImageStreamAsync(requestImageFile);
+                    await _tableRegistrationService.UpdateTableAsync(User, latestRegistrationByUidAsync.Id, request, requestImageFile == null ? null : imageStream);
+                }
+                else
+                {
+                    // If the user does not have an accepted registration, we create a new one.
+                    using MemoryStream imageStream = await GetImageStreamAsync(requestImageFile);
+                    await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
+
+                }
             }
             catch (ArgumentException ex)
             {

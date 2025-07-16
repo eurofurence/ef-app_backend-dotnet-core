@@ -36,14 +36,14 @@ namespace Eurofurence.App.Server.Services.Telegram
             await Task.WhenAll(handlerTasks);
         }
 
-        public async Task SendTableRegistrationAsync(string chatId, TableRegistrationRecord record)
+        public async Task SendTableRegistrationAsync(string chatId, TableRegistrationRecord record, bool updated)
         {
             var invocationList = OnTableRegistrationAsync.GetInvocationList();
             var handlerTasks = new Task[invocationList.Length];
 
             for (var i = 0; i < invocationList.Length; i++)
             {
-                handlerTasks[i] = ((Func<string, TableRegistrationRecord, Task>)invocationList[i])(chatId, record);
+                handlerTasks[i] = ((Func<string, TableRegistrationRecord, bool, Task>)invocationList[i])(chatId, record, updated);
             }
 
             await Task.WhenAll(handlerTasks);
@@ -51,6 +51,6 @@ namespace Eurofurence.App.Server.Services.Telegram
 
         public event Func<string, string, Task> OnSendMarkdownMessageToChatAsync;
         public event Func<string, Stream, string, Task> OnSendImageToChatAsync;
-        public event Func<string, TableRegistrationRecord, Task> OnTableRegistrationAsync;
+        public event Func<string, TableRegistrationRecord, bool, Task> OnTableRegistrationAsync;
     }
 }
