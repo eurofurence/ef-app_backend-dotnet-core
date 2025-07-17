@@ -47,6 +47,7 @@ namespace Eurofurence.App.Server.Web
             {
                 options.SendDefaultPii = !builder.Environment.IsProduction();
                 options.TracesSampleRate = builder.Environment.IsProduction() ? 0.25 : 1.0;
+                options.Dsn ??= SentryConstants.DisableSdkDsnValue;
             });
 
             var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);

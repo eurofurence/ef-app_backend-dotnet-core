@@ -16,6 +16,7 @@ builder.UseSentry(options =>
 {
     options.SendDefaultPii = !builder.HostEnvironment.IsProduction();
     options.TracesSampleRate = builder.HostEnvironment.IsProduction() ? 0.25 : 1.0;
+    options.Dsn ??= SentryConstants.DisableSdkDsnValue;
 });
 
 builder.Services.AddMudServices();
