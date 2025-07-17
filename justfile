@@ -120,3 +120,11 @@ import SOURCE TARGET_API TOKEN TYPE *ARGS:
 # List types supported for import.
 import-list-types TARGET_API:
 	python ./scripts/import.py {{TARGET_API}} --list-types
+
+# Create a new EntityFramework migration
+create-migration MIGRATION_NAME $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'):
+	#!/usr/bin/env bash
+	set -euxo pipefail
+	docker compose start db
+	cd src/Eurofurence.App.Infrastructure.EntityFramework
+	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations add {{MIGRATION_NAME}}

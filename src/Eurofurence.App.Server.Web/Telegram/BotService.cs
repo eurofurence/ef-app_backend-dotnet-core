@@ -322,10 +322,9 @@ public class BotService : BackgroundService, IUpdateHandler
 
         var dealers = await _dealerService
             .FindAll(a => a.IsDeleted == 0 && (
-                a.DisplayName.ToLower().Contains(query.ToLower()) ||
-                a.AttendeeNickname.ToLower().Contains(query.ToLower())
+                a.DisplayName.ToLower().Contains(query.ToLower())
             ))
-            .OrderBy(a => a.DisplayNameOrAttendeeNickname)
+            .OrderBy(a => a.DisplayName)
             .Take(10)
             .ToListAsync(cancellationToken);
 
@@ -336,7 +335,7 @@ public class BotService : BackgroundService, IUpdateHandler
 
         return dealers.Select(e => new InlineQueryResultArticle(
                 e.Id.ToString(),
-                $"DEALER: {e.DisplayNameOrAttendeeNickname}",
+                $"DEALER: {e.DisplayName}",
                 new InputTextMessageContent(
                     $"*Dealer:* https://app.eurofurence.org/{_globalOptions.ConventionIdentifier}/Web/Dealers/{e.Id}")
                 {
