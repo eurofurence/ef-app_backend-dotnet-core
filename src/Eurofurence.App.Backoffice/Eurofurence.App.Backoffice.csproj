@@ -3,6 +3,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+        Workaround for NullabilityInfoContext_NotSupported error
+        (see https://github.com/dotnet/aspnetcore/issues/59806)
+    -->
+    <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.41.1" />
