@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
+ARG BUILD_VERSION="0.0.0-development"
 WORKDIR /app
 ENV NUGET_PACKAGES=/dotnet/packages
 # Disable husky in docker build
@@ -28,8 +29,8 @@ RUN --mount=type=cache,target=/dotnet/packages \
     --mount=type=cache,target=/dotnet/global-packages \
     --mount=type=cache,target=/dotnet/artifacts \
     --mount=type=bind,source=./ef-app_backend-dotnet-core.sln,target=/app/ef-app_backend-dotnet-core.sln \
-    dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --configuration Release \
-    && dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --no-build --output "/app/artifacts" --configuration Release \
+    dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --configuration Release --property:Version=$BUILD_VERSION \
+    && dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --no-build --output "/app/artifacts" --configuration Release --property:Version=$BUILD_VERSION \
     && dotnet tool install --global dotnet-ef \
     && export PATH="$PATH:/root/.dotnet/tools" \
     && export ASPNETCORE_ENVIRONMENT="sample" \

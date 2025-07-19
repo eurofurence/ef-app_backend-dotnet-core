@@ -11,6 +11,16 @@ env:
   HUSKY: 0
 
 jobs:
+  determine-build-version:
+    runs-on: ubuntu-latest
+    outputs:
+      build-version: ${{ steps.build-version.outputs.build-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine build version from git tags
+        id: build-version
+        run: echo "build-version=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> "$GITHUB_OUTPUT"
+
   call_build-and-push-image_nightly:
     if: startsWith(github.ref, 'refs/heads/')
     permissions:
@@ -19,6 +29,7 @@ jobs:
     uses: ./.github/workflows/docker-build-push-matrix.yml
     with:
       image-tags: nightly
+      build-args: "--build-arg ${{needs.determine-build-version.outputs.build-version}}-nightly"
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
 
@@ -30,6 +41,7 @@ jobs:
     uses: ./.github/workflows/docker-build-push-matrix.yml
     with:
       image-tags: ${{ github.ref_name }}
+      build-args: "--build-arg ${{needs.determine-build-version.outputs.build-version}}"
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
 
@@ -41,5 +53,6 @@ jobs:
     uses: ./.github/workflows/docker-build-push-matrix.yml
     with:
       image-tags: ${{ github.ref_name }} latest
+      build-args: "--build-arg ${{needs.determine-build-version.outputs.build-version}}"
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
