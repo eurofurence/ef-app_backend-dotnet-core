@@ -35,7 +35,7 @@ jobs:
             image-name: ${{ github.repository }}
           - dockerfile: Dockerfile-backoffice
             image-name: ${{ github.repository }}-backoffice
-    uses: ./.github/workflows/docker-build-push.yml@main
+    uses: ./.github/workflows/docker-build-push.yml
     with:
       dockerfile: ${{ matrix.dockerfile }}
       build-args: ${{ inputs.build-args }}
