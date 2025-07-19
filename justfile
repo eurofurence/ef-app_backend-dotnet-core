@@ -1,5 +1,8 @@
 set dotenv-load := true
 
+
+export BUILD_VERSION := `echo $(git describe --tags --abbrev=0 | sed -e 's/^v//')$(if [ -z "$(git tag --points-at HEAD)" ]; then echo "-local.$USER"; fi)`
+
 # List available recipes
 default:
   just --list
@@ -48,19 +51,19 @@ clean:
 
 # Perform restore, build & publish with dotnet
 build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'): (_create_if_not_exists 'src/Eurofurence.App.Backoffice/wwwroot/appsettings.json')
-	dotnet tool install --global dotnet-ef
+	dotnet tool install --global dotnet-ef || true
 	dotnet restore
-	dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release
-	dotnet build src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --configuration Release
-	dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Server.Web
-	dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --output "$(pwd)/artifacts/backend" --configuration Release
-	dotnet publish src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --output "$(pwd)/artifacts/backoffice" --configuration Release
+	dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release --property:Version=$BUILD_VERSION
+	dotnet build src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --configuration Release --property:Version=$BUILD_VERSION
+	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Server.Web
+	dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --output "$(pwd)/artifacts/backend" --configuration Release --property:Version=$BUILD_VERSION
+	dotnet publish src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --output "$(pwd)/artifacts/backoffice" --configuration Release --property:Version=$BUILD_VERSION
 
 # Build release container for service using spec from docker-compose.yml and refresh service if stack is running
 containerize SERVICE="" *ARGS="":
 	#!/bin/bash
 	set -euxo pipefail
-	docker compose build {{ARGS}} {{SERVICE}}
+	docker compose build --build-arg BUILD_VERSION=$BUILD_VERSION {{ARGS}} {{SERVICE}}
 	if [[ $(docker compose ps --services --status running | wc -w) -gt 0 ]]; then
 		echo "Detected running stack! Refreshing service {{SERVICE}} …"
 		just recreate {{SERVICE}}
@@ -71,11 +74,11 @@ recreate SERVICE="":
 
 # Build sdk container for backend without executing second stage
 containerize-dev:
-	docker build --target build -t ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev-sdk -f Dockerfile .
+	docker build --build-arg BUILD_VERSION=$BUILD_VERSION --target build -t ghcr.io/eurofurence/ef-app_backend-dotnet-core:dev-sdk -f Dockerfile .
 
 # Build sdk container for backoffice without executing second stage
 containerize-backoffice-dev:
-	docker build --target build -t ghcr.io/eurofurence/ef-app_backend-dotnet-core-backoffice:dev-sdk -f Dockerfile-backoffice .
+	docker build --build-arg BUILD_VERSION=$BUILD_VERSION --target build -t ghcr.io/eurofurence/ef-app_backend-dotnet-core-backoffice:dev-sdk -f Dockerfile-backoffice .
 
 # Open Swagger UI in default browser
 swagger: (_open_url "Swagger UI" ("http://localhost:"+env_var('EF_MOBILE_APP_BACKEND_PORT')+"/swagger/ui/index.html"))

@@ -45,8 +45,6 @@ namespace Eurofurence.App.Server.Web
             var builder = WebApplication.CreateBuilder(args);
             builder.WebHost.UseSentry(options =>
             {
-                options.SendDefaultPii = !builder.Environment.IsProduction();
-                options.TracesSampleRate = builder.Environment.IsProduction() ? 0.25 : 1.0;
                 options.Dsn ??= SentryConstants.DisableSdkDsnValue;
             });
 
