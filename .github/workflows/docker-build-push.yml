@@ -1,0 +1,116 @@
+name: Create and publish Docker image
+
+# Note: DOLLAR in the field descriptions should of course be replaced with a dollar sign.
+#       GitHub parses the description, so we can't write it correctly :)
+
+on:
+  workflow_call:
+    inputs:
+      registry:
+        required: false
+        default: 'ghcr.io'
+        type: string
+        description: Docker registry to push the finished image to. Defaults to GHCR.
+      image-name:
+        required: true
+        type: string
+        description: The image name to push. Should usually be set to DOLLAR{{ github.repository }}, which will evaluate to e.g. eurofurence/reg-attendee-service
+      image-tags:
+        required: false
+        default: 'latest'
+        type: string
+        description: The tag(s) to push. Space separated, for example 'v1 v1.3 v1.3.7 latest'.
+      full-repo-url:
+        required: true
+        type: string
+        description: The full repository URL. Should usually be set to 'https://github.com/DOLLAR{{ github.repository }}. The image will be labeled with this information, and if pushing to GHCR, the description page will be auto-filled.
+      branch-or-tag-name:
+        required: true
+        type: string
+        description: The branch or tag name to clone, in short format. Should usually be set to DOLLAR{{ github.ref_name }}.
+      commit-hash:
+        required: true
+        type: string
+        description: The commit hash. Should usually be set to DOLLAR{{ github.sha }}. The image will be labeled with this information.
+      registry-user:
+        required: true
+        type: string
+        description: Username to use for docker registry login. If ghrc, you probably want DOLLAR{{ github.actor }}.
+      dockerfile:
+        required: false
+        default: 'Dockerfile'
+        type: string
+        description: Dockerfile to use when calling docker build.
+      build-context:
+        required: false
+        default: '.'
+        type: string
+        description: Path to build context for docker build command.
+      build-args:
+        required: false
+        default: ''
+        type: string
+        description: Additional arguments provided to the docker build command.
+    secrets:
+      registry-pass:
+        required: true
+        description: Token to use for docker registry login. If GHCR, should usually be set to DOLLAR{{ secrets.GITHUB_TOKEN }}, and do remember to limit the token permissions to package write and content read and nothing else.
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print debugging information
+        run: >
+          echo registry="$REGISTRY" &&
+          echo image-name="$IMAGE_NAME" &&
+          echo image-tags="$IMAGE_TAGS" &&
+          echo full-repo-url="$FULL_REPO_URL" &&
+          echo branch-or-tag-name="$BRANCH_OR_TAG_NAME" &&
+          echo commit-hash="$COMMIT_HASH" &&
+          echo registry-user="$REGISTRY_USER"
+        shell: bash
+        env:
+          REGISTRY: ${{ inputs.registry }}
+          IMAGE_NAME: ${{ inputs.image-name }}
+          IMAGE_TAGS: ${{ inputs.image-tags }}
+          FULL_REPO_URL: ${{ inputs.full-repo-url }}
+          BRANCH_OR_TAG_NAME: ${{ inputs.branch-or-tag-name }}
+          COMMIT_HASH: ${{ inputs.commit-hash }}
+          REGISTRY_USER: ${{ inputs.registry-user }}
+
+      - name: Checkout repository
+        run: 'git clone -b "$BRANCH_OR_TAG_NAME" --depth 1 "$FULL_REPO_URL" app'
+        shell: bash
+        env:
+          FULL_REPO_URL: ${{ inputs.full-repo-url }}
+          BRANCH_OR_TAG_NAME: ${{ inputs.branch-or-tag-name }}
+
+      - name: Log in to the Container registry
+        run: 'echo "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin'
+        shell: bash
+        env:
+          REGISTRY: ${{ inputs.registry }}
+          REGISTRY_USER: ${{ inputs.registry-user }}
+          REGISTRY_PASS: ${{ secrets.registry-pass }}
+
+      - name: Docker build and push image
+        run: >
+          cd app &&
+          TAG_ARGS=$(echo -n "$IMAGE_TAGS" | sed -r "s#([^ :/]+)# --tag $REGISTRY/$IMAGE_NAME:\1 #g") &&
+          docker build 
+          ${{ inputs.build-args }} 
+          --label org.opencontainers.image.url="$FULL_REPO_URL"
+          --label org.opencontainers.image.revision="$COMMIT_HASH"
+          $TAG_ARGS
+          --pull
+          -f ${{ inputs.dockerfile }}
+          ${{ inputs.build-context }} &&
+          docker push -a "$REGISTRY/$IMAGE_NAME"
+        shell: bash
+        env:
+          REGISTRY: ${{ inputs.registry }}
+          IMAGE_NAME: ${{ inputs.image-name }}
+          IMAGE_TAGS: ${{ inputs.image-tags }}
+          FULL_REPO_URL: ${{ inputs.full-repo-url }}
+          COMMIT_HASH: ${{ inputs.commit-hash }}
