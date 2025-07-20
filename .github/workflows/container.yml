@@ -17,6 +17,8 @@ jobs:
       build-version: ${{ steps.build-version.outputs.build-version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
       - name: Determine build version from git tags
         id: build-version
         run: echo "build-version=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> "$GITHUB_OUTPUT"; echo "GitHub Outputs:"; cat $GITHUB_OUTPUT
