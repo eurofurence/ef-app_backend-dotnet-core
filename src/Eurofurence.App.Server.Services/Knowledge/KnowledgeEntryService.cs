@@ -154,10 +154,10 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 response.DeletedEntities = Array.Empty<Guid>();
                 response.ChangedEntities = await
                     _appDbContext.KnowledgeEntries
-                        .Include(ke => ke.Links)
-                        .Include(ke => ke.Images)
-                        .Where(entity => entity.IsDeleted == 0)
-                        .Select(x => x.Transform())
+                        .Include(entity => entity.Links)
+                        .Include(entity => entity.Images)
+                        .Where(entity => entity.IsDeleted == 0 && entity.Published != null)
+                        .Select(entity => entity.Transform())
                         .ToArrayAsync(cancellationToken);
             }
             else
@@ -165,18 +165,18 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 response.RemoveAllBeforeInsert = false;
 
                 var entities = _appDbContext.KnowledgeEntries
-                    .Include(ke => ke.Links)
-                    .Include(ke => ke.Images)
+                    .Include(entity => entity.Links)
+                    .Include(entity => entity.Images)
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities
-                    .Where(a => a.IsDeleted == 0)
-                    .Select(x => x.Transform())
+                    .Where(entity => entity.IsDeleted == 0 && entity.Published != null)
+                    .Select(entity => entity.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
-                    .Where(a => a.IsDeleted == 1)
-                    .Select(a => a.Id)
+                    .Where(entity => entity.IsDeleted == 1)
+                    .Select(entity => entity.Id)
                     .ToArrayAsync(cancellationToken);
             }
 
