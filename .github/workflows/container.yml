@@ -30,7 +30,7 @@ jobs:
     needs: [determine-build-version]
     with:
       image-tags: nightly
-      build-args: "--build-arg ${{ needs.determine-build-version.outputs.build-version }}-nightly"
+      build-args: "--build-arg BUILD_VERSION=${{ needs.determine-build-version.outputs.build-version }}-nightly"
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,7 +43,7 @@ jobs:
     needs: [determine-build-version]
     with:
       image-tags: ${{ github.ref_name }}
-      build-args: "--build-arg ${{ needs.determine-build-version.outputs.build-version }}"
+      build-args: "--build-arg BUILD_VERSION=${{ needs.determine-build-version.outputs.build-version }}"
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
 
@@ -56,6 +56,6 @@ jobs:
     needs: [determine-build-version]
     with:
       image-tags: ${{ github.ref_name }} latest
-      build-args: "--build-arg ${{ needs.determine-build-version.outputs.build-version }}"
+      build-args: "--build-arg BUILD_VERSION=${{ needs.determine-build-version.outputs.build-version }}"
     secrets:
       registry-pass: ${{ secrets.GITHUB_TOKEN }}
