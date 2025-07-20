@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Fetch tags
-        run: git fetch <remote> 'refs/tags/*:refs/tags/*'
+        run: git fetch origin 'refs/tags/*:refs/tags/*'
       - name: Determine build version from git tags
         id: build-version
         run: echo "build-version=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> "$GITHUB_OUTPUT"; echo "GitHub Outputs:"; cat $GITHUB_OUTPUT
