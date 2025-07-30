@@ -228,13 +228,9 @@
         var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
 
         var dialog = await DialogService.ShowAsync<KnowledgeGroupsDialog>(null, parameters, options);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false })
-        {
-            Loading = true;
-            await LoadKnowledgeGroups();
-        }
+        await dialog.Result;
+        Loading = true;
+        await LoadKnowledgeGroups();
     }
 
     private async Task AddKnowledgeEntry()
