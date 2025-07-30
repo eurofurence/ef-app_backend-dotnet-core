@@ -18,11 +18,11 @@
                             <MudTextField Disabled="true" Value="Record.Id" Label="ID"/>
                             <MudTextField Class="mt-2" @bind-Value="Record.Title" Required="true" RequiredError="Title is required."
                                           Label="Title"/>
-                            <MudSelect Class="mt-2" Required="true" T="KnowledgeGroupRecord" Label="Group"
+                            <MudSelect Class="mt-2" Required="true" T="KnowledgeGroupResponse" Label="Group"
                                        ToStringFunc="@_knowledgeGroupToNameConverter" @bind-Value="SelectedGroupRecord">
                                 @foreach (var knowledgeGroup in _knowledgeGroups)
                                 {
-                                    <MudSelectItem T="KnowledgeGroupRecord" Value="@knowledgeGroup"></MudSelectItem>
+                                    <MudSelectItem T="KnowledgeGroupResponse" Value="@knowledgeGroup"></MudSelectItem>
                                 }
                             </MudSelect>
                             <MudNumericField Class="mt-2 mb-4" @bind-Value="Record.Order" Required="true"
@@ -43,9 +43,9 @@
                                 </ActivatorContent>
                             </MudFileUpload>
                         </MudToolBar>
-                        @if (Record.Images != null)
+                        @if (Record.ImageIds != null)
                         {
-                            <MudDataGrid Items="@Record.Images" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+                            <MudDataGrid Items="@_images.Where(i => Record.ImageIds.Contains(i.Id))" Filterable="false" SortMode="@SortMode.None" Groupable="false">
                                 <Columns>
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate>
@@ -106,10 +106,11 @@
 @code {
     [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
 
-    [Parameter] public KnowledgeEntryRecord? Record { get; set; }
+    [Parameter] public KnowledgeEntryResponse? Record { get; set; }
 
-    private IEnumerable<KnowledgeGroupRecord> _knowledgeGroups = new List<KnowledgeGroupRecord>();
-    private KnowledgeGroupRecord? SelectedGroupRecord { get; set; } = null;
+    private IEnumerable<KnowledgeGroupResponse> _knowledgeGroups = new List<KnowledgeGroupResponse>();
+    private readonly List<ImageResponse> _images = [];
+    private KnowledgeGroupResponse? SelectedGroupRecord { get; set; } = null;
 
     private bool Update { get; set; }
 
@@ -124,7 +125,7 @@
 
         if (Record == null)
         {
-            Record = new KnowledgeEntryRecord
+            Record = new KnowledgeEntryResponse
                 {
                     Id = Guid.NewGuid()
                 };
@@ -146,19 +147,8 @@
         var image = await ImageService.PostImageAsync(file);
         if (image != null)
         {
-            Record?.Images.Add(new ImageRecord()
-                {
-                    Id = image.Id,
-                    Url = image.Url,
-                    InternalReference = image.InternalReference,
-                    MimeType = image.MimeType,
-                    SizeInBytes = image.SizeInBytes,
-                    LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
-                    ContentHashSha1 = image.ContentHashSha1,
-                    Height = image.Height,
-                    Width = image.Width,
-                    IsDeleted = image.IsDeleted
-                });
+            Record?.ImageIds.Add(image.Id);
+            _images.Add(image);
             Snackbar.Add("Image uploaded.", Severity.Success);
         }
         else
@@ -169,7 +159,14 @@
 
     private void DeleteImage(Guid id)
     {
-        Record?.Images.Remove(Record.Images.FirstOrDefault(image => image.Id == id));
+        Record?.ImageIds.Remove(id);
+
+        var imageToRemove = _images.FirstOrDefault(image => image.Id == id);
+        if (imageToRemove == null)
+        {
+            return;
+        }
+        _images.Remove(imageToRemove);
     }
 
     private async Task AddLink()
@@ -249,7 +246,7 @@
                 Order = Record.Order,
                 Published = publishedAt,
                 Links = Record.Links,
-                ImageIds = Record.Images.Select(image => image.Id).ToList()
+                ImageIds = Record.ImageIds
             };
 
         if (Update)
@@ -280,5 +277,5 @@
         MudDialog?.Close(DialogResult.Ok(true));
     }
 
-    readonly Func<KnowledgeGroupRecord, string> _knowledgeGroupToNameConverter = kg => kg.Name;
+    readonly Func<KnowledgeGroupResponse, string> _knowledgeGroupToNameConverter = kg => kg.Name;
 }
