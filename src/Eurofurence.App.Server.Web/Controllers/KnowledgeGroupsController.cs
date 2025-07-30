@@ -61,7 +61,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeGroupAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("id")] KnowledgeGroupRequest request,
+            [EnsureNotNull][FromBody] KnowledgeGroupRequest request,
             [EnsureNotNull][FromRoute] Guid id
         )
         {
