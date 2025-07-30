@@ -158,7 +158,7 @@
     private string? _knowledgeEntrySearch;
     private List<KnowledgeGroupResponse> _knowledgeGroups = [];
     private List<KnowledgeEntryResponse> _knowledgeEntries = [];
-    private List<ImageResponse> _images = [];
+    private readonly List<ImageResponse> _images = [];
 
     protected override async Task OnInitializedAsync()
     {

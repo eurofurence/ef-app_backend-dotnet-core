@@ -33,11 +33,11 @@
                     </MudTabPanel>
                     <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
                         <MudToolBar>
-                            <MudSpacer />
+                            <MudSpacer/>
                             <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
                                 <ActivatorContent>
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                        StartIcon="@Icons.Material.Filled.CloudUpload">
+                                               StartIcon="@Icons.Material.Filled.CloudUpload">
                                         Upload Image
                                     </MudButton>
                                 </ActivatorContent>
@@ -49,17 +49,17 @@
                                 <Columns>
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate>
-                                            <MudImage Height="100" ObjectFit="ObjectFit.Contain" Src="@context.Item.Url" />
+                                            <MudImage Height="100" ObjectFit="ObjectFit.Contain" Src="@context.Item.Url"/>
                                         </CellTemplate>
                                     </TemplateColumn>
-                                    <PropertyColumn Title="ID" Property="image => image.Id" />
-                                    <PropertyColumn Title="Name" Property="image => image.InternalReference" />
-                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes" />
-                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc" />
+                                    <PropertyColumn Title="ID" Property="image => image.Id"/>
+                                    <PropertyColumn Title="Name" Property="image => image.InternalReference"/>
+                                    <PropertyColumn Title="Size (Bytes)" Property="image => image.SizeInBytes"/>
+                                    <PropertyColumn Title="Last Changed" Property="image => image.LastChangeDateTimeUtc"/>
                                     <TemplateColumn StickyRight="true">
                                         <CellTemplate>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                OnClick="@(() => DeleteImage(@context.Item.Id))" />
+                                                           OnClick="@(() => DeleteImage(@context.Item.Id))"/>
                                         </CellTemplate>
                                     </TemplateColumn>
                                 </Columns>
@@ -69,22 +69,24 @@
                     </MudTabPanel>
                     <MudTabPanel Icon="@Icons.Material.Outlined.Link" Text="Links">
                         <MudToolBar>
-                            <MudSpacer />
+                            <MudSpacer/>
                             <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary"
-                                StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">New Link</MudButton>
+                                       StartIcon="@Icons.Material.Filled.Add" @onclick="AddLink">
+                                New Link
+                            </MudButton>
                         </MudToolBar>
                         @if (Record.Links != null)
                         {
                             <MudDataGrid Items="@Record.Links" Filterable="false" SortMode="@SortMode.None" Groupable="false">
                                 <Columns>
-                                    <PropertyColumn Title="ID" Property="link => link.Id" />
-                                    <PropertyColumn Title="Name" Property="link => link.Name" />
-                                    <PropertyColumn Title="Type" Property="link => link.FragmentType" />
-                                    <PropertyColumn Title="Target" Property="link => link.Target" />
+                                    <PropertyColumn Title="ID" Property="link => link.Id"/>
+                                    <PropertyColumn Title="Name" Property="link => link.Name"/>
+                                    <PropertyColumn Title="Type" Property="link => link.FragmentType"/>
+                                    <PropertyColumn Title="Target" Property="link => link.Target"/>
                                     <TemplateColumn StickyRight="true">
                                         <CellTemplate>
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                           OnClick="@(() => UpdateLink(context.Item))" />
+                                                           OnClick="@(() => UpdateLink(context.Item))"/>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                            OnClick="@(() => DeleteLink(@context.Item.Id))"/>
                                         </CellTemplate>
@@ -126,15 +128,27 @@
         if (Record == null)
         {
             Record = new KnowledgeEntryResponse
-                {
-                    Id = Guid.NewGuid()
-                };
+            {
+                Id = Guid.NewGuid()
+            };
         }
         else
         {
             Update = true;
             SelectedGroupRecord = _knowledgeGroups.FirstOrDefault(knowledgeGroup => knowledgeGroup.Id == Record?.KnowledgeGroupId);
             Published = Record?.Published != null;
+
+            if (Record?.ImageIds != null)
+            {
+                foreach (var imageId in Record.ImageIds)
+                {
+                    var image = await ImageService.GetImageAsync(imageId);
+                    if (image != null)
+                    {
+                        _images.Add(image);
+                    }
+                }
+            }
         }
     }
 
@@ -144,6 +158,7 @@
         {
             return;
         }
+
         var image = await ImageService.PostImageAsync(file);
         if (image != null)
         {
@@ -166,6 +181,7 @@
         {
             return;
         }
+
         _images.Remove(imageToRemove);
     }
 
@@ -239,15 +255,15 @@
         }
 
         var request = new KnowledgeEntryRequest()
-            {
-                Title = Record.Title,
-                Text = Record.Text,
-                KnowledgeGroupId = Record.KnowledgeGroupId,
-                Order = Record.Order,
-                Published = publishedAt,
-                Links = Record.Links,
-                ImageIds = Record.ImageIds
-            };
+        {
+            Title = Record.Title,
+            Text = Record.Text,
+            KnowledgeGroupId = Record.KnowledgeGroupId,
+            Order = Record.Order,
+            Published = publishedAt,
+            Links = Record.Links,
+            ImageIds = Record.ImageIds
+        };
 
         if (Update)
         {
