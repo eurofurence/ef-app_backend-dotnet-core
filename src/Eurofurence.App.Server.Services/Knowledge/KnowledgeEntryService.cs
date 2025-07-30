@@ -35,11 +35,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
             Guid id,
             CancellationToken cancellationToken = default)
         {
-            return await _appDbContext.KnowledgeEntries
-                .Include(m => m.Images)
-                .Include(m => m.Links)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+            return await FindAll().FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
         public override IQueryable<KnowledgeEntryRecord> FindAll()
@@ -47,6 +43,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
             return _appDbContext.KnowledgeEntries
                 .Include(m => m.Images)
                 .Include(m => m.Links)
+                .AsSplitQuery()
                 .AsNoTracking();
         }
 
