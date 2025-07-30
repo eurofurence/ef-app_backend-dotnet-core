@@ -281,7 +281,7 @@ namespace Eurofurence.App.Server.Web.Startup
         {
             var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
             typeAdapterConfig.Default.PreserveReference(true);
-            typeAdapterConfig.Scan(typeof(Program).Assembly);
+            typeAdapterConfig.Scan(typeof(Eurofurence.App.Domain.Model.IAssemblyMarker).Assembly);
             services.AddSingleton(typeAdapterConfig);
             services.AddScoped<IMapper, ServiceMapper>();
 
