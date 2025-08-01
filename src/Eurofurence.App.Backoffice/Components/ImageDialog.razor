@@ -75,7 +75,8 @@
             return;
         }
 
-        ImageRecord? image;
+        ImageResponse? image;
+
         if (Update)
         {
             image = await ImageService.PutImageAsync(Record.Id, file);
@@ -119,5 +120,4 @@
     {
         MudDialog?.Close(DialogResult.Ok(true));
     }
-
 }
