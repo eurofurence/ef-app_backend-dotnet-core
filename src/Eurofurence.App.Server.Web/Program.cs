@@ -11,7 +11,6 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using Eurofurence.App.Server.Web.Startup;

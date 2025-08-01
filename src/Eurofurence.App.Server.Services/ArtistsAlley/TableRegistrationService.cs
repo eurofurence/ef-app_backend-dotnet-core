@@ -21,8 +21,8 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Domain.Model.Transformers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
@@ -171,7 +171,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
-            
+
             var announcementRequest = new AnnouncementRequest
             {
                 Title = "New Artist Alley Registration",
