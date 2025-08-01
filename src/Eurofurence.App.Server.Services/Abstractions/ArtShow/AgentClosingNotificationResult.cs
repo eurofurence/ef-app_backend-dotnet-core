@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
+﻿namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
 {
     public class AgentClosingNotificationResult
     {

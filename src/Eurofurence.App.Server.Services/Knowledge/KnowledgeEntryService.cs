@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using System.Web;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Knowledge

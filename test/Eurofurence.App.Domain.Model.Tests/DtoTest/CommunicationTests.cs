@@ -1,5 +1,5 @@
 using Eurofurence.App.Domain.Model.Communication;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Xunit;
 
 namespace Eurofurence.App.Domain.Model.Tests.DtoTest;

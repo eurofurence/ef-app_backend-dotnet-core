@@ -1,8 +1,6 @@
 ﻿using Eurofurence.App.Domain.Model.Fragments;
-using Eurofurence.App.Domain.Model.Images;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Knowledge

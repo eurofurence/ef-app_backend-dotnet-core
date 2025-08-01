@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Eurofurence.App.Server.Web.Identity;
+namespace Eurofurence.App.Server.Services.Abstractions.Identity;
 
 public class AuthorizationOptions
 {

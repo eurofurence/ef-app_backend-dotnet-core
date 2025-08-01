@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Knowledge;
+﻿using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
@@ -10,9 +8,12 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -66,7 +67,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Returns everything you could ever wish for.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns></returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)

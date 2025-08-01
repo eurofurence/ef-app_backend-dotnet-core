@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {

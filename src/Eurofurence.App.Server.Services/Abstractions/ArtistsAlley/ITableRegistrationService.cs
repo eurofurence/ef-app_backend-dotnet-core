@@ -4,7 +4,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
-using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
 {

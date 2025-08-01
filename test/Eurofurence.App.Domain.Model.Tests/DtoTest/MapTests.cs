@@ -1,8 +1,7 @@
-using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Maps;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 using Xunit;
 

@@ -5,7 +5,6 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
