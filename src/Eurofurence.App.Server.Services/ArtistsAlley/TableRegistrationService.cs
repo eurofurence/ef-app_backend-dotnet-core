@@ -11,11 +11,14 @@ using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Domain.Model.Transformers;
@@ -26,8 +29,10 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
     public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord, TableRegistrationResponse>, ITableRegistrationService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly AuthorizationOptions _authorizationOptions;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly IHtmlSanitizer _htmlSanitizer;
 
@@ -36,15 +41,19 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public TableRegistrationService(
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
+            IOptions<AuthorizationOptions> authorizationOptions,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
+            IPushNotificationChannelManager pushNotificationChannelManager,
             IHttpUriSanitizer uriSanitizer,
             IHtmlSanitizer htmlSanitizer
         ) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
+            _authorizationOptions = authorizationOptions.Value;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
             _uriSanitizer = uriSanitizer;
             _htmlSanitizer = htmlSanitizer;
         }
@@ -162,6 +171,23 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
+            
+            var announcementRequest = new AnnouncementRequest
+            {
+                Title = "New Artist Alley Registration",
+                Content = $"New registration by {record.OwnerUsername} ({record.OwnerUid})",
+                Area = "announcement",
+                Author = "Artist Alley",
+                ImageId = image?.Id,
+                ValidFromDateTimeUtc = DateTime.UtcNow,
+                ValidUntilDateTimeUtc = DateTime.UtcNow.AddDays(1),
+                Roles = _authorizationOptions.ArtistAlleyAdmin.Concat(_authorizationOptions.ArtistAlleyModerator).ToArray()
+            };
+
+            foreach (var role in announcementRequest.Roles)
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationToRoleAsync(announcementRequest.Transform(), role);
+            }
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
