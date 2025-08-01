@@ -19,7 +19,7 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Telegram;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
