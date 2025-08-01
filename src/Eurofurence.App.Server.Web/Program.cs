@@ -1,40 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using dotAPNS.AspNetCore;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Eurofurence.App.Server.Services.Abstractions.Lassie;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
-using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Web.Extensions;
-using Eurofurence.App.Server.Web.Identity;
-using IdentityModel.AspNetCore.OAuth2Introspection;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using dotAPNS.AspNetCore;
-using Eurofurence.App.Server.Web.Startup;
-using Microsoft.AspNetCore.Rewrite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using Serilog.Context;
-using Swashbuckle.AspNetCore.SwaggerUI;
-using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
+using Eurofurence.App.Server.Services.Abstractions.Telegram;
+using Eurofurence.App.Server.Web.Extensions;
+using Eurofurence.App.Server.Web.Identity;
+using Eurofurence.App.Server.Web.Startup;
+using IdentityModel.AspNetCore.OAuth2Introspection;
 using Mapster;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Rewrite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Sentry;
+using Serilog;
+using Serilog.Context;
+using Swashbuckle.AspNetCore.SwaggerUI;
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -168,7 +167,11 @@ namespace Eurofurence.App.Server.Web
                 options.UseMySql(
                     connectionString,
                     serverVersion,
-                    mySqlOptions => mySqlOptions.UseMicrosoftJson());
+                    mySqlOptions =>
+                    {
+                        mySqlOptions.UseMicrosoftJson();
+                        mySqlOptions.EnablePrimitiveCollectionsSupport();
+                    });
             });
 
             builder.Services.AddApns();
