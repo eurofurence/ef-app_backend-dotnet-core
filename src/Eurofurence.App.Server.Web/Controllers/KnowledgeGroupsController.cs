@@ -8,7 +8,6 @@ using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
-using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -62,7 +61,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeGroupAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("id")] KnowledgeGroupRequest request,
+            [EnsureNotNull][FromBody] KnowledgeGroupRequest request,
             [EnsureNotNull][FromRoute] Guid id
         )
         {

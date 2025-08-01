@@ -4,6 +4,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250622111120_AddPublishedToKnowledgeBaseEntries")]
+    partial class AddPublishedToKnowledgeBaseEntries
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -381,6 +384,10 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<Guid?>("ArtistThumbnailImageId")
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("AttendeeNickname")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("AttendsOnFriday")
                         .HasColumnType("tinyint(1)");
 
@@ -421,6 +428,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<string>("Merchandise")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int>("RegistrationNumber")
+                        .HasColumnType("int");
 
                     b.Property<string>("ShortDescription")
                         .HasColumnType("longtext");
@@ -965,6 +975,29 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("EntityStorageInfos");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Telegram.TelegramUserRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Acl")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TelegramUsers");
                 });
 
             modelBuilder.Entity("EventRecordUserRecord", b =>

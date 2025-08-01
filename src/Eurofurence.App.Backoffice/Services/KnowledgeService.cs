@@ -11,7 +11,7 @@ namespace Eurofurence.App.Backoffice.Services
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonStringEnumConverter());
-            return (await http.GetFromJsonAsync<KnowledgeEntryResponse[]>("knowledgeEntries", options))?.ToArray() ?? [];
+            return (await http.GetFromJsonAsync<KnowledgeEntryResponse[]>("knowledgeEntries?includeNonPublished=true", options))?.ToArray() ?? [];
         }
 
         public async Task<bool> PutKnowledgeEntryAsync(Guid id, KnowledgeEntryRequest record)
@@ -34,18 +34,18 @@ namespace Eurofurence.App.Backoffice.Services
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<KnowledgeGroupRecord[]> GetKnowledgeGroupsAsync()
+        public async Task<KnowledgeGroupResponse[]> GetKnowledgeGroupsAsync()
         {
-            return (await http.GetFromJsonAsync<KnowledgeGroupRecord[]>("knowledgeGroups"))?.Where(ke => ke.IsDeleted != 1).ToArray() ?? [];
+            return (await http.GetFromJsonAsync<KnowledgeGroupResponse[]>("knowledgeGroups"))?.ToArray() ?? [];
         }
-        public async Task<bool> PutKnowledgeGroupAsync(KnowledgeGroupRecord record)
+        public async Task<bool> PutKnowledgeGroupAsync(Guid id, KnowledgeGroupRequest record)
         {
             JsonContent content = JsonContent.Create(record);
-            var response = await http.PutAsync($"knowledgeGroups/{record.Id}", content);
+            var response = await http.PutAsync($"knowledgeGroups/{id}", content);
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> PostKnowledgeGroupAsync(KnowledgeGroupRecord record)
+        public async Task<bool> PostKnowledgeGroupAsync(KnowledgeGroupRequest record)
         {
             JsonContent content = JsonContent.Create(record);
             var response = await http.PostAsync($"knowledgeGroups", content);

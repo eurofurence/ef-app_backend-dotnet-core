@@ -6,6 +6,7 @@
 @using Eurofurence.App.Backoffice.Components
 @using Eurofurence.App.Domain.Model.Fragments
 @using Eurofurence.App.Domain.Model.Images
+@using System.Globalization
 @inject IConfiguration Configuration
 @inject ISnackbar Snackbar
 @inject IKnowledgeService KnowledgeService
@@ -91,6 +92,19 @@
 
                                     <MudSpacer></MudSpacer>
 
+                                    @if (@knowledgeEntry.Published != null)
+                                    {
+                                        <MudIcon Class="mt-3" Icon="@Icons.Material.Outlined.Public" Color="Color.Secondary"></MudIcon>
+                                        <MudTooltip Text="@knowledgeEntry.Published.Value.ToString(CultureInfo.CurrentCulture)">
+                                            <MudText Class="mt-3 mr-2" Color="Color.Secondary">Published</MudText>
+                                        </MudTooltip>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Class="mt-3" Icon="@Icons.Material.Outlined.Public" Color="Color.Tertiary"></MudIcon>
+                                        <MudText Class="mt-3 mr-2" Color="Color.Tertiary">Not Published</MudText>
+                                    }
+
                                     <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
                                                    Href="@GetWebPreviewUrl(["KnowledgeEntries", knowledgeEntry.Id.ToString()])"
                                                    Target="_blank">
@@ -108,7 +122,7 @@
                                 </MudItem>
 
                                 <MudItem>
-                                    @foreach (var image in knowledgeEntry.Images)
+                                    @foreach (var image in _images.Where(i => knowledgeEntry.ImageIds.Contains(i.Id)))
                                     {
                                         <MudImage Class="ml-2" Height="100" ObjectFit="ObjectFit.Contain" Src="@image.Url"/>
                                     }
@@ -129,8 +143,7 @@
                                         }
                                     }
                                 </MudItem>
-
-
+                                
                             </ChildContent>
                         </MudExpansionPanel>
                     }
@@ -143,10 +156,9 @@
 @code {
     public bool Loading = true;
     private string? _knowledgeEntrySearch;
-    private List<KnowledgeGroupRecord> _knowledgeGroups = [];
-    private List<KnowledgeEntryRecord> _knowledgeEntries = [];
-
-    readonly Func<KnowledgeEntryRecord, object> _groupBy = x => x.KnowledgeGroup.Name;
+    private List<KnowledgeGroupResponse> _knowledgeGroups = [];
+    private List<KnowledgeEntryResponse> _knowledgeEntries = [];
+    private readonly List<ImageResponse> _images = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,39 +175,21 @@
 
         foreach (var response in responses)
         {
-            var record = new KnowledgeEntryRecord
-            {
-                Id = response.Id,
-                KnowledgeGroupId = response.KnowledgeGroupId,
-                    KnowledgeGroup = _knowledgeGroups.FirstOrDefault(kg => kg.Id == response.KnowledgeGroupId),
-                Title = response.Title,
-                Text = response.Text,
-                Order = response.Order,
-                LastChangeDateTimeUtc = response.LastChangeDateTimeUtc,
-                Links = response.Links
-            };
             foreach (var imageId in response.ImageIds)
             {
+                if (_images.Exists(i => i.Id == imageId))
+                {
+                    continue;
+                }
+
                 var image = await ImageService.GetImageAsync(imageId);
                 if (image != null)
                 {
-                    record.Images.Add(new ImageRecord()
-                    {
-                        Id = image.Id,
-                        Url = image.Url,
-                        Height = image.Height,
-                        Width = image.Width,
-                        ContentHashSha1 = image.ContentHashSha1,
-                        InternalReference = image.InternalReference,
-                        MimeType = image.MimeType,
-                        SizeInBytes = image.SizeInBytes,
-                        LastChangeDateTimeUtc = image.LastChangeDateTimeUtc,
-                        IsDeleted = image.IsDeleted
-                    });
+                    _images.Add(image);
                 }
             }
 
-            _knowledgeEntries.Add(record);
+            _knowledgeEntries.Add(response);
         }
 
         Loading = false;
@@ -208,7 +202,7 @@
         Loading = false;
     }
 
-    private IEnumerable<KnowledgeGroupRecord> GetKnowledgeGroups()
+    private IEnumerable<KnowledgeGroupResponse> GetKnowledgeGroups()
     {
         if (string.IsNullOrEmpty(_knowledgeEntrySearch))
         {
@@ -220,7 +214,7 @@
         return _knowledgeGroups.Where(kg => filteredKnowledgeEntries.Any(ke => ke.KnowledgeGroupId == kg.Id));
     }
 
-    private IEnumerable<KnowledgeEntryRecord> GetKnowledgeEntities()
+    private IEnumerable<KnowledgeEntryResponse> GetKnowledgeEntities()
     {
         return string.IsNullOrEmpty(_knowledgeEntrySearch)
             ? _knowledgeEntries
@@ -234,13 +228,9 @@
         var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
 
         var dialog = await DialogService.ShowAsync<KnowledgeGroupsDialog>(null, parameters, options);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false })
-        {
-            Loading = true;
-            await LoadKnowledgeGroups();
-        }
+        await dialog.Result;
+        Loading = true;
+        await LoadKnowledgeGroups();
     }
 
     private async Task AddKnowledgeEntry()
@@ -258,7 +248,7 @@
         }
     }
 
-    private async Task UpdateKnowledgeEntry(KnowledgeEntryRecord record)
+    private async Task UpdateKnowledgeEntry(KnowledgeEntryResponse record)
     {
         var parameters = new DialogParameters<KnowledgeEntryDialog> { { x => x.Record, record } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };

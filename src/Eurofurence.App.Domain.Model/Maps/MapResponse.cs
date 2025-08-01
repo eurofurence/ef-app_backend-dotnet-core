@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,14 +11,14 @@ public class MapResponse : ResponseBase
 {
     [DataMember]
     [Required]
-    public Guid Id { get; set; }
+    public new Guid Id { get; set; }
 
     [DataMember]
     [Required]
-    public string Description { get; set; }
+    public required string Description { get; set; }
 
-    [Required]
     [DataMember]
+    [Required]
     public int Order { get; set; }
 
     [DataMember]

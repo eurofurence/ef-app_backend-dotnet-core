@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
@@ -16,6 +17,7 @@ using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
+using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
@@ -46,8 +48,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _htmlSanitizer = htmlSanitizer;
         }
 
-        public IQueryable<TableRegistrationRecord> GetRegistrations(
-            TableRegistrationRecord.RegistrationStateEnum? state)
+        public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
         {
             var records = _appDbContext.TableRegistrations
                 .Include(tr => tr.Image)
@@ -65,7 +66,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
-        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream)
+        private void ValidateRegistrationRequest(TableRegistrationRequest request, Stream imageStream)
         {
             if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
                 if (_uriSanitizer.Sanitize(request.WebsiteUrl) is string sanitizedUrl and not null)
@@ -93,6 +94,38 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             {
                 throw new ArgumentException("Registrations must include an image.");
             }
+        }
+
+        public async Task UpdateTableAsync(ClaimsPrincipal user, Guid id, TableRegistrationRequest request, Stream imageStream)
+        {
+            ValidateRegistrationRequest(request, imageStream);
+            string subject = user.GetSubject();
+
+            TableRegistrationRecord record = await _appDbContext
+                .TableRegistrations
+                .FirstOrDefaultAsync(tr => tr.Id == id);
+
+            if (record == null)
+            {
+                throw new ArgumentException($"No existing approved table registration found with ID {id}.");
+            }
+
+            record.Merge(request);
+
+            ImageRecord image = await _imageService
+                .InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
+            record.ImageId = image.Id;
+
+            TableRegistrationRecord.StateChangeRecord stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Pending, $"Data-Updated-By-Artist: {subject}");
+            _appDbContext.StateChangeRecord.Add(stateChange);
+
+            await _appDbContext.SaveChangesAsync();
+            await _telegramMessageSender.SendTableRegistrationAsync(_artistAlleyOptions.Telegram.AdminGroupChatId, record, true);
+        }
+
+        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream)
+        {
+            ValidateRegistrationRequest(request, imageStream);
 
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
@@ -138,6 +171,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
+            await _appDbContext.SaveChangesAsync();
 
             await BroadcastAsync(record);
 
@@ -156,7 +190,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
 
-            await _appDbContext.SaveChangesAsync();
+
         }
 
         private async Task BroadcastAsync(TableRegistrationRecord record)

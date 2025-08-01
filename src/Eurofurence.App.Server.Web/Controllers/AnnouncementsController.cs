@@ -108,9 +108,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Updates and existing announcement and requests all devices to sync their data.
+        /// Updates an existing announcement and requests all devices to sync their data.
         /// </summary>
-        /// <param name="record">Updated announcement record</param>
+        /// <param name="id">ID of existing announcement record</param>
+        /// <param name="request">Updated announcement record</param>
         /// <returns></returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]

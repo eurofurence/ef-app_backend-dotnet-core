@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -77,16 +76,6 @@ namespace Eurofurence.App.Server.Services.Communication
             message.ReadDateTimeUtc = DateTime.UtcNow;
             await _appDbContext.SaveChangesAsync(cancellationToken);
             return message.ReadDateTimeUtc;
-        }
-
-
-        private struct QueuedNotificationParameters
-        {
-            public string RecipientIdentityId;
-            public string RecipientRegSysId;
-            public string ToastTitle;
-            public string ToastMessage;
-            public Guid RelatedId;
         }
 
         public async Task<Guid> SendPrivateMessageAsync(

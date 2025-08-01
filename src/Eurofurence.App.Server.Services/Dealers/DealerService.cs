@@ -237,8 +237,7 @@ namespace Eurofurence.App.Server.Services.Dealers
                     {
                         var dealerRecord = new DealerRecord
                         {
-                            RegistrationNumber = csvRecords[i].RegNo,
-                            AttendeeNickname = csvRecords[i].Nickname.Trim(),
+                            Id = csvRecords[i].Id,
                             AboutTheArtistText = csvRecords[i].AboutTheArtist.Trim(),
                             AboutTheArtText = csvRecords[i].AboutTheArt.Trim(),
                             ArtPreviewCaption = csvRecords[i].ArtPreviewCaption.Trim(),
@@ -260,19 +259,19 @@ namespace Eurofurence.App.Server.Services.Dealers
 
                         dealerRecord.ArtistImageId = await GetImageIdAsync(
                         archive,
-                        $"artist_{csvRecords[i].RegNo}.",
-                        $"dealer:artist:{csvRecords[i].RegNo}",
+                        $"artist_{csvRecords[i].Id}.",
+                        $"dealer:artist:{csvRecords[i].Id}",
                         cancellationToken
                         );
                         dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(
                         archive,
-                        $"thumbnail_{csvRecords[i].RegNo}.",
-                        $"dealer:thumbnail:{csvRecords[i].RegNo}",
+                        $"thumbnail_{csvRecords[i].Id}.",
+                        $"dealer:thumbnail:{csvRecords[i].Id}",
                         cancellationToken
                         );
                         dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive,
-                        $"art_{csvRecords[i].RegNo}.",
-                        $"dealer:art:{csvRecords[i].RegNo}",
+                        $"art_{csvRecords[i].Id}.",
+                        $"dealer:art:{csvRecords[i].Id}",
                         cancellationToken
                         );
 
@@ -291,11 +290,10 @@ namespace Eurofurence.App.Server.Services.Dealers
                 var existingRecords = FindAll();
 
                 var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) =>
-                    list.SingleOrDefault(d => d.RegistrationNumber == source.RegistrationNumber));
+                    list.SingleOrDefault(d => d.Id == source.Id));
 
                 patch
-                    .Map(s => s.RegistrationNumber, t => t.RegistrationNumber)
-                    .Map(s => s.AttendeeNickname, t => t.AttendeeNickname)
+                    .Map(s => s.Id, t => t.Id)
                     .Map(s => s.AboutTheArtistText, t => t.AboutTheArtistText)
                     .Map(s => s.AboutTheArtText, t => t.AboutTheArtText)
                     .Map(s => s.ArtPreviewCaption, t => t.ArtPreviewCaption)
@@ -443,8 +441,7 @@ namespace Eurofurence.App.Server.Services.Dealers
     {
         public DealerImportRowClassMap()
         {
-            Map(m => m.RegNo).Name("Reg No.");
-            Map(m => m.Nickname).Name("Nick");
+            Map(m => m.Id).Name("Reg No.");
             Map(m => m.DisplayName).Name("Display Name");
             Map(m => m.Merchandise).Name("Merchandise");
             Map(m => m.ShortDescription).Name("Short Description");
@@ -467,8 +464,7 @@ namespace Eurofurence.App.Server.Services.Dealers
 
     public class DealerImportRow
     {
-        public int RegNo { get; set; }
-        public string Nickname { get; set; }
+        public Guid Id { get; set; }
         public string DisplayName { get; set; }
         public string Merchandise { get; set; }
         public string ShortDescription { get; set; }

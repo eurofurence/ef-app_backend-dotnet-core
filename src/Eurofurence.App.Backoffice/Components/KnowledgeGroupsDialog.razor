@@ -11,7 +11,7 @@
             <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
         }
         
-        <MudDataGrid Items="_knowledgeGroups">
+        <MudDataGrid T="KnowledgeGroupResponse" Items="_knowledgeGroups">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Groups</MudText>
                 <MudSpacer/>
@@ -54,7 +54,7 @@
                 </TemplateColumn>
             </Columns>
             <PagerContent>
-                <MudDataGridPager T="KnowledgeEntryRecord" />
+                <MudDataGridPager T="KnowledgeGroupResponse" />
             </PagerContent>
         </MudDataGrid>
     </DialogContent>
@@ -66,7 +66,7 @@
 @code {
     [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
     public bool Loading = true;
-    private List<KnowledgeGroupRecord> _knowledgeGroups = [];
+    private List<KnowledgeGroupResponse> _knowledgeGroups = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,7 +95,7 @@
         }
     }
 
-    private async Task UpdateKnowledgeGroup(KnowledgeGroupRecord record)
+    private async Task UpdateKnowledgeGroup(KnowledgeGroupResponse record)
     {
         var parameters = new DialogParameters<KnowledgeGroupDialog> { { x => x.Record, record } };
         var options = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };

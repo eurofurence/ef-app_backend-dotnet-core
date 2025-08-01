@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;

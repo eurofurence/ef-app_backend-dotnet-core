@@ -32,6 +32,8 @@ using Eurofurence.App.Server.Services.Abstractions.MinIO;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Mapster;
+using Microsoft.Extensions.Hosting;
+using Sentry;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -40,6 +42,10 @@ namespace Eurofurence.App.Server.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.WebHost.UseSentry(options =>
+            {
+                options.Dsn ??= SentryConstants.DisableSdkDsnValue;
+            });
 
             var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
             Log.Logger = loggerConfiguration.CreateLogger();
@@ -122,6 +128,7 @@ namespace Eurofurence.App.Server.Web
             });
 
             builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            builder.Services.AddSingleton<ISentryUserFactory, SentryUserFactory>();
 
             builder.Services.AddSwagger(globalOptions);
 
