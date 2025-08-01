@@ -1,6 +1,14 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using System.Collections.Generic;
+﻿using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
+using IdentityModel.AspNetCore.OAuth2Introspection;
+using IdentityModel.Client;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,14 +17,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Users;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Infrastructure.EntityFramework;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using Microsoft.EntityFrameworkCore;
-using IdentityModel.AspNetCore.OAuth2Introspection;
-using IdentityModel.Client;
-using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Identity
 {
@@ -26,6 +26,11 @@ namespace Eurofurence.App.Server.Services.Identity
         private readonly IOptionsMonitor<IdentityOptions> _identityOptionsMonitor;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IDistributedCache _cache;
+
+        /// <summary>
+        /// The name of the role claim type for IDP groups.
+        /// </summary>
+        private const string IdpRoleClaimType = "groups";
 
         public IdentityService(
             AppDbContext appDbContext,
@@ -96,7 +101,8 @@ namespace Eurofurence.App.Server.Services.Identity
             {
                 identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
 
-                var cachedRegistrations = JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
+                var cachedRegistrations =
+                    JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
 
                 foreach (var registration in cachedRegistrations)
                 {
@@ -117,7 +123,8 @@ namespace Eurofurence.App.Server.Services.Identity
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
             var request = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"), "attsrv/api/rest/v1/attendees"));
+                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"),
+                    "attsrv/api/rest/v1/attendees"));
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             using var response = await client.SendAsync(request);
@@ -173,6 +180,13 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
+        public IEnumerable<string> GetUserRoles(ClaimsIdentity identity)
+        {
+            return identity.Claims
+                .Where(claim => claim.Type == IdpRoleClaimType)
+                .Select(claim => claim.Value);
+        }
+
         public async Task<IEnumerable<string>> GetRoleMembers(ClaimsIdentity identity, string role)
         {
             if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
@@ -198,7 +212,8 @@ namespace Eurofurence.App.Server.Services.Identity
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
             var statusRequest = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"), $"attsrv/api/rest/v1/attendees/{id}/status"));
+                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"),
+                    $"attsrv/api/rest/v1/attendees/{id}/status"));
             statusRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             using var statusResponse = await client.SendAsync(statusRequest);
 
@@ -211,7 +226,6 @@ namespace Eurofurence.App.Server.Services.Identity
             Enum.TryParse(statusJson.RootElement.TryGetString("status")?.Replace(" ", ""), true,
                 out UserRegistrationStatus status);
             return status;
-
         }
 
         private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId, string nickname)
@@ -257,20 +271,16 @@ namespace Eurofurence.App.Server.Services.Identity
 
         private sealed class GroupMembersResponse : ProtocolResponse
         {
-            [JsonPropertyName("data")]
-            public GroupMemberResponseData[] Data { get; set; }
+            [JsonPropertyName("data")] public GroupMemberResponseData[] Data { get; set; }
         }
 
         private sealed class GroupMemberResponseData
         {
-            [JsonPropertyName("group_id")]
-            public string GroupId { get; set; }
+            [JsonPropertyName("group_id")] public string GroupId { get; set; }
 
-            [JsonPropertyName("user_id")]
-            public string UserId { get; set; }
+            [JsonPropertyName("user_id")] public string UserId { get; set; }
 
-            [JsonPropertyName("level")]
-            public string Level { get; set; }
+            [JsonPropertyName("level")] public string Level { get; set; }
         }
     }
 }
