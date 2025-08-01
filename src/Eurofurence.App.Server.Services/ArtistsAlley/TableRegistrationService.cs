@@ -175,7 +175,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await BroadcastAsync(record);
 
             var message =
-                $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
+                $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nYour presence in the Artist Alley along with the text and images you provided has been published on the mobile app!\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
 
             var sendPrivateMessageRequest = new SendPrivateMessageByIdentityRequest()
             {
