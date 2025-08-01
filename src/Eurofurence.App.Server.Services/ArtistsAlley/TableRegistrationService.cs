@@ -120,7 +120,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _appDbContext.StateChangeRecord.Add(stateChange);
 
             await _appDbContext.SaveChangesAsync();
-            await _telegramMessageSender.SendTableRegistrationAsync(_artistAlleyOptions.Telegram.AdminGroupChatId, record, true);
         }
 
         public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream)
