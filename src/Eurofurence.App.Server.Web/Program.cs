@@ -5,7 +5,6 @@ using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
@@ -71,7 +70,6 @@ namespace Eurofurence.App.Server.Web
             var dealerOptions = builder.Configuration.GetSection("Dealers").Get<DealerOptions>();
             var announcementOptions = builder.Configuration.GetSection("Announcements").Get<AnnouncementOptions>();
             var eventOptions = builder.Configuration.GetSection("Events").Get<EventOptions>();
-            var telegramOptions = builder.Configuration.GetSection("Telegram").Get<TelegramOptions>();
             var jobsOptions = builder.Configuration.GetSection("Jobs").Get<JobsOptions>();
 
             builder.Services.Configure<GlobalOptions>(builder.Configuration.GetSection("Global"));
@@ -151,11 +149,6 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
-
-            if (telegramOptions.AccessToken is { Length: > 0 })
-            {
-                builder.Services.AddTelegramBot(telegramOptions);
-            }
 
             builder.Services.AddDbContextPool<AppDbContext>(options =>
             {
