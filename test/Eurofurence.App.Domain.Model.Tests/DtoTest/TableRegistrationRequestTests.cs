@@ -93,7 +93,7 @@ public class TableRegistrationRequestTests
     [Fact]
     public void TestRecordIntoResponse()
     {
-        var tableRegistrationResponse = _record.Transform();
+        var tableRegistrationResponse = _record.Transform<TableRegistrationResponse>();
 
         Assert.Equal(_record.DisplayName, tableRegistrationResponse.DisplayName);
         Assert.Equal(_record.ShortDescription, tableRegistrationResponse.ShortDescription);
