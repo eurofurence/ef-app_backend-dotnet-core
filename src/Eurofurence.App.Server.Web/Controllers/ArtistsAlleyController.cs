@@ -174,7 +174,6 @@ namespace Eurofurence.App.Server.Web.Controllers
                     // If the user does not have an accepted registration, we create a new one.
                     using MemoryStream imageStream = await GetImageStreamAsync(requestImageFile);
                     await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
-
                 }
             }
             catch (ArgumentException ex)
@@ -190,7 +189,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext).Transform();
+            return record.Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>
