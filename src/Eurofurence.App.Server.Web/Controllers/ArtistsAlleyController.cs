@@ -82,12 +82,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<ArtistAlleyResponse>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
         [HttpGet]
-        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
+        public IEnumerable<ArtistAlleyResponse> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform());
+            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform<ArtistAlleyResponse>());
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform<TableRegistrationResponse>();
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext)?.Transform();
+            return record.Transient404(HttpContext)?.Transform<TableRegistrationResponse>();
         }
 
         /// <summary>

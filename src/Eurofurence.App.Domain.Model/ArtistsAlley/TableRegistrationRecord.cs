@@ -8,7 +8,8 @@ using Eurofurence.App.Domain.Model.Transformers;
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     public class TableRegistrationRecord : EntityBase,
-        IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse, TableRegistrationRecord>
+        IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse, TableRegistrationRecord>,
+        IDtoTransformable<ArtistAlleyResponse>
     {
         public class StateChangeRecord : EntityBase
         {
