@@ -181,12 +181,12 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 ImageId = image?.Id,
                 ValidFromDateTimeUtc = DateTime.UtcNow,
                 ValidUntilDateTimeUtc = DateTime.UtcNow.AddDays(1),
-                Roles = _authorizationOptions.ArtistAlleyAdmin.Concat(_authorizationOptions.ArtistAlleyModerator).ToArray()
+                Groups = _authorizationOptions.ArtistAlleyAdmin.Concat(_authorizationOptions.ArtistAlleyModerator).ToArray()
             };
 
-            foreach (var role in announcementRequest.Roles)
+            foreach (var group in announcementRequest.Groups)
             {
-                await _pushNotificationChannelManager.PushAnnouncementNotificationToRoleAsync(announcementRequest.Transform(), role);
+                await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(announcementRequest.Transform(), group);
             }
         }
 

@@ -21,7 +21,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
             AnnouncementRecord announcement,
             CancellationToken cancellationToken = default);
 
-        Task PushAnnouncementNotificationToRoleAsync(
+        Task PushAnnouncementNotificationToGroupAsync(
             AnnouncementRecord announcement,
             string role,
             CancellationToken cancellationToken = default);

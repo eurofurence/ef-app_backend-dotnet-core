@@ -104,11 +104,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
-            if (request.Roles is { Length: > 0 })
+            if (request.Groups is { Length: > 0 })
             {
-                foreach (var role in request.Roles)
+                foreach (var role in request.Groups)
                 {
-                    await _pushNotificationChannelManager.PushAnnouncementNotificationToRoleAsync(record, role);
+                    await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(record, role);
                 }
             }
             else

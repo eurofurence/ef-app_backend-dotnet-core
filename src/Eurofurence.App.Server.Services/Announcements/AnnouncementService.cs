@@ -48,7 +48,7 @@ namespace Eurofurence.App.Server.Services.Announcements
 
             if (_httpContext.User.Identity is ClaimsIdentity identity)
             {
-                userRoles = _identityService.GetUserRoles(identity);
+                userRoles = _identityService.GetUserGroups(identity);
             }
 
             return _appDbContext.Announcements
@@ -64,7 +64,7 @@ namespace Eurofurence.App.Server.Services.Announcements
 
             if (_httpContext.User.Identity is ClaimsIdentity identity)
             {
-                userRoles = _identityService.GetUserRoles(identity);
+                userRoles = _identityService.GetUserGroups(identity);
             }
 
             var storageInfo = await GetStorageInfoAsync(cancellationToken);

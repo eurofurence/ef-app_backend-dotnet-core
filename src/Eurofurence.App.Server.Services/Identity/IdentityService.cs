@@ -28,9 +28,9 @@ namespace Eurofurence.App.Server.Services.Identity
         private readonly IDistributedCache _cache;
 
         /// <summary>
-        /// The name of the role claim type for IDP groups.
+        /// The name of the claim type for IDP groups.
         /// </summary>
-        private const string IdpRoleClaimType = "groups";
+        private const string IdpGroupClaimType = "groups";
 
         public IdentityService(
             AppDbContext appDbContext,
@@ -180,14 +180,14 @@ namespace Eurofurence.App.Server.Services.Identity
             }
         }
 
-        public IEnumerable<string> GetUserRoles(ClaimsIdentity identity)
+        public IEnumerable<string> GetUserGroups(ClaimsIdentity identity)
         {
             return identity.Claims
-                .Where(claim => claim.Type == IdpRoleClaimType)
+                .Where(claim => claim.Type == IdpGroupClaimType)
                 .Select(claim => claim.Value);
         }
 
-        public async Task<IEnumerable<string>> GetRoleMembers(ClaimsIdentity identity, string role)
+        public async Task<IEnumerable<string>> GetGroupMembers(ClaimsIdentity identity, string group)
         {
             if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
             {
@@ -198,7 +198,7 @@ namespace Eurofurence.App.Server.Services.Identity
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var uri = new Uri(System.IO.Path.Combine(_identityOptionsMonitor.CurrentValue.GroupsEndpoint,
-                $"{role}/users"));
+                $"{group}/users"));
             using var response = await client.GetAsync(uri);
             response.EnsureSuccessStatusCode();
 
