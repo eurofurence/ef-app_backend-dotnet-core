@@ -38,19 +38,8 @@ namespace Eurofurence.App.Server.Services.Announcements
 
         public override async Task<AnnouncementRecord> FindOneAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            IEnumerable<string> userRoles = new List<string>();
-
-            if (_httpContext.User.Identity is ClaimsIdentity identity)
-            {
-                userRoles = _identityService.GetUserRoles(identity);
-            }
-
-            return await _appDbContext.Announcements
-                .AsNoTracking()
-                .FirstOrDefaultAsync(entity =>
-                        entity.Id == id
-                        && (entity.Roles == null || !entity.Roles.Any() || entity.Roles.Any(role => userRoles.Contains(role)))
-                    , cancellationToken);
+            return await FindAll()
+                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
         public override IQueryable<AnnouncementRecord> FindAll()
