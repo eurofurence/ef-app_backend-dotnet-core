@@ -117,6 +117,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             try
             {
+                // TODO: Implement alternative to pulling group memberships from IDP
+                // Suggestion: Consider caching group memberships in database table UserPushNotificationRoles
+                // end refresh them every whenever IdentityService.ReadUserInfo() runs into a cache-miss.
                 identityIds = await _identityService.GetRoleMembers(identity, role);
             }
             catch (Exception ex)
