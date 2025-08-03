@@ -199,8 +199,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.Touch();
             await _appDbContext.SaveChangesAsync();
 
-            await BroadcastAsync(record);
-
             var message =
                 $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nYour presence in the Artist Alley along with the text and images you provided has been published on the mobile app!";
 
@@ -217,29 +215,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
 
 
-        }
-
-        private async Task BroadcastAsync(TableRegistrationRecord record)
-        {
-            var message = new StringBuilder();
-
-            message.Append($@"Now in the Artist Alley ({record.Location.RemoveMarkdown()}):
-
-*{record.DisplayName.RemoveMarkdown()}*
-
-");
-
-            message.Append(record.ShortDescription.EscapeMarkdown() + "\n\n");
-
-            if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
-            {
-                message.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
-            }
-
-            if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
-            {
-                message.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
-            }
         }
 
         public async Task RejectByIdAsync(Guid id, string operatorUid)
