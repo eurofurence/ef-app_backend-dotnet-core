@@ -1,4 +1,4 @@
-﻿using Eurofurence.App.Server.Web.Controllers.Transformers;
+﻿using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Communication
 {
