@@ -52,7 +52,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Roles")
+                    b.Property<string>("Groups")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Title")

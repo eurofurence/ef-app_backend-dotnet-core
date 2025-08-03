@@ -44,15 +44,15 @@ namespace Eurofurence.App.Server.Services.Announcements
 
         public override IQueryable<AnnouncementRecord> FindAll()
         {
-            IEnumerable<string> userRoles = new List<string>();
+            IEnumerable<string> userGroups = new List<string>();
 
             if (_httpContext.User.Identity is ClaimsIdentity identity)
             {
-                userRoles = _identityService.GetUserGroups(identity);
+                userGroups = _identityService.GetUserGroups(identity);
             }
 
             return _appDbContext.Announcements
-                .Where(entity => entity.Roles == null || !entity.Roles.Any() || entity.Roles.Any(role => userRoles.Contains(role)))
+                .Where(entity => entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group)))
                 .AsNoTracking();
         }
 
@@ -60,11 +60,11 @@ namespace Eurofurence.App.Server.Services.Announcements
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default)
         {
-            IEnumerable<string> userRoles = new List<string>();
+            IEnumerable<string> userGroups = new List<string>();
 
             if (_httpContext.User.Identity is ClaimsIdentity identity)
             {
-                userRoles = _identityService.GetUserGroups(identity);
+                userGroups = _identityService.GetUserGroups(identity);
             }
 
             var storageInfo = await GetStorageInfoAsync(cancellationToken);
@@ -82,7 +82,7 @@ namespace Eurofurence.App.Server.Services.Announcements
                     _appDbContext.Announcements
                         .Where(entity =>
                             entity.IsDeleted == 0
-                            && (entity.Roles == null || !entity.Roles.Any() || entity.Roles.Any(role => userRoles.Contains(role))))
+                            && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group))))
                         .Select(x => x.Transform()).ToArrayAsync(cancellationToken);
             }
             else
@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Services.Announcements
                     .IgnoreQueryFilters()
                     .Where(entity =>
                         entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc
-                        && (entity.Roles == null || !entity.Roles.Any() || entity.Roles.Any(role => userRoles.Contains(role))));
+                        && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group))));
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)

@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRolesToAnnouncements : Migration
+    public partial class AddGroupsToAnnouncements : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "Roles",
+                name: "Groups",
                 table: "Announcements",
                 type: "longtext",
                 nullable: true)
@@ -23,7 +23,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Roles",
+                name: "Groups",
                 table: "Announcements");
         }
     }

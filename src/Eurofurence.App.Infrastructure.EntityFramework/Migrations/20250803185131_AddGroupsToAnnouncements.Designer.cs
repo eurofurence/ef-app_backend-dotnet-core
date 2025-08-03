@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250801185131_AddRolesToAnnouncements")]
-    partial class AddRolesToAnnouncements
+    [Migration("20250803185131_AddGroupsToAnnouncements")]
+    partial class AddGroupsToAnnouncements
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,7 +55,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Roles")
+                    b.Property<string>("Groups")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Title")
