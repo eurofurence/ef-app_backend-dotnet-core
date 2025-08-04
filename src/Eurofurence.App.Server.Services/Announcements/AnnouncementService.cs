@@ -46,7 +46,7 @@ namespace Eurofurence.App.Server.Services.Announcements
         {
             IEnumerable<string> userGroups = new List<string>();
 
-            if (_httpContext.User.Identity is ClaimsIdentity identity)
+            if (_httpContext?.User.Identity is ClaimsIdentity identity)
             {
                 userGroups = _identityService.GetUserGroups(identity);
             }
