@@ -1,7 +1,6 @@
-using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 
-namespace Eurofurence.App.Server.Web.Controllers.Transformers;
+namespace Eurofurence.App.Domain.Model.Transformers;
 
 /// <summary>
 /// Extension class for working with <see cref="IDtoTransformable{TDestination}"/> and <see cref="IDtoRecordTransformable{TRequest,TResponse,TRecord}"/>.

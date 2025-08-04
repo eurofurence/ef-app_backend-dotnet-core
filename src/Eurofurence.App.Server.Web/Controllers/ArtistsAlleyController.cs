@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Users;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -82,12 +82,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<ArtistAlleyResponse>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
         [HttpGet]
-        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
+        public IEnumerable<ArtistAlleyResponse> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform());
+            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform<ArtistAlleyResponse>());
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform<TableRegistrationResponse>();
         }
 
         /// <summary>
@@ -174,7 +174,6 @@ namespace Eurofurence.App.Server.Web.Controllers
                     // If the user does not have an accepted registration, we create a new one.
                     using MemoryStream imageStream = await GetImageStreamAsync(requestImageFile);
                     await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
-
                 }
             }
             catch (ArgumentException ex)
@@ -190,7 +189,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext).Transform();
+            return record.Transient404(HttpContext)?.Transform<TableRegistrationResponse>();
         }
 
         /// <summary>

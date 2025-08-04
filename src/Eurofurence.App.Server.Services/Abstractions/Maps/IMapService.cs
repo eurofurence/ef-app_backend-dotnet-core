@@ -1,6 +1,4 @@
 ﻿using Eurofurence.App.Domain.Model.Maps;
-using Eurofurence.App.Infrastructure.EntityFramework;
-using Eurofurence.App.Server.Services.Storage;
 using System.Threading.Tasks;
 using System;
 using System.Threading;

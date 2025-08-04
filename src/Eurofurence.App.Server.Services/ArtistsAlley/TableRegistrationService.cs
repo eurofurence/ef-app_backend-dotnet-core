@@ -2,31 +2,36 @@
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Eurofurence.App.Common.ExtensionMethods;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
     public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord, TableRegistrationResponse>, ITableRegistrationService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly AuthorizationOptions _authorizationOptions;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly IHtmlSanitizer _htmlSanitizer;
 
@@ -35,15 +40,19 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         public TableRegistrationService(
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
+            IOptions<AuthorizationOptions> authorizationOptions,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
+            IPushNotificationChannelManager pushNotificationChannelManager,
             IHttpUriSanitizer uriSanitizer,
             IHtmlSanitizer htmlSanitizer
         ) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
+            _authorizationOptions = authorizationOptions.Value;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
             _uriSanitizer = uriSanitizer;
             _htmlSanitizer = htmlSanitizer;
         }
@@ -161,6 +170,23 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
+
+            var announcementRequest = new AnnouncementRequest
+            {
+                Title = "New Artist Alley Registration",
+                Content = $"New registration by {record.OwnerUsername} ({record.OwnerUid})",
+                Area = "announcement",
+                Author = "Artist Alley",
+                ImageId = image?.Id,
+                ValidFromDateTimeUtc = DateTime.UtcNow,
+                ValidUntilDateTimeUtc = DateTime.UtcNow.AddDays(1),
+                Groups = _authorizationOptions.ArtistAlleyAdmin.Concat(_authorizationOptions.ArtistAlleyModerator).ToArray()
+            };
+
+            foreach (var group in announcementRequest.Groups)
+            {
+                await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(announcementRequest.Transform(), group);
+            }
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid)
@@ -171,8 +197,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
             await _appDbContext.SaveChangesAsync();
-
-            await BroadcastAsync(record);
 
             var message =
                 $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nYour presence in the Artist Alley along with the text and images you provided has been published on the mobile app!";
@@ -190,29 +214,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
 
 
-        }
-
-        private async Task BroadcastAsync(TableRegistrationRecord record)
-        {
-            var message = new StringBuilder();
-
-            message.Append($@"Now in the Artist Alley ({record.Location.RemoveMarkdown()}):
-
-*{record.DisplayName.RemoveMarkdown()}*
-
-");
-
-            message.Append(record.ShortDescription.EscapeMarkdown() + "\n\n");
-
-            if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
-            {
-                message.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
-            }
-
-            if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
-            {
-                message.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
-            }
         }
 
         public async Task RejectByIdAsync(Guid id, string operatorUid)
@@ -267,6 +268,54 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             }
 
             await DeleteOneAsync(tableRegistrationRecord.Id);
+        }
+
+        public new async Task<DeltaResponse<TableRegistrationResponse>> GetDeltaResponseAsync(
+            DateTime? minLastDateTimeChangedUtc = null,
+            CancellationToken cancellationToken = default)
+        {
+            var storageInfo = await GetStorageInfoAsync(cancellationToken);
+            var response = new DeltaResponse<TableRegistrationResponse>
+            {
+                StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
+                StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
+            };
+
+            if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
+            {
+                response.RemoveAllBeforeInsert = true;
+                response.DeletedEntities = Array.Empty<Guid>();
+                var changedEntities = await
+                        GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                        .Select(x => x.Transform<TableRegistrationResponse>())
+                        .ToListAsync(cancellationToken: cancellationToken);
+
+                response.ChangedEntities = changedEntities.ToArray();
+            }
+            else
+            {
+                response.RemoveAllBeforeInsert = false;
+
+                var entities =
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                    .IgnoreQueryFilters()
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+
+                var changedEntities = await
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc)
+                    .Select(x => x.Transform<TableRegistrationResponse>())
+                    .ToListAsync(cancellationToken);
+
+                response.ChangedEntities = changedEntities.ToArray();
+                response.DeletedEntities = await entities
+                    .AsNoTracking()
+                    .Where(a => a.IsDeleted == 1)
+                    .Select(a => a.Id)
+                    .ToArrayAsync(cancellationToken);
+            }
+
+            return response;
         }
     }
 }

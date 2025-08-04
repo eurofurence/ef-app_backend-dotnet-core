@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
@@ -80,10 +80,10 @@ namespace Eurofurence.App.Domain.Model.Announcements
         public Guid? ImageId { get; set; }
 
         /// <summary>
-        /// Optional ids for roles in the identity provider.
-        /// If provided, the announcement will only be sent to members of those roles.
+        /// Optional ids for groups in the identity provider.
+        /// If provided, the announcement will only be sent to members of those groups.
         /// </summary>
         [DataMember]
-        public string[] Roles { get; set; }
+        public string[] Groups { get; set; }
     }
 }

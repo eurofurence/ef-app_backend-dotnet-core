@@ -4,8 +4,6 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
@@ -91,5 +89,12 @@ namespace Eurofurence.App.Domain.Model.Announcements
 
         [JsonIgnore]
         public ImageRecord Image { get; set; }
+
+        /// <summary>
+        /// Optional ids for roles in the identity provider.
+        /// If provided, the announcement will only be sent to members of those roles.
+        /// </summary>
+        [DataMember]
+        public string[] Groups { get; set; }
     }
 }

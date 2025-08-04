@@ -103,9 +103,9 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
         }
 
-        public async Task PushAnnouncementNotificationToRoleAsync(
+        public async Task PushAnnouncementNotificationToGroupAsync(
             AnnouncementRecord announcement,
-            string role,
+            string group,
             CancellationToken cancellationToken = default)
         {
             if (_httpContext.User.Identity is not ClaimsIdentity identity)
@@ -117,11 +117,14 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
             try
             {
-                identityIds = await _identityService.GetRoleMembers(identity, role);
+                // TODO: Implement alternative to pulling group memberships from IDP
+                // Suggestion: Consider caching group memberships in database table UserPushNotificationRoles
+                // end refresh them every whenever IdentityService.ReadUserInfo() runs into a cache-miss.
+                identityIds = await _identityService.GetGroupMembers(identity, group);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error when trying to get members of IDP role {role}: {ex.Message}");
+                _logger.LogError($"Error when trying to get members of IDP group {group}: {ex.Message}");
                 identityIds = [];
             }
 

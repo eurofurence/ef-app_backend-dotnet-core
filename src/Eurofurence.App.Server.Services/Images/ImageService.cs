@@ -59,6 +59,8 @@ namespace Eurofurence.App.Server.Services.Images
             var entity = await _appDbContext.Images
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
+            if (entity is null) return;
+
             await DeleteFileFromMinIoAsync(
                 _minIoOptions.Bucket,
                 entity.InternalFileName,

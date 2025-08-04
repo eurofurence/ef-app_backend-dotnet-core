@@ -4,26 +4,17 @@ using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley;
 
+/// <summary>
+/// Data type used to present ARt
+/// </summary>
 [DataContract]
-public class TableRegistrationResponse : ResponseBase
+public class ArtistAlleyResponse : ResponseBase
 {
     /// <summary>
     /// Date and time at which the registration was submitted.
     /// </summary>
     [DataMember]
     public DateTime CreatedDateTimeUtc { get; set; }
-
-    /// <summary>
-    /// Identity provider ID of the user that submitted the registration.
-    /// </summary>
-    [DataMember]
-    public string OwnerUid { get; set; }
-
-    /// <summary>
-    /// Actual name of the user (may be different from `DisplayName`).
-    /// </summary>
-    [DataMember]
-    public string OwnerUsername { get; set; }
 
     /// <summary>
     /// Preferred display name of artist.
@@ -61,16 +52,4 @@ public class TableRegistrationResponse : ResponseBase
     /// </summary>
     [DataMember]
     public Guid? ImageId { get; set; }
-
-    /// <summary>
-    /// Metadata of the image attached to this registration.
-    /// </summary>
-    [DataMember]
-    public ImageResponse Image { get; set; }
-
-    /// <summary>
-    /// Current state of the registration (Pending, Accepted, Published, Rejected).
-    /// </summary>
-    [DataMember]
-    public TableRegistrationRecord.RegistrationStateEnum State { get; set; } = TableRegistrationRecord.RegistrationStateEnum.Pending;
 }

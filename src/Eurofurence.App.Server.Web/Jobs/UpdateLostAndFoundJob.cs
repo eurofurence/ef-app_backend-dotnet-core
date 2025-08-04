@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using Quartz;
 using Eurofurence.App.Server.Services.Abstractions;
-using System.Threading;
 using Sentry;
 
 namespace Eurofurence.App.Server.Web.Jobs
