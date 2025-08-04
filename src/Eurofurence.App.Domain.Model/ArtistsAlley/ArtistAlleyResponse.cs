@@ -52,10 +52,4 @@ public class ArtistAlleyResponse : ResponseBase
     /// </summary>
     [DataMember]
     public Guid? ImageId { get; set; }
-
-    /// <summary>
-    /// Metadata of the image attached to this registration.
-    /// </summary>
-    [DataMember]
-    public ImageResponse Image { get; set; }
 }

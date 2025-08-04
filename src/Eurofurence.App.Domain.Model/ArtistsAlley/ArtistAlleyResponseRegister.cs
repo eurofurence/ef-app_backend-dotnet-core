@@ -12,8 +12,7 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
     {
         public void Register(TypeAdapterConfig config)
         {
-            config.NewConfig<TableRegistrationRecord, ArtistAlleyResponse>()
-                .Map(dest => dest.Image, src => src.Image.Transform<ImageResponse>());
+            config.NewConfig<TableRegistrationRecord, ArtistAlleyResponse>();
         }
     }
 }

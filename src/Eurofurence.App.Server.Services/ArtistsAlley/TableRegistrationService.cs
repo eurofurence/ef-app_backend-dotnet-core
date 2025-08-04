@@ -2,15 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Eurofurence.App.Common.ExtensionMethods;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -269,6 +268,54 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             }
 
             await DeleteOneAsync(tableRegistrationRecord.Id);
+        }
+
+        public new async Task<DeltaResponse<TableRegistrationResponse>> GetDeltaResponseAsync(
+            DateTime? minLastDateTimeChangedUtc = null,
+            CancellationToken cancellationToken = default)
+        {
+            var storageInfo = await GetStorageInfoAsync(cancellationToken);
+            var response = new DeltaResponse<TableRegistrationResponse>
+            {
+                StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
+                StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
+            };
+
+            if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
+            {
+                response.RemoveAllBeforeInsert = true;
+                response.DeletedEntities = Array.Empty<Guid>();
+                var changedEntities = await
+                        GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                        .Select(x => x.Transform<TableRegistrationResponse>())
+                        .ToListAsync(cancellationToken: cancellationToken);
+
+                response.ChangedEntities = changedEntities.ToArray();
+            }
+            else
+            {
+                response.RemoveAllBeforeInsert = false;
+
+                var entities =
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                    .IgnoreQueryFilters()
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+
+                var changedEntities = await
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc)
+                    .Select(x => x.Transform<TableRegistrationResponse>())
+                    .ToListAsync(cancellationToken);
+
+                response.ChangedEntities = changedEntities.ToArray();
+                response.DeletedEntities = await entities
+                    .AsNoTracking()
+                    .Where(a => a.IsDeleted == 1)
+                    .Select(a => a.Id)
+                    .ToArrayAsync(cancellationToken);
+            }
+
+            return response;
         }
     }
 }

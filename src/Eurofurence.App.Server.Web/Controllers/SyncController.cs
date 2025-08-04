@@ -1,7 +1,9 @@
-﻿using Eurofurence.App.Domain.Model.Knowledge;
+﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -31,6 +33,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly ILogger _logger;
         private readonly IMapService _mapService;
+        private readonly ITableRegistrationService _tableRegistrationService;
         private readonly GlobalOptions _globalOptions;
         private readonly IMapper _mapper;
         public SyncController(
@@ -45,6 +48,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IDealerService dealerService,
             IAnnouncementService announcementService,
             IMapService mapService,
+            ITableRegistrationService tableRegistrationService,
             IOptions<GlobalOptions> globalOptions,
             IMapper mapper
         )
@@ -60,6 +64,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
             _announcementService = announcementService;
             _mapService = mapService;
+            _tableRegistrationService = tableRegistrationService;
             _globalOptions = globalOptions.Value;
             _mapper = mapper;
         }
@@ -81,6 +86,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             _logger.LogInformation("Execute=Sync, Since={since}", since);
 
+            var tableRegistrations =
+                (User.IsInRole("AttendeeCheckedIn") || User.IsInRole("ArtistAlleyModerator") || User.IsInRole("ArtistAlleyAdmin") || User.IsInRole("Admin")) ?
+                _mapper.Map<DeltaResponse<ArtistAlleyResponse>>(await _tableRegistrationService.GetDeltaResponseAsync(since))
+                : new DeltaResponse<ArtistAlleyResponse>
+                {
+                    RemoveAllBeforeInsert = true,
+                    ChangedEntities = [],
+                    DeletedEntities = []
+                };
+
             var response = new AggregatedDeltaResponse
             {
                 ConventionIdentifier = _globalOptions.ConventionIdentifier,
@@ -97,7 +112,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Images = await _imageService.GetDeltaResponseAsync(since),
                 Dealers = await _dealerService.GetDeltaResponseAsync(since),
                 Announcements = await _announcementService.GetDeltaResponseAsync(since),
-                Maps = await _mapService.GetDeltaResponseAsync(since)
+                Maps = await _mapService.GetDeltaResponseAsync(since),
+                TableRegistrations = tableRegistrations,
             };
 
             return response;
