@@ -29,6 +29,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
     {
         private readonly AppDbContext _appDbContext;
         private readonly AuthorizationOptions _authorizationOptions;
+        private readonly ArtistAlleyOptions _artistAlleyOptions;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
@@ -41,6 +42,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
             IOptions<AuthorizationOptions> authorizationOptions,
+            IOptions<ArtistAlleyOptions> artistAlleyOptions,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
             IPushNotificationChannelManager pushNotificationChannelManager,
@@ -50,6 +52,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
         {
             _appDbContext = context;
             _authorizationOptions = authorizationOptions.Value;
+            _artistAlleyOptions = artistAlleyOptions.Value;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
             _pushNotificationChannelManager = pushNotificationChannelManager;
@@ -170,6 +173,11 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
+
+            if (_artistAlleyOptions.SendAnnouncements != true)
+            {
+                return;
+            }
 
             var announcementRequest = new AnnouncementRequest
             {
