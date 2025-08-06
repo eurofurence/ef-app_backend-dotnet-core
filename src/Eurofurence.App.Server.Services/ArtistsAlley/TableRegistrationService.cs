@@ -322,22 +322,6 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 throw new ArgumentException("User has not been registered yet.");
             }
 
-            var message =
-                $"Dear {record.OwnerUsername},\n\nYou have successfully been checked out from the Artist Alley..";
-
-            var sendPrivateMessageRequest = new SendPrivateMessageByIdentityRequest()
-            {
-                AuthorName = "Artist Alley",
-                RecipientUid = record.OwnerUid,
-                Subject = "Your table registration has been checked out",
-                Message = message,
-                ToastTitle = "Artist Alley",
-                ToastMessage = "Your table registration has been checked out"
-            };
-
-            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest,
-                cancellationToken: cancellationToken);
-
             await DeleteOneAsync(record.Id, cancellationToken);
         }
 
