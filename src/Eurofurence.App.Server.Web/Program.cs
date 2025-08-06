@@ -69,6 +69,7 @@ namespace Eurofurence.App.Server.Web
             var dealerOptions = builder.Configuration.GetSection("Dealers").Get<DealerOptions>();
             var announcementOptions = builder.Configuration.GetSection("Announcements").Get<AnnouncementOptions>();
             var eventOptions = builder.Configuration.GetSection("Events").Get<EventOptions>();
+            var artistAlleyOptions = builder.Configuration.GetSection("ArtistAlley").Get<ArtistAlleyOptions>();
             var jobsOptions = builder.Configuration.GetSection("Jobs").Get<JobsOptions>();
 
             builder.Services.Configure<GlobalOptions>(builder.Configuration.GetSection("Global"));
@@ -169,7 +170,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddApns();
 
-            builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions);
+            builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions, artistAlleyOptions);
 
             builder.Services.AddMapper();
 

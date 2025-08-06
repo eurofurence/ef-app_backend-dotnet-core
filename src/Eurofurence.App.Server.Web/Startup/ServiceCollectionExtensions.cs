@@ -153,7 +153,7 @@ namespace Eurofurence.App.Server.Web.Startup
 
         public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger logger,
             JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions,
-            AnnouncementOptions announcementOptions, EventOptions eventOptions)
+            AnnouncementOptions announcementOptions, EventOptions eventOptions, ArtistAlleyOptions artistAlleyOptions)
         {
             services.AddQuartz(q =>
             {
@@ -260,16 +260,23 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.DeleteExpiredArtistAlleyRegistrations.Enabled)
                 {
-                    var deleteExpiredArtistAlleyRegistrationsKey = new JobKey(nameof(DeleteExpiredArtistAlleyRegistrationsJob));
-                    q.AddJob<DeleteExpiredArtistAlleyRegistrationsJob>(opts => opts.WithIdentity(deleteExpiredArtistAlleyRegistrationsKey));
-                    q.AddTrigger(t =>
-                        t.ForJob(deleteExpiredArtistAlleyRegistrationsKey)
-                            .WithSimpleSchedule(s =>
-                            {
-                                s.WithIntervalInSeconds(jobsOptions.DeleteExpiredArtistAlleyRegistrations
-                                    .SecondsInterval);
-                                s.RepeatForever();
-                            }));
+                    if (artistAlleyOptions.ExpirationTimeInHours == null)
+                    {
+                        logger.Error("Delete Expired Artist Alley Registrations job can't be added: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
+                    }
+                    else
+                    {
+                        var deleteExpiredArtistAlleyRegistrationsKey = new JobKey(nameof(DeleteExpiredArtistAlleyRegistrationsJob));
+                        q.AddJob<DeleteExpiredArtistAlleyRegistrationsJob>(opts => opts.WithIdentity(deleteExpiredArtistAlleyRegistrationsKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(deleteExpiredArtistAlleyRegistrationsKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(jobsOptions.DeleteExpiredArtistAlleyRegistrations
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
                 }
             });
 

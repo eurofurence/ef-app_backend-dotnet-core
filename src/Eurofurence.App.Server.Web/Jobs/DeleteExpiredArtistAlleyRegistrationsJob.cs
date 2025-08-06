@@ -35,13 +35,6 @@ namespace Eurofurence.App.Server.Web.Jobs
 
             try
             {
-                if (_options.ExpirationTimeInHours == null)
-                {
-                    _logger.LogWarning(LogEvents.Audit,
-                        $"Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire.");
-                    return;
-                }
-
                 var expiredRegistrations = (await _tableRegistrationService
                         .GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Pending)
                         .ToListAsync())
