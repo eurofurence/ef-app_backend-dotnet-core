@@ -118,7 +118,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             try
             {
-                await _tableRegistrationService.DeleteLatestRegistrationByUidAsync(User.GetSubject());
+                await _tableRegistrationService.CheckoutLatestRegistrationByUidAsync(User.GetSubject());
             }
             catch (ArgumentException)
             {

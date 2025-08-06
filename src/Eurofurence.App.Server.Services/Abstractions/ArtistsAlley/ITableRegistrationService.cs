@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 
@@ -32,12 +33,15 @@ namespace Eurofurence.App.Server.Services.Abstractions.ArtistsAlley
         /// Deletes the latest registration of a given user by their ID (<paramref name="uid"/>)
         /// </summary>
         /// <param name="uid">The ID of the user whose registration should be deleted</param>
+        /// <param name="cancellationToken">Token to abort the operation.</param>
         /// <exception cref="ArgumentException">Can be thrown when no registration can be found under the users <paramref name="uid"/></exception>
         /// <returns></returns>
-        Task DeleteLatestRegistrationByUidAsync(string uid);
+        Task CheckoutLatestRegistrationByUidAsync(string uid, CancellationToken cancellationToken = default);
 
-        Task ApproveByIdAsync(Guid id, string operatorUid);
+        Task ApproveByIdAsync(Guid id, string operatorUid, CancellationToken cancellationToken = default);
 
-        Task RejectByIdAsync(Guid id, string operatorUid);
+        Task RejectByIdAsync(Guid id, string operatorUid, CancellationToken cancellationToken = default);
+
+        Task DeleteExpiredAsync(CancellationToken cancellationToken);
     }
 }

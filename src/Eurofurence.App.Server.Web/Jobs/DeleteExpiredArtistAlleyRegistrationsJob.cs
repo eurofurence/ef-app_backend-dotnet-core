@@ -35,17 +35,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
             try
             {
-                var expiredRegistrations = (await _tableRegistrationService
-                        .FindAll()
-                        .ToListAsync())
-                    .Where(r => (DateTime.UtcNow - r.CreatedDateTimeUtc).TotalHours > _options.ExpirationTimeInHours);
-
-                foreach (var registration in expiredRegistrations)
-                {
-                    await _tableRegistrationService.DeleteOneAsync(registration.Id);
-                    _logger.LogInformation(LogEvents.Audit,
-                        $"Artist alley registration with the ID {registration.Id} of user {registration.OwnerUsername} expired and was deleted.");
-                }
+                await _tableRegistrationService.DeleteExpiredAsync(context.CancellationToken);
             }
             catch (Exception e)
             {
