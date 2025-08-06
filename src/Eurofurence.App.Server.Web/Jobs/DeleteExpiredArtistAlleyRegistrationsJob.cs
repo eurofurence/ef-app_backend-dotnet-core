@@ -8,6 +8,7 @@ using Sentry;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
@@ -41,9 +42,10 @@ namespace Eurofurence.App.Server.Web.Jobs
                     return;
                 }
 
-                var expiredRegistrations = _tableRegistrationService
-                    .GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Pending)
-                    .Where(r => (DateTime.Now - r.CreatedDateTimeUtc).TotalHours > _options.ExpirationTimeInHours);
+                var expiredRegistrations = (await _tableRegistrationService
+                        .GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Pending)
+                        .ToListAsync())
+                    .Where(r => (DateTime.UtcNow - r.CreatedDateTimeUtc).TotalHours > _options.ExpirationTimeInHours);
 
                 foreach (var registration in expiredRegistrations)
                 {
