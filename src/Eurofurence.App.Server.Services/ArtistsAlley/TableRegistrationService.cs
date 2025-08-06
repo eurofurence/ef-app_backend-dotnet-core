@@ -271,7 +271,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var expiredRegistrations = (await FindAll()
                     .AsNoTracking()
                     .ToListAsync(cancellationToken: cancellationToken))
-                .Where(r => (DateTime.UtcNow - r.CreatedDateTimeUtc).TotalHours >
+                .Where(r => (DateTime.UtcNow - r.LastChangeDateTimeUtc).TotalHours >
                             _artistAlleyOptions.ExpirationTimeInHours);
 
             foreach (var registration in expiredRegistrations)
