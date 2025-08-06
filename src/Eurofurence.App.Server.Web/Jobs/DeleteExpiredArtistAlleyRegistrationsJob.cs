@@ -36,7 +36,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             try
             {
                 var expiredRegistrations = (await _tableRegistrationService
-                        .GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Pending)
+                        .FindAll()
                         .ToListAsync())
                     .Where(r => (DateTime.UtcNow - r.CreatedDateTimeUtc).TotalHours > _options.ExpirationTimeInHours);
 
