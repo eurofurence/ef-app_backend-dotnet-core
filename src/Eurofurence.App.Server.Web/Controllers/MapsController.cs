@@ -76,7 +76,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<MapEntryResponse> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
             var result = (await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId)
-                .Transient404(HttpContext).Transform();
+                .Transient404(HttpContext)?.Transform();
 
             return result;
         }

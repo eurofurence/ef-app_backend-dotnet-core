@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform<TableRegistrationResponse>();
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<TableRegistrationResponse>();
         }
 
         /// <summary>

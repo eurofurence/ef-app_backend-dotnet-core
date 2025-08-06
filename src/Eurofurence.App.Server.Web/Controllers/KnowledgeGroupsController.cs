@@ -48,7 +48,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
             )
         {
-            return (await _knowledgeGroupService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _knowledgeGroupService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>

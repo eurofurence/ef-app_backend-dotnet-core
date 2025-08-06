@@ -84,7 +84,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ImageRecord), 200)]
         public async Task<ImageResponse> GetImageAsync([FromRoute] Guid id)
         {
-            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext).Transform<ImageResponse>();
+            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<ImageResponse>();
         }
 
         [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
