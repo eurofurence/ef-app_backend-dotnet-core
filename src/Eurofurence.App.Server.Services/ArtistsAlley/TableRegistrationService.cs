@@ -1,11 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Announcements;
+﻿using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Images;
@@ -22,6 +15,13 @@ using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System;
+using System.IO;
+using System.Linq;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
@@ -276,6 +276,18 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             }
 
             await DeleteOneAsync(tableRegistrationRecord.Id);
+        }
+
+        public override async Task DeleteOneAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var entity = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+            if (entity.ImageId != null)
+            {
+                await _imageService.DeleteOneAsync((Guid)entity.ImageId, cancellationToken);
+            }
+
+            await base.DeleteOneAsync(id, cancellationToken);
         }
 
         public new async Task<DeltaResponse<TableRegistrationResponse>> GetDeltaResponseAsync(
