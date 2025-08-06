@@ -3,5 +3,6 @@
     public class ArtistAlleyOptions
     {
         public bool RegistrationEnabled { get; init; }
+        public double? ExpirationTimeInHours { get; init; }
     }
 }
