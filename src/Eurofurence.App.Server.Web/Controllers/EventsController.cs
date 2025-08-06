@@ -74,7 +74,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventResponse), 200)]
         public async Task<EventResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventService.FindOneAsync(id)).Transient404(HttpContext)
+            return (await _eventService.FindOneAsync(id)).Transient404(HttpContext)?
                 .Transform();
         }
 

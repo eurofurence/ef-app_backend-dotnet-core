@@ -50,8 +50,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(DealerResponse), 200)]
         public async Task<DealerResponse> GetDealerAsync([FromRoute] Guid id)
         {
-            var result = (await _dealerService.FindOneAsync(id)).Transient404(HttpContext).Transform();
-            result.MapLink = _dealerService.GetMapLink(result.Id);
+            var result = (await _dealerService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
+            if (result is not null) result.MapLink = _dealerService.GetMapLink(result.Id);
             return result;
         }
 

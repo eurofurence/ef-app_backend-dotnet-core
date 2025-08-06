@@ -72,7 +72,8 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<ILostAndFoundLassieImporter, LostAndFoundLassieImporter>();
             services.AddTransient<IMapService, MapService>();
             services.AddTransient<IPrivateMessageService, PrivateMessageService>();
-            services.AddTransient<IPushNotificationChannelStatisticsService, PushNotificationChannelStatisticsService>();
+            services
+                .AddTransient<IPushNotificationChannelStatisticsService, PushNotificationChannelStatisticsService>();
             services.AddTransient<IQrCodeService, QrCodeService>();
             services.AddTransient<IStorageServiceFactory, StorageServiceFactory>();
             services.AddTransient<ITableRegistrationService, TableRegistrationService>();
@@ -113,13 +114,14 @@ namespace Eurofurence.App.Server.Web.Startup
                     Type = SecuritySchemeType.Http
                 });
 
-                options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme, new OpenApiSecurityScheme
-                {
-                    Name = ApiKeyAuthenticationDefaults.HeaderName,
-                    Description = "Authenticate with a static API key",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
-                });
+                options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme,
+                    new OpenApiSecurityScheme
+                    {
+                        Name = ApiKeyAuthenticationDefaults.HeaderName,
+                        Description = "Authenticate with a static API key",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey
+                    });
 
                 //options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
@@ -149,7 +151,9 @@ namespace Eurofurence.App.Server.Web.Startup
             return services;
         }
 
-        public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger logger, JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions, AnnouncementOptions announcementOptions, EventOptions eventOptions)
+        public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger logger,
+            JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions,
+            AnnouncementOptions announcementOptions, EventOptions eventOptions, ArtistAlleyOptions artistAlleyOptions)
         {
             services.AddQuartz(q =>
             {
@@ -248,6 +252,27 @@ namespace Eurofurence.App.Server.Web.Startup
                                 .WithSimpleSchedule(s =>
                                 {
                                     s.WithIntervalInSeconds(jobsOptions.UpdateLostAndFound
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
+                }
+
+                if (jobsOptions.DeleteExpiredArtistAlleyRegistrations.Enabled)
+                {
+                    if (artistAlleyOptions.ExpirationTimeInHours == null)
+                    {
+                        logger.Error("Delete Expired Artist Alley Registrations job can't be added: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
+                    }
+                    else
+                    {
+                        var deleteExpiredArtistAlleyRegistrationsKey = new JobKey(nameof(DeleteExpiredArtistAlleyRegistrationsJob));
+                        q.AddJob<DeleteExpiredArtistAlleyRegistrationsJob>(opts => opts.WithIdentity(deleteExpiredArtistAlleyRegistrationsKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(deleteExpiredArtistAlleyRegistrationsKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(jobsOptions.DeleteExpiredArtistAlleyRegistrations
                                         .SecondsInterval);
                                     s.RepeatForever();
                                 }));

@@ -102,7 +102,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform<TableRegistrationResponse>();
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<TableRegistrationResponse>();
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             try
             {
-                await _tableRegistrationService.DeleteLatestRegistrationByUidAsync(User.GetSubject());
+                await _tableRegistrationService.CheckoutLatestRegistrationByUidAsync(User.GetSubject());
             }
             catch (ArgumentException)
             {

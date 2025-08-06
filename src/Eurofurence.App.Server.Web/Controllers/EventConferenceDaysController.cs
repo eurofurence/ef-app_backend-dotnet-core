@@ -41,7 +41,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceDayResponse), 200)]
         public async Task<EventConferenceDayResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventConferenceDayService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _eventConferenceDayService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
         }
     }
 }

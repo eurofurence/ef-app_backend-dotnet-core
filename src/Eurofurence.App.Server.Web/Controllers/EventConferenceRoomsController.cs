@@ -44,8 +44,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceRoomResponse), 200)]
         public async Task<EventConferenceRoomResponse> GetEventAsync([FromRoute] Guid id)
         {
-            var result = (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext).Transform();
-            result.MapLink = _eventConferenceRoomService.GetMapLink(result.Id);
+            var result = (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
+            if (result is not null) result.MapLink = _eventConferenceRoomService.GetMapLink(result.Id);
             return result;
         }
     }
