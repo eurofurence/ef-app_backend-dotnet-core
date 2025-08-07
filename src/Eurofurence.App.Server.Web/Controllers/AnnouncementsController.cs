@@ -106,10 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             if (request.Groups is { Length: > 0 })
             {
-                foreach (var role in request.Groups)
-                {
-                    await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(record, role);
-                }
+                await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupsAsync(record, request.Groups);
             }
             else
             {

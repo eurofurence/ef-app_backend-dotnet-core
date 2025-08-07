@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Identity
@@ -12,6 +13,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
 
         public IEnumerable<string> GetUserGroups(ClaimsIdentity identity);
 
-        public Task<IEnumerable<string>> GetGroupMembers(ClaimsIdentity identity, string role);
+        public Task<IEnumerable<string>> GetGroupMembers(string groupId);
+        public Task<List<string>> GetCachedGroupMembers(string groupId,
+        CancellationToken cancellationToken = default);
     }
 }

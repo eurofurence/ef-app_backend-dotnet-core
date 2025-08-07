@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +16,6 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -37,7 +35,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly ExpoOptions _expoOptions;
         private readonly IApnsService _apnsService;
         private readonly ILogger _logger;
-        private readonly HttpContext _httpContext;
 
         public PushNotificationChannelManager(
             IDeviceIdentityService deviceService,
@@ -49,8 +46,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             IOptions<ExpoOptions> expoOptions,
             IOptions<ApnsOptions> apnsOptions,
             IApnsService apnsService,
-            ILoggerFactory loggerFactory,
-            IHttpContextAccessor httpContextAccessor)
+            ILoggerFactory loggerFactory)
         {
             _deviceService = deviceService;
             _userService = userService;
@@ -62,7 +58,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _apnsOptions = apnsOptions.Value;
             _apnsService = apnsService;
             _logger = loggerFactory.CreateLogger(GetType());
-            _httpContext = httpContextAccessor.HttpContext;
 
             if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile)) return;
 
@@ -103,32 +98,34 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
         }
 
-        public async Task PushAnnouncementNotificationToGroupAsync(
+        public async Task PushAnnouncementNotificationToGroupsAsync(
             AnnouncementRecord announcement,
-            string group,
+            string[] groupIds,
             CancellationToken cancellationToken = default)
         {
-            if (_httpContext.User.Identity is not ClaimsIdentity identity)
+            var identityIds = new List<string>();
+
+            foreach (var groupId in groupIds)
             {
-                return;
+                try
+                {
+                    var fetchedGroupMembers = await _identityService.GetGroupMembers(groupId);
+                    identityIds.AddRange(fetchedGroupMembers);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error when trying to get members of IDP group {groupId}: {ex.Message}");
+                    identityIds = [];
+                }
+                var cachedGroupMembers = await _identityService.GetCachedGroupMembers(groupId);
+                identityIds.AddRange(cachedGroupMembers);
             }
 
-            IEnumerable<string> identityIds;
+            var uniqueIdentityIds = new HashSet<string>(identityIds);
+            _logger.LogDebug($"Sending announcement for groups {groupIds} to {uniqueIdentityIds.Count} out of originally {identityIds.Count} after deduplication…");
 
-            try
-            {
-                // TODO: Implement alternative to pulling group memberships from IDP
-                // Suggestion: Consider caching group memberships in database table UserPushNotificationRoles
-                // end refresh them every whenever IdentityService.ReadUserInfo() runs into a cache-miss.
-                identityIds = await _identityService.GetGroupMembers(identity, group);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error when trying to get members of IDP group {group}: {ex.Message}");
-                identityIds = [];
-            }
 
-            foreach (var identityId in identityIds)
+            foreach (var identityId in uniqueIdentityIds)
             {
                 var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 

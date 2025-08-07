@@ -7,4 +7,6 @@ public class IdentityOptions
     public string UserInfoEndpoint { get; init; }
     public string GroupsEndpoint { get; set; }
     public string RegSysUrl { get; init; }
+    public string GroupReaderToken { get; init; }
+    public int GroupCacheExpirationInHours { get; init; }
 }

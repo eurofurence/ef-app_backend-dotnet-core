@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.PushNotifications;
+﻿using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
@@ -16,6 +17,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.Identity
@@ -82,6 +84,28 @@ namespace Eurofurence.App.Server.Services.Identity
                         AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(seconds)
                     }
                 );
+
+                if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
+                    GetUserGroups(identity).ToArray() is { Length: > 0 } groups)
+                {
+                    var identityAnnouncementGroups = await _appDbContext.IdentityAnnouncementGroups.AsTracking().FirstOrDefaultAsync(iag => iag.IdentityId == identityId);
+
+                    if (identityAnnouncementGroups is null)
+                    {
+                        await _appDbContext.IdentityAnnouncementGroups.AddAsync(new IdentityAnnouncementGroupsRecord
+                        {
+                            IdentityId = identityId,
+                            Groups = groups
+                        });
+                    }
+                    else
+                    {
+                        identityAnnouncementGroups.Groups = groups;
+                        identityAnnouncementGroups.Touch();
+                    }
+                    await _appDbContext.SaveChangesAsync();
+                }
+
             }
         }
 
@@ -179,7 +203,6 @@ namespace Eurofurence.App.Server.Services.Identity
                 );
             }
         }
-
         public IEnumerable<string> GetUserGroups(ClaimsIdentity identity)
         {
             return identity.Claims
@@ -187,9 +210,10 @@ namespace Eurofurence.App.Server.Services.Identity
                 .Select(claim => claim.Value);
         }
 
-        public async Task<IEnumerable<string>> GetGroupMembers(ClaimsIdentity identity, string group)
+        public async Task<IEnumerable<string>> GetGroupMembers(string groupId)
         {
-            if (identity.FindFirst("token")?.Value is not { Length: > 0 } token)
+            if (_identityOptionsMonitor.CurrentValue.GroupReaderToken is not { Length: > 0 } token
+                || _identityOptionsMonitor.CurrentValue.GroupsEndpoint is not { Length: > 0 } groupsEndpoint)
             {
                 return [];
             }
@@ -197,14 +221,38 @@ namespace Eurofurence.App.Server.Services.Identity
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var uri = new Uri(System.IO.Path.Combine(_identityOptionsMonitor.CurrentValue.GroupsEndpoint,
-                $"{group}/users"));
+            var uri = new Uri(System.IO.Path.Combine(groupsEndpoint,
+                $"{groupId}/users"));
             using var response = await client.GetAsync(uri);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<GroupMembersResponse>();
 
             return result.Data.Select(d => d.UserId);
+        }
+
+        /// <summary>
+        /// Retrieve unexpired, cached identity IDs associated to given group ID.
+        /// Groups get cached every time userinfo is refreshed.
+        /// Caching is only active if reading group memberships from IDP is not configured.
+        /// </summary>
+        /// <param name="groupId">Group ID for which to fetch member identity IDs</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<List<string>> GetCachedGroupMembers(string groupId,
+        CancellationToken cancellationToken = default)
+        {
+            if (_identityOptionsMonitor.CurrentValue.GroupsEndpoint is { Length: > 0 }
+                && _identityOptionsMonitor.CurrentValue.GroupReaderToken is { Length: > 0 })
+            {
+                return [];
+            }
+
+            return await _appDbContext.IdentityAnnouncementGroups
+                    .Where(iag => iag.Groups.Contains(groupId)
+                        && iag.LastChangeDateTimeUtc.CompareTo(DateTime.UtcNow.AddDays(-1 * _identityOptionsMonitor.CurrentValue.GroupCacheExpirationInHours)) > 0)
+                    .Select(iag => iag.IdentityId)
+                    .ToListAsync(cancellationToken);
         }
 
         private async Task<UserRegistrationStatus> GetRegistrationStatus(string token, string id)
@@ -249,7 +297,7 @@ namespace Eurofurence.App.Server.Services.Identity
                 {
                     RegSysId = x,
                     IdentityId = identityId,
-                    Nickname = nickname
+                    Nickname = nickname,
                 }));
 
                 await _appDbContext.SaveChangesAsync();

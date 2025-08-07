@@ -184,7 +184,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
 
-            if (_artistAlleyOptions.SendAnnouncements != true)
+            if (_artistAlleyOptions.SendModeratorAnnouncements != true)
             {
                 return;
             }
@@ -202,11 +202,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                     .ToArray()
             };
 
-            foreach (var group in announcementRequest.Groups)
-            {
-                await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupAsync(
-                    announcementRequest.Transform(), group);
-            }
+            await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupsAsync(
+                announcementRequest.Transform(), announcementRequest.Groups);
         }
 
         public async Task ApproveByIdAsync(Guid id, string operatorUid, CancellationToken cancellationToken = default)
