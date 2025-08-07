@@ -72,7 +72,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                     .Include(i => i.DealerArtists)
                     .Include(i => i.EventBanners)
                     .Include(i => i.EventPosters)
-                    .Include(i => i.Announcements));
+                    .Include(i => i.Announcements)
+                    .AsSplitQuery());
         }
 
         /// <summary>
