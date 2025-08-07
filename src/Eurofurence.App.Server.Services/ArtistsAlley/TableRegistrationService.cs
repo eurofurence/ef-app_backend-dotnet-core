@@ -161,15 +161,16 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 await DeleteOneAsync(registration.Id);
             }
 
-            var regId = user.GetRegSysIds().FirstOrDefault("none");
+            var regSysId = user.GetRegSysIds().FirstOrDefault("none");
 
             var image = await _imageService.InsertImageAsync(
-                $"artistalley:{subject}:{regId}", imageStream, true, 1500, 1500);
+                $"artistalley:{subject}:{regSysId}", imageStream, true, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
                 OwnerUid = user.GetSubject(),
                 OwnerUsername = user.Identity?.Name,
+                OwnerRegSysId = regSysId,
                 CreatedDateTimeUtc = DateTime.UtcNow,
                 DisplayName = _htmlSanitizer.Sanitize(request.DisplayName),
                 WebsiteUrl = request.WebsiteUrl,
@@ -194,7 +195,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             var announcementRequest = new AnnouncementRequest
             {
                 Title = "New Artist Alley Registration",
-                Content = $"{record.OwnerUsername} (Reg# {regId}) registered as {request.DisplayName} at table {request.Location}. Please check their table and approve or reject their request.",
+                Content = $"{record.OwnerUsername} (Reg# {regSysId}) registered as {request.DisplayName} at table {request.Location}. Please check their table and approve or reject their request.",
                 Area = "announcement",
                 Author = "Artist Alley",
                 ImageId = image?.Id,
