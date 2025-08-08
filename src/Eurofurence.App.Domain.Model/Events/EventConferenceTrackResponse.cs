@@ -7,4 +7,7 @@ public class EventConferenceTrackResponse : ResponseBase
 {
     [DataMember]
     public string Name { get; set; }
+
+    [DataMember]
+    public bool IsInternal { get; set; }
 }

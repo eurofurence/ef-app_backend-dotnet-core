@@ -38,6 +38,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all events in the event schedule.
         /// </summary>
         /// <returns>All events in the event schedule.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
@@ -52,6 +54,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     in minutes that is considered when calculating overlaps.
         /// </summary>
         /// <returns>All events in the event schedule that conflict with a specified start/endtime + tolerance.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet(":conflicts")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
@@ -69,6 +73,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single event in the event schedule.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(EventResponse), 200)]
@@ -138,6 +144,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
         [Authorize]
+        [AllowAnonymous]
+        [Authorize]
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
         {
@@ -157,6 +165,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
+        [Authorize]
+        [AllowAnonymous]
         [Authorize]
         [HttpDelete("{id}/:favorite")]
         public async Task<ActionResult> UnmarkEventAsFavorite([FromRoute] Guid id)
