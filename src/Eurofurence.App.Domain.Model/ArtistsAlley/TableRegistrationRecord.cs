@@ -64,6 +64,12 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         public string OwnerUsername { get; set; }
 
         /// <summary>
+        /// Registration system ID of the user that submitted the registration.
+        /// </summary>
+        [DataMember]
+        public string OwnerRegSysId { get; set; }
+
+        /// <summary>
         /// Preferred display name of artist.
         /// </summary>
         [DataMember]
