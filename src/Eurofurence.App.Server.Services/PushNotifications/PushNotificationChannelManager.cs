@@ -121,11 +121,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 identityIds.AddRange(cachedGroupMembers);
             }
 
-            var uniqueIdentityIds = new HashSet<string>(identityIds);
-            _logger.LogDebug($"Sending announcement for groups {groupIds} to {uniqueIdentityIds.Count} out of originally {identityIds.Count} after deduplication…");
 
-
-            foreach (var identityId in uniqueIdentityIds)
+            foreach (var identityId in identityIds.Distinct())
             {
                 var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 

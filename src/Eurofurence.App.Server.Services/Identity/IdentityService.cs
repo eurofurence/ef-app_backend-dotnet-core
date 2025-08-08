@@ -92,7 +92,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
                     if (identityAnnouncementGroups is null)
                     {
-                        await _appDbContext.IdentityAnnouncementGroups.AddAsync(new IdentityAnnouncementGroupsRecord
+                        _appDbContext.IdentityAnnouncementGroups.Add(new IdentityAnnouncementGroupsRecord
                         {
                             IdentityId = identityId,
                             Groups = groups
