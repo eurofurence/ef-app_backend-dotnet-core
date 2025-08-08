@@ -14,6 +14,7 @@ using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -25,15 +26,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IImageService _imageService;
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
+        private readonly ILogger _logger;
 
         public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,
             IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService,
-            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService,
+            ILoggerFactory loggerFactory)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
             _artistAlleyOptions = artistAlleyOptions.Value;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
 
@@ -42,8 +46,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
+            _logger.LogDebug($"Request to update TableRegistration {id} with status {state}.");
+
             TableRegistrationRecord record =
-                await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+                await _tableRegistrationService.FindOneAsync(id);
             // Return 404 if the passed id does not exist
             if (record == null)
             {
