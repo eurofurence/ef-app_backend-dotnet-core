@@ -16,7 +16,7 @@ public static class DtoTransformerExtensions
     public static TDestination Transform<TDestination>(this IDtoTransformable<TDestination> transformable)
         where TDestination : class
     {
-        return transformable.Transform();
+        return transformable?.Transform();
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ public static class DtoTransformerExtensions
         TypeAdapterConfig configuration)
         where TDestination : class
     {
-        return transformable.Transform(configuration);
+        return transformable?.Transform(configuration);
     }
 
 
@@ -49,7 +49,7 @@ public static class DtoTransformerExtensions
         where TRecord : class
         where TResponse : class
     {
-        transformable.MergeDto(source);
+        transformable?.MergeDto(source);
     }
 
     /// <summary>
@@ -68,6 +68,6 @@ public static class DtoTransformerExtensions
         where TRecord : class
         where TResponse : class
     {
-        transformable.MergeDto(source, configuration);
+        transformable?.MergeDto(source, configuration);
     }
 }
