@@ -17,7 +17,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         IQueryable<EventRecord> FindConflicts(
             DateTime conflictStartTime,
             DateTime conflictEndTime,
-            TimeSpan tolerance);
+            TimeSpan tolerance,
+            bool includeInternal);
 
         public Task RunImportAsync();
 

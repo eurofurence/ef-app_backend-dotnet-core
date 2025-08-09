@@ -38,12 +38,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all events in the event schedule.
         /// </summary>
         /// <returns>All events in the event schedule.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
         public IQueryable<EventResponse> GetEventsAsync()
         {
-            return _eventService.FindAll().Select(x => x.Transform());
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            return _eventService.FindAll(e => isStaff || !e.IsInternal).Select(x => x.Transform());
         }
 
         /// <summary>
@@ -52,6 +55,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     in minutes that is considered when calculating overlaps.
         /// </summary>
         /// <returns>All events in the event schedule that conflict with a specified start/endtime + tolerance.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet(":conflicts")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
@@ -61,21 +66,25 @@ namespace Eurofurence.App.Server.Web.Controllers
             int toleranceInMinutes
         )
         {
+            var isStaff = User?.IsInRole("Staff") ?? false;
             return _eventService.FindConflicts(conflictStartTime, conflictEndTime,
-                TimeSpan.FromMinutes(toleranceInMinutes)).Select(x => x.Transform());
+                TimeSpan.FromMinutes(toleranceInMinutes), isStaff).Select(x => x.Transform());
         }
 
         /// <summary>
         ///     Retrieve a single event in the event schedule.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(EventResponse), 200)]
         public async Task<EventResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventService.FindOneAsync(id)).Transient404(HttpContext)?
-                .Transform();
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            var eventEntry = await _eventService.FindAll(e => e.Id == id && (isStaff || !e.IsInternal)).FirstOrDefaultAsync();
+            return eventEntry.Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>
@@ -87,7 +96,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType<EventResponse>(200)]
         public ActionResult GetMyFavorites()
         {
-            return Ok(_eventService.GetFavoriteEventsFromUser(User).Select(x => x.Transform()));
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            return Ok(_eventService.GetFavoriteEventsFromUser(User)?
+                .Where(e => isStaff || !e.IsInternal)
+                .Select(x => x.Transform()));
         }
 
         [Authorize]
@@ -138,12 +150,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
         [Authorize]
+        [AllowAnonymous]
+        [Authorize]
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
         {
             var foundEvent = await _eventService.FindOneAsync(id);
+            var isStaff = User?.IsInRole("Staff") ?? false;
 
-            if (foundEvent == null)
+            if (foundEvent == null || (foundEvent.IsInternal && !isStaff))
             {
                 return NotFound();
             }
@@ -157,6 +172,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
+        [Authorize]
+        [AllowAnonymous]
         [Authorize]
         [HttpDelete("{id}/:favorite")]
         public async Task<ActionResult> UnmarkEventAsFavorite([FromRoute] Guid id)

@@ -72,4 +72,7 @@ public class EventRequest : IDtoTransformable<EventRecord>
 
     [DataMember]
     public string[] Tags { get; set; } = [];
+
+    [DataMember]
+    public bool IsInternal { get; set; }
 }

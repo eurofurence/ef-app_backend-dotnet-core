@@ -6,6 +6,7 @@ using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Web.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,12 +26,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all event conference Rooms in the event schedule.
         /// </summary>
         /// <returns>All events in the event schedule.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventConferenceRoomResponse>), 200)]
-        public async Task<IEnumerable<EventConferenceRoomResponse>> GetEventsAsync()
+        public async Task<IEnumerable<EventConferenceRoomResponse>> GetEventConferenceRoomsAsync()
         {
-            var result = await _eventConferenceRoomService.FindAll().Select(x => x.Transform()).ToListAsync();
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            var result = await _eventConferenceRoomService.FindAll(x => isStaff || !x.IsInternal).Select(x => x.Transform()).ToListAsync();
             result.ForEach(r => r.MapLink = _eventConferenceRoomService.GetMapLink(r.Id));
             return result;
         }
@@ -39,12 +43,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieve a single event conference room in the event schedule.
         /// </summary>
         /// <param name="id">id of the requested entity</param>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(EventConferenceRoomResponse), 200)]
-        public async Task<EventConferenceRoomResponse> GetEventAsync([FromRoute] Guid id)
+        public async Task<EventConferenceRoomResponse> GetEventConferenceRoomAsync([FromRoute] Guid id)
         {
-            var result = (await _eventConferenceRoomService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            var result = (await _eventConferenceRoomService.FindAll(x => x.Id == id && (isStaff || !x.IsInternal)).FirstOrDefaultAsync()).Transient404(HttpContext)?.Transform();
             if (result is not null) result.MapLink = _eventConferenceRoomService.GetMapLink(result.Id);
             return result;
         }

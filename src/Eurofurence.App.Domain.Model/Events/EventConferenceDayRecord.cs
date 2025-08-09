@@ -15,6 +15,9 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public DateTime Date { get; set; }
 
+        [DataMember]
+        public bool IsInternal { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<EventRecord> Events { get; set; }
     }

@@ -71,4 +71,7 @@ public class EventResponse : ResponseBase
 
     [DataMember]
     public string[] Tags { get; set; } = [];
+
+    [DataMember]
+    public bool IsInternal { get; set; }
 }

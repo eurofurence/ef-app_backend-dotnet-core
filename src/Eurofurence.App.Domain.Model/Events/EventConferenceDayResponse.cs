@@ -11,4 +11,7 @@ public class EventConferenceDayResponse : ResponseBase
 
     [DataMember]
     public DateTime Date { get; set; }
+
+    [DataMember]
+    public bool IsInternal { get; set; }
 }

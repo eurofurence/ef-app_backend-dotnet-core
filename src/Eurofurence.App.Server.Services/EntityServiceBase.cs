@@ -170,13 +170,20 @@ namespace Eurofurence.App.Server.Services
                 response.RemoveAllBeforeInsert = true;
                 response.DeletedEntities = Array.Empty<Guid>();
                 response.ChangedEntities = await
-                    _appDbContext.Set<T>().Where(entity => entity.IsDeleted == 0).Select(x => x.Transform()).ToArrayAsync(cancellationToken);
+                    _appDbContext.Set<T>()
+                    .AsNoTracking()
+                    .Where(entity => entity.IsDeleted == 0)
+                    .Select(x => x.Transform())
+                    .ToArrayAsync(cancellationToken);
             }
             else
             {
                 response.RemoveAllBeforeInsert = false;
 
-                var entities = _appDbContext.Set<T>().IgnoreQueryFilters().Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+                var entities = _appDbContext.Set<T>()
+                    .AsNoTracking()
+                    .IgnoreQueryFilters()
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)

@@ -13,6 +13,9 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public string ShortName { get; set; }
 
+        [DataMember]
+        public bool IsInternal { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<EventRecord> Events { get; set; }
     }
