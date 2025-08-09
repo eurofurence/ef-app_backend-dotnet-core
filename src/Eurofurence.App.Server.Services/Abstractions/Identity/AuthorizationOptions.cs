@@ -7,7 +7,10 @@ public class AuthorizationOptions
     public HashSet<string> Admin { get; init; } = new();
 
     public HashSet<string> Attendee { get; init; } = new();
+
     public HashSet<string> AttendeeCheckedIn { get; init; } = new();
+
+    public HashSet<string> Staff { get; init; } = new();
 
     public HashSet<string> KnowledgeBaseEditor { get; init; } = new();
 
