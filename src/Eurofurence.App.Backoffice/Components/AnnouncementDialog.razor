@@ -20,30 +20,24 @@
                     RequiredError="Name is required." Label="Content" />
                 <MudGrid>
                     <MudItem xs="6">
-                        <MudDatePicker Label="Start Date" @bind-Date="_startDate" />
+                        <MudDatePicker Label="Start Date" Required="true" @bind-Date="_startDate" />
                     </MudItem>
                     <MudItem xs="6">
-                        <MudTimePicker Label="Start Time" @bind-Time="_startTime" />
+                        <MudTimePicker Label="Start Time" Required="true" @bind-Time="_startTime" />
                     </MudItem>
                 </MudGrid>
 
                 <MudGrid>
                     <MudItem xs="6">
-                        <MudDatePicker Label="End Date" @bind-Date="_endDate" />
+                        <MudDatePicker Label="End Date" Required="true" @bind-Date="_endDate" />
                     </MudItem>
                     <MudItem xs="6">
-                        <MudTimePicker Label="End Time" @bind-Time="_endTime" />
+                        <MudTimePicker Label="End Time" Required="true" @bind-Time="_endTime" />
                     </MudItem>
                 </MudGrid>
 
+                <MudTextField Label="Roles (comma seperated)" @bind-Value="_roles" />
 
-                <MudSelect T="string" Label="Roles" MultiSelection="true" @bind-SelectedValues="request.Roles">
-                    @foreach (string role in _roles)
-                    {
-                        <MudSelectItem T="string">@role</MudSelectItem>
-                    }
-
-                </MudSelect>
                 @if (request.ImageId != null)
                 {
                     <MudText> ImageID: @request.ImageId.ToString()</MudText>
@@ -69,6 +63,10 @@
             </MudImage>
         </DialogContent>
         <DialogActions>
+            @if (_roles == "")
+            {
+                <MudAlert Severity="Severity.Warning">You are about to send this announcement to all users.</MudAlert>
+            }
             <MudButton Color="Color.Secondary" OnClick="OnClickedCancel">Cancel</MudButton>
             <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@submittionInProgress"
                 OnClick="OnClickedSubmit">
@@ -90,15 +88,13 @@
 
     #region Attributes
     [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
-    private DateTime? _startDate = DateTime.Today;
-    private TimeSpan? _startTime = DateTime.Today.TimeOfDay;
+    private DateTime? _startDate = DateTime.Now;
+    private TimeSpan? _startTime = DateTime.Now.TimeOfDay;
 
+    private DateTime? _endDate = DateTime.Now;
+    private TimeSpan? _endTime = DateTime.Now.TimeOfDay;
 
-    private DateTime? _endDate = DateTime.Today;
-    private TimeSpan? _endTime = DateTime.Today.TimeOfDay;
-
-    private string[] _roles = new[]
-    { "Admin" };
+    private string _roles = "";
 
     private bool _formIsValid;
     private MudForm _form;
@@ -159,8 +155,18 @@
         }
         DateTime startDateTime = _startDate.Value.Date + _startTime.Value;
         DateTime endDateTime = _endDate.Value.Date + _endTime.Value;
+        if (endDateTime <= startDateTime)
+        {
+            Snackbar.Add("End date/time must be after start date/time.", Severity.Error);
+            return;
+        }
         request.ValidFromDateTimeUtc = startDateTime.ToUniversalTime();
         request.ValidUntilDateTimeUtc = endDateTime.ToUniversalTime();
+        request.Roles = _roles
+        .Split(",")
+        .Select(role => role.Trim())
+        .Where(role => role != "")
+        .ToList();
 
         submittionInProgress = true;
         await AnnouncementService.SubmitAnnouncementAsync(request);

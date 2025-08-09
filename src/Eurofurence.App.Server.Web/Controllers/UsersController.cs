@@ -47,15 +47,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             return result;
         }
 
-        [Authorize]
-        [HttpGet(":self/matrix_code")]
-        [ProducesResponseType(typeof(string), 200)]
-        public ActionResult<string> GetUserDataMatrixCode()
-        {
-            return Ok(GetUsersSelf().Registrations
-                        .First(r => r.Status == UserRegistrationStatus.Paid).Id);
-        }
-
         /// <summary>
         /// Sets (or unsets) a penalty for the artist alley for a given user
         /// </summary>

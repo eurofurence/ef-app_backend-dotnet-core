@@ -8,13 +8,14 @@
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Announcements</MudText>
-    <MudSpacer/>
-    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" OnClick="OnClickNewAnnouncment">Add New</MudButton>
+    <MudSpacer />
+    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" OnClick="OnClickNewAnnouncement">Add New
+    </MudButton>
 </MudToolBar>
 
 
 <MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
-             FilterMode="@DataGridFilterMode.ColumnFilterMenu">
+    FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
         <PropertyColumn Title="Title" Property="arg => arg.Title"></PropertyColumn>
         <PropertyColumn Title="Author" Property="arg => arg.Author"></PropertyColumn>
@@ -24,7 +25,7 @@
         <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="AnnouncementResponse"/>
+        <MudDataGridPager T="AnnouncementResponse" />
     </PagerContent>
 </MudDataGrid>
 
@@ -32,7 +33,7 @@
 
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
 
-    public async void OnClickNewAnnouncment()
+    public async Task OnClickNewAnnouncement()
     {
         var options = new DialogOptions
         {
@@ -41,9 +42,14 @@
             CloseButton = true
         };
 
-        var dialog = await DialogService.ShowAsync<AnnouncementDialog>("Create new Announcement", options);
+        var dialog = await DialogService.ShowAsync<AnnouncementDialog>("Create a new Announcement", options);
 
-        await dialog.Result;
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            _items = await AnnouncementService.GetAnnouncementsAsync();
+            StateHasChanged();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
