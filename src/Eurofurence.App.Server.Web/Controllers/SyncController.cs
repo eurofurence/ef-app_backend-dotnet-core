@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -84,7 +85,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
-            _logger.LogInformation("Execute=Sync, Since={since}", since);
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            _logger.LogDebug($"Execute=Sync, Since={since}, IsStaff={isStaff}");
 
             var tableRegistrations =
                 (User.IsInRole("AttendeeCheckedIn") || User.IsInRole("ArtistAlleyModerator") || User.IsInRole("ArtistAlleyAdmin") || User.IsInRole("Admin")) ?
@@ -115,6 +117,12 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Maps = await _mapService.GetDeltaResponseAsync(since),
                 TableRegistrations = tableRegistrations,
             };
+
+            // Filter internal event-related entities for non-staff
+            response.Events.ChangedEntities = response.Events.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+            response.EventConferenceDays.ChangedEntities = response.EventConferenceDays.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+            response.EventConferenceRooms.ChangedEntities = response.EventConferenceRooms.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+            response.EventConferenceTracks.ChangedEntities = response.EventConferenceTracks.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
 
             return response;
         }

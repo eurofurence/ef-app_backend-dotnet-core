@@ -101,6 +101,9 @@ namespace Eurofurence.App.Server.Services.Events
 
             foreach (var item in favoriteEvents)
             {
+                // TODO: Check user authorisation for internal events
+                if (item.IsInternal) continue;
+
                 // Include for each event the title, start time/end time and the description of the event including
                 // the organizer of the panel.
                 CalendarEvent calendarEvent = new CalendarEvent()
@@ -132,12 +135,12 @@ namespace Eurofurence.App.Server.Services.Events
         }
 
         public IQueryable<EventRecord> FindConflicts(DateTime conflictStartTime, DateTime conflictEndTime,
-            TimeSpan tolerance)
+            TimeSpan tolerance, bool includeInternal)
         {
             var queryConflictEndTime = conflictEndTime + tolerance;
             var queryConflictStartTime = conflictStartTime - tolerance;
 
-            return FindAll().Where(e =>
+            return FindAll(e => includeInternal || !e.IsInternal).Where(e =>
                 e.IsDeleted == 0 &&
                 e.StartDateTimeUtc <= queryConflictEndTime &&
                 e.EndDateTimeUtc >= queryConflictStartTime);
