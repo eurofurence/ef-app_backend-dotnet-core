@@ -167,7 +167,7 @@ namespace Eurofurence.App.Server.Services.Events
 
                 if (csvRecords.Count == 0) return;
 
-                var internalTrackNamesLowerCase = _eventOptions.InternalTracksLowerCase;
+                var internalTrackNamesLowerCase = _eventOptions.InternalTracksLowerCase ?? new HashSet<string>();
                 var csvRecordsPublic = csvRecords.Where(r => !internalTrackNamesLowerCase.Contains(r.ConferenceTrack.ToLowerInvariant()));
 
                 foreach (var record in csvRecords)

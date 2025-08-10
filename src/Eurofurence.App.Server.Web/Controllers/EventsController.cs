@@ -37,6 +37,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieves a list of all events in the event schedule.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns>All events in the event schedule.</returns>
         [Authorize]
         [AllowAnonymous]
@@ -54,6 +59,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     conflict with the specified start/end time, +/- a tolerance
         ///     in minutes that is considered when calculating overlaps.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns>All events in the event schedule that conflict with a specified start/endtime + tolerance.</returns>
         [Authorize]
         [AllowAnonymous]
@@ -74,6 +84,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieve a single event in the event schedule.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">id of the requested entity</param>
         [Authorize]
         [AllowAnonymous]
@@ -147,6 +162,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Adds an event to favorites
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
         [Authorize]
@@ -170,6 +190,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Removes an event from favorites
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
         [Authorize]

@@ -25,6 +25,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieves a list of all event conference Rooms in the event schedule.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns>All events in the event schedule.</returns>
         [Authorize]
         [AllowAnonymous]
@@ -42,6 +47,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieve a single event conference room in the event schedule.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">id of the requested entity</param>
         [Authorize]
         [AllowAnonymous]
