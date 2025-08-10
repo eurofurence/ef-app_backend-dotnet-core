@@ -35,7 +35,7 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly EventOptions _eventOptions;
-        private readonly AppDbContext _dbContext;
+        private readonly AppDbContext _appDbContext;
 
         private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
@@ -52,7 +52,7 @@ namespace Eurofurence.App.Server.Services.Events
         )
             : base(appDbContext, storageServiceFactory)
         {
-            _dbContext = appDbContext;
+            _appDbContext = appDbContext;
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceTrackService = eventConferenceTrackService;
@@ -66,7 +66,7 @@ namespace Eurofurence.App.Server.Services.Events
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            UserRecord userRecord = _dbContext.Users
+            UserRecord userRecord = _appDbContext.Users
                 .Include(userRecord => userRecord.FavoriteEvents)
                 .FirstOrDefault(x => x.IdentityId == user.GetSubject());
 
@@ -75,7 +75,7 @@ namespace Eurofurence.App.Server.Services.Events
                 userRecord.FavoriteEvents.Add(eventRecord);
             }
 
-            await _dbContext.SaveChangesAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Eurofurence.App.Server.Services.Events
         /// <returns>A list of all the events of the user</returns>
         public List<EventRecord> GetFavoriteEventsFromUser(ClaimsPrincipal user)
         {
-            return _dbContext.Users
+            return _appDbContext.Users
                 .AsNoTracking()
                 .Include(x => x.FavoriteEvents)
                 .Where(x => x.IdentityId == user.GetSubject())
@@ -101,6 +101,11 @@ namespace Eurofurence.App.Server.Services.Events
 
             foreach (var item in favoriteEvents)
             {
+                // TODO: Check user authorisation for internal events if we wish to allow them in
+                //       favorites iCal? An issue would only arise if somebody favs internal events
+                //       and then is removed from staff, which should likely not be an issue.
+                if (item.IsInternal) continue;
+
                 // Include for each event the title, start time/end time and the description of the event including
                 // the organizer of the panel.
                 CalendarEvent calendarEvent = new CalendarEvent()
@@ -119,7 +124,7 @@ namespace Eurofurence.App.Server.Services.Events
 
         public async Task RemoveEventFromFavoritesIfExist(ClaimsPrincipal user, EventRecord eventRecord)
         {
-            var foundRecord = _dbContext.Users
+            var foundRecord = _appDbContext.Users
                 .Include(x => x.FavoriteEvents)
                 .First(x => x.IdentityId == user.GetSubject());
 
@@ -128,16 +133,16 @@ namespace Eurofurence.App.Server.Services.Events
                 foundRecord.FavoriteEvents.Remove(eventRecordToRemove);
             }
 
-            await _dbContext.SaveChangesAsync();
+            await _appDbContext.SaveChangesAsync();
         }
 
         public IQueryable<EventRecord> FindConflicts(DateTime conflictStartTime, DateTime conflictEndTime,
-            TimeSpan tolerance)
+            TimeSpan tolerance, bool includeInternal)
         {
             var queryConflictEndTime = conflictEndTime + tolerance;
             var queryConflictStartTime = conflictStartTime - tolerance;
 
-            return FindAll().Where(e =>
+            return FindAll(e => includeInternal || !e.IsInternal).Where(e =>
                 e.IsDeleted == 0 &&
                 e.StartDateTimeUtc <= queryConflictEndTime &&
                 e.EndDateTimeUtc >= queryConflictStartTime);
@@ -164,6 +169,9 @@ namespace Eurofurence.App.Server.Services.Events
 
                 if (csvRecords.Count == 0) return;
 
+                var internalTrackNamesLowerCase = _eventOptions.InternalTracksLowerCase ?? new HashSet<string>();
+                var csvRecordsPublic = csvRecords.Where(r => !internalTrackNamesLowerCase.Contains(r.ConferenceTrack.ToLowerInvariant()));
+
                 foreach (var record in csvRecords)
                     record.ConferenceDayName = record.ConferenceDayName.Contains(" - ")
                         ? record.ConferenceDayName.Split(new[] { " - " }, StringSplitOptions.None)[1].Trim()
@@ -171,9 +179,11 @@ namespace Eurofurence.App.Server.Services.Events
 
                 var conferenceTracks = csvRecords.Select(a => a.ConferenceTrack)
                     .Distinct().OrderBy(a => a).ToList();
+                var conferenceTracksPublic = csvRecordsPublic.Select(r => r.ConferenceTrack).ToHashSet();
 
                 var conferenceRooms = csvRecords.Select(a => a.ConferenceRoom)
                     .Distinct().OrderBy(a => a).ToList();
+                var conferenceRoomsPublic = csvRecordsPublic.Select(r => r.ConferenceRoom).ToHashSet();
 
                 var conferenceDays = csvRecords.Select(a =>
                         new Tuple<DateTime, string>(
@@ -181,20 +191,23 @@ namespace Eurofurence.App.Server.Services.Events
                                 DateTimeKind.Utc),
                             a.ConferenceDayName))
                     .Distinct().OrderBy(a => a).ToList();
+                var conferenceDaysPublic = csvRecordsPublic.Select(a =>
+                        new Tuple<DateTime, string>(
+                            DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture),
+                                DateTimeKind.Utc),
+                            a.ConferenceDayName)).ToHashSet();
 
-                int modifiedRecords = 0;
-
-                var eventConferenceTracks = UpdateEventConferenceTracks(conferenceTracks, ref modifiedRecords);
-                var eventConferenceRooms = UpdateEventConferenceRooms(conferenceRooms, ref modifiedRecords);
-                var eventConferenceDays = UpdateEventConferenceDays(conferenceDays, ref modifiedRecords);
-                UpdateEventEntries(csvRecords,
-                    eventConferenceTracks,
-                    eventConferenceRooms,
-                    eventConferenceDays,
-                    ref modifiedRecords);
+                var eventConferenceTracks = await UpdateEventConferenceTracksAsync(conferenceTracks, conferenceTracksPublic);
+                var eventConferenceRooms = await UpdateEventConferenceRoomsAsync(conferenceRooms, conferenceRoomsPublic);
+                var eventConferenceDays = await UpdateEventConferenceDaysAsync(conferenceDays, conferenceDaysPublic);
+                var eventEntries = await UpdateEventEntriesAsync(csvRecords,
+                    eventConferenceTracks.Item2,
+                    eventConferenceRooms.Item2,
+                    eventConferenceDays.Item2,
+                    internalTrackNamesLowerCase);
 
                 _logger.LogInformation(LogEvents.Import,
-                    $"Event import finished successfully modifying {modifiedRecords} record(s).");
+                    $"Event import finished successfully modifying {eventConferenceTracks.Item1} EventConferenceTrack(s), {eventConferenceRooms.Item1} EventConferenceRoom(s), {eventConferenceDays.Item1} EventConferenceDay(s) and {eventEntries.Item1} Event(s).");
             }
             finally
             {
@@ -202,55 +215,57 @@ namespace Eurofurence.App.Server.Services.Events
             }
         }
 
-        private List<EventConferenceDayRecord> UpdateEventConferenceDays(
+        private async Task<Tuple<int, List<EventConferenceDayRecord>>> UpdateEventConferenceDaysAsync(
             IList<Tuple<DateTime, string>> importConferenceDays,
-            ref int modifiedRecords
+            ISet<Tuple<DateTime, string>> importConferenceDaysPublic
         )
         {
-            var eventConferenceDayRecords = _eventConferenceDayService.FindAll();
+            var eventConferenceDayRecords = _appDbContext.EventConferenceDays.AsNoTracking();
 
             var patch = new PatchDefinition<Tuple<DateTime, string>, EventConferenceDayRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Date == source.Item1)
             );
 
             patch.Map(s => s.Item1, t => t.Date)
-                .Map(s => s.Item2, t => t.Name);
+                .Map(s => s.Item2, t => t.Name)
+                .Map(s => !importConferenceDaysPublic.Contains(s), t => t.IsInternal);
 
             var diff = patch.Patch(importConferenceDays, eventConferenceDayRecords);
 
-            _eventConferenceDayService.ApplyPatchOperationAsync(diff).Wait();
+            await _eventConferenceDayService.ApplyPatchOperationAsync(diff);
 
-            modifiedRecords += diff.Count(a => a.Action != ActionEnum.NotModified);
-            return diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList();
+            var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
+            return new Tuple<int, List<EventConferenceDayRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
         }
 
 
-        private List<EventConferenceTrackRecord> UpdateEventConferenceTracks(
+        private async Task<Tuple<int, List<EventConferenceTrackRecord>>> UpdateEventConferenceTracksAsync(
             IList<string> importConferenceTracks,
-            ref int modifiedRecords
+            ISet<string> importConferenceTracksPublic
         )
         {
-            var eventConferenceTrackRecords = _eventConferenceTrackService.FindAll();
+            var eventConferenceTrackRecords = _appDbContext.EventConferenceTracks.AsNoTracking();
 
             var patch = new PatchDefinition<string, EventConferenceTrackRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
             );
 
-            patch.Map(s => s, t => t.Name);
+            patch.Map(s => s, t => t.Name)
+                .Map(s => !importConferenceTracksPublic.Contains(s), t => t.IsInternal);
             var diff = patch.Patch(importConferenceTracks, eventConferenceTrackRecords);
 
-            _eventConferenceTrackService.ApplyPatchOperationAsync(diff).Wait();
+            await _eventConferenceTrackService.ApplyPatchOperationAsync(diff);
 
-            modifiedRecords += diff.Count(a => a.Action != ActionEnum.NotModified);
-            return diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList();
+            var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
+            return new Tuple<int, List<EventConferenceTrackRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
         }
 
-        private List<EventConferenceRoomRecord> UpdateEventConferenceRooms(
+        private async Task<Tuple<int, List<EventConferenceRoomRecord>>> UpdateEventConferenceRoomsAsync(
             IList<string> importConferenceRooms,
-            ref int modifiedRecords
+            ISet<string> importConferenceRoomsPublic
         )
         {
-            var eventConferenceRoomRecords = _eventConferenceRoomService.FindAll();
+            var eventConferenceRoomRecords = _appDbContext.EventConferenceRooms.AsNoTracking();
 
             var patch = new PatchDefinition<string, EventConferenceRoomRecord>(
                 (source, list) => list.SingleOrDefault(a => a.Name == source)
@@ -270,22 +285,23 @@ namespace Eurofurence.App.Server.Services.Events
                         else
                             return s;
                     },
-                    t => t.ShortName);
+                    t => t.ShortName)
+                .Map(s => !importConferenceRoomsPublic.Contains(s), t => t.IsInternal);
 
             var diff = patch.Patch(importConferenceRooms, eventConferenceRoomRecords);
 
-            _eventConferenceRoomService.ApplyPatchOperationAsync(diff).Wait();
+            await _eventConferenceRoomService.ApplyPatchOperationAsync(diff);
 
-            modifiedRecords += diff.Count(a => a.Action != ActionEnum.NotModified);
-            return diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList();
+            var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
+            return new Tuple<int, List<EventConferenceRoomRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
         }
 
-        private List<EventRecord> UpdateEventEntries(
+        private async Task<Tuple<int, List<EventRecord>>> UpdateEventEntriesAsync(
             IList<EventImportRow> importEventEntries,
             IList<EventConferenceTrackRecord> currentConferenceTracks,
             IList<EventConferenceRoomRecord> currentConferenceRooms,
             IList<EventConferenceDayRecord> currentConferenceDays,
-            ref int modifiedRecords
+            ISet<string> internalTrackNamesLowerCase
         )
         {
             var eventRecords = FindAll();
@@ -320,14 +336,15 @@ namespace Eurofurence.App.Server.Services.Events
                 .Map(s => s.PanelHosts, t => t.PanelHosts)
                 .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase),
                     t => t.IsAcceptingFeedback)
-                .Map(s => s.CalculateTags(), t => t.Tags);
+                .Map(s => s.CalculateTags(), t => t.Tags)
+                .Map(s => internalTrackNamesLowerCase.Contains(s.ConferenceTrack.ToLowerInvariant()), t => t.IsInternal);
 
             var diff = patch.Patch(importEventEntries, eventRecords);
 
-            ApplyPatchOperationAsync(diff).Wait();
+            await ApplyPatchOperationAsync(diff);
 
-            modifiedRecords += diff.Count(a => a.Action != ActionEnum.NotModified);
-            return diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList();
+            var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
+            return new Tuple<int, List<EventRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
         }
 
         public class EventImportRow

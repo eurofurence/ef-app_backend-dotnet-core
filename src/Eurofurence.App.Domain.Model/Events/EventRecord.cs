@@ -84,6 +84,9 @@ namespace Eurofurence.App.Domain.Model.Events
         [DataMember]
         public string[] Tags { get; set; }
 
+        [DataMember]
+        public bool IsInternal { get; set; }
+
         [JsonIgnore]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }
 

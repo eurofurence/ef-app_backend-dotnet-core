@@ -13,4 +13,7 @@ public class EventConferenceRoomResponse : ResponseBase
     /// </summary>
     [DataMember]
     public string MapLink { get; set; }
+
+    [DataMember]
+    public bool IsInternal { get; set; }
 }
