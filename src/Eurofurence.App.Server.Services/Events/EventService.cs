@@ -101,7 +101,9 @@ namespace Eurofurence.App.Server.Services.Events
 
             foreach (var item in favoriteEvents)
             {
-                // TODO: Check user authorisation for internal events
+                // TODO: Check user authorisation for internal events if we wish to allow them in
+                //       favorites iCal? An issue would only arise if somebody favs internal events
+                //       and then is removed from staff, which should likely not be an issue.
                 if (item.IsInternal) continue;
 
                 // Include for each event the title, start time/end time and the description of the event including
