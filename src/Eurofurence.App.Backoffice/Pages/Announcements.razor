@@ -5,6 +5,7 @@
 
 @inject IAnnouncementService AnnouncementService
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Announcements</MudText>
@@ -31,8 +32,15 @@
 
 @code {
 
+    /// <summary>
+    /// A collection of the loaded announcements to display in the data grid.
+    /// </summary>
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
 
+    /// <summary>
+    /// Is called when the "Add New" button is clicked.
+    /// Opens a dialog to create a new announcement.
+    /// </summary>
     public async Task OnClickNewAnnouncement()
     {
         var options = new DialogOptions
@@ -52,17 +60,26 @@
         }
     }
 
+    /// <summary>
+    /// Called after the component has rendered.
+    /// Will load the announcements from the service if this is the first render.
+    /// </summary>
+    /// <param name="firstRender">Specifies if the component is rendered for the first time.</param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
 
         if (firstRender)
         {
-            _items = await AnnouncementService.GetAnnouncementsAsync();
-
-            //_dataGrid?.SetSortAsync(nameof(TableRegistrationRecord.State), SortDirection.Ascending, x => x.State);
-            StateHasChanged();
+            try
+            {
+                _items = await AnnouncementService.GetAnnouncementsAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
+            }
         }
     }
-
 }

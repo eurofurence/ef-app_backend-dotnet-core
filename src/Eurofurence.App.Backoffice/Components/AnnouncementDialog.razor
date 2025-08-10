@@ -2,8 +2,8 @@
 @using Eurofurence.App.Domain.Model.Announcements
 @using Eurofurence.App.Domain.Model.Images
 
-@inject IImageService ImageService;
-@inject IAnnouncementService AnnouncementService;
+@inject IImageService ImageService
+@inject IAnnouncementService AnnouncementService
 @inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4">
@@ -17,7 +17,8 @@
                 <MudTextField Class="mt-2" T="string" @bind-Value="request.Area" Required="true"
                     RequiredError="Area is required." Label="Area" />
                 <MudTextField Class="mt-2" T="string" @bind-Value="request.Content" Required="true"
-                    RequiredError="Content is required." AutoGrow Label="Content" HelperText="Supports multiple lines." />
+                    RequiredError="Content is required." AutoGrow Label="Content"
+                    HelperText="Supports multiple lines." />
                 <MudGrid>
                     <MudItem xs="6">
                         <MudDatePicker Label="End Date" Required="true" @bind-Date="_endDate" />
@@ -40,7 +41,7 @@
                 <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
                     <ActivatorContent>
                         <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.CloudUpload">
+                            StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@fileUploadInProgress">
                             @if (fileUploadInProgress)
                             {
                                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -56,11 +57,11 @@
             </MudForm>
         </DialogContent>
         <DialogActions>
-            @if (_roles == "")
+            @if (string.IsNullOrWhiteSpace(_roles))
             {
                 <MudAlert Severity="Severity.Warning">You are about to send this announcement to all users.</MudAlert>
             }
-            <MudButton Color="Color.Secondary" OnClick="OnClickedCancel">Cancel</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="OnClickedCancelAsync">Cancel</MudButton>
             <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@submittionInProgress"
                 OnClick="OnClickedSubmit">
                 @if (submittionInProgress)
@@ -110,7 +111,7 @@
     /// <summary>
     /// Instance of the MudForm component used for validation.
     /// </summary>
-    private MudForm _form;
+    private MudForm? _form;
 
     /// <summary>
     /// The request object containing the announcement data.
@@ -154,33 +155,56 @@
         if (file != null)
         {
             fileUploadInProgress = true;
-            ImageRecord? image = await ImageService.PostImageAsync(file);
-            if (image != null)
+            StateHasChanged();
+            try
             {
-                Snackbar.Add("Image added.", Severity.Success);
-                request.ImageId = image.Id;
+                ImageRecord? image = await ImageService.PostImageAsync(file);
+                if (image != null)
+                {
+                    Snackbar.Add("Image added.", Severity.Success);
+                    request.ImageId = image.Id;
+                }
+                else
+                {
+                    Snackbar.Add("API Error adding image.", Severity.Error);
+                }
+                fileUploadInProgress = false;
             }
-            else
+            catch (Exception ex)
             {
-                Snackbar.Add("Error adding image.", Severity.Error);
+                Snackbar.Add($"Error uploading image: {ex.Message}", Severity.Error);
             }
-            fileUploadInProgress = false;
+            finally
+            {
+                fileUploadInProgress = false;
+                StateHasChanged();
+            }
         }
-        StateHasChanged();
     }
 
     /// <summary>
     /// Is called when the cancel button is clicked.
     /// This will close the dialog.
     /// </summary>
-    private void OnClickedCancel()
+    private async void OnClickedCancelAsync()
     {
-        if (request.ImageId != null)
+        try
         {
-            // Delete otherwise dangling image.
-            ImageService.DeleteImageAsync((Guid)request.ImageId);
+            if (request.ImageId != null)
+            {
+                // Delete dangling image.
+                await ImageService.DeleteImageAsync((Guid)request.ImageId);
+            }
         }
-        MudDialog?.Close(DialogResult.Cancel());
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error while deleting image: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            MudDialog?.Close(DialogResult.Cancel());
+
+        }
     }
 
     /// <summary>
@@ -197,7 +221,7 @@
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
             return;
         }
-        DateTime startDateTime =  DateTime.Now;
+        DateTime startDateTime = DateTime.Now;
         DateTime endDateTime = _endDate.Value.Date + _endTime.Value;
         if (endDateTime <= startDateTime)
         {
@@ -207,16 +231,26 @@
         request.ValidFromDateTimeUtc = startDateTime.ToUniversalTime();
         request.ValidUntilDateTimeUtc = endDateTime.ToUniversalTime();
         request.Roles = _roles
-        .Split(",")
+        .Split(",", StringSplitOptions.RemoveEmptyEntries)
         .Select(role => role.Trim())
-        .Where(role => role != "")
+        .Where(role => role.Length > 0)
         .ToList();
 
         submittionInProgress = true;
-        await AnnouncementService.SubmitAnnouncementAsync(request);
-        submittionInProgress = false;
-        Snackbar.Add("Announcement successfully submitted", Severity.Success);
-        MudDialog?.Close(DialogResult.Ok(request));
+        try
+        {
+            await AnnouncementService.SubmitAnnouncementAsync(request);
+            Snackbar.Add("Announcement successfully submitted", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            submittionInProgress = false;
+            MudDialog?.Close(DialogResult.Ok(request));
+        }
     }
 
     #endregion
