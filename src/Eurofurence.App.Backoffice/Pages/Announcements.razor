@@ -2,7 +2,8 @@
 @using Eurofurence.App.Backoffice.Components
 @using Eurofurence.App.Backoffice.Services
 @using Eurofurence.App.Domain.Model.Announcements
-
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
 @inject IAnnouncementService AnnouncementService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
