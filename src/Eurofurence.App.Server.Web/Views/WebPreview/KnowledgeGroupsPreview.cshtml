@@ -18,6 +18,13 @@
 </header>
 
 @foreach (var knowledgeGroup in knowledgeGroups) {
+    System.Linq.IOrderedEnumerable<Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord> groupKnowledgeEntries = null;
+    if (knowledgeEntries != null) {
+        groupKnowledgeEntries = knowledgeEntries.Where(a => a.KnowledgeGroupId == knowledgeGroup.Id && a.Published != null).OrderBy(a => a.Order); 
+    }
+    if (groupKnowledgeEntries == null || groupKnowledgeEntries.Count() == 0) {
+        continue;
+    }
 
     <hr id="@knowledgeGroup.Id"/>
 
@@ -42,7 +49,7 @@
 
     @if (knowledgeEntries != null)
     {
-        foreach (var knowledgeEntry in knowledgeEntries.Where(a => a.KnowledgeGroupId == knowledgeGroup.Id).OrderBy(a => a.Order))
+        foreach (var knowledgeEntry in groupKnowledgeEntries)
         {
             <section class="row">
                 <div class="one columns desktopOnly">&nbsp;</div>
