@@ -71,7 +71,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Events/{id}")]
         public async Task<ActionResult> GetEventById(Guid id)
         {
-            var @event = await _eventService.FindAll().Include(e => e.BannerImage).Include(e => e.PosterImage).FirstOrDefaultAsync(e => e.Id == id);
+            var @event = await _eventService.FindAll(e => !e.IsInternal).Include(e => e.BannerImage).Include(e => e.PosterImage).FirstOrDefaultAsync(e => e.Id == id);
             if (@event == null) return NotFound();
 
             var previewImageUrl = @event.PosterImage?.Url ?? @event.BannerImage?.Url ?? string.Empty;
@@ -144,7 +144,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> GetKnowledgeGroups()
         {
             var knowledgeGroups = await _knowledgeGroupService.FindAll().ToListAsync();
-            var knowledgeEntries = await _knowledgeEntryService.FindAll().ToListAsync();
+            var knowledgeEntries = await _knowledgeEntryService.FindAll(e => e.Published != null).ToListAsync();
 
             PopulateViewData();
 
@@ -160,6 +160,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> GetKnowledgeEntryById(Guid id)
         {
             var knowledgeEntry = await _knowledgeEntryService.FindOneAsync(id);
+            if (knowledgeEntry == null || knowledgeEntry.Published == null) return NotFound();
+
             var knowledgeGroup = await _knowledgeGroupService.FindOneAsync(knowledgeEntry.KnowledgeGroupId);
 
             PopulateViewData();
