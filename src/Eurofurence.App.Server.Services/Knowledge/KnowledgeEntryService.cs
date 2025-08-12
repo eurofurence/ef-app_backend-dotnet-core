@@ -172,7 +172,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
                     .Select(entity => entity.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
-                    .Where(entity => entity.IsDeleted == 1)
+                    .Where(entity => entity.IsDeleted == 1 || entity.Published == null)
                     .Select(entity => entity.Id)
                     .ToArrayAsync(cancellationToken);
             }
