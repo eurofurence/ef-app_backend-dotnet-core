@@ -104,6 +104,17 @@ namespace Eurofurence.App.Server.Web.Controllers
             return View("EventsPreview", _globalOptions);
         }
 
+        [HttpGet("ArtistAlleyReg")]
+        [HttpGet("ArtistAlley")]
+        public ActionResult GetArtistAlley()
+        {
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                            .WithTitle($"Eurofurence {_globalOptions.ConventionNumber} Artist Alley")
+                            .WithDescription($"Our open marketplace for creativity at Eurofurence {_globalOptions.ConventionNumber}!");
+
+            return View("ArtistAlleyPreview", _globalOptions);
+        }
+
         [HttpGet("Dealers/{id}")]
         public async Task<ActionResult> GetDealerById(Guid id)
         {

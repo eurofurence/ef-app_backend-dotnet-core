@@ -27,13 +27,15 @@ section.summary {
 }
 
 /* apply Skeleton's non-hover style on hover */
-.button.nohover, .button.nohover:hover {
+.button.nohover,
+.button.nohover:hover {
     cursor: initial;
     color: #555;
     border-color: #bbb;
 }
 
-.button.button-primary.nohover, .button.button-primary.nohover:hover {
+.button.button-primary.nohover,
+.button.button-primary.nohover:hover {
     color: #FFF;
     background-color: #33C3F0;
     border-color: #33C3F0;
@@ -41,6 +43,8 @@ section.summary {
 
 .button {
     flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .button.wrapped {
@@ -59,42 +63,51 @@ section.summary {
     white-space: inherit;
 }
 
-section.nomargin > * {
+section.nomargin>* {
     margin: 0;
 }
 
 .infobox {
     display: block;
     flex-grow: 1;
-    padding-bottom: 0.5em;
     font-weight: bold;
     font-size: 0.8em;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px dotted silver;
+    padding: 0.70em;
+    margin-bottom: 0.70em;
 }
-.infobox > label {
+
+.infobox>label {
     margin: 0;
-    white-space: nowrap;   
+    white-space: nowrap;
     font-weight: normal;
     display: inline;
 }
-    .infobox > label > i {
-        width: 1.8em;
-        color: silver;
-    }
+
+.infobox>label>i {
+    width: 1.8em;
+    color: silver;
+}
 
 @media (max-width: 549px) {
-    .infobox {
-        margin-left: 25vw;
+    .infobox:has(label) {
+        margin: 0 0 0 25vw;
         width: 100%;
         text-align: left;
+        padding: 0 0 0.5em 0;
+        border: none;
     }
 
-    .infobox > label {
+    .infobox>label {
         float: left;
         width: 25vw;
         margin-left: -25vw;
     }
 
 }
+
 /* allow for Skeleton rows to use reverse sorting */
 .row.reverse {
     flex-direction: row-reverse;
@@ -105,23 +118,17 @@ section.nomargin > * {
         display: none !important;
     }
 
-    .infobox {
-        text-align: center;
-        border-radius: 4px;
-        border: 1px dotted silver;
-        padding: 0.70em;
-        margin-bottom: 0.70em;
-    }
-
-    .row.reverse .column:first-child, .row.reverse .columns:first-child {
+    .row.reverse .column:first-child,
+    .row.reverse .columns:first-child {
         margin-left: 4%;
     }
 
-    .row.reverse .column, .row.reverse .columns {
+    .row.reverse .column,
+    .row.reverse .columns {
         margin-left: 0;
     }
 
-    .summary > * {
+    .summary>* {
         margin-left: 1ex;
         margin-right: 1ex;
     }
@@ -136,16 +143,17 @@ section.nomargin > * {
     text-align: center;
 }
 
-    .summary > * {
-        text-wrap: avoid;
-        max-width: 100%;
-    }
+.summary>* {
+    text-wrap: avoid;
+    max-width: 100%;
+}
 
 @media (max-width: 550px) {
 
     .desktopOnly {
         display: none !important;
     }
+
     .button {
         width: 100%;
         box-sizing: border-box;
@@ -153,9 +161,6 @@ section.nomargin > * {
 }
 
 /* apply Skeleton's block margins to images as well */
-section.row > img {
+section.row>img {
     margin-bottom: 2.5rem;
 }
-
-
-
