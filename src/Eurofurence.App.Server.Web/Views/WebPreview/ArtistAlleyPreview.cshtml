@@ -1,0 +1,28 @@
+﻿@using Eurofurence.App.Server.Services.Abstractions
+@using Microsoft.Extensions.Options
+@inject IOptions<GlobalOptions> GlobalOptions
+@{
+    Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+}
+
+<header>
+    <h1>
+        Eurofurence @GlobalOptions.Value.ConventionNumber Artist Alley
+        <span>Our community's open marketplace for creativity!</span>
+    </h1>
+</header>
+
+<section class="summary">
+    <div class="infobox">
+        <i class="fas fa-cart-plus"></i> Want to see who is selling in the Artist Alley at 
+        Eurofurence @GlobalOptions.Value.ConventionNumber right now?<br>
+        Open up the app, make sure you're signed in and have retrieved your badge and open up the <a href="/qr/aaoverview">Artist Alley</a>!
+    </div>
+    <div class="infobox">
+        <i class="fas fa-store"></i> Want to sell your own merchandise at the Eurofurence @GlobalOptions.Value.ConventionNumber Artist Alley?<br>
+        You can find the <a href="/qr/aatablereg">registration form</a> in our app once you are signed in and registered on site!
+    </div>
+    <div class="infobox">
+        <i class="fas fa-info"></i> All the information you need for participating in the Artist Alley can be found over on <a href="/qr/artistalley">our website</a>!
+    </div>
+</section>
