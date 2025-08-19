@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Transformers;
@@ -84,6 +85,6 @@ namespace Eurofurence.App.Domain.Model.Announcements
         /// If provided, the announcement will only be sent to members of those groups.
         /// </summary>
         [DataMember]
-        public string[] Groups { get; set; }
+        public IEnumerable<string> Roles { get; set; }
     }
 }

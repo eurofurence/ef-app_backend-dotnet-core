@@ -1,0 +1,257 @@
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Announcements
+@using Eurofurence.App.Domain.Model.Images
+
+@inject IImageService ImageService
+@inject IAnnouncementService AnnouncementService
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4">
+    <MudDialog>
+        <DialogContent>
+            <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
+                <MudTextField Class="mt-2" T="string" @bind-Value="request.Title" Required="true"
+                    RequiredError="Name is required." Label="Title" />
+                <MudTextField Class="mt-2" T="string" @bind-Value="request.Author" Required="true"
+                    RequiredError="Author is required." Label="Author" />
+                <MudTextField Class="mt-2" T="string" @bind-Value="request.Area" Required="true"
+                    RequiredError="Area is required." Label="Area" />
+                <MudTextField Class="mt-2" T="string" @bind-Value="request.Content" Required="true"
+                    RequiredError="Content is required." AutoGrow Label="Content"
+                    HelperText="Supports multiple lines." />
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudDatePicker Label="End Date" Required="true" @bind-Date="_endDate" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTimePicker Label="End Time" Required="true" @bind-Time="_endTime" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudTextField Label="Roles (comma seperated)" @bind-Value="_roles" />
+
+                @if (request.ImageId != null)
+                {
+                    <MudText> ImageID: @request.ImageId.ToString()</MudText>
+                }
+                else
+                {
+                    <MudText> No image uploaded yet.</MudText>
+                }
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
+                    <ActivatorContent>
+                        <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
+                            StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@fileUploadInProgress">
+                            @if (fileUploadInProgress)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Processing</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Upload Image</MudText>
+                            }
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+            </MudForm>
+        </DialogContent>
+        <DialogActions>
+            @if (string.IsNullOrWhiteSpace(_roles))
+            {
+                <MudAlert Severity="Severity.Warning">You are about to send this announcement to all users.</MudAlert>
+            }
+            <MudButton Color="Color.Secondary" OnClick="OnClickedCancelAsync">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@submittionInProgress"
+                OnClick="OnClickedSubmit">
+                @if (submittionInProgress)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Processing</MudText>
+                }
+                else
+                {
+                    <MudText>Submit</MudText>
+                }
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudPaper>
+
+@code {
+
+    #region Attributes
+
+    /// <summary>
+    /// Dialog instance for MudBlazor dialog.
+    /// </summary>
+    ///
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+
+    /// <summary>
+    /// The date until the announcement should be valid.
+    /// </summary>
+    private DateTime? _endDate = DateTime.Now;
+
+    /// <summary>
+    /// The time until the announcement should be valid.
+    /// </summary>
+    private TimeSpan? _endTime = DateTime.Now.TimeOfDay;
+
+    /// <summary>
+    /// Roles (IDP roles) which the announcement should be sent to.
+    /// </summary>
+    private string _roles = "";
+
+    /// <summary>
+    /// Specifies whether the form is valid or not.
+    /// </summary>
+    private bool _formIsValid;
+
+    /// <summary>
+    /// Instance of the MudForm component used for validation.
+    /// </summary>
+    private MudForm? _form;
+
+    /// <summary>
+    /// The request object containing the announcement data.
+    /// This will be submitted to the server when the form is submitted.
+    /// </summary>
+    private AnnouncementRequest request = new AnnouncementRequest();
+
+    /// <summary>
+    /// Specifies whether a submission is currently in progress.
+    /// This is used to disable the submit button while the request is being processed.
+    /// </summary>
+    private bool submittionInProgress;
+
+
+    private bool fileUploadInProgress;
+
+    #endregion
+
+    #region Methods
+
+    /// <summary>
+    /// Requests the image URL asynchronously based on the ImageId in the request.
+    /// </summary>
+    /// <returns>The URL of the image.</returns>
+    private async Task<string> GetImageUrlAsync()
+    {
+        if (!request.ImageId.HasValue)
+        {
+            return "";
+        }
+        ImageRecord image = (await ImageService.GetImageAsync((Guid)request.ImageId))!;
+        return image.Url;
+    }
+
+    /// <summary>
+    /// Uploads an image file to the server and updates the request with the image ID.
+    /// </summary>
+    /// <param name="file">The file which should be uploaded.</param>
+    private async Task UploadImage(IBrowserFile? file)
+    {
+        if (file != null)
+        {
+            fileUploadInProgress = true;
+            StateHasChanged();
+            try
+            {
+                ImageRecord? image = await ImageService.PostImageAsync(file);
+                if (image != null)
+                {
+                    Snackbar.Add("Image added.", Severity.Success);
+                    request.ImageId = image.Id;
+                }
+                else
+                {
+                    Snackbar.Add("API Error adding image.", Severity.Error);
+                }
+                fileUploadInProgress = false;
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error uploading image: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                fileUploadInProgress = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Is called when the cancel button is clicked.
+    /// This will close the dialog.
+    /// </summary>
+    private async void OnClickedCancelAsync()
+    {
+        try
+        {
+            if (request.ImageId != null)
+            {
+                // Delete dangling image.
+                await ImageService.DeleteImageAsync((Guid)request.ImageId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error while deleting image: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            MudDialog?.Close(DialogResult.Cancel());
+
+        }
+    }
+
+    /// <summary>
+    /// Called when the submit button is clicked.
+    /// This will send the announcement request to the server if valid.
+    /// </summary>
+    /// <param name="obj">Event object. Not used here.</param>
+    private async Task OnClickedSubmit(MouseEventArgs obj)
+    {
+        await _form.Validate();
+
+        if (!_formIsValid)
+        {
+            Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            return;
+        }
+        DateTime startDateTime = DateTime.Now;
+        DateTime endDateTime = _endDate.Value.Date + _endTime.Value;
+        if (endDateTime <= startDateTime)
+        {
+            Snackbar.Add("End datetime can not be in the past", Severity.Error);
+            return;
+        }
+        request.ValidFromDateTimeUtc = startDateTime.ToUniversalTime();
+        request.ValidUntilDateTimeUtc = endDateTime.ToUniversalTime();
+        request.Roles = _roles
+        .Split(",", StringSplitOptions.RemoveEmptyEntries)
+        .Select(role => role.Trim())
+        .Where(role => role.Length > 0)
+        .ToList();
+
+        submittionInProgress = true;
+        try
+        {
+            await AnnouncementService.SubmitAnnouncementAsync(request);
+            Snackbar.Add("Announcement successfully submitted", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            submittionInProgress = false;
+            MudDialog?.Close(DialogResult.Ok(request));
+        }
+    }
+
+    #endregion
+}
