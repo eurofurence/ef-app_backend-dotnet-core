@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
     [DataContract]
-    public class EventFeedbackRecord : EntityBase
+    public class EventFeedbackRecord : EntityBase, IDtoTransformable<EventFeedbackResponse>
     {
         [DataMember]
         public Guid EventId { get; set; }

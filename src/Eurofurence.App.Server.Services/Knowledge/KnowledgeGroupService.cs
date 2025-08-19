@@ -5,7 +5,7 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 
 namespace Eurofurence.App.Server.Services.Knowledge
 {
-    public class KnowledgeGroupService : EntityServiceBase<KnowledgeGroupRecord>,
+    public class KnowledgeGroupService : EntityServiceBase<KnowledgeGroupRecord, KnowledgeGroupResponse>,
         IKnowledgeGroupService
     {
         public KnowledgeGroupService(

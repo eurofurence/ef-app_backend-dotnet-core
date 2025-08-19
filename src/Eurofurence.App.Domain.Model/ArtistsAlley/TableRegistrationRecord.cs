@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
-    public class TableRegistrationRecord : EntityBase
+    public class TableRegistrationRecord : EntityBase,
+        IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse, TableRegistrationRecord>,
+        IDtoTransformable<ArtistAlleyResponse>
     {
         public class StateChangeRecord : EntityBase
         {
@@ -26,14 +28,17 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
             /// Registration has been submitted and is pending review.
             /// </summary>
             Pending = 0,
+
             /// <summary>
             /// Registration has been reviewed and accepted, and may be published.
             /// </summary>
             Accepted = 1,
+
             /// <summary>
             /// Registration has been published to social media channels.
             /// </summary>
             Published = 2,
+
             /// <summary>
             /// Registration has been rejected and must be submitted again.
             /// </summary>
@@ -57,6 +62,12 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         /// </summary>
         [DataMember]
         public string OwnerUsername { get; set; }
+
+        /// <summary>
+        /// Registration system ID of the user that submitted the registration.
+        /// </summary>
+        [DataMember]
+        public string OwnerRegSysId { get; set; }
 
         /// <summary>
         /// Preferred display name of artist.

@@ -3,7 +3,7 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
     public interface IEventConferenceTrackService :
-        IEntityServiceOperations<EventConferenceTrackRecord>,
+        IEntityServiceOperations<EventConferenceTrackRecord, EventConferenceTrackResponse>,
         IPatchOperationProcessor<EventConferenceTrackRecord>
     {
     }

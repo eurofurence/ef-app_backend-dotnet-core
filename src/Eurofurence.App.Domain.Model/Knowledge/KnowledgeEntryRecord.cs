@@ -5,11 +5,12 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
-    public class KnowledgeEntryRecord : EntityBase
+    public class KnowledgeEntryRecord : EntityBase, IDtoRecordTransformable<KnowledgeEntryRequest, KnowledgeEntryResponse, KnowledgeEntryRecord>
     {
         [Required]
         [DataMember]
@@ -23,6 +24,9 @@ namespace Eurofurence.App.Domain.Model.Knowledge
         [DataMember]
         public int Order { get; set; }
 
+        [DataMember]
+        public DateTime? Published { get; set; }
+
         [Required]
         [DataMember]
         public Guid KnowledgeGroupId { get; set; }
@@ -35,5 +39,6 @@ namespace Eurofurence.App.Domain.Model.Knowledge
 
         [JsonIgnore]
         public virtual List<ImageRecord> Images { get; set; } = new();
+
     }
 }

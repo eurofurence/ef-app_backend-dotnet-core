@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Telegram;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
-    public class EventRecord : EntityBase
+    public class EventRecord : EntityBase, IDtoRecordTransformable<EventRequest, EventResponse, EventRecord>
     {
         [JsonIgnore]
         public int SourceEventId { get; set; }
@@ -83,6 +83,9 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public string[] Tags { get; set; }
+
+        [DataMember]
+        public bool IsInternal { get; set; }
 
         [JsonIgnore]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }

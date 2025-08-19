@@ -5,7 +5,7 @@ using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 
 namespace Eurofurence.App.Server.Services.LostAndFound
 {
-    public class LostAndFoundService : EntityServiceBase<LostAndFoundRecord>, ILostAndFoundService
+    public class LostAndFoundService : EntityServiceBase<LostAndFoundRecord, LostAndFoundResponse>, ILostAndFoundService
     {
         public LostAndFoundService(
             AppDbContext appDbContext,

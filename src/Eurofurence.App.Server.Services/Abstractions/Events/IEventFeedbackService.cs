@@ -3,7 +3,7 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
     public interface IEventFeedbackService :
-        IEntityServiceOperations<EventFeedbackRecord>,
+        IEntityServiceOperations<EventFeedbackRecord, EventFeedbackResponse>,
         IPatchOperationProcessor<EventFeedbackRecord>
     {
     }

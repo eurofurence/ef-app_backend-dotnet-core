@@ -7,9 +7,9 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Text;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using Eurofurence.App.Domain.Model.Transformers;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,10 +33,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All images.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
-        public IEnumerable<ImageRecord> GetImagesAsync()
+        [ProducesResponseType(typeof(IEnumerable<ImageResponse>), 200)]
+        public IEnumerable<ImageResponse> GetImagesAsync()
         {
-            return _imageService.FindAll().Where(i => !i.IsRestricted);
+            return _imageService.FindAll().Where(i => !i.IsRestricted).Select(x => x.Transform<ImageResponse>());
         }
 
         /// <summary>
@@ -46,10 +46,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin")]
         [HttpGet(":all")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<ImageRecord>), 200)]
-        public IEnumerable<ImageRecord> GetAllImagesAsync()
+        [ProducesResponseType(typeof(IEnumerable<ImageResponse>), 200)]
+        public IEnumerable<ImageResponse> GetAllImagesAsync()
         {
-            return _imageService.FindAll();
+            return _imageService.FindAll().Select(x => x.Transform<ImageResponse>());
         }
 
         /// <summary>
@@ -72,7 +72,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                     .Include(i => i.DealerArtists)
                     .Include(i => i.EventBanners)
                     .Include(i => i.EventPosters)
-                    .Include(i => i.Announcements));
+                    .Include(i => i.Announcements)
+                    .AsSplitQuery());
         }
 
         /// <summary>
@@ -82,9 +83,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(ImageRecord), 200)]
-        public async Task<ImageRecord> GetImageAsync([FromRoute] Guid id)
+        public async Task<ImageResponse> GetImageAsync([FromRoute] Guid id)
         {
-            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext);
+            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<ImageResponse>();
         }
 
         [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
@@ -99,7 +100,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
             var result = await _imageService.InsertImageAsync(file.FileName, ms);
-            return Ok(result);
+            return Ok(result.Transform<ImageResponse>());
         }
 
         [Authorize(Roles = "Admin")]
@@ -112,7 +113,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
             var result = await _imageService.ReplaceImageAsync(record.Id, file.FileName, ms);
-            return Ok(result);
+            return Ok(result.Transform<ImageResponse>());
         }
 
         /// <summary>

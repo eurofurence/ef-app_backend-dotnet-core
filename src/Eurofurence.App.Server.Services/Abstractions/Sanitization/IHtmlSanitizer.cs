@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Eurofurence.App.Server.Services.Abstractions.Sanitization
+﻿namespace Eurofurence.App.Server.Services.Abstractions.Sanitization
 {
     public interface IHtmlSanitizer
     {

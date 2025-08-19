@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
+using Sentry;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
@@ -147,6 +148,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             }
             catch (Exception e)
             {
+                SentrySdk.CaptureException(e);
                 _logger.LogError(LogEvents.Import,
                     $"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }

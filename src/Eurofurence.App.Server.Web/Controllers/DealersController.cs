@@ -8,7 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MapsterMapper;
+using Eurofurence.App.Domain.Model.Transformers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -32,10 +33,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All dealer Entries.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<DealerRecord>), 200)]
-        public IQueryable<DealerRecord> GetDealerEntriesAsync()
+        [ProducesResponseType(typeof(IEnumerable<DealerResponse>), 200)]
+        public async Task<IEnumerable<DealerResponse>> GetDealerEntriesAsync()
         {
-            return _dealerService.FindAll();
+            var result = await _dealerService.FindAll().Select(x => x.Transform()).ToListAsync();
+            result.ForEach(r => r.MapLink = _dealerService.GetMapLink(r.Id));
+            return result;
         }
 
         /// <summary>
@@ -44,10 +47,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(DealerRecord), 200)]
-        public async Task<DealerRecord> GetDealerAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(DealerResponse), 200)]
+        public async Task<DealerResponse> GetDealerAsync([FromRoute] Guid id)
         {
-            return (await _dealerService.FindOneAsync(id)).Transient404(HttpContext);
+            var result = (await _dealerService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
+            if (result is not null) result.MapLink = _dealerService.GetMapLink(result.Id);
+            return result;
         }
 
 
@@ -85,16 +90,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Create a new dealer.
         /// </summary>
-        /// <param name="record"></param>
+        /// <param name="request"></param>
         /// <returns>Id of the newly created dealer</returns>
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(400)]
         [HttpPost("")]
         public async Task<ActionResult> PostDealerAsync(
-            [EnsureNotNull][FromBody] DealerRecord record
+            [EnsureNotNull][FromBody] DealerRequest request
         )
         {
+            DealerRecord record = request.Transform();
             record.NewId();
             record.Touch();
 

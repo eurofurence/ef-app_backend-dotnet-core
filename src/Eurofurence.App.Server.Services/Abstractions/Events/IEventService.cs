@@ -11,13 +11,14 @@ using Ical.Net;
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
     public interface IEventService :
-        IEntityServiceOperations<EventRecord>,
+        IEntityServiceOperations<EventRecord, EventResponse>,
         IPatchOperationProcessor<EventRecord>
     {
         IQueryable<EventRecord> FindConflicts(
             DateTime conflictStartTime,
             DateTime conflictEndTime,
-            TimeSpan tolerance);
+            TimeSpan tolerance,
+            bool includeInternal);
 
         public Task RunImportAsync();
 

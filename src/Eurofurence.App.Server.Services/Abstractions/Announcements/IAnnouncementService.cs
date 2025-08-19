@@ -3,7 +3,7 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Announcements
 {
     public interface IAnnouncementService :
-        IEntityServiceOperations<AnnouncementRecord>,
+        IEntityServiceOperations<AnnouncementRecord, AnnouncementResponse>,
         IPatchOperationProcessor<AnnouncementRecord>
     {
     }

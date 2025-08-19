@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Users
 {
-    public class ArtistAlleyUserPenaltyService : EntityServiceBase<ArtistAlleyUserPenaltyRecord>, IArtistAlleyUserPenaltyService
+    public class ArtistAlleyUserPenaltyService : EntityServiceBase<ArtistAlleyUserPenaltyRecord, ArtistAlleyUserPenaltyResponse>, IArtistAlleyUserPenaltyService
     {
 
         private readonly AppDbContext _appDbContext;

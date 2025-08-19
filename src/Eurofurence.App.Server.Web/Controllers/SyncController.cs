@@ -1,18 +1,22 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -30,6 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly ILogger _logger;
         private readonly IMapService _mapService;
+        private readonly ITableRegistrationService _tableRegistrationService;
         private readonly GlobalOptions _globalOptions;
         private readonly IMapper _mapper;
         public SyncController(
@@ -44,6 +49,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IDealerService dealerService,
             IAnnouncementService announcementService,
             IMapService mapService,
+            ITableRegistrationService tableRegistrationService,
             IOptions<GlobalOptions> globalOptions,
             IMapper mapper
         )
@@ -59,6 +65,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _dealerService = dealerService;
             _announcementService = announcementService;
             _mapService = mapService;
+            _tableRegistrationService = tableRegistrationService;
             _globalOptions = globalOptions.Value;
             _mapper = mapper;
         }
@@ -66,12 +73,30 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Returns everything you could ever wish for.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns></returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
-            _logger.LogInformation("Execute=Sync, Since={since}", since);
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            _logger.LogDebug($"Execute=Sync, Since={since}, IsStaff={isStaff}");
+
+            var tableRegistrations =
+                (User.IsInRole("AttendeeCheckedIn") || User.IsInRole("ArtistAlleyModerator") || User.IsInRole("ArtistAlleyAdmin") || User.IsInRole("Admin")) ?
+                _mapper.Map<DeltaResponse<ArtistAlleyResponse>>(await _tableRegistrationService.GetDeltaResponseAsync(since))
+                : new DeltaResponse<ArtistAlleyResponse>
+                {
+                    RemoveAllBeforeInsert = true,
+                    ChangedEntities = [],
+                    DeletedEntities = []
+                };
 
             var response = new AggregatedDeltaResponse
             {
@@ -89,8 +114,15 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Images = await _imageService.GetDeltaResponseAsync(since),
                 Dealers = await _dealerService.GetDeltaResponseAsync(since),
                 Announcements = await _announcementService.GetDeltaResponseAsync(since),
-                Maps = await _mapService.GetDeltaResponseAsync(since)
+                Maps = await _mapService.GetDeltaResponseAsync(since),
+                TableRegistrations = tableRegistrations,
             };
+
+            // Filter internal event-related entities for non-staff
+            response.Events.ChangedEntities = response.Events.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+            response.EventConferenceDays.ChangedEntities = response.EventConferenceDays.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+            response.EventConferenceRooms.ChangedEntities = response.EventConferenceRooms.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+            response.EventConferenceTracks.ChangedEntities = response.EventConferenceTracks.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
 
             return response;
         }

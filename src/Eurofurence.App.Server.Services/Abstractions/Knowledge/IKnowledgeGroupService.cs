@@ -3,7 +3,7 @@
 namespace Eurofurence.App.Server.Services.Abstractions.Knowledge
 {
     public interface IKnowledgeGroupService :
-        IEntityServiceOperations<KnowledgeGroupRecord>,
+        IEntityServiceOperations<KnowledgeGroupRecord, KnowledgeGroupResponse>,
         IPatchOperationProcessor<KnowledgeGroupRecord>
     {
     }

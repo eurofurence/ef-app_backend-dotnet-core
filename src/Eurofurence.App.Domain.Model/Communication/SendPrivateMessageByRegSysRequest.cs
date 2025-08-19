@@ -1,6 +1,8 @@
-﻿namespace Eurofurence.App.Domain.Model.Communication
+﻿using Eurofurence.App.Domain.Model.Transformers;
+
+namespace Eurofurence.App.Domain.Model.Communication
 {
-    public class SendPrivateMessageByRegSysRequest
+    public class SendPrivateMessageByRegSysRequest : IDtoTransformable<PrivateMessageRecord>
     {
         public string RecipientUid { get; set; }
         public string AuthorName { get; set; }

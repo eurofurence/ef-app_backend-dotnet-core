@@ -3,6 +3,7 @@
     public class ArtistAlleyOptions
     {
         public bool RegistrationEnabled { get; init; }
-        public ArtistAlleyTelegramOptions Telegram { get; init; }
+        public bool SendModeratorAnnouncements { get; init; }
+        public double? ExpirationTimeInHours { get; init; }
     }
 }

@@ -23,7 +23,7 @@ using Minio.DataModel.Args;
 
 namespace Eurofurence.App.Server.Services.Images
 {
-    public class ImageService : EntityServiceBase<ImageRecord>, IImageService
+    public class ImageService : EntityServiceBase<ImageRecord, ImageResponse>, IImageService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IMinioClient _minIoClient;
@@ -58,6 +58,8 @@ namespace Eurofurence.App.Server.Services.Images
         {
             var entity = await _appDbContext.Images
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+
+            if (entity is null) return;
 
             await DeleteFileFromMinIoAsync(
                 _minIoOptions.Bucket,

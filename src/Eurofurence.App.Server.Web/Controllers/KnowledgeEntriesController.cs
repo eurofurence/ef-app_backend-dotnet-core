@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
-using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -16,12 +16,10 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class KnowledgeEntriesController : BaseController
     {
         private readonly IKnowledgeEntryService _knowledgeEntryService;
-        private readonly IMapper _mapper;
 
-        public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService, IMapper mapper)
+        public KnowledgeEntriesController(IKnowledgeEntryService knowledgeEntryService)
         {
             _knowledgeEntryService = knowledgeEntryService;
-            _mapper = mapper;
         }
 
         /// <summary>
@@ -31,11 +29,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<KnowledgeEntryResponse>), 200)]
-        public IEnumerable<KnowledgeEntryResponse> GetKnowledgeEntriesAsync()
+        public IEnumerable<KnowledgeEntryResponse> GetKnowledgeEntriesAsync(bool includeNonPublished = false)
         {
-            return _mapper.Map<IEnumerable<KnowledgeEntryResponse>>(_knowledgeEntryService.FindAll()
-                .Include(ke => ke.Images)
-                .Include(ke => ke.Links));
+            var knowledgeEntries = _knowledgeEntryService.FindAll();
+
+            if (!includeNonPublished || !(User.IsInRole("KnowledgeBaseEditor") || User.IsInRole("Admin")))
+            {
+                knowledgeEntries = knowledgeEntries.Where(ke => ke.Published != null);
+            }
+
+            return knowledgeEntries.Select(x => x.Transform());
         }
 
         /// <summary>
@@ -47,10 +50,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(KnowledgeEntryResponse), 200)]
         public async Task<KnowledgeEntryResponse> GetKnowledgeEntryAsync([FromRoute] Guid id)
         {
-            return _mapper.Map<KnowledgeEntryResponse>(await _knowledgeEntryService.FindAll()
-                .Include(ke => ke.Images)
-                .Include(ke => ke.Links)
-                .FirstOrDefaultAsync(entity => entity.Id == id)).Transient404(HttpContext);
+            var knowledgeEntryResponse = (await _knowledgeEntryService.FindOneAsync(id)).Transform();
+
+            if (knowledgeEntryResponse?.Published == null && !User.IsInRole("KnowledgeBaseEditor") && !User.IsInRole("Admin"))
+            {
+                knowledgeEntryResponse = null;
+            }
+
+            return knowledgeEntryResponse.Transient404(HttpContext);
         }
 
 

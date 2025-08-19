@@ -1,5 +1,4 @@
-﻿using System;
-using Ganss.Xss;
+﻿using Ganss.Xss;
 
 namespace Eurofurence.App.Server.Services.Sanitization
 {

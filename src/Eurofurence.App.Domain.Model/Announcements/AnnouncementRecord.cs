@@ -3,11 +3,13 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Announcements
 {
     [DataContract]
-    public class AnnouncementRecord : EntityBase
+    public class AnnouncementRecord : EntityBase,
+        IDtoRecordTransformable<AnnouncementRequest, AnnouncementResponse, AnnouncementRecord>
     {
         /// <summary>
         /// When does this announcement start to be valid?
@@ -87,5 +89,12 @@ namespace Eurofurence.App.Domain.Model.Announcements
 
         [JsonIgnore]
         public ImageRecord Image { get; set; }
+
+        /// <summary>
+        /// Optional ids for roles in the identity provider.
+        /// If provided, the announcement will only be sent to members of those roles.
+        /// </summary>
+        [DataMember]
+        public string[] Groups { get; set; }
     }
 }

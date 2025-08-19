@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
-using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Web.Extensions;
 using Ical.Net;
 using Ical.Net.Serialization;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -38,13 +37,21 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieves a list of all events in the event schedule.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns>All events in the event schedule.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
-        public IQueryable<EventRecord> GetEventsAsync()
+        [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
+        public IQueryable<EventResponse> GetEventsAsync()
         {
-            return _eventService.FindAll();
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            return _eventService.FindAll(e => isStaff || !e.IsInternal).Select(x => x.Transform());
         }
 
         /// <summary>
@@ -52,30 +59,47 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     conflict with the specified start/end time, +/- a tolerance
         ///     in minutes that is considered when calculating overlaps.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns>All events in the event schedule that conflict with a specified start/endtime + tolerance.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet(":conflicts")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventRecord>), 200)]
-        public IQueryable<EventRecord> GetConflictingEventsAsync(
+        [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
+        public IQueryable<EventResponse> GetConflictingEventsAsync(
             DateTime conflictStartTime,
             DateTime conflictEndTime,
             int toleranceInMinutes
         )
         {
+            var isStaff = User?.IsInRole("Staff") ?? false;
             return _eventService.FindConflicts(conflictStartTime, conflictEndTime,
-                TimeSpan.FromMinutes(toleranceInMinutes));
+                TimeSpan.FromMinutes(toleranceInMinutes), isStaff).Select(x => x.Transform());
         }
 
         /// <summary>
         ///     Retrieve a single event in the event schedule.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">id of the requested entity</param>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(EventRecord), 200)]
-        public async Task<EventRecord> GetEventAsync([FromRoute] Guid id)
+        [ProducesResponseType(typeof(EventResponse), 200)]
+        public async Task<EventResponse> GetEventAsync([FromRoute] Guid id)
         {
-            return (await _eventService.FindOneAsync(id)).Transient404(HttpContext);
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            var eventEntry = await _eventService.FindAll(e => e.Id == id && (isStaff || !e.IsInternal)).FirstOrDefaultAsync();
+            return eventEntry.Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>
@@ -84,14 +108,19 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>A list of <see cref="EventRecord"/> marked as favorite</returns>
         [Authorize]
         [HttpGet("Favorites")]
-        [ProducesResponseType(200)]
-        public Task<ActionResult> GetMyFavorites()
+        [ProducesResponseType<EventResponse>(200)]
+        public ActionResult GetMyFavorites()
         {
-            return Task.FromResult<ActionResult>(Ok(_eventService.GetFavoriteEventsFromUser(User)));
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            return Ok(_eventService.GetFavoriteEventsFromUser(User)?
+                .Where(e => isStaff || !e.IsInternal)
+                .Select(x => x.Transform()));
         }
 
         [Authorize]
         [HttpGet("Favorites/:calendar-token")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType<string>(200)]
         public async Task<ActionResult> GetFavoritesUrl()
         {
             var userToken = await _userService.GetOrCreateUserCalendarToken(User);
@@ -105,6 +134,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("Favorites/calendar.ics/")]
+        [ProducesResponseType(401)]
+        [ProducesResponseType<FileContentResult>(200)]
         public async Task<ActionResult> FavoritesCalendar([FromQuery, BindRequired] string token)
         {
             if (token == null)
@@ -131,15 +162,23 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Adds an event to favorites
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
+        [Authorize]
+        [AllowAnonymous]
         [Authorize]
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
         {
             var foundEvent = await _eventService.FindOneAsync(id);
+            var isStaff = User?.IsInRole("Staff") ?? false;
 
-            if (foundEvent == null)
+            if (foundEvent == null || (foundEvent.IsInternal && !isStaff))
             {
                 return NotFound();
             }
@@ -151,8 +190,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Removes an event from favorites
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
+        [Authorize]
+        [AllowAnonymous]
         [Authorize]
         [HttpDelete("{id}/:favorite")]
         public async Task<ActionResult> UnmarkEventAsFavorite([FromRoute] Guid id)

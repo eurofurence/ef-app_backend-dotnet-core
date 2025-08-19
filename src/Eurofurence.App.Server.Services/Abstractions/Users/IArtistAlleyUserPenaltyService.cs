@@ -1,4 +1,3 @@
-using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
@@ -6,7 +5,7 @@ using Eurofurence.App.Domain.Model.ArtistsAlley;
 namespace Eurofurence.App.Server.Services.Abstractions.Users
 {
     public interface IArtistAlleyUserPenaltyService :
-        IEntityServiceOperations<ArtistAlleyUserPenaltyRecord>,
+        IEntityServiceOperations<ArtistAlleyUserPenaltyRecord, ArtistAlleyUserPenaltyResponse>,
         IPatchOperationProcessor<ArtistAlleyUserPenaltyRecord>
     {
         /// <summary>

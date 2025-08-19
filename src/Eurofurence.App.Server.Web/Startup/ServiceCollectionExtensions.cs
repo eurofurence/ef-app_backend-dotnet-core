@@ -1,5 +1,4 @@
-﻿using AngleSharp;
-using Eurofurence.App.Server.Services.Abstractions.Announcements;
+﻿using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -12,7 +11,6 @@ using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -31,13 +29,10 @@ using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
-using Eurofurence.App.Server.Services.Telegram;
 using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Eurofurence.App.Server.Web.Identity;
-using Eurofurence.App.Server.Web.Telegram;
-using Telegram.Bot;
 using Eurofurence.App.Server.Web.Swagger;
 using Microsoft.OpenApi.Models;
 using System;
@@ -45,10 +40,11 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Identity;
 using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Web.Jobs;
-using Microsoft.Extensions.Logging;
 using Quartz;
+using Quartz.Impl.Matchers;
 using Mapster;
 using MapsterMapper;
+using Serilog;
 
 namespace Eurofurence.App.Server.Web.Startup
 {
@@ -76,30 +72,18 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<ILostAndFoundLassieImporter, LostAndFoundLassieImporter>();
             services.AddTransient<IMapService, MapService>();
             services.AddTransient<IPrivateMessageService, PrivateMessageService>();
-            services.AddTransient<IPushNotificationChannelStatisticsService, PushNotificationChannelStatisticsService>();
+            services
+                .AddTransient<IPushNotificationChannelStatisticsService, PushNotificationChannelStatisticsService>();
             services.AddTransient<IQrCodeService, QrCodeService>();
             services.AddTransient<IStorageServiceFactory, StorageServiceFactory>();
             services.AddTransient<ITableRegistrationService, TableRegistrationService>();
             services.AddTransient<IHttpUriSanitizer, HttpUriSanitizer>();
-            services.AddTransient<IUserManager, UserManager>();
             services.AddTransient<IDealerApiClient, DealerApiClient>();
             services.AddTransient<IDeviceIdentityService, DeviceIdentityService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
-            services.AddSingleton<ITelegramMessageBroker, TelegramMessageBroker>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
-
-            return services;
-        }
-
-        public static IServiceCollection AddTelegramBot(this IServiceCollection services, TelegramOptions telegramOptions)
-        {
-            services.AddHostedService<BotService>();
-            services.AddSingleton<ITelegramBotClient>(sp => new TelegramBotClient(
-                telegramOptions.AccessToken
-            ));
-            services.AddTransient<AdminConversation>();
 
             return services;
         }
@@ -130,13 +114,14 @@ namespace Eurofurence.App.Server.Web.Startup
                     Type = SecuritySchemeType.Http
                 });
 
-                options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme, new OpenApiSecurityScheme
-                {
-                    Name = ApiKeyAuthenticationDefaults.HeaderName,
-                    Description = "Authenticate with a static API key",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
-                });
+                options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme,
+                    new OpenApiSecurityScheme
+                    {
+                        Name = ApiKeyAuthenticationDefaults.HeaderName,
+                        Description = "Authenticate with a static API key",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey
+                    });
 
                 //options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
@@ -166,10 +151,14 @@ namespace Eurofurence.App.Server.Web.Startup
             return services;
         }
 
-        public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger<Program> logger, JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions, AnnouncementOptions announcementOptions, EventOptions eventOptions)
+        public static IServiceCollection AddQuartzJobs(this IServiceCollection services, ILogger logger,
+            JobsOptions jobsOptions, LassieOptions lassieOptions, DealerOptions dealerOptions,
+            AnnouncementOptions announcementOptions, EventOptions eventOptions, ArtistAlleyOptions artistAlleyOptions)
         {
             services.AddQuartz(q =>
             {
+                q.AddJobListener<SentryJobListener>(GroupMatcher<JobKey>.AnyGroup());
+
                 if (jobsOptions.FlushPrivateMessageNotifications.Enabled)
                 {
                     var flushPrivateMessageNotificationsKey = new JobKey(nameof(FlushPrivateMessageNotificationsJob));
@@ -189,7 +178,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(announcementOptions.Url))
                     {
-                        logger.LogError("Update announcements job can't be added: Empty source url");
+                        logger.Error("Update announcements job can't be added: Empty source url");
                     }
                     else
                     {
@@ -210,7 +199,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(dealerOptions.Url))
                     {
-                        logger.LogError("Update dealers job can't be added: Empty source url");
+                        logger.Error("Update dealers job can't be added: Empty source url");
                     }
                     else
                     {
@@ -231,7 +220,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(eventOptions.Url))
                     {
-                        logger.LogError("Update events job can't be added: Empty source url");
+                        logger.Error("Update events job can't be added: Empty source url");
                     }
                     else
                     {
@@ -252,7 +241,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl))
                     {
-                        logger.LogError("Update lost and found job can't be added: Empty source url");
+                        logger.Error("Update lost and found job can't be added: Empty source url");
                     }
                     else
                     {
@@ -263,6 +252,27 @@ namespace Eurofurence.App.Server.Web.Startup
                                 .WithSimpleSchedule(s =>
                                 {
                                     s.WithIntervalInSeconds(jobsOptions.UpdateLostAndFound
+                                        .SecondsInterval);
+                                    s.RepeatForever();
+                                }));
+                    }
+                }
+
+                if (jobsOptions.DeleteExpiredArtistAlleyRegistrations.Enabled)
+                {
+                    if (artistAlleyOptions.ExpirationTimeInHours == null)
+                    {
+                        logger.Error("Delete Expired Artist Alley Registrations job can't be added: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
+                    }
+                    else
+                    {
+                        var deleteExpiredArtistAlleyRegistrationsKey = new JobKey(nameof(DeleteExpiredArtistAlleyRegistrationsJob));
+                        q.AddJob<DeleteExpiredArtistAlleyRegistrationsJob>(opts => opts.WithIdentity(deleteExpiredArtistAlleyRegistrationsKey));
+                        q.AddTrigger(t =>
+                            t.ForJob(deleteExpiredArtistAlleyRegistrationsKey)
+                                .WithSimpleSchedule(s =>
+                                {
+                                    s.WithIntervalInSeconds(jobsOptions.DeleteExpiredArtistAlleyRegistrations
                                         .SecondsInterval);
                                     s.RepeatForever();
                                 }));
@@ -279,7 +289,7 @@ namespace Eurofurence.App.Server.Web.Startup
         {
             var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
             typeAdapterConfig.Default.PreserveReference(true);
-            typeAdapterConfig.Scan(typeof(Program).Assembly);
+            typeAdapterConfig.Scan(typeof(Eurofurence.App.Domain.Model.IAssemblyMarker).Assembly);
             services.AddSingleton(typeAdapterConfig);
             services.AddScoped<IMapper, ServiceMapper>();
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Eurofurence.App.Server.Services.Abstractions.Knowledge
 {
     public interface IKnowledgeEntryService :
-        IEntityServiceOperations<KnowledgeEntryRecord>,
+        IEntityServiceOperations<KnowledgeEntryRecord, KnowledgeEntryResponse>,
         IPatchOperationProcessor<KnowledgeEntryRecord>
     {
         public Task<KnowledgeEntryRecord> InsertKnowledgeEntryAsync(

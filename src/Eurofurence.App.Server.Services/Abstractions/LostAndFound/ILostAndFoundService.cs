@@ -3,7 +3,7 @@
 namespace Eurofurence.App.Server.Services.Abstractions.LostAndFound
 {
     public interface ILostAndFoundService :
-        IEntityServiceOperations<LostAndFoundRecord>,
+        IEntityServiceOperations<LostAndFoundRecord, LostAndFoundResponse>,
         IPatchOperationProcessor<LostAndFoundRecord>
     {
     }
