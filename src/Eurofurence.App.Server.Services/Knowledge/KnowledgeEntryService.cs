@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using System.Web;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Knowledge
@@ -35,11 +35,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
             Guid id,
             CancellationToken cancellationToken = default)
         {
-            return await _appDbContext.KnowledgeEntries
-                .Include(m => m.Images)
-                .Include(m => m.Links)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+            return await FindAll().FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
         public override IQueryable<KnowledgeEntryRecord> FindAll()
@@ -47,6 +43,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
             return _appDbContext.KnowledgeEntries
                 .Include(m => m.Images)
                 .Include(m => m.Links)
+                .AsSplitQuery()
                 .AsNoTracking();
         }
 
@@ -73,6 +70,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 Title = request.Title,
                 Text = HttpUtility.HtmlDecode(_htmlSanitizer.Sanitize(request.Text)),
                 Order = request.Order,
+                Published = request.Published,
                 Links = request.Links,
                 IsDeleted = 0
             };
@@ -100,6 +98,7 @@ namespace Eurofurence.App.Server.Services.Knowledge
             existingEntity.Title = request.Title;
             existingEntity.Text = HttpUtility.HtmlDecode(_htmlSanitizer.Sanitize(request.Text));
             existingEntity.Order = request.Order;
+            existingEntity.Published = request.Published;
 
             foreach (var existingLink in existingEntity.Links)
             {
@@ -152,10 +151,10 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 response.DeletedEntities = Array.Empty<Guid>();
                 response.ChangedEntities = await
                     _appDbContext.KnowledgeEntries
-                        .Include(ke => ke.Links)
-                        .Include(ke => ke.Images)
-                        .Where(entity => entity.IsDeleted == 0)
-                        .Select(x => x.Transform())
+                        .Include(entity => entity.Links)
+                        .Include(entity => entity.Images)
+                        .Where(entity => entity.IsDeleted == 0 && entity.Published != null)
+                        .Select(entity => entity.Transform())
                         .ToArrayAsync(cancellationToken);
             }
             else
@@ -163,18 +162,18 @@ namespace Eurofurence.App.Server.Services.Knowledge
                 response.RemoveAllBeforeInsert = false;
 
                 var entities = _appDbContext.KnowledgeEntries
-                    .Include(ke => ke.Links)
-                    .Include(ke => ke.Images)
+                    .Include(entity => entity.Links)
+                    .Include(entity => entity.Images)
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities
-                    .Where(a => a.IsDeleted == 0)
-                    .Select(x => x.Transform())
+                    .Where(entity => entity.IsDeleted == 0 && entity.Published != null)
+                    .Select(entity => entity.Transform())
                     .ToArrayAsync(cancellationToken);
                 response.DeletedEntities = await entities
-                    .Where(a => a.IsDeleted == 1)
-                    .Select(a => a.Id)
+                    .Where(entity => entity.IsDeleted == 1 || entity.Published == null)
+                    .Select(entity => entity.Id)
                     .ToArrayAsync(cancellationToken);
             }
 

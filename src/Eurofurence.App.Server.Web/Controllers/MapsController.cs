@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Maps;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -76,7 +76,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<MapEntryResponse> GetSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
             var result = (await _mapService.FindOneAsync(id))?.Entries.SingleOrDefault(a => a.Id == entryId)
-                .Transient404(HttpContext).Transform();
+                .Transient404(HttpContext)?.Transform();
 
             return result;
         }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
+﻿namespace Eurofurence.App.Server.Services.Abstractions.ArtShow
 {
     public class ImportResult
     {

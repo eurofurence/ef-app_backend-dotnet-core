@@ -1,60 +1,72 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Eurofurence.App.Common.ExtensionMethods;
+﻿using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Communication;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.IO;
+using System.Linq;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Services.ArtistsAlley
 {
-    public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord, TableRegistrationResponse>, ITableRegistrationService
+    public class TableRegistrationService : EntityServiceBase<TableRegistrationRecord, TableRegistrationResponse>,
+        ITableRegistrationService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly AuthorizationOptions _authorizationOptions;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
-        private readonly ITelegramMessageBroker _telegramMessageSender;
         private readonly IImageService _imageService;
         private readonly IPrivateMessageService _privateMessageService;
+        private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly IHtmlSanitizer _htmlSanitizer;
+        private readonly ILogger _logger;
 
         private readonly Regex _telegramHandleRegex = new Regex("^@?[0-9A-Za-z_]{5,32}$");
 
         public TableRegistrationService(
             AppDbContext context,
             IStorageServiceFactory storageServiceFactory,
+            IOptions<AuthorizationOptions> authorizationOptions,
             IOptions<ArtistAlleyOptions> artistAlleyOptions,
-            ITelegramMessageBroker telegramMessageSender,
             IPrivateMessageService privateMessageService,
             IImageService imageService,
+            IPushNotificationChannelManager pushNotificationChannelManager,
             IHttpUriSanitizer uriSanitizer,
-            IHtmlSanitizer htmlSanitizer) : base(context, storageServiceFactory)
+            IHtmlSanitizer htmlSanitizer,
+            ILoggerFactory loggerFactory
+        ) : base(context, storageServiceFactory)
         {
             _appDbContext = context;
+            _authorizationOptions = authorizationOptions.Value;
             _artistAlleyOptions = artistAlleyOptions.Value;
-            _telegramMessageSender = telegramMessageSender;
             _privateMessageService = privateMessageService;
             _imageService = imageService;
+            _pushNotificationChannelManager = pushNotificationChannelManager;
             _uriSanitizer = uriSanitizer;
             _htmlSanitizer = htmlSanitizer;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
-        public IQueryable<TableRegistrationRecord> GetRegistrations(TableRegistrationRecord.RegistrationStateEnum? state)
+        public IQueryable<TableRegistrationRecord> GetRegistrations(
+            TableRegistrationRecord.RegistrationStateEnum? state)
         {
             var records = _appDbContext.TableRegistrations
                 .Include(tr => tr.Image)
@@ -72,7 +84,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 .FirstOrDefaultAsync(tr => tr.Id == id, cancellationToken);
         }
 
-        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream)
+        private void ValidateRegistrationRequest(TableRegistrationRequest request, Stream imageStream)
         {
             if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
                 if (_uriSanitizer.Sanitize(request.WebsiteUrl) is string sanitizedUrl and not null)
@@ -80,7 +92,8 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 else
                     throw new ArgumentException("Invalid website URL.");
 
-            if (!string.IsNullOrWhiteSpace(request.TelegramHandle) && !_telegramHandleRegex.IsMatch(request.TelegramHandle))
+            if (!string.IsNullOrWhiteSpace(request.TelegramHandle) &&
+                !_telegramHandleRegex.IsMatch(request.TelegramHandle))
             {
                 throw new ArgumentException("Invalid Telegram handle.");
             }
@@ -99,6 +112,41 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             {
                 throw new ArgumentException("Registrations must include an image.");
             }
+        }
+
+        public async Task UpdateTableAsync(ClaimsPrincipal user, Guid id, TableRegistrationRequest request,
+            Stream imageStream)
+        {
+            ValidateRegistrationRequest(request, imageStream);
+            string subject = user.GetSubject();
+
+            TableRegistrationRecord record = await _appDbContext
+                .TableRegistrations
+                .FirstOrDefaultAsync(tr => tr.Id == id);
+
+            if (record == null)
+            {
+                throw new ArgumentException($"No existing approved table registration found with ID {id}.");
+            }
+
+            record.Merge(request);
+
+            ImageRecord image = await _imageService
+                .InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream,
+                    true, 1500, 1500);
+            record.ImageId = image.Id;
+
+            TableRegistrationRecord.StateChangeRecord stateChange =
+                record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Pending,
+                    $"Data-Updated-By-Artist: {subject}");
+            _appDbContext.StateChangeRecord.Add(stateChange);
+
+            await _appDbContext.SaveChangesAsync();
+        }
+
+        public async Task RegisterTableAsync(ClaimsPrincipal user, TableRegistrationRequest request, Stream imageStream)
+        {
+            ValidateRegistrationRequest(request, imageStream);
 
             var subject = user.GetSubject();
             var activeRegistrations = await _appDbContext.TableRegistrations
@@ -113,12 +161,16 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 await DeleteOneAsync(registration.Id);
             }
 
-            var image = await _imageService.InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream, true, 1500, 1500);
+            var regSysId = user.GetRegSysIds().FirstOrDefault("none");
+
+            var image = await _imageService.InsertImageAsync(
+                $"artistalley:{subject}:{regSysId}", imageStream, true, 1500, 1500);
 
             var record = new TableRegistrationRecord()
             {
                 OwnerUid = user.GetSubject(),
                 OwnerUsername = user.Identity?.Name,
+                OwnerRegSysId = regSysId,
                 CreatedDateTimeUtc = DateTime.UtcNow,
                 DisplayName = _htmlSanitizer.Sanitize(request.DisplayName),
                 WebsiteUrl = request.WebsiteUrl,
@@ -134,27 +186,41 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
 
             _appDbContext.TableRegistrations.Add(record);
             await _appDbContext.SaveChangesAsync();
-            await _telegramMessageSender.SendTableRegistrationAsync(
-                _artistAlleyOptions.Telegram.AdminGroupChatId,
-                record
-            );
+
+            if (_artistAlleyOptions.SendModeratorAnnouncements != true)
+            {
+                return;
+            }
+
+            var announcementRequest = new AnnouncementRequest
+            {
+                Title = "New Artist Alley Registration",
+                Content = $"{record.OwnerUsername} (Reg# {regSysId}) registered as {request.DisplayName} at table {request.Location}. Please check their table and approve or reject their request.",
+                Area = "announcement",
+                Author = "Artist Alley",
+                ImageId = image?.Id,
+                ValidFromDateTimeUtc = DateTime.UtcNow,
+                ValidUntilDateTimeUtc = DateTime.UtcNow.AddDays(1),
+                Groups = _authorizationOptions.ArtistAlleyAdmin.Concat(_authorizationOptions.ArtistAlleyModerator)
+                    .ToArray()
+            };
+
+            await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupsAsync(
+                announcementRequest.Transform(), announcementRequest.Groups);
         }
 
-        public async Task ApproveByIdAsync(Guid id, string operatorUid)
+        public async Task ApproveByIdAsync(Guid id, string operatorUid, CancellationToken cancellationToken = default)
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
-                                                                                         && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
+                    && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending,
+                cancellationToken: cancellationToken);
             var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Accepted, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
             record.Touch();
+            await _appDbContext.SaveChangesAsync(cancellationToken);
 
-            await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-            _artistAlleyOptions.Telegram.AdminGroupChatId,
-            $"*Approved:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been approved by *{operatorUid.RemoveMarkdown()}* and will be published on Telegram.");
-
-            await BroadcastAsync(record);
-
-            var message = $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nA message about your presence in the Artist Alley (along with the text/images you provided) has been posted on our Telegram channel.\n\nFeel free to re-submit the table registration during any other convention day for another signal boost!";
+            var message =
+                $"Dear {record.OwnerUsername},\n\nWe're happy to inform you that your Artist Alley table registration was accepted as suitable for publication.\n\nYour presence in the Artist Alley along with the text and images you provided has been published on the mobile app!";
 
             var sendPrivateMessageRequest = new SendPrivateMessageByIdentityRequest()
             {
@@ -166,63 +232,23 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 ToastMessage = "Your table registration was accepted"
             };
 
-            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
-
-            await _appDbContext.SaveChangesAsync();
+            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest,
+                cancellationToken: cancellationToken);
         }
 
-        private async Task BroadcastAsync(TableRegistrationRecord record)
-        {
-            var message = new StringBuilder();
-
-            message.Append($@"Now in the Artist Alley ({record.Location.RemoveMarkdown()}):
-
-*{record.DisplayName.RemoveMarkdown()}*
-
-");
-
-            message.Append(record.ShortDescription.EscapeMarkdown() + "\n\n");
-
-            if (!string.IsNullOrWhiteSpace(record.TelegramHandle))
-            {
-                message.AppendLine($"Telegram: {record.TelegramHandle.RemoveMarkdown()}");
-            }
-            if (!string.IsNullOrWhiteSpace(record.WebsiteUrl))
-            {
-                message.AppendLine($"Website: {record.WebsiteUrl.RemoveMarkdown()}");
-            }
-
-            if (record.ImageId.HasValue)
-            {
-                await _telegramMessageSender.SendImageToChatAsync(
-                    _artistAlleyOptions.Telegram.AnnouncementChannelId,
-                    await _imageService.GetImageContentByImageIdAsync(record.ImageId.Value),
-                    message.ToString()
-                );
-            }
-            else
-            {
-                await _telegramMessageSender.SendMarkdownMessageToChatAsync(
-                    _artistAlleyOptions.Telegram.AnnouncementChannelId,
-                    message.ToString()
-                );
-            }
-        }
-
-        public async Task RejectByIdAsync(Guid id, string operatorUid)
+        public async Task RejectByIdAsync(Guid id, string operatorUid, CancellationToken cancellationToken = default)
         {
             var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(a => a.Id == id
-                                                                                         && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending);
+                    && a.State == TableRegistrationRecord.RegistrationStateEnum.Pending,
+                cancellationToken: cancellationToken);
 
             var stateChange = record.ChangeState(TableRegistrationRecord.RegistrationStateEnum.Rejected, operatorUid);
             _appDbContext.StateChangeRecord.Add(stateChange);
 
             record.Touch();
 
-            await _telegramMessageSender.SendMarkdownMessageToChatAsync(_artistAlleyOptions.Telegram.AdminGroupChatId,
-            $"*Rejected:* {record.OwnerUsername.EscapeMarkdown()} ({record.OwnerUid.EscapeMarkdown()} / {record.Id})\n\nRegistration has been rejected by *{operatorUid.RemoveMarkdown()}*.");
-
-            var message = $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
+            var message =
+                $"Dear {record.OwnerUsername},\n\nWe're sorry to inform you that your Artist Alley table registration was considered not suitable for publication.\n\nIt's possible that we couldn't visit your table in time, or that your submitted texts/images are not suitable for public display.\n\nFeel free to update and re-submit the table registration.";
 
             var sendPrivateMessageRequest = new SendPrivateMessageByRegSysRequest()
             {
@@ -234,10 +260,45 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 ToastMessage = "Your table registration was rejected"
             };
 
-            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest);
+            await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest,
+                cancellationToken: cancellationToken);
 
-            await _appDbContext.SaveChangesAsync();
+            await _appDbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task DeleteExpiredAsync(CancellationToken cancellationToken = default)
+        {
+            var expiredRegistrations = (await FindAll()
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken: cancellationToken))
+                .Where(r => (DateTime.UtcNow - r.LastChangeDateTimeUtc).TotalHours >
+                            _artistAlleyOptions.ExpirationTimeInHours);
+
+            foreach (var registration in expiredRegistrations)
+            {
+                var message =
+                    $"Dear {registration.OwnerUsername},\n\nYour current Artist Alley registration has expired after {_artistAlleyOptions.ExpirationTimeInHours} hours. If you are still at the table, please submit a new registration.";
+
+                var sendPrivateMessageRequest = new SendPrivateMessageByIdentityRequest()
+                {
+                    AuthorName = "Artist Alley",
+                    RecipientUid = registration.OwnerUid,
+                    Subject = "Your table registration has expired",
+                    Message = message,
+                    ToastTitle = "Artist Alley",
+                    ToastMessage = "Your table registration has expired"
+                };
+
+                await _privateMessageService.SendPrivateMessageAsync(sendPrivateMessageRequest,
+                    cancellationToken: cancellationToken);
+
+                await DeleteOneAsync(registration.Id, cancellationToken);
+
+                _logger.LogInformation(LogEvents.Audit,
+                    $"Artist alley registration with the ID {registration.Id} of user {registration.OwnerUsername} expired and was deleted.");
+            }
+        }
+
         public async Task<TableRegistrationRecord> GetLatestRegistrationByUidAsync(string uid)
         {
             var request = await _appDbContext.TableRegistrations
@@ -250,18 +311,78 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             return request;
         }
 
-        public async Task DeleteLatestRegistrationByUidAsync(string userUid)
+        public async Task CheckoutLatestRegistrationByUidAsync(string userUid, CancellationToken cancellationToken = default)
         {
-            TableRegistrationRecord tableRegistrationRecord = await _appDbContext.TableRegistrations
+            var record = await _appDbContext.TableRegistrations
                 .OrderByDescending(a => a.CreatedDateTimeUtc)
-                .FirstOrDefaultAsync(a => a.OwnerUid == userUid);
+                .FirstOrDefaultAsync(a => a.OwnerUid == userUid, cancellationToken: cancellationToken);
 
-            if (tableRegistrationRecord == null)
+            if (record == null)
             {
                 throw new ArgumentException("User has not been registered yet.");
             }
 
-            await DeleteOneAsync(tableRegistrationRecord.Id);
+            await DeleteOneAsync(record.Id, cancellationToken);
+        }
+
+        public override async Task DeleteOneAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var record = await _appDbContext.TableRegistrations.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+            if (record.ImageId != null)
+            {
+                await _imageService.DeleteOneAsync((Guid)record.ImageId, cancellationToken);
+            }
+
+            await base.DeleteOneAsync(id, cancellationToken);
+        }
+
+        public new async Task<DeltaResponse<TableRegistrationResponse>> GetDeltaResponseAsync(
+            DateTime? minLastDateTimeChangedUtc = null,
+            CancellationToken cancellationToken = default)
+        {
+            var storageInfo = await GetStorageInfoAsync(cancellationToken);
+            var response = new DeltaResponse<TableRegistrationResponse>
+            {
+                StorageDeltaStartChangeDateTimeUtc = storageInfo.DeltaStartDateTimeUtc,
+                StorageLastChangeDateTimeUtc = storageInfo.LastChangeDateTimeUtc
+            };
+
+            if (!minLastDateTimeChangedUtc.HasValue || minLastDateTimeChangedUtc < storageInfo.DeltaStartDateTimeUtc)
+            {
+                response.RemoveAllBeforeInsert = true;
+                response.DeletedEntities = Array.Empty<Guid>();
+                var changedEntities = await
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                        .Select(x => x.Transform<TableRegistrationResponse>())
+                        .ToListAsync(cancellationToken: cancellationToken);
+
+                response.ChangedEntities = changedEntities.ToArray();
+            }
+            else
+            {
+                response.RemoveAllBeforeInsert = false;
+
+                var entities =
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                        .IgnoreQueryFilters()
+                        .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
+
+                var changedEntities = await
+                    GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                        .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc)
+                        .Select(x => x.Transform<TableRegistrationResponse>())
+                        .ToListAsync(cancellationToken);
+
+                response.ChangedEntities = changedEntities.ToArray();
+                response.DeletedEntities = await entities
+                    .AsNoTracking()
+                    .Where(a => a.IsDeleted == 1)
+                    .Select(a => a.Id)
+                    .ToArrayAsync(cancellationToken);
+            }
+
+            return response;
         }
     }
 }

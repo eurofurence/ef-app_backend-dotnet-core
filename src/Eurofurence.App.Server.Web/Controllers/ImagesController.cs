@@ -7,10 +7,9 @@ using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Text;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,7 +72,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                     .Include(i => i.DealerArtists)
                     .Include(i => i.EventBanners)
                     .Include(i => i.EventPosters)
-                    .Include(i => i.Announcements));
+                    .Include(i => i.Announcements)
+                    .AsSplitQuery());
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(ImageRecord), 200)]
         public async Task<ImageResponse> GetImageAsync([FromRoute] Guid id)
         {
-            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext).Transform<ImageResponse>();
+            return (await _imageService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<ImageResponse>();
         }
 
         [Authorize(Roles = "Admin,KnowledgeBaseEditor")]

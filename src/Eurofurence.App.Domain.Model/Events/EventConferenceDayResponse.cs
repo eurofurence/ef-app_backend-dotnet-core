@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Events;
 
@@ -13,4 +11,7 @@ public class EventConferenceDayResponse : ResponseBase
 
     [DataMember]
     public DateTime Date { get; set; }
+
+    [DataMember]
+    public bool IsInternal { get; set; }
 }

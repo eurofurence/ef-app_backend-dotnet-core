@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley
 {
     public class TableRegistrationRecord : EntityBase,
-        IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse, TableRegistrationRecord>
+        IDtoRecordTransformable<TableRegistrationRequest, TableRegistrationResponse, TableRegistrationRecord>,
+        IDtoTransformable<ArtistAlleyResponse>
     {
         public class StateChangeRecord : EntityBase
         {
@@ -64,6 +62,12 @@ namespace Eurofurence.App.Domain.Model.ArtistsAlley
         /// </summary>
         [DataMember]
         public string OwnerUsername { get; set; }
+
+        /// <summary>
+        /// Registration system ID of the user that submitted the registration.
+        /// </summary>
+        [DataMember]
+        public string OwnerRegSysId { get; set; }
 
         /// <summary>
         /// Preferred display name of artist.

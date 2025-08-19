@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Images;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley;
@@ -27,6 +24,12 @@ public class TableRegistrationResponse : ResponseBase
     /// </summary>
     [DataMember]
     public string OwnerUsername { get; set; }
+
+    /// <summary>
+    /// Registration system ID of the user that submitted the registration.
+    /// </summary>
+    [DataMember]
+    public string OwnerRegSysId { get; set; }
 
     /// <summary>
     /// Preferred display name of artist.

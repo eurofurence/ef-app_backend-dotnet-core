@@ -15,6 +15,11 @@ on:
         default: 'latest'
         type: string
         description: The tag(s) to push. Space separated, for example 'v1 v1.3 v1.3.7 latest'.
+      build-args:
+        required: false
+        default: ''
+        type: string
+        description: Additional arguments provided to the docker build command.
     secrets:
       registry-pass:
         required: true
@@ -30,9 +35,10 @@ jobs:
             image-name: ${{ github.repository }}
           - dockerfile: Dockerfile-backoffice
             image-name: ${{ github.repository }}-backoffice
-    uses: eurofurence/reg-workflows/.github/workflows/docker-build-push.yml@main
+    uses: ./.github/workflows/docker-build-push.yml
     with:
       dockerfile: ${{ matrix.dockerfile }}
+      build-args: ${{ inputs.build-args }}
       image-name: ${{ matrix.image-name }}
       image-tags: ${{ inputs.image-tags }}
       full-repo-url: https://github.com/${{ github.repository }}

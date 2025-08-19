@@ -1,5 +1,5 @@
 using Eurofurence.App.Domain.Model.Images;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 
 namespace Eurofurence.App.Domain.Model.ArtistsAlley

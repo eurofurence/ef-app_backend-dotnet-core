@@ -1,7 +1,7 @@
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 using Xunit;
 
@@ -17,8 +17,6 @@ public class DealersTest
         _record = new DealerRecord
         {
             Id = Guid.NewGuid(),
-            RegistrationNumber = 12345,
-            AttendeeNickname = "artist123",
             DisplayName = "Amazing Artworks",
             Merchandise = "Prints, Stickers, and Original Art",
             ShortDescription = "A variety of art and merchandise from Amazing Artworks.",
@@ -108,7 +106,7 @@ public class DealersTest
     {
         var record = _request.Adapt<DealerRecord>();
         AreEqual(record, _request);
-        Assert.Equal(record.DisplayNameOrAttendeeNickname, _request.DisplayName);
+        Assert.Equal(record.DisplayName, _request.DisplayName);
     }
 
 
@@ -118,8 +116,6 @@ public class DealersTest
         _request.Transform();
 
         var oldGuid = _record.Id;
-        var oldRegID = _record.RegistrationNumber;
-        var oldAttendeeNickname = _record.AttendeeNickname;
         var oldArtistImage = _record.ArtistImage;
         var oldArtistThumbnailImage = _record.ArtistThumbnailImage;
 
@@ -140,8 +136,6 @@ public class DealersTest
         _record.Merge(_request);
 
         Assert.Equal(oldGuid, _record.Id);
-        Assert.Equal(oldRegID, _record.RegistrationNumber);
-        Assert.Equal(oldAttendeeNickname, _record.AttendeeNickname);
         Assert.Equal(oldArtistImage, _record.ArtistImage);
         Assert.Equal(oldArtistThumbnailImage, _record.ArtistThumbnailImage);
         Assert.Equal(oldArtPreviewImage, _record.ArtPreviewImage);

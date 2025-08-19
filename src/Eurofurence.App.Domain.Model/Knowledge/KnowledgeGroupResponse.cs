@@ -1,17 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Knowledge
 {
     [DataContract]
     public class KnowledgeGroupResponse : ResponseBase
     {
-        [DataMember]
-        public Guid Id { get; set; }
-
         [Required]
         [DataMember]
         public string Name { get; set; }

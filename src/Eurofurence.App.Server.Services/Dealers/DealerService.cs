@@ -13,12 +13,13 @@ using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Sync;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -32,16 +33,18 @@ namespace Eurofurence.App.Server.Services.Dealers
         private readonly AppDbContext _appDbContext;
         private readonly IDealerApiClient _dealerApiClient;
         private readonly GlobalOptions _globalOptions;
+        private readonly MapOptions _mapOptions;
         private readonly IImageService _imageService;
         private readonly IHttpUriSanitizer _uriSanitizer;
         private readonly ILogger _logger;
-        private static SemaphoreSlim _semaphore = new(1, 1);
+        private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
         public DealerService(
             AppDbContext appDbContext,
             IStorageServiceFactory storageServiceFactory,
             IDealerApiClient dealerApiClient,
             IOptions<GlobalOptions> globalOptions,
+            IOptions<MapOptions> mapOptions,
             IImageService imageService,
             IHttpUriSanitizer uriSanitizer,
             ILoggerFactory loggerFactory
@@ -51,6 +54,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             _appDbContext = appDbContext;
             _dealerApiClient = dealerApiClient;
             _globalOptions = globalOptions.Value;
+            _mapOptions = mapOptions.Value;
             _imageService = imageService;
             _uriSanitizer = uriSanitizer;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -140,13 +144,17 @@ namespace Eurofurence.App.Server.Services.Dealers
             {
                 response.RemoveAllBeforeInsert = true;
                 response.DeletedEntities = Array.Empty<Guid>();
-                response.ChangedEntities = await
+                var changedEntities = await
                     _appDbContext.Dealers
                         .AsNoTracking()
                         .Include(d => d.Links)
                         .Where(entity => entity.IsDeleted == 0)
                         .Select(x => x.Transform())
-                        .ToArrayAsync(cancellationToken);
+                        .ToListAsync(cancellationToken: cancellationToken);
+
+                changedEntities.ForEach(x => x.MapLink = GetMapLink(x.Id));
+
+                response.ChangedEntities = changedEntities.ToArray();
             }
             else
             {
@@ -158,11 +166,15 @@ namespace Eurofurence.App.Server.Services.Dealers
                     .IgnoreQueryFilters()
                     .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
-                response.ChangedEntities = await entities
+                var changedEntities = await entities
                     .AsNoTracking()
                     .Where(a => a.IsDeleted == 0)
                     .Select(x => x.Transform())
-                    .ToArrayAsync(cancellationToken);
+                    .ToListAsync(cancellationToken);
+
+                changedEntities.ForEach(x => x.MapLink = GetMapLink(x.Id));
+
+                response.ChangedEntities = changedEntities.ToArray();
                 response.DeletedEntities = await entities
                     .AsNoTracking()
                     .Where(a => a.IsDeleted == 1)
@@ -177,7 +189,7 @@ namespace Eurofurence.App.Server.Services.Dealers
         {
             try
             {
-                await _semaphore.WaitAsync();
+                await Semaphore.WaitAsync(cancellationToken);
                 _logger.LogDebug(LogEvents.Import, "Starting dealers import.");
 
                 if (!Directory.Exists(_globalOptions.WorkingDirectory))
@@ -225,8 +237,7 @@ namespace Eurofurence.App.Server.Services.Dealers
                     {
                         var dealerRecord = new DealerRecord
                         {
-                            RegistrationNumber = csvRecords[i].RegNo,
-                            AttendeeNickname = csvRecords[i].Nickname.Trim(),
+                            Id = csvRecords[i].Id,
                             AboutTheArtistText = csvRecords[i].AboutTheArtist.Trim(),
                             AboutTheArtText = csvRecords[i].AboutTheArt.Trim(),
                             ArtPreviewCaption = csvRecords[i].ArtPreviewCaption.Trim(),
@@ -248,19 +259,19 @@ namespace Eurofurence.App.Server.Services.Dealers
 
                         dealerRecord.ArtistImageId = await GetImageIdAsync(
                         archive,
-                        $"artist_{csvRecords[i].RegNo}.",
-                        $"dealer:artist:{csvRecords[i].RegNo}",
+                        $"artist_{csvRecords[i].Id}.",
+                        $"dealer:artist:{csvRecords[i].Id}",
                         cancellationToken
                         );
                         dealerRecord.ArtistThumbnailImageId = await GetImageIdAsync(
                         archive,
-                        $"thumbnail_{csvRecords[i].RegNo}.",
-                        $"dealer:thumbnail:{csvRecords[i].RegNo}",
+                        $"thumbnail_{csvRecords[i].Id}.",
+                        $"dealer:thumbnail:{csvRecords[i].Id}",
                         cancellationToken
                         );
                         dealerRecord.ArtPreviewImageId = await GetImageIdAsync(archive,
-                        $"art_{csvRecords[i].RegNo}.",
-                        $"dealer:art:{csvRecords[i].RegNo}",
+                        $"art_{csvRecords[i].Id}.",
+                        $"dealer:art:{csvRecords[i].Id}",
                         cancellationToken
                         );
 
@@ -279,11 +290,10 @@ namespace Eurofurence.App.Server.Services.Dealers
                 var existingRecords = FindAll();
 
                 var patch = new PatchDefinition<DealerRecord, DealerRecord>((source, list) =>
-                    list.SingleOrDefault(d => d.RegistrationNumber == source.RegistrationNumber));
+                    list.SingleOrDefault(d => d.Id == source.Id));
 
                 patch
-                    .Map(s => s.RegistrationNumber, t => t.RegistrationNumber)
-                    .Map(s => s.AttendeeNickname, t => t.AttendeeNickname)
+                    .Map(s => s.Id, t => t.Id)
                     .Map(s => s.AboutTheArtistText, t => t.AboutTheArtistText)
                     .Map(s => s.AboutTheArtText, t => t.AboutTheArtText)
                     .Map(s => s.ArtPreviewCaption, t => t.ArtPreviewCaption)
@@ -316,8 +326,13 @@ namespace Eurofurence.App.Server.Services.Dealers
             }
             finally
             {
-                _semaphore.Release();
+                Semaphore.Release();
             }
+        }
+
+        public string GetMapLink(Guid id)
+        {
+            return _mapOptions.UrlTemplate.Replace("{id}", id.ToString());
         }
 
         private void SanitizeFields(DealerRecord dealerRecord)
@@ -426,8 +441,7 @@ namespace Eurofurence.App.Server.Services.Dealers
     {
         public DealerImportRowClassMap()
         {
-            Map(m => m.RegNo).Name("Reg No.");
-            Map(m => m.Nickname).Name("Nick");
+            Map(m => m.Id).Name("Reg No.");
             Map(m => m.DisplayName).Name("Display Name");
             Map(m => m.Merchandise).Name("Merchandise");
             Map(m => m.ShortDescription).Name("Short Description");
@@ -450,8 +464,7 @@ namespace Eurofurence.App.Server.Services.Dealers
 
     public class DealerImportRow
     {
-        public int RegNo { get; set; }
-        public string Nickname { get; set; }
+        public Guid Id { get; set; }
         public string DisplayName { get; set; }
         public string Merchandise { get; set; }
         public string ShortDescription { get; set; }

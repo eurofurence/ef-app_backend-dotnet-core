@@ -34,7 +34,7 @@
 @code {
     [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
 
-    [Parameter] public KnowledgeGroupRecord? Record { get; set; }
+    [Parameter] public KnowledgeGroupResponse? Record { get; set; }
 
     private bool Update { get; set; }
 
@@ -45,7 +45,7 @@
     {
         if (Record == null)
         {
-            Record = new KnowledgeGroupRecord
+            Record = new KnowledgeGroupResponse
                 {
                     Id = Guid.NewGuid()
                 };
@@ -73,9 +73,18 @@
             return;
         }
 
+        var request = new KnowledgeGroupRequest
+        {
+            Name = Record.Name,
+            Description = Record.Description,
+            FontAwesomeIconName = Record.FontAwesomeIconName,
+            Order = Record.Order,
+            ShowInHamburgerMenu = Record.ShowInHamburgerMenu
+        };
+
         if (Update)
         {
-            var result = await KnowledgeService.PutKnowledgeGroupAsync(Record);
+            var result = await KnowledgeService.PutKnowledgeGroupAsync(Record.Id, request);
             if (result)
             {
                 Snackbar.Add("Knowledge base group updated.", Severity.Success);
@@ -87,7 +96,7 @@
         }
         else
         {
-            var result = await KnowledgeService.PostKnowledgeGroupAsync(Record);
+            var result = await KnowledgeService.PostKnowledgeGroupAsync(request);
             if (result)
             {
                 Snackbar.Add("Knowledge base group added.", Severity.Success);

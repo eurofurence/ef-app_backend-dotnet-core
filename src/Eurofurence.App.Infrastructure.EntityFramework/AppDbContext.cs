@@ -11,7 +11,6 @@ using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.Sync;
-using Eurofurence.App.Domain.Model.Telegram;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
@@ -29,6 +28,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         }
 
         public virtual DbSet<AnnouncementRecord> Announcements { get; set; }
+        public virtual DbSet<IdentityAnnouncementGroupsRecord> IdentityAnnouncementGroups { get; set; }
         public virtual DbSet<TableRegistrationRecord> TableRegistrations { get; set; }
         // FIXME: Should be TableRegistrationRecordStateChangeRecords #EF29
         public virtual DbSet<TableRegistrationRecord.StateChangeRecord> StateChangeRecord { get; set; }
@@ -48,7 +48,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<MapEntryRecord> MapEntries { get; set; }
         public virtual DbSet<MapRecord> Maps { get; set; }
         public virtual DbSet<EntityStorageInfoRecord> EntityStorageInfos { get; set; }
-        public virtual DbSet<TelegramUserRecord> TelegramUsers { get; set; }
         public virtual DbSet<LinkFragment> LinkFragments { get; set; }
         public virtual DbSet<DeviceIdentityRecord> DeviceIdentities { get; set; }
         public virtual DbSet<UserRecord> Users { get; set; }

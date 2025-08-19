@@ -1,8 +1,7 @@
-using Eurofurence.App.Domain.Model.Dealers;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 using Xunit;
 

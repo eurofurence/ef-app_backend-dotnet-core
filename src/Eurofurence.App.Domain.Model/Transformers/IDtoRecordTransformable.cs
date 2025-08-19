@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Server.Web.Controllers.Transformers;
-using Mapster;
+﻿using Mapster;
 
 namespace Eurofurence.App.Domain.Model.Transformers;
 

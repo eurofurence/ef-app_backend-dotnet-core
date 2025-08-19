@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Eurofurence.App.Domain.Model.Fragments;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Mapster;
@@ -15,9 +14,7 @@ namespace Eurofurence.App.Server.Web.Mapper
         {
             config
                 .NewConfig<KnowledgeEntryRecord, KnowledgeEntryResponse>()
-                .Map(dest => dest.Id, src => src.Id)
-                .Map(dest => dest.ImageIds, src => src.Images.Select(ke => ke.Id))
-                .IgnoreNonMapped(true)
+                .Map(dest => dest.ImageIds, src => src.Images.Select(image => image.Id))
                 .PreserveReference(true);
 
             config

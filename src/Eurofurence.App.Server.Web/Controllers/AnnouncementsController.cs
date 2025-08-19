@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Announcements;
+﻿using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -31,10 +31,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieves a list of all announcement entries.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <returns>All Announcement Entries.</returns>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<AnnouncementRecord>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<AnnouncementResponse>), 200)]
         public IEnumerable<AnnouncementResponse> GetAnnouncementEntries()
         {
             return _announcementService.FindAll().Select(x => x.Transform());
@@ -43,13 +50,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         ///     Retrieve a single announcement.
         /// </summary>
+        /// <remarks>
+        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
+        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
+        /// This endpoint works without authentication.
+        /// </remarks>
         /// <param name="id">id of the requested entity</param>
+        [Authorize]
+        [AllowAnonymous]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(AnnouncementRecord), 200)]
+        [ProducesResponseType(typeof(AnnouncementResponse), 200)]
         public async Task<AnnouncementResponse> GetAnnouncementAsync([FromRoute] Guid id)
         {
-            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>
@@ -92,10 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             if (request.Roles.Any())
             {
-                foreach (var role in request.Roles)
-                {
-                    await _pushNotificationChannelManager.PushAnnouncementNotificationToRoleAsync(record, role);
-                }
+                await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupsAsync(record, request.Groups);
             }
             else
             {
@@ -108,9 +119,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Updates and existing announcement and requests all devices to sync their data.
+        /// Updates an existing announcement and requests all devices to sync their data.
         /// </summary>
-        /// <param name="record">Updated announcement record</param>
+        /// <param name="id">ID of existing announcement record</param>
+        /// <param name="request">Updated announcement record</param>
         /// <returns></returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]

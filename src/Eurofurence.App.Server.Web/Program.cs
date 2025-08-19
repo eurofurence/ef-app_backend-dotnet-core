@@ -1,38 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using dotAPNS.AspNetCore;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
-using Eurofurence.App.Server.Services.Abstractions.Telegram;
-using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Maps;
+using Eurofurence.App.Server.Services.Abstractions.MinIO;
+using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
+using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
+using Eurofurence.App.Server.Web.Startup;
 using IdentityModel.AspNetCore.OAuth2Introspection;
+using Mapster;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using dotAPNS.AspNetCore;
-using Eurofurence.App.Server.Web.Startup;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Sentry;
 using Serilog;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using Eurofurence.App.Server.Services.Abstractions.MinIO;
-using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
-using Eurofurence.App.Server.Services.Abstractions.QrCode;
-using Mapster;
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -41,6 +41,22 @@ namespace Eurofurence.App.Server.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.WebHost.UseSentry(options =>
+            {
+                options.Dsn ??= SentryConstants.DisableSdkDsnValue;
+            });
+
+            var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
+            Log.Logger = loggerConfiguration.CreateLogger();
+            var logger = Log.ForContext<Program>();
+            logger.Information($"Logging configured");
+
+            builder.Services.AddLogging(options =>
+            {
+                options.ClearProviders();
+                options.AddSerilog(dispose: true);
+            });
+
 
             builder.WebHost.ConfigureKestrel(options =>
             {
@@ -53,7 +69,7 @@ namespace Eurofurence.App.Server.Web
             var dealerOptions = builder.Configuration.GetSection("Dealers").Get<DealerOptions>();
             var announcementOptions = builder.Configuration.GetSection("Announcements").Get<AnnouncementOptions>();
             var eventOptions = builder.Configuration.GetSection("Events").Get<EventOptions>();
-            var telegramOptions = builder.Configuration.GetSection("Telegram").Get<TelegramOptions>();
+            var artistAlleyOptions = builder.Configuration.GetSection("ArtistAlley").Get<ArtistAlleyOptions>();
             var jobsOptions = builder.Configuration.GetSection("Jobs").Get<JobsOptions>();
 
             builder.Services.Configure<GlobalOptions>(builder.Configuration.GetSection("Global"));
@@ -67,6 +83,7 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<DealerOptions>(builder.Configuration.GetSection("Dealers"));
             builder.Services.Configure<AnnouncementOptions>(builder.Configuration.GetSection("Announcements"));
             builder.Services.Configure<EventOptions>(builder.Configuration.GetSection("Events"));
+            builder.Services.Configure<MapOptions>(builder.Configuration.GetSection("Maps"));
             builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Identity"));
             builder.Services.Configure<AuthorizationOptions>(builder.Configuration.GetSection("Authorization"));
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -77,24 +94,6 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<LoggerFilterOptions>(options => { options.MinLevel = LogLevel.Trace; });
 
             builder.Services.AddServices();
-
-            builder.Services.AddLogging(options =>
-            {
-                options.ClearProviders();
-
-                if (builder.Environment.IsDevelopment())
-                {
-                    options.AddConsole();
-                }
-            });
-
-            var loggerFactory = LoggerFactory.Create(loggingBuilder =>
-            {
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddSerilog();
-            });
-
-            var logger = loggerFactory.CreateLogger<Program>();
 
             builder.Services.AddCors(options =>
             {
@@ -129,6 +128,7 @@ namespace Eurofurence.App.Server.Web
             });
 
             builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            builder.Services.AddSingleton<ISentryUserFactory, SentryUserFactory>();
 
             builder.Services.AddSwagger(globalOptions);
 
@@ -143,17 +143,12 @@ namespace Eurofurence.App.Server.Web
                             .Get<IList<ApiKeyAuthenticationOptions.ApiKeyOptions>>();
                         foreach (var apiKey in options.ApiKeys ?? [])
                         {
-                            logger.LogInformation($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
+                            logger.Information($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
                         }
                     });
 
             builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
-
-            if (telegramOptions.AccessToken is { Length: > 0 })
-            {
-                builder.Services.AddTelegramBot(telegramOptions);
-            }
 
             builder.Services.AddDbContextPool<AppDbContext>(options =>
             {
@@ -166,23 +161,22 @@ namespace Eurofurence.App.Server.Web
                 options.UseMySql(
                     connectionString,
                     serverVersion,
-                    mySqlOptions => mySqlOptions.UseMicrosoftJson());
+                    mySqlOptions =>
+                    {
+                        mySqlOptions.UseMicrosoftJson();
+                        mySqlOptions.EnablePrimitiveCollectionsSupport();
+                    });
             });
 
             builder.Services.AddApns();
 
-            builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions);
+            builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions, artistAlleyOptions);
 
             builder.Services.AddMapper();
 
             CidRouteBaseAttribute.Value = globalOptions.ConventionIdentifier;
 
             var app = builder.Build();
-
-            var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
-            Log.Logger = loggerConfiguration.CreateLogger();
-
-            logger.LogInformation($"Logging commences");
 
             app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
@@ -219,10 +213,10 @@ namespace Eurofurence.App.Server.Web
                 c.EnableDeepLinking();
             });
 
-            logger.LogInformation("Compiling type mappings");
+            logger.Information("Compiling type mappings");
             TypeAdapterConfig.GlobalSettings.Compile();
 
-            logger.LogInformation($"Startup complete ({builder.Environment.EnvironmentName})");
+            logger.Information($"Startup complete ({builder.Environment.EnvironmentName})");
 
             app.Run();
         }

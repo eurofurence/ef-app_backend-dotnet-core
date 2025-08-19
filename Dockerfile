@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
+ARG BUILD_VERSION="0.0.0-development"
 WORKDIR /app
 ENV NUGET_PACKAGES=/dotnet/packages
 # Disable husky in docker build
@@ -17,7 +18,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
     --mount=type=bind,source=./src/Eurofurence.App.Domain.Model/Eurofurence.App.Domain.Model.csproj,target=/app/src/Eurofurence.App.Domain.Model/Eurofurence.App.Domain.Model.csproj \
     --mount=type=bind,source=./test/Eurofurence.App.Server.Services.Tests/Eurofurence.App.Server.Services.Tests.csproj,target=/app/test/Eurofurence.App.Server.Services.Tests/Eurofurence.App.Server.Services.Tests.csproj \
     --mount=type=bind,source=./test/Eurofurence.App.Server.Web.Tests/Eurofurence.App.Server.Web.Tests.csproj,target=/app/test/Eurofurence.App.Server.Web.Tests/Eurofurence.App.Server.Web.Tests.csproj \
-    --mount=type=bind,source=./test/Eurofurence.App.Tests.Common/Eurofurence.App.Tests.Common.csproj,target=/app/test/Eurofurence.App.Tests.Common/Eurofurence.App.Tests.Common.csproj \
+    --mount=type=bind,source=./test/Eurofurence.App.Domain.Model.Tests/Eurofurence.App.Domain.Model.Tests.csproj,target=/app/test/Eurofurence.App.Domain.Model.Tests/Eurofurence.App.Domain.Model.Tests.csproj \
     dotnet nuget config set repositoryPath /dotnet/packages --configfile /app/NuGet.config \
     && dotnet nuget config set globalPackagesFolder /dotnet/global-packages --configfile /app/NuGet.config \
     && dotnet restore
@@ -28,13 +29,13 @@ RUN --mount=type=cache,target=/dotnet/packages \
     --mount=type=cache,target=/dotnet/global-packages \
     --mount=type=cache,target=/dotnet/artifacts \
     --mount=type=bind,source=./ef-app_backend-dotnet-core.sln,target=/app/ef-app_backend-dotnet-core.sln \
-    dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --configuration Release \
-    && dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --no-build --output "/app/artifacts" --configuration Release \
+    dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --configuration Release --property:Version=$BUILD_VERSION \
+    && dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --artifacts-path /dotnet/artifacts --no-build --output "/app/artifacts" --configuration Release --property:Version=$BUILD_VERSION \
     && dotnet tool install --global dotnet-ef \
     && export PATH="$PATH:/root/.dotnet/tools" \
     && export ASPNETCORE_ENVIRONMENT="sample" \
     && dotnet ef migrations bundle -o "/app/artifacts/db-migration-bundle" -p src/Eurofurence.App.Infrastructure.EntityFramework
-ENTRYPOINT dotnet artifacts/Eurofurence.App.Server.Web.dll http://*:30001
+ENTRYPOINT ["dotnet", "artifacts/Eurofurence.App.Server.Web.dll", "http://*:30001"]
 EXPOSE 30001
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled AS prod

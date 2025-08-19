@@ -1,8 +1,6 @@
-﻿using System.Runtime.CompilerServices;
-using Eurofurence.App.Domain.Model.Transformers;
-using Mapster;
+﻿using Mapster;
 
-namespace Eurofurence.App.Server.Web.Controllers.Transformers;
+namespace Eurofurence.App.Domain.Model.Transformers;
 
 /// <summary>
 /// Provides a contract for transforming an object into an instance of a specified destination type.
@@ -13,7 +11,7 @@ public interface IDtoTransformable<out TDestination>
     where TDestination : class
 {
     /// <summary>
-    /// Transforms the current class to an instance of <typeparam name="TDestination"></typeparam>.
+    /// Transforms the current class to an instance of <typeparamref name="TDestination"/>.
     ///
     /// Note that some data may be lost in that process.
     /// </summary>
@@ -24,7 +22,7 @@ public interface IDtoTransformable<out TDestination>
     }
 
     /// <summary>
-    /// Transforms the current class to an instance of <typeparam name="TDestination"></typeparam>.
+    /// Transforms the current class to an instance of <typeparamref name="TDestination"/>.
     ///
     /// Note that some data may be lost in that process.
     /// </summary>

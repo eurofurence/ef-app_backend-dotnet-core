@@ -5,15 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Eurofurence.App.Server.Services.Abstractions.Users;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -25,15 +26,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IImageService _imageService;
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
         private readonly ArtistAlleyOptions _artistAlleyOptions;
+        private readonly ILogger _logger;
 
         public ArtistsAlleyController(ITableRegistrationService tableRegistrationService,
             IOptions<ArtistAlleyOptions> artistAlleyOptions, IImageService imageService,
-            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService,
+            ILoggerFactory loggerFactory)
         {
             _tableRegistrationService = tableRegistrationService;
             _imageService = imageService;
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
             _artistAlleyOptions = artistAlleyOptions.Value;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
 
@@ -42,8 +46,10 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
+            _logger.LogDebug($"Request to update TableRegistration {id} with status {state}.");
+
             TableRegistrationRecord record =
-                await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+                await _tableRegistrationService.FindOneAsync(id);
             // Return 404 if the passed id does not exist
             if (record == null)
             {
@@ -82,12 +88,12 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<TableRegistrationResponse>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<ArtistAlleyResponse>), 200)]
         [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
         [HttpGet]
-        public IEnumerable<TableRegistrationResponse> GetTableRegistrationsAsync()
+        public IEnumerable<ArtistAlleyResponse> GetTableRegistrationsAsync()
         {
-            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform());
+            return _tableRegistrationService.GetRegistrations(TableRegistrationRecord.RegistrationStateEnum.Accepted).Select(x => x.Transform<ArtistAlleyResponse>());
         }
 
         /// <summary>
@@ -102,7 +108,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
         )
         {
-            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _tableRegistrationService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<TableRegistrationResponse>();
         }
 
         /// <summary>
@@ -118,13 +124,26 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             try
             {
-                await _tableRegistrationService.DeleteLatestRegistrationByUidAsync(User.GetSubject());
+                await _tableRegistrationService.CheckoutLatestRegistrationByUidAsync(User.GetSubject());
             }
             catch (ArgumentException)
             {
                 return NotFound("User has not been registered yet.");
             }
             return NoContent();
+        }
+
+        /// <summary>
+        /// Converts the provided image file into a MemoryStream.
+        /// </summary>
+        /// <param name="requestImageFile">The <see cref="IFormFile"/> from the request to convert into a stream</param>
+        /// <returns>A stream of the parameter <paramref name="requestImageFile"/></returns>
+        private static async Task<MemoryStream> GetImageStreamAsync(IFormFile requestImageFile)
+        {
+            var imageStream = new MemoryStream();
+            if (requestImageFile != null)
+                await requestImageFile.CopyToAsync(imageStream);
+            return imageStream;
         }
 
         /// <summary>
@@ -146,12 +165,22 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return StatusCode(403, "Your Artist Alley registration cannot be processed at this time. Please contact the Dealers' Den team about your Artist Alley registration");
             }
 
+            TableRegistrationRecord latestRegistrationByUidAsync = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
+
             try
             {
-                using var imageStream = new MemoryStream();
-                if (requestImageFile != null)
-                    await requestImageFile.CopyToAsync(imageStream);
-                await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
+                if (latestRegistrationByUidAsync?.State == TableRegistrationRecord.RegistrationStateEnum.Accepted)
+                {
+                    // If the user already has an accepted registration, we update it instead of creating a new one.
+                    using MemoryStream imageStream = await GetImageStreamAsync(requestImageFile);
+                    await _tableRegistrationService.UpdateTableAsync(User, latestRegistrationByUidAsync.Id, request, requestImageFile == null ? null : imageStream);
+                }
+                else
+                {
+                    // If the user does not have an accepted registration, we create a new one.
+                    using MemoryStream imageStream = await GetImageStreamAsync(requestImageFile);
+                    await _tableRegistrationService.RegisterTableAsync(User, request, requestImageFile == null ? null : imageStream);
+                }
             }
             catch (ArgumentException ex)
             {
@@ -166,7 +195,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
             var record = await _tableRegistrationService.GetLatestRegistrationByUidAsync(User.GetSubject());
-            return record.Transient404(HttpContext).Transform();
+            return record.Transient404(HttpContext)?.Transform<TableRegistrationResponse>();
         }
 
         /// <summary>

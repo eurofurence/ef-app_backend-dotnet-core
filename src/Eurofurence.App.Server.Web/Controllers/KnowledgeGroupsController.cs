@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Knowledge;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
-using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -49,7 +48,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromRoute] Guid id
             )
         {
-            return (await _knowledgeGroupService.FindOneAsync(id)).Transient404(HttpContext).Transform();
+            return (await _knowledgeGroupService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>
@@ -62,7 +61,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
         public async Task<ActionResult> PutKnowledgeGroupAsync(
-            [EnsureNotNull][FromBody][EnsureEntityIdMatches("id")] KnowledgeGroupRequest request,
+            [EnsureNotNull][FromBody] KnowledgeGroupRequest request,
             [EnsureNotNull][FromRoute] Guid id
         )
         {

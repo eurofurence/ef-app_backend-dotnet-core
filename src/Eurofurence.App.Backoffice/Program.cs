@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Eurofurence.App.Backoffice;
 using Eurofurence.App.Backoffice.Authentication;
 using Eurofurence.App.Backoffice.Services;
@@ -10,6 +9,13 @@ using MudBlazor.Services;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+builder.Services.Configure<SentryBlazorOptions>(builder.Configuration.GetSection("Sentry"));
+
+builder.UseSentry(options =>
+{
+    options.Dsn ??= SentryConstants.DisableSdkDsnValue;
+});
 
 builder.Services.AddMudServices();
 

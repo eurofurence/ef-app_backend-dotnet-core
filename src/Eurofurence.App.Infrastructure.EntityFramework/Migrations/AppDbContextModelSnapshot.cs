@@ -17,7 +17,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.16")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -41,6 +41,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("ExternalReference")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Groups")
                         .HasColumnType("longtext");
 
                     b.Property<Guid?>("ImageId")
@@ -67,6 +70,31 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasIndex("ImageId");
 
                     b.ToTable("Announcements");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Announcements.IdentityAnnouncementGroupsRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Groups")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("IdentityId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IdentityAnnouncementGroups");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtShow.AgentClosingResultRecord", b =>
@@ -254,6 +282,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("OwnerRegSysId")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("OwnerUid")
                         .HasColumnType("longtext");
 
@@ -381,10 +412,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<Guid?>("ArtistThumbnailImageId")
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("AttendeeNickname")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("AttendsOnFriday")
                         .HasColumnType("tinyint(1)");
 
@@ -426,9 +453,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("RegistrationNumber")
-                        .HasColumnType("int");
-
                     b.Property<string>("ShortDescription")
                         .HasColumnType("longtext");
 
@@ -461,6 +485,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
 
@@ -480,6 +507,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
@@ -503,6 +533,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.Property<int>("IsDeleted")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastChangeDateTimeUtc")
                         .HasColumnType("datetime(6)");
@@ -583,6 +616,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeviatingFromConBook")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsInternal")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastChangeDateTimeUtc")
@@ -742,6 +778,9 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("Published")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -969,29 +1008,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("EntityStorageInfos");
-                });
-
-            modelBuilder.Entity("Eurofurence.App.Domain.Model.Telegram.TelegramUserRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Acl")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("IsDeleted")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastChangeDateTimeUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Username")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TelegramUsers");
                 });
 
             modelBuilder.Entity("EventRecordUserRecord", b =>

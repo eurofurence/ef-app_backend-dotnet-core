@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Telegram;
 using Eurofurence.App.Domain.Model.Transformers;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
@@ -85,6 +83,9 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public string[] Tags { get; set; }
+
+        [DataMember]
+        public bool IsInternal { get; set; }
 
         [JsonIgnore]
         public virtual EventConferenceTrackRecord ConferenceTrack { get; set; }

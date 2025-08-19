@@ -1,6 +1,6 @@
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Images;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 using Mapster;
 using Xunit;
 
@@ -93,7 +93,7 @@ public class TableRegistrationRequestTests
     [Fact]
     public void TestRecordIntoResponse()
     {
-        var tableRegistrationResponse = _record.Transform();
+        var tableRegistrationResponse = _record.Transform<TableRegistrationResponse>();
 
         Assert.Equal(_record.DisplayName, tableRegistrationResponse.DisplayName);
         Assert.Equal(_record.ShortDescription, tableRegistrationResponse.ShortDescription);

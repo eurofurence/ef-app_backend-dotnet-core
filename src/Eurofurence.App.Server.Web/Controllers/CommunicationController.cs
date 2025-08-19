@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Communication;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Security;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using IdentityModel.AspNetCore.OAuth2Introspection;
@@ -121,7 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     with the same recipient uid, it will push a toast message to those devices.
         ///     The toast message content is defined by the `ToastTitle` and `ToastMessage` properties.
         /// </remarks>
-        /// <param name="reqsuest"></param>
+        /// <param name="request">Private message to be sent.</param>
         /// <param name="cancellationToken">Token for Cancelling the operation.</param>
         /// <returns>The `ID` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>

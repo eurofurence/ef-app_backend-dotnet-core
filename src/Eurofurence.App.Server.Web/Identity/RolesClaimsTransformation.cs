@@ -33,29 +33,24 @@ public class RolesClaimsTransformation(
 
         foreach (var claim in identity.Claims.Where(x => x.Type == "groups"))
         {
-            if (authorizationOptions.Value.ArtShow.Contains(claim.Value))
-            {
-                roles.Add("ArtShow");
-            }
-
-            if (authorizationOptions.Value.PrivateMessageSender.Contains(claim.Value))
-            {
-                roles.Add("PrivateMessageSender");
-            }
-
-            if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
-            {
-                roles.Add("KnowledgeBaseEditor");
-            }
-
-            if (authorizationOptions.Value.MapEditor.Contains(claim.Value))
-            {
-                roles.Add("MapEditor");
-            }
-
             if (authorizationOptions.Value.Admin.Contains(claim.Value))
             {
                 roles.Add("Admin");
+            }
+
+            if (authorizationOptions.Value.ArtistAlleyAdmin.Contains(claim.Value))
+            {
+                roles.Add("ArtistAlleyAdmin");
+            }
+
+            if (authorizationOptions.Value.ArtistAlleyModerator.Contains(claim.Value))
+            {
+                roles.Add("ArtistAlleyModerator");
+            }
+
+            if (authorizationOptions.Value.ArtShow.Contains(claim.Value))
+            {
+                roles.Add("ArtShow");
             }
 
             if (authorizationOptions.Value.Attendee.Contains(claim.Value))
@@ -68,14 +63,24 @@ public class RolesClaimsTransformation(
                 roles.Add("AttendeeCheckedIn");
             }
 
-            if (authorizationOptions.Value.ArtistAlleyAdmin.Contains(claim.Value))
+            if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
             {
-                roles.Add("ArtistAlleyAdmin");
+                roles.Add("KnowledgeBaseEditor");
             }
 
-            if (authorizationOptions.Value.ArtistAlleyModerator.Contains(claim.Value))
+            if (authorizationOptions.Value.MapEditor.Contains(claim.Value))
             {
-                roles.Add("ArtistAlleyModerator");
+                roles.Add("MapEditor");
+            }
+
+            if (authorizationOptions.Value.PrivateMessageSender.Contains(claim.Value))
+            {
+                roles.Add("PrivateMessageSender");
+            }
+
+            if (authorizationOptions.Value.Staff.Contains(claim.Value))
+            {
+                roles.Add("Staff");
             }
         }
 

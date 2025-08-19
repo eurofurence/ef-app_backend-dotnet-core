@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using Eurofurence.App.Server.Web.Controllers.Transformers;
+using Eurofurence.App.Domain.Model.Transformers;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
@@ -14,6 +14,9 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public DateTime Date { get; set; }
+
+        [DataMember]
+        public bool IsInternal { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<EventRecord> Events { get; set; }

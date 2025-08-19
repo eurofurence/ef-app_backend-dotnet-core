@@ -15,7 +15,7 @@ namespace Eurofurence.App.Server.Services.QrCode
         }
         public string GetTarget(string id)
         {
-            return _qrCodeOptions.Targets[id];
+            return _qrCodeOptions.Targets[id?.ToLowerInvariant()];
         }
     }
 }
