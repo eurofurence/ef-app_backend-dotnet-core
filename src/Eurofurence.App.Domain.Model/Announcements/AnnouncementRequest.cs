@@ -85,6 +85,6 @@ namespace Eurofurence.App.Domain.Model.Announcements
         /// If provided, the announcement will only be sent to members of those groups.
         /// </summary>
         [DataMember]
-        public IEnumerable<string> Roles { get; set; }
+        public string[] Groups { get; set; }
     }
 }

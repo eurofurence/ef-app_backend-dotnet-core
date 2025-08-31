@@ -28,7 +28,7 @@
                     </MudItem>
                 </MudGrid>
 
-                <MudTextField Label="Roles (comma seperated)" @bind-Value="_roles" />
+                <MudTextField Label="Groups (comma seperated)" @bind-Value="_groups" />
 
                 @if (request.ImageId != null)
                 {
@@ -57,7 +57,7 @@
             </MudForm>
         </DialogContent>
         <DialogActions>
-            @if (string.IsNullOrWhiteSpace(_roles))
+            @if (string.IsNullOrWhiteSpace(_groups))
             {
                 <MudAlert Severity="Severity.Warning">You are about to send this announcement to all users.</MudAlert>
             }
@@ -99,9 +99,9 @@
     private TimeSpan? _endTime = DateTime.Now.TimeOfDay;
 
     /// <summary>
-    /// Roles (IDP roles) which the announcement should be sent to.
+    /// Groups (IDP groups) which the announcement should be sent to.
     /// </summary>
-    private string _roles = "";
+    private string _groups = "";
 
     /// <summary>
     /// Specifies whether the form is valid or not.
@@ -142,7 +142,7 @@
         {
             return "";
         }
-        ImageRecord image = (await ImageService.GetImageAsync((Guid)request.ImageId))!;
+        var image = (await ImageService.GetImageAsync((Guid)request.ImageId))!;
         return image.Url;
     }
 
@@ -158,7 +158,7 @@
             StateHasChanged();
             try
             {
-                ImageRecord? image = await ImageService.PostImageAsync(file);
+                var image = await ImageService.PostImageAsync(file);
                 if (image != null)
                 {
                     Snackbar.Add("Image added.", Severity.Success);
@@ -230,11 +230,11 @@
         }
         request.ValidFromDateTimeUtc = startDateTime.ToUniversalTime();
         request.ValidUntilDateTimeUtc = endDateTime.ToUniversalTime();
-        request.Roles = _roles
+        request.Groups = _groups
         .Split(",", StringSplitOptions.RemoveEmptyEntries)
         .Select(role => role.Trim())
         .Where(role => role.Length > 0)
-        .ToList();
+        .ToArray();
 
         submittionInProgress = true;
         try
