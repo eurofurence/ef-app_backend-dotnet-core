@@ -6,6 +6,8 @@ namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("qr")]
     [Route("qrcode")]
+    //FIXME: Temporary solution for EF29
+    [Route("wifi")]
     public class QrCodeController : BaseController
     {
         private readonly IQrCodeService _qrCodeService;
@@ -15,6 +17,13 @@ namespace Eurofurence.App.Server.Web.Controllers
             )
         {
             _qrCodeService = qrCodeService;
+        }
+
+        //FIXME: Temporary solution for EF29
+        [HttpGet("")]
+        public ActionResult GetTargetRedirect()
+        {
+            return GetTargetRedirect("wifi");
         }
 
         [HttpGet("{targetId}")]
