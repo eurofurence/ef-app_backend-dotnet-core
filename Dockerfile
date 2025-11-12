@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
 ARG BUILD_VERSION="0.0.0-development"
 WORKDIR /app
