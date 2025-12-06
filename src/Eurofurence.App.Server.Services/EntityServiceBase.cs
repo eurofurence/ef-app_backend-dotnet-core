@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Abstractions;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model;
 using Eurofurence.App.Domain.Model.Sync;
@@ -17,7 +18,7 @@ namespace Eurofurence.App.Server.Services
     public class EntityServiceBase<T, TResponse> :
         IEntityServiceOperations<T, TResponse>,
         IPatchOperationProcessor<T>
-        where T : EntityBase, IDtoTransformable<TResponse>
+        where T : EntityBase, IEntityBase, IDtoTransformable<TResponse>
         where TResponse : ResponseBase
     {
         private readonly AppDbContext _appDbContext;
@@ -34,6 +35,12 @@ namespace Eurofurence.App.Server.Services
             _useSoftDelete = useSoftDelete;
         }
 
+        /// <summary>
+        /// Retrieves a single entity by its unique identifier asynchronously.
+        /// </summary>
+        /// <param name="id">The unique identifier of the entity to be retrieved.</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>A task, with the entity as the result if found, or null if not found.</returns>
         public virtual async Task<T> FindOneAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _appDbContext.Set<T>()
@@ -41,11 +48,20 @@ namespace Eurofurence.App.Server.Services
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieves all entities of the specified type <typeparamref name="T"/> name="T"/> as an <see cref="IQueryable{T}"/>.
+        /// </summary>
+        /// <returns>An <see cref="IQueryable{T}"/> containing all entities of the specified type.</returns>
         public virtual IQueryable<T> FindAll()
         {
             return _appDbContext.Set<T>().AsNoTracking();
         }
 
+        /// <summary>
+        /// Retrieves all entities that satisfy the specified filter expression <paramref name="filter"/>.
+        /// </summary>
+        /// <param name="filter">An expression to filter the entities to be retrieved.</param>
+        /// <returns>The filtered entities.</returns>
         public IQueryable<T> FindAll(Expression<Func<T, bool>> filter)
         {
             return _appDbContext.Set<T>().Where(filter).AsNoTracking();
@@ -104,7 +120,10 @@ namespace Eurofurence.App.Server.Services
         {
             var entity = await _appDbContext.Set<T>()
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
-
+            if (entity == null)
+            {
+                return;
+            }
             if (_useSoftDelete)
             {
                 entity.IsDeleted = 1;

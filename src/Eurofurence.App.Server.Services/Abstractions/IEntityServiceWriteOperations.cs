@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Abstractions;
 using Eurofurence.App.Domain.Model;
 
 namespace Eurofurence.App.Server.Services.Abstractions
 {
-    public interface IEntityServiceWriteOperations<TEntity> where TEntity : EntityBase
+    public interface IEntityServiceWriteOperations<TEntity> where TEntity : IEntityBase
     {
         Task ReplaceOneAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task ReplaceMultipleAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = default);

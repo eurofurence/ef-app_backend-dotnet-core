@@ -11,6 +11,7 @@ namespace Eurofurence.App.Server.Services.Tests
         public TestDbContextFactory(string databaseName = "InMemoryTest")
         {
             _options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite("DataSource=:memory:")
                 .UseInMemoryDatabase(databaseName)
                 .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                 .Options;

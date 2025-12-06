@@ -4,11 +4,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Common.Abstractions;
 using Eurofurence.App.Domain.Model;
 
 namespace Eurofurence.App.Server.Services.Abstractions
 {
-    public interface IEntityServiceReadOperations<TEntity> where TEntity : EntityBase
+    public interface IEntityServiceReadOperations<TEntity> where TEntity : IEntityBase
     {
         Task<TEntity> FindOneAsync(Guid id, CancellationToken cancellationToken = default);
         IQueryable<TEntity> FindAll();

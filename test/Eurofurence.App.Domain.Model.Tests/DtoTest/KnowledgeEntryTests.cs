@@ -48,6 +48,19 @@ public class KnowledgeEntryTests
     }
 
     [Fact]
+    public void TestRecordToResponse()
+    {
+        KnowledgeEntryResponse response = _record.Transform(typeAdapterConfig);
+        Assert.Equal(_record.Id, response.Id);
+        Assert.Equal(_record.KnowledgeGroupId, response.KnowledgeGroupId);
+        Assert.Equal(_record.Title, response.Title);
+        Assert.Equal(_record.Text, response.Text);
+        Assert.Equal(_record.Order, response.Order);
+        Assert.Equal(_record.Links.Count, response.Links.Count);
+        Assert.Equal(_record.Images.Select(x => x.Id), response.ImageIds);
+    }
+
+    [Fact]
     public void TestRequestMergeIntoRecord()
     {
         var oldGuid = _record.Id;
