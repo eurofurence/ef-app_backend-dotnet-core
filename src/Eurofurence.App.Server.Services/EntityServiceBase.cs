@@ -67,6 +67,11 @@ namespace Eurofurence.App.Server.Services
             return _appDbContext.Set<T>().Where(filter).AsNoTracking();
         }
 
+        /// <summary>
+        /// Replaces an existing entity with the specified entity.
+        /// </summary>
+        /// <param name="entity">The entity which should be replaced.</param>
+        /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
         public virtual async Task ReplaceOneAsync(T entity, CancellationToken cancellationToken = default)
         {
             entity.Touch();
@@ -75,6 +80,11 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Replaces multiple entities with the specified entities.
+        /// </summary>
+        /// <param name="entities">The entities, which should be replaced.</param>
+        /// <param name="cancellationToken"></param>
         public virtual async Task ReplaceMultipleAsync(
             ICollection<T> entities,
             CancellationToken cancellationToken = default)
@@ -94,6 +104,11 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Inserts a new entity.
+        /// </summary>
+        /// <param name="entity">The entity which should be inserted.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
         public virtual async Task InsertOneAsync(T entity, CancellationToken cancellationToken = default)
         {
             entity.Touch();
@@ -102,6 +117,11 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Inserts multiple entities.
+        /// </summary>
+        /// <param name="entities">The entities which should be inserted.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
         public virtual async Task InsertMultipleAsync(
             ICollection<T> entities,
             CancellationToken cancellationToken = default)

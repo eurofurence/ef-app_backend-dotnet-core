@@ -24,7 +24,7 @@ namespace Eurofurence.App.Domain.Model
         [JsonIgnore]
         public int IsDeleted { get; set; }
 
-        public void Touch()
+        public virtual void Touch()
         {
             LastChangeDateTimeUtc = DateTime.UtcNow;
         }

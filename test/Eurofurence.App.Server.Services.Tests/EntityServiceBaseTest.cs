@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model;
@@ -8,6 +10,7 @@ using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Web.Controllers.Transformers;
 using Moq;
 using Moq.EntityFrameworkCore;
+using Moq.EntityFrameworkCore.Dynamic;
 using Xunit;
 
 namespace Eurofurence.App.Server.Services.Tests
@@ -134,10 +137,12 @@ namespace Eurofurence.App.Server.Services.Tests
             };
             var announcement2 = new TestEntity();
             dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet([announcement1, announcement2]);
-            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([new EntityStorageInfoRecord()
-            {
-                EntityType = "TestEntity"
-            }]);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
             var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
 
             // Act
@@ -156,22 +161,25 @@ namespace Eurofurence.App.Server.Services.Tests
         {
             // Arrange
             var dbMock = new Mock<AppDbContext>();
-            var announcement1 = new TestEntity()
-            {
-                Title = "Test"
-            };
+
+            var announcement1 = GenerateTestEntities(1).First();
+
             dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet([]);
-            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([new EntityStorageInfoRecord()
-            {
-                EntityType = "TestEntity"
-            }]);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
             var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
 
             entityServiceBase.InsertOneAsync(announcement1);
 
             dbMock.Verify(db => db.Add(announcement1), Times.Once);
             dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            Mock.Get(announcement1).Verify(e => e.Touch(), Times.Exactly(2));
         }
+
         [Fact]
         public async Task DeleteOne_With_ExistingEntity_SoftDelete_DeletesEntity()
         {
@@ -184,11 +192,13 @@ namespace Eurofurence.App.Server.Services.Tests
 
             var oldTime = entity1.LastChangeDateTimeUtc;
 
-            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet([entity1]);
-            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([new EntityStorageInfoRecord()
-            {
-                EntityType = "TestEntity"
-            }]);
+            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSetDynamic([entity1]);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSetDynamic([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
 
             var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
             await entityServiceBase.DeleteOneAsync(entity1.Id);
@@ -203,15 +213,18 @@ namespace Eurofurence.App.Server.Services.Tests
         {
             var dbMock = new Mock<AppDbContext>();
             dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet([]);
-            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([new EntityStorageInfoRecord()
-            {
-                EntityType = "TestEntity"
-            }]);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
 
             var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
             await entityServiceBase.DeleteOneAsync(Guid.NewGuid());
 
             dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+
         }
         [Fact]
         public async Task DeleteOne_With_ExistingEntity_HardDelete_DeletesEntity()
@@ -225,16 +238,183 @@ namespace Eurofurence.App.Server.Services.Tests
 
             var oldTime = entity1.LastChangeDateTimeUtc;
 
-            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet([entity1]);
-            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([new EntityStorageInfoRecord()
-            {
-                EntityType = "TestEntity"
-            }]);
+            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSetDynamic([entity1]);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSetDynamic([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
 
             var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object), useSoftDelete: false);
             await entityServiceBase.DeleteOneAsync(entity1.Id);
 
             dbMock.Verify(db => db.Remove(entity1), Times.Once);
+        }
+
+        [Fact]
+        public async Task ReplaceMultipleAsync_With_ExistingEntities_ReplacesMultiple()
+        {
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+            SetupDbSetMock(dbMock, entities);
+
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
+
+            foreach (var entity in entities)
+            {
+                entity.Title = Guid.NewGuid().ToString();
+            }
+
+            List<TestEntity> replEntities = new List<TestEntity>(entities);
+            await entityServiceBase.ReplaceMultipleAsync(replEntities);
+
+            dbMock.Verify(db => db.UpdateRange(replEntities), Times.Once);
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task ReplaceMultipleAsync_With_ExistingEntites_With_NullArguments_ReplacesNothing()
+        {
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+            SetupDbSetMock(dbMock, entities);
+
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
+            await entityServiceBase.ReplaceMultipleAsync(null);
+
+            dbMock.Verify(db => db.UpdateRange(It.IsAny<IEnumerable<object>>()), Times.Never);
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        }
+
+        [Fact]
+        public async Task ReplaceMultipleAsync_With_ExistingEntites_With_EmptyList_ReplacesNothing()
+        {
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+            SetupDbSetMock(dbMock, entities);
+
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
+            await entityServiceBase.ReplaceMultipleAsync([]);
+
+            dbMock.Verify(db => db.UpdateRange(It.IsAny<IEnumerable<object>>()), Times.Never);
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        }
+
+        private static void SetupDbSetMock<T>(Mock<AppDbContext> dbMock, IList<T> entities) where T : class
+        {
+            dbMock.Setup(db => db.Set<T>()).ReturnsDbSet(entities);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
+        }
+
+        [Fact]
+        public async Task InsertMultiple_With_NewEntities_InsertsAndTouchesEntities()
+        {
+            // Arrange
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+
+            var mockedEntities = entities.Select(Mock.Get).ToList();
+
+            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet([]);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
+
+            await entityServiceBase.InsertMultipleAsync(entities);
+
+            dbMock.Verify(db => db.AddRangeAsync(entities, It.IsAny<CancellationToken>()), Times.Once);
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+            foreach (var mockedEntity in mockedEntities)
+            {
+                mockedEntity.Verify(e => e.Touch(), Times.Exactly(2));
+            }
+        }
+
+        [Fact]
+        public async Task DeleteMultiple_With_ExistingEntities_SoftDeletesEntities()
+        {
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+
+            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSet(entities);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
+
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object));
+
+            await entityServiceBase.DeleteMultipleAsync(entities.Select(e => e.Id));
+
+            Assert.All(entities, e => Assert.True(e.IsDeleted == 1));
+            Assert.All(entities, e => Mock.Get(e).Verify(x => x.Touch(), Times.Exactly(2)));
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task DeleteMultiple_With_ExistingEntities_HardDeletesEntities()
+        {
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+
+            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSetDynamic(entities);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
+
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object), useSoftDelete: false);
+
+            await entityServiceBase.DeleteMultipleAsync(entities.Select(e => e.Id));
+
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task DeleteAll_With_ExistingEntities_SoftDeletesEntities()
+        {
+            var dbMock = new Mock<AppDbContext>();
+            var entities = GenerateTestEntities(2);
+
+            dbMock.Setup(db => db.Set<TestEntity>()).ReturnsDbSetDynamic(entities);
+            dbMock.Setup(db => db.EntityStorageInfos).ReturnsDbSet([
+                new EntityStorageInfoRecord()
+                {
+                    EntityType = "TestEntity"
+                }
+            ]);
+
+            var entityServiceBase = new EntityServiceBase<TestEntity, ResponseBase>(dbMock.Object, new StorageServiceFactory(dbMock.Object), useSoftDelete: false);
+
+            await entityServiceBase.DeleteAllAsync();
+            Assert.All(entities, e => Assert.True(e.IsDeleted == 1));
+            Assert.All(entities, e => Mock.Get(e).Verify(x => x.Touch(), Times.Exactly(2)));
+            dbMock.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        }
+
+        private static IList<TestEntity> GenerateTestEntities(int count)
+        {
+            return new List<TestEntity>(Enumerable.Range(0, count).Select(i => new Mock<TestEntity>()).Select(m => m.Object).Select((e, i) => {
+                e.Title = $"Test {i}";
+                return e;
+            }));
         }
     }
 }
