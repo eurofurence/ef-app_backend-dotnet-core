@@ -26,6 +26,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public AppDbContext()
         {
         }
+
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {

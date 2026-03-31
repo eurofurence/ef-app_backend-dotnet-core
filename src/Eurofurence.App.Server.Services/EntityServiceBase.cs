@@ -35,12 +35,10 @@ namespace Eurofurence.App.Server.Services
             _useSoftDelete = useSoftDelete;
         }
 
-        /// <summary>
-        /// Retrieves a single entity by its unique identifier asynchronously.
-        /// </summary>
-        /// <param name="id">The unique identifier of the entity to be retrieved.</param>
-        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <returns>A task, with the entity as the result if found, or null if not found.</returns>
+        public EntityServiceBase()
+        {
+        }
+
         public virtual async Task<T> FindOneAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _appDbContext.Set<T>()
@@ -48,30 +46,16 @@ namespace Eurofurence.App.Server.Services
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
 
-        /// <summary>
-        /// Retrieves all entities of the specified type <typeparamref name="T"/> name="T"/> as an <see cref="IQueryable{T}"/>.
-        /// </summary>
-        /// <returns>An <see cref="IQueryable{T}"/> containing all entities of the specified type.</returns>
         public virtual IQueryable<T> FindAll()
         {
             return _appDbContext.Set<T>().AsNoTracking();
         }
 
-        /// <summary>
-        /// Retrieves all entities that satisfy the specified filter expression <paramref name="filter"/>.
-        /// </summary>
-        /// <param name="filter">An expression to filter the entities to be retrieved.</param>
-        /// <returns>The filtered entities.</returns>
         public IQueryable<T> FindAll(Expression<Func<T, bool>> filter)
         {
             return _appDbContext.Set<T>().Where(filter).AsNoTracking();
         }
 
-        /// <summary>
-        /// Replaces an existing entity with the specified entity.
-        /// </summary>
-        /// <param name="entity">The entity which should be replaced.</param>
-        /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
         public virtual async Task ReplaceOneAsync(T entity, CancellationToken cancellationToken = default)
         {
             entity.Touch();
@@ -80,11 +64,6 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Replaces multiple entities with the specified entities.
-        /// </summary>
-        /// <param name="entities">The entities, which should be replaced.</param>
-        /// <param name="cancellationToken"></param>
         public virtual async Task ReplaceMultipleAsync(
             ICollection<T> entities,
             CancellationToken cancellationToken = default)
@@ -104,11 +83,6 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Inserts a new entity.
-        /// </summary>
-        /// <param name="entity">The entity which should be inserted.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
         public virtual async Task InsertOneAsync(T entity, CancellationToken cancellationToken = default)
         {
             entity.Touch();
@@ -117,11 +91,6 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Inserts multiple entities.
-        /// </summary>
-        /// <param name="entities">The entities which should be inserted.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
         public virtual async Task InsertMultipleAsync(
             ICollection<T> entities,
             CancellationToken cancellationToken = default)
@@ -181,6 +150,7 @@ namespace Eurofurence.App.Server.Services
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
 
+
         public virtual async Task DeleteAllAsync(CancellationToken cancellationToken = default)
         {
             _appDbContext.RemoveRange(_appDbContext.Set<T>());
@@ -230,6 +200,11 @@ namespace Eurofurence.App.Server.Services
             return response;
         }
 
+        /// <summary>
+        /// Applies a list of <see cref="PatchOperation{T}"/> to the database set."/>
+        /// </summary>
+        /// <param name="patchResults">The list of operations to apply.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
         public virtual async Task ApplyPatchOperationAsync(
             IEnumerable<PatchOperation<T>> patchResults,
             CancellationToken cancellationToken = default)
