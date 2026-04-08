@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG MYSQL_VERSION=10.11.8-MariaDB
 ARG BUILD_VERSION="0.0.0-development"
 WORKDIR /app
@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/dotnet/packages \
 ENTRYPOINT ["dotnet", "artifacts/Eurofurence.App.Server.Web.dll", "http://*:30001"]
 EXPOSE 30001
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled AS prod
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-jammy-chiseled AS prod
 COPY --from=build /app/artifacts/* /app/
 COPY /src/Eurofurence.App.Server.Web/wwwroot /app/wwwroot
 WORKDIR /app
