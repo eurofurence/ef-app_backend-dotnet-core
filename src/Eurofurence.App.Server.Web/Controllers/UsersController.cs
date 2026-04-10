@@ -89,6 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// Returns a data matrix code for the current user.
         ///
         /// The code is generated from the reg id of the user and returned as a svg.
+        /// It should be the same as the code on the con badge.
         /// </summary>
         /// <returns>Data matrix code as svg.</returns>
         [HttpGet("datamatrix")]
