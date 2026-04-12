@@ -170,7 +170,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddApns();
 
-            builder.Services.AddFirebase(firebaseOptions);
+            builder.Services.AddFirebase(logger, firebaseOptions);
 
             builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions, artistAlleyOptions);
 
