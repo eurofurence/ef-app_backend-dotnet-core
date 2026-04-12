@@ -297,10 +297,16 @@ namespace Eurofurence.App.Server.Web.Startup
             return services;
         }
 
-        public static IServiceCollection AddFirebase(this IServiceCollection services, FirebaseOptions firebaseOptions)
+        public static IServiceCollection AddFirebase(this IServiceCollection services, ILogger logger, FirebaseOptions firebaseOptions)
         {
             if (string.IsNullOrEmpty(firebaseOptions.GoogleServiceCredentialKeyFile))
                 return services;
+
+            if (!System.IO.File.Exists(firebaseOptions.GoogleServiceCredentialKeyFile))
+            {
+                logger.Error($"Google credentials file for Firebase was not found: {firebaseOptions.GoogleServiceCredentialKeyFile}");
+                return services;
+            }
 
             var credential = CredentialFactory.FromFile<ServiceAccountCredential>(firebaseOptions.GoogleServiceCredentialKeyFile)
                                   .ToGoogleCredential();
