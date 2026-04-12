@@ -123,7 +123,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order);
+        _knowledgeGroups = (await KnowledgeService.GetKnowledgeGroupsAsync()).OrderBy(kg => kg.Order).ToList();
 
         if (Record == null)
         {
@@ -293,5 +293,5 @@
         MudDialog?.Close(DialogResult.Ok(true));
     }
 
-    readonly Func<KnowledgeGroupResponse, string> _knowledgeGroupToNameConverter = kg => kg.Name;
+    readonly Func<KnowledgeGroupResponse, string> _knowledgeGroupToNameConverter = kg => kg?.Name ?? string.Empty;
 }
