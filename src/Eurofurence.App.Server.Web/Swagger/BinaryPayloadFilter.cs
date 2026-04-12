@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,12 +26,12 @@ namespace Eurofurence.App.Server.Web.Swagger
                 Required = true,
                 Content = new Dictionary<string, OpenApiMediaType>()
                 {
-                    { "Content",
+                    { "Content", // *See note below
                         new OpenApiMediaType()
                         {
                             Schema = new OpenApiSchema()
                             {
-                                Type = "string",
+                                Type = JsonSchemaType.String, // <-- FIX: Use the new Enum
                                 Format = "byte"
                             }
                         }
@@ -39,6 +39,5 @@ namespace Eurofurence.App.Server.Web.Swagger
                 }
             };
         }
-
     }
 }
