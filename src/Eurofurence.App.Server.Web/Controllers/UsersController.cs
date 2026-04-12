@@ -1,10 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net.Mime;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Users;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -16,9 +19,16 @@ namespace Eurofurence.App.Server.Web.Controllers
     public class UsersController : BaseController
     {
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
-        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService)
+
+        /// <summary>
+        /// Identity service for user identity management.
+        /// </summary>
+        private readonly IIdentityService _identityService;
+
+        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService, IIdentityService identityService)
         {
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
+            _identityService = identityService;
         }
 
         [Authorize]
@@ -73,6 +83,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ArtistAlleyUserPenaltyRecord.PenaltyStatus> GetArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id)
         {
             return await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(id);
+        }
+
+        /// <summary>
+        /// Returns a data matrix code for the current user.
+        ///
+        /// The code is generated from the reg id of the user and returned as a svg.
+        /// It should be the same as the code on the con badge.
+        /// </summary>
+        /// <returns>Data matrix code as svg.</returns>
+        [HttpGet("datamatrix")]
+        [Authorize(Roles = "AttendeeCheckedIn")]
+        public FileContentResult GetDataMatrixCode()
+        {
+            return File(Encoding.UTF8.GetBytes(_identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)), MediaTypeNames.Image.Svg, "matrix.svg");
         }
 
     }
