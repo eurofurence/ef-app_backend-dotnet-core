@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using Xunit;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Web.Extensions;
 using static Eurofurence.App.Server.Services.Lassie.LassieApiClient;
 using System;
+using Xunit;
 
 namespace Eurofurence.App.Server.Services.Tests
 {

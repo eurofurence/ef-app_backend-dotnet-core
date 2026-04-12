@@ -29,7 +29,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         private readonly IIdentityService _identityService;
         private readonly AppDbContext _appDbContext;
         private readonly GlobalOptions _globalOptions;
-        private readonly FirebaseOptions _firebaseOptions;
         private readonly FirebaseMessaging _firebaseMessaging;
         private readonly ApnsOptions _apnsOptions;
         private readonly ExpoOptions _expoOptions;
@@ -41,7 +40,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             IUserService userService,
             IIdentityService identityService,
             AppDbContext appDbContext,
-            IOptions<FirebaseOptions> options,
             IOptions<GlobalOptions> globalOptions,
             IOptions<ExpoOptions> expoOptions,
             IOptions<ApnsOptions> apnsOptions,
@@ -52,20 +50,12 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _userService = userService;
             _identityService = identityService;
             _appDbContext = appDbContext;
-            _firebaseOptions = options.Value;
             _globalOptions = globalOptions.Value;
             _expoOptions = expoOptions.Value;
             _apnsOptions = apnsOptions.Value;
             _apnsService = apnsService;
             _logger = loggerFactory.CreateLogger(GetType());
 
-            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile)) return;
-
-            var googleCredential = GoogleCredential.FromFile(_firebaseOptions.GoogleServiceCredentialKeyFile);
-            if (FirebaseApp.DefaultInstance == null)
-            {
-                FirebaseApp.Create(new AppOptions { Credential = googleCredential });
-            }
             _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
         }
 
@@ -73,7 +63,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             AnnouncementRecord announcement,
             CancellationToken cancellationToken = default)
         {
-            if (!string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile))
+            if (FirebaseApp.DefaultInstance is not null)
             {
                 var androidMessage = CreateAndroidFcmMessage(null, PushEventType.Announcement, announcement.Title.RemoveMarkdown(), announcement.Content.RemoveMarkdown(), announcement.Id);
 
@@ -126,7 +116,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             {
                 var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
-                if (!string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile))
+                if (FirebaseApp.DefaultInstance is not null)
                 {
                     var firebaseDeviceIdentities = devices.Where(d => d.DeviceType == DeviceType.Android);
 
@@ -168,7 +158,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && !_apnsOptions.IsConfigured) return;
+            if (FirebaseApp.DefaultInstance is null && !_apnsOptions.IsConfigured) return;
 
             var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
@@ -187,7 +177,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && !_apnsOptions.IsConfigured) return;
+            if (FirebaseApp.DefaultInstance is null && !_apnsOptions.IsConfigured) return;
 
             var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
@@ -201,7 +191,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushSyncRequestAsync(CancellationToken cancellationToken = default)
         {
-            if (!string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile))
+            if (FirebaseApp.DefaultInstance is not null)
             {
                 var androidMessage = new Message()
                 {
@@ -424,7 +414,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 }
             }
 
-            if (!string.IsNullOrEmpty(_firebaseOptions.GoogleServiceCredentialKeyFile) && firebaseMessages.Any())
+            if (FirebaseApp.DefaultInstance is not null && firebaseMessages.Any())
             {
                 _logger.LogDebug($"Pushing private message {relatedId} to {firebaseMessages.Count()} devices on FCM…");
                 await _firebaseMessaging.SendEachAsync(firebaseMessages, cancellationToken);

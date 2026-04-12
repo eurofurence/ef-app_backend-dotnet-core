@@ -1,9 +1,12 @@
-﻿using Eurofurence.App.Server.Services.Abstractions.Announcements;
+﻿using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
@@ -13,38 +16,37 @@ using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
-using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Announcements;
 using Eurofurence.App.Server.Services.ArtistsAlley;
 using Eurofurence.App.Server.Services.ArtShow;
 using Eurofurence.App.Server.Services.Communication;
 using Eurofurence.App.Server.Services.Dealers;
 using Eurofurence.App.Server.Services.Events;
+using Eurofurence.App.Server.Services.Identity;
 using Eurofurence.App.Server.Services.Images;
 using Eurofurence.App.Server.Services.Knowledge;
 using Eurofurence.App.Server.Services.Lassie;
 using Eurofurence.App.Server.Services.LostAndFound;
 using Eurofurence.App.Server.Services.Maps;
 using Eurofurence.App.Server.Services.PushNotifications;
+using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
-using Microsoft.Extensions.DependencyInjection;
 using Eurofurence.App.Server.Web.Identity;
-using Eurofurence.App.Server.Web.Swagger;
-using Microsoft.OpenApi.Models;
-using System;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using Eurofurence.App.Server.Services.Identity;
-using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Web.Jobs;
-using Quartz;
-using Quartz.Impl.Matchers;
+using Eurofurence.App.Server.Web.Swagger;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Mapster;
 using MapsterMapper;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
+using Quartz;
+using Quartz.Impl.Matchers;
 using Serilog;
+using System;
 
 namespace Eurofurence.App.Server.Web.Startup
 {
@@ -127,7 +129,6 @@ namespace Eurofurence.App.Server.Web.Startup
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Domain.Model.xml");
 
-                options.OperationFilter<AddAuthorizationHeaderParameterOperationFilter>();
                 options.OperationFilter<BinaryPayloadFilter>();
 
                 if (Environment.GetEnvironmentVariable("CID_IN_API_BASE_PATH") == "1")
@@ -289,9 +290,28 @@ namespace Eurofurence.App.Server.Web.Startup
         {
             var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
             typeAdapterConfig.Default.PreserveReference(true);
-            typeAdapterConfig.Scan(typeof(Eurofurence.App.Domain.Model.IAssemblyMarker).Assembly);
+            typeAdapterConfig.Scan(typeof(Domain.Model.IAssemblyMarker).Assembly);
             services.AddSingleton(typeAdapterConfig);
             services.AddScoped<IMapper, ServiceMapper>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddFirebase(this IServiceCollection services, FirebaseOptions firebaseOptions)
+        {
+            if (string.IsNullOrEmpty(firebaseOptions.GoogleServiceCredentialKeyFile))
+                return services;
+
+            var credential = CredentialFactory.FromFile<ServiceAccountCredential>(firebaseOptions.GoogleServiceCredentialKeyFile)
+                                  .ToGoogleCredential();
+
+            if (FirebaseApp.DefaultInstance is null)
+            {
+                FirebaseApp.Create(new AppOptions()
+                {
+                    Credential = credential
+                });
+            }
 
             return services;
         }

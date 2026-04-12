@@ -71,9 +71,9 @@ namespace Eurofurence.App.Server.Web
             var eventOptions = builder.Configuration.GetSection("Events").Get<EventOptions>();
             var artistAlleyOptions = builder.Configuration.GetSection("ArtistAlley").Get<ArtistAlleyOptions>();
             var jobsOptions = builder.Configuration.GetSection("Jobs").Get<JobsOptions>();
+            var firebaseOptions = builder.Configuration.GetSection("Push:Firebase").Get<FirebaseOptions>();
 
             builder.Services.Configure<GlobalOptions>(builder.Configuration.GetSection("Global"));
-            builder.Services.Configure<FirebaseOptions>(builder.Configuration.GetSection("Push:Firebase"));
             builder.Services.Configure<ApnsOptions>(builder.Configuration.GetSection("Push:Apns"));
             builder.Services.Configure<ExpoOptions>(builder.Configuration.GetSection("Push:Expo"));
             builder.Services.Configure<QrCodeOptions>(builder.Configuration.GetSection("QrCode"));
@@ -169,6 +169,8 @@ namespace Eurofurence.App.Server.Web
             });
 
             builder.Services.AddApns();
+
+            builder.Services.AddFirebase(firebaseOptions);
 
             builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions, artistAlleyOptions);
 
