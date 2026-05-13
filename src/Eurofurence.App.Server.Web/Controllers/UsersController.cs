@@ -92,7 +92,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// It should be the same as the code on the con badge.
         /// </summary>
         /// <returns>Data matrix code as svg.</returns>
-        [HttpGet("datamatrix")]
+        [HttpGet("pass")]
         [Authorize(Roles = "AttendeeCheckedIn")]
         public FileContentResult GetDataMatrixCode()
         {
