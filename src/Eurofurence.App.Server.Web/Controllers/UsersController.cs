@@ -96,7 +96,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "AttendeeCheckedIn")]
         public FileContentResult GetDataMatrixCode()
         {
-            return File(Encoding.UTF8.GetBytes(_identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)), Request.Headers.Accept, "matrix.svg");
+            return File(Encoding.UTF8.GetBytes(_identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)), MediaTypeNames.Image.Svg, "matrix.svg");
         }
 
     }
