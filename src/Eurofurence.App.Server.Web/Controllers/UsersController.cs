@@ -88,17 +88,37 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Returns a data matrix code for the current user.
         ///
-        /// The code is generated from the reg id of the user and returned as a svg.
+        /// The code is generated from the reg id of the user and returned as an image.
+        /// The image format can be specified by the Accept header.
         /// It should be the same as the code on the con badge.
         /// </summary>
         /// <returns>Data matrix code as svg.</returns>
         [HttpGet("pass")]
-        [Authorize(Roles = "AttendeeCheckedIn")]
-        public FileContentResult GetDataMatrixCode()
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(typeof(string), 404)]
+        public ActionResult GetDataMatrixCode()
         {
-            return File(Encoding.UTF8.GetBytes(_identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)), MediaTypeNames.Image.Svg, "matrix.svg");
+            if (User.Identity is ClaimsIdentity identity)
+            {
+                if (_identityService.GetRegistrations(identity).Any())
+                {
+                    try
+                    {
+                        string fileExtension = MimeTypes.MimeTypeMap.GetExtension(Request.Headers.Accept);
+                        return File(
+                            Encoding.UTF8.GetBytes(
+                                _identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)),
+                            Request.Headers.Accept,
+                            $"matrix{fileExtension}");
+                    }
+                    catch (Exception e) when (e is ArgumentException or FormatException)
+                    {
+                        return BadRequest("Accept header not recognized - unknown format");
+                    }
+                }
+            }
+            return NotFound();
         }
-
     }
 
 

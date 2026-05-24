@@ -258,16 +258,16 @@ namespace Eurofurence.App.Server.Services.Identity
 
         public string GenerateUserMatrixCode(ClaimsIdentity identity)
         {
-            string userRegID = identity.FindFirst(UserRegistrationClaims.Id)?.Value;
-            if (userRegID == null)
-            {
-                // Should never happen, but just in case.
-                throw new InvalidOperationException("User Reg ID not found in claims.");
-            }
+            string userRegID = GetRegistrations(identity).FirstOrDefault() ?? string.Empty;
             DmtxImageEncoder encoder = new DmtxImageEncoder();
             string img = encoder.EncodeSvgImage(userRegID);
 
             return img;
+        }
+
+        public IEnumerable<string> GetRegistrations(ClaimsIdentity identity)
+        {
+            return identity.FindAll(UserRegistrationClaims.Id).Select(x => x.Value);
         }
 
         private async Task<UserRegistrationStatus> GetRegistrationStatus(string token, string id)

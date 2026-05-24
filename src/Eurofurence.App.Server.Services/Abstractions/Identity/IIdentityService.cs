@@ -23,5 +23,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
         /// <param name="identity">Users identity</param>
         /// <returns>The svg image data</returns>
         public string GenerateUserMatrixCode(ClaimsIdentity identity);
+
+        public IEnumerable<string> GetRegistrations(ClaimsIdentity identity);
     }
 }
