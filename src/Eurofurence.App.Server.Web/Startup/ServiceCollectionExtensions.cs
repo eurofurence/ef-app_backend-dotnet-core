@@ -116,6 +116,11 @@ namespace Eurofurence.App.Server.Web.Startup
                     Type = SecuritySchemeType.Http
                 });
 
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                });
+
                 options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme,
                     new OpenApiSecurityScheme
                     {
