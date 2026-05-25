@@ -100,7 +100,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             if (User.Identity is ClaimsIdentity identity)
             {
-                if (_identityService.GetRegistrations(identity).Any())
+                if (_identityService.GetRegistrationsIds(identity).Any())
                 {
                     try
                     {

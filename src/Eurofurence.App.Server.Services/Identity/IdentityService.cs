@@ -258,14 +258,14 @@ namespace Eurofurence.App.Server.Services.Identity
 
         public string GenerateUserMatrixCode(ClaimsIdentity identity)
         {
-            string userRegID = GetRegistrations(identity).FirstOrDefault() ?? string.Empty;
+            string userRegID = GetRegistrationsIds(identity).FirstOrDefault() ?? string.Empty;
             DmtxImageEncoder encoder = new DmtxImageEncoder();
             string img = encoder.EncodeSvgImage(userRegID);
 
             return img;
         }
 
-        public IEnumerable<string> GetRegistrations(ClaimsIdentity identity)
+        public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity)
         {
             return identity.FindAll(UserRegistrationClaims.Id).Select(x => x.Value);
         }
