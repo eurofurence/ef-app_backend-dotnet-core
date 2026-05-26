@@ -98,23 +98,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         public ActionResult GetDataMatrixCode()
         {
-            if (User.Identity is ClaimsIdentity identity)
+            if (User.Identity is ClaimsIdentity identity && _identityService.GetRegistrationsIds(identity).Any())
             {
-                if (_identityService.GetRegistrationsIds(identity).Any())
+                try
                 {
-                    try
-                    {
-                        string fileExtension = MimeTypes.MimeTypeMap.GetExtension(Request.Headers.Accept);
-                        return File(
-                            Encoding.UTF8.GetBytes(
-                                _identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)),
-                            Request.Headers.Accept,
-                            $"matrix{fileExtension}");
-                    }
-                    catch (Exception e) when (e is ArgumentException or FormatException)
-                    {
-                        return BadRequest("Accept header not recognized - unknown format");
-                    }
+                    string fileExtension = MimeTypes.MimeTypeMap.GetExtension(Request.Headers.Accept);
+                    return File(
+                        Encoding.UTF8.GetBytes(
+                            _identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)),
+                        Request.Headers.Accept,
+                        $"matrix{fileExtension}");
+                }
+                catch (Exception e) when (e is ArgumentException or FormatException)
+                {
+                    return BadRequest("Accept header not recognized - unknown format");
                 }
             }
             return NotFound();
