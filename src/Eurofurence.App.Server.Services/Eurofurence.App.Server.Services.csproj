@@ -22,7 +22,7 @@
     <PackageReference Include="dotAPNS.AspNetCore" Version="2.2.2" />
     <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
     <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
-    <PackageReference Include="Ical.Net" Version="5.2.1" />
+    <PackageReference Include="Ical.Net" Version="5.2.2" />
     <PackageReference Include="IdentityModel.AspNetCore.OAuth2Introspection" Version="6.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
