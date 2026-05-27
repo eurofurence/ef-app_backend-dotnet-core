@@ -23,5 +23,13 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
         /// <param name="identity">Users identity</param>
         /// <returns>The svg image data</returns>
         public string GenerateUserMatrixCode(ClaimsIdentity identity);
+
+        /// <summary>
+        /// Finds all registrations ids of the user.
+        /// Assumes, that <see cref="ReadRegSys"/> was called before (which it should in the authentication pipeline).
+        /// </summary>
+        /// <param name="identity">The <see cref="ClaimsIdentity"/> of the user.</param>
+        /// <returns>A sequence of all reg id of the user.</returns>
+        public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity);
     }
 }
