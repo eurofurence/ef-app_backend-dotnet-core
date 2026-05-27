@@ -20,11 +20,6 @@ public class ImageTests
 
     public ImageTests()
     {
-        TypeAdapterConfig typeAdapterConfig;
-        typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
-        typeAdapterConfig.Default.PreserveReference(true);
-        typeAdapterConfig.Scan(typeof(ImageRecord).Assembly);
-
         _request = new ImageRequest()
         {
             InternalReference = "InternalReference",
@@ -49,9 +44,9 @@ public class ImageTests
             Url = "Url",
             IsRestricted = true,
             InternalFileName = "internalFileName.gif",
-            Announcements = new List<AnnouncementRecord>()
-            {
-                new AnnouncementRecord()
+            Announcements =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Area = "Main Hall",
@@ -64,38 +59,38 @@ public class ImageTests
                     ExternalReference = "asdf",
                     Image = new ImageRecord(),
                 }
-            },
-            KnowledgeEntries = new List<KnowledgeEntryRecord>()
-            {
-                new KnowledgeEntryRecord()
+            ],
+            KnowledgeEntries =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     KnowledgeGroupId = Guid.NewGuid(),
                     Title = "Knowledge Entry Title",
                     Text = "Knowledge Entry Text",
                     Order = 1,
-                    Links = new List<LinkFragment>(),
+                    Links = [],
                 }
-            },
-            TableRegistrations = new List<TableRegistrationRecord>()
-            {
-                new TableRegistrationRecord()
+            ],
+            TableRegistrations =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     ImageId = Guid.NewGuid(),
                     Image = new ImageRecord(),
                 }
-            },
-            Maps = new List<MapRecord>()
-            {
-                new MapRecord()
+            ],
+            Maps =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                 }
-            },
-            EventBanners = new List<EventRecord>()
-            {
-                new EventRecord()
+            ],
+            EventBanners =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Title = "Event Banner",
@@ -103,10 +98,10 @@ public class ImageTests
                     StartDateTimeUtc = DateTime.UtcNow,
                     EndDateTimeUtc = DateTime.UtcNow.AddDays(1),
                 }
-            },
-            EventPosters = new List<EventRecord>()
-            {
-                new EventRecord()
+            ],
+            EventPosters =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     Title = "Event Poster",
@@ -114,36 +109,38 @@ public class ImageTests
                     StartDateTimeUtc = DateTime.UtcNow,
                     EndDateTimeUtc = DateTime.UtcNow.AddDays(1),
                 }
-            },
-            DealerArtists = new List<DealerRecord>()
-            {
-                new DealerRecord()
+            ],
+            DealerArtists =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     ArtistImageId = Guid.NewGuid(),
                     ArtistImage = new ImageRecord(),
                 }
-            },
-            DealerArtistThumbnails = new List<DealerRecord>()
-            {
-                new DealerRecord()
+            ],
+            DealerArtistThumbnails =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     ArtistThumbnailImageId = Guid.NewGuid(),
                     ArtistThumbnailImage = new ImageRecord(),
                 }
-            },
-            DealerArtPreviews = new List<DealerRecord>()
-            {
-                new DealerRecord()
+            ],
+            DealerArtPreviews =
+            [
+                new()
                 {
                     Id = Guid.NewGuid(),
                     ArtPreviewImageId = Guid.NewGuid(),
                     ArtPreviewImage = new ImageRecord(),
                 }
-            },
+            ],
             BlurHash = "BlurHashValue",
         };
+
+        TypeAdapterConfig.GlobalSettings.Scan(typeof(ImageRecord).Assembly);
     }
 
     [Fact]

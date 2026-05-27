@@ -3,13 +3,13 @@
   "isRoot": true,
   "tools": {
     "husky": {
-      "version": "0.7.2",
+      "version": "0.9.1",
       "commands": [
         "husky"
       ]
     },
     "dotnet-ef": {
-      "version": "9.0.0",
+      "version": "10.0.8",
       "commands": [
         "dotnet-ef"
       ]

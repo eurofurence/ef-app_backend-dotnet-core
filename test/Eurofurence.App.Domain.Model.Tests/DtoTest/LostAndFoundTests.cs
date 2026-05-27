@@ -1,5 +1,6 @@
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Mapper;
 using Mapster;
 using Xunit;
 
@@ -37,6 +38,9 @@ public class LostAndFoundTests
             FoundDateTimeUtc = null,
             ReturnDateTimeUtc = null
         };
+
+        // Ensure registrations are loaded
+        TypeAdapterConfig.GlobalSettings.Scan(typeof(LostAndFoundResponseRegister).Assembly);
     }
 
 
