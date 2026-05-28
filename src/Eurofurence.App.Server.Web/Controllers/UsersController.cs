@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageType">The image type the resulting data matrix code should have.</param>
         /// <returns>Data matrix code as svg.</returns>
-        [HttpGet("pass")]
+        [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
         public ActionResult GetDataMatrixCode([Required][FromQuery] string imageType)
