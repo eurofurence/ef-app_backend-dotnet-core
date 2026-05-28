@@ -105,8 +105,8 @@ namespace Eurofurence.App.Server.Web.Controllers
                     string fileExtension = MimeTypes.MimeTypeMap.GetExtension(Request.Headers.Accept);
                     return File(
                         Encoding.UTF8.GetBytes(
-                            _identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)),
-                        Request.Headers.Accept,
+                            _identityService.GenerateUserMatrixCode(identity)),
+                        imageType,
                         $"matrix{fileExtension}");
                 }
                 catch (Exception e) when (e is ArgumentException or FormatException)
