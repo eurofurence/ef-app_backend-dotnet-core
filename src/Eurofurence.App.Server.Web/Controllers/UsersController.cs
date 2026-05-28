@@ -111,7 +111,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 }
                 catch (Exception e) when (e is ArgumentException or FormatException)
                 {
-                    return BadRequest("Image type header not recognized - unknown format");
+                    return BadRequest("Image type not recognized - unknown format");
                 }
             }
             return NotFound();
