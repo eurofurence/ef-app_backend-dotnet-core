@@ -96,9 +96,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
+        [Authorize]
         public ActionResult GetDataMatrixCode([Required][FromQuery] string imageType)
         {
-            if (User.Identity is ClaimsIdentity identity && _identityService.GetRegistrationsIds(identity).Any())
+            if (User.Identity is not ClaimsIdentity identity)
+            {
+                return Unauthorized();
+            }
+
+            if (_identityService.GetRegistrationsIds(identity).Any())
             {
                 try
                 {
