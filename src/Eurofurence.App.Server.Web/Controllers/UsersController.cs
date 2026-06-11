@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Net.Mime;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -92,26 +91,33 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// The image format can be specified by the Accept header.
         /// It should be the same as the code on the con badge.
         /// </summary>
+        /// <param name="imageType">The image type the resulting data matrix code should have.</param>
         /// <returns>Data matrix code as svg.</returns>
-        [HttpGet("pass")]
+        [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        public ActionResult GetDataMatrixCode()
+        [Authorize]
+        public ActionResult GetDataMatrixCode([Required][FromQuery] string imageType)
         {
-            if (User.Identity is ClaimsIdentity identity && _identityService.GetRegistrationsIds(identity).Any())
+            if (User.Identity is not ClaimsIdentity identity)
+            {
+                return Unauthorized();
+            }
+
+            if (_identityService.GetRegistrationsIds(identity).Any())
             {
                 try
                 {
-                    string fileExtension = MimeTypes.MimeTypeMap.GetExtension(Request.Headers.Accept);
+                    string fileExtension = MimeTypes.MimeTypeMap.GetExtension(imageType);
                     return File(
                         Encoding.UTF8.GetBytes(
-                            _identityService.GenerateUserMatrixCode(User.Identity as ClaimsIdentity)),
-                        Request.Headers.Accept,
+                            _identityService.GenerateUserMatrixCode(identity)),
+                        imageType,
                         $"matrix{fileExtension}");
                 }
                 catch (Exception e) when (e is ArgumentException or FormatException)
                 {
-                    return BadRequest("Accept header not recognized - unknown format");
+                    return BadRequest("Image type not recognized - unknown or unsupported format");
                 }
             }
             return NotFound();
