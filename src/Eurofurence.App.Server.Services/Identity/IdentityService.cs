@@ -3,8 +3,6 @@ using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
-using IdentityModel.AspNetCore.OAuth2Introspection;
-using IdentityModel.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
@@ -20,6 +18,8 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using DataMatrix.NetCore;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
+using Duende.IdentityModel.Client;
 
 namespace Eurofurence.App.Server.Services.Identity
 {

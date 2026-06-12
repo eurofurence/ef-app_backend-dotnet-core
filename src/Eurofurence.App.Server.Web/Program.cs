@@ -1,4 +1,5 @@
 ﻿using dotAPNS.AspNetCore;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
@@ -14,7 +15,6 @@ using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using Eurofurence.App.Server.Web.Startup;
-using IdentityModel.AspNetCore.OAuth2Introspection;
 using Mapster;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -133,8 +133,12 @@ namespace Eurofurence.App.Server.Web
             builder.Services.AddSwagger(globalOptions);
 
             builder.Services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();
+
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddHybridCache();
+
             builder.Services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
-                .AddOAuth2Introspection(options => { options.EnableCaching = true; })
+                .AddOAuth2Introspection()
                 .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>
                 (ApiKeyAuthenticationDefaults.AuthenticationScheme,
                     options =>
