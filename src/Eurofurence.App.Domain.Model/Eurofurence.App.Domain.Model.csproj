@@ -19,7 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Mapster" Version="10.0.7" />
-    <PackageReference Include="Mapster.Core" Version="10.0.7" />
+    <PackageReference Include="Mapster.Core" Version="10.0.8" />
   </ItemGroup>
   <Target Name="Husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != 0">
     <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
