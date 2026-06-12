@@ -18,14 +18,14 @@
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
-	<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.8" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
+	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.9" />
+	<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.9" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9" />
 	<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
 	<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
 	<PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Json.Microsoft" Version="8.0.3" />
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
+    <PackageReference Include="System.Text.Json" Version="10.0.9" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />
