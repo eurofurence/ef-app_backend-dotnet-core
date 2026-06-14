@@ -58,7 +58,7 @@ public class EventTests
             Tags = ["Tag1", "Tag2"],
             BannerImageId = Guid.NewGuid(),
             PosterImageId = Guid.NewGuid(),
-            SourceEventId = 1,
+            SourceId = 1,
             BannerImage = new ImageRecord(),
             PosterImage = new ImageRecord(),
             ConferenceTrack = new EventConferenceTrackRecord(),
@@ -102,7 +102,7 @@ public class EventTests
 
         var oldGuid = _record.Id;
 
-        var oldSourceEventId = _record.SourceEventId;
+        var oldSourceId = _record.SourceId;
         var oldBannerImage = _record.BannerImage;
         var oldPosterImage = _record.PosterImage;
         var oldConferenceTrack = _record.ConferenceTrack;
@@ -134,7 +134,7 @@ public class EventTests
 
         Assert.Equal(oldGuid, _record.Id);
 
-        Assert.Equal(oldSourceEventId, _record.SourceEventId);
+        Assert.Equal(oldSourceId, _record.SourceId);
         Assert.Equal(oldBannerImage, _record.BannerImage);
         Assert.Equal(oldPosterImage, _record.PosterImage);
         Assert.Equal(oldConferenceTrack, _record.ConferenceTrack);

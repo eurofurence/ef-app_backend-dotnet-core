@@ -307,10 +307,10 @@ namespace Eurofurence.App.Server.Services.Events
             var eventRecords = FindAll();
 
             var patch = new PatchDefinition<EventImportRow, EventRecord>(
-                (source, list) => list.SingleOrDefault(a => a.SourceEventId == source.EventId)
+                (source, list) => list.SingleOrDefault(a => a.SourceId == source.EventId)
             );
 
-            patch.Map(s => s.EventId, t => t.SourceEventId)
+            patch.Map(s => s.EventId, t => t.SourceId)
                 .Map(s => s.Slug, t => t.Slug)
                 .Map(s => s.Title.Split('�')[0]?.Trim(), t => t.Title)
                 .Map(s => (s.Title + '�').Split('�')[1]?.Trim(), t => t.SubTitle)

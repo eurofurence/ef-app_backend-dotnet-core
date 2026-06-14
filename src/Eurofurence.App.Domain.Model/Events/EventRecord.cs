@@ -11,7 +11,7 @@ namespace Eurofurence.App.Domain.Model.Events
     public class EventRecord : EntityBase, IDtoRecordTransformable<EventRequest, EventResponse, EventRecord>
     {
         [JsonIgnore]
-        public int SourceEventId { get; set; }
+        public int SourceId { get; set; }
 
         [DataMember]
         public string Slug { get; set; }
