@@ -170,7 +170,7 @@ namespace Eurofurence.App.Server.Services.Events
                 // For some reason, slots in a published Pretalx schedule can come without a
                 // start/end time, so we have to filter them out.
                 var slots = pretalxSchedule.Slots.Where(slot => slot.Start != null && slot.End != null);
-                var slotsPublic = slots.Where(slot => slot.Submission.Tags.Contains(_eventOptions.InternalTagId));
+                var slotsPublic = slots.Where(slot => !slot.Submission.Tags.Contains(_eventOptions.InternalTagId));
 
                 var tracks = slots.Select(slot => slot.Submission.Track).ToHashSet();
                 var tracksPublic = slotsPublic.Select(slot => slot.Submission.Track).ToHashSet();
