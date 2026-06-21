@@ -20,12 +20,12 @@ namespace Eurofurence.App.Domain.Model.Events.Pretalx
 
         public bool Equals(PretalxTrack other)
         {
-            return Id == other.Id;
+            return other != null && Id == other.Id;
         }
 
         public override bool Equals(object obj)
         {
-            return base.Equals(obj as PretalxTrack);
+            return Equals(obj as PretalxTrack);
         }
 
         public override int GetHashCode()
