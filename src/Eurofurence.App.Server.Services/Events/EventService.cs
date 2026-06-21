@@ -156,7 +156,7 @@ namespace Eurofurence.App.Server.Services.Events
 
                 var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _eventOptions.ApiKey);
-                var pretalxSchedule = await httpClient.GetFromJsonAsync<PretalxSchedule>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/latest/?expand=slots,slots.room,slots.submission,slots.submission.speakers,slots.submission.submission_type,slots.submission.track");
+                var pretalxSchedule = await httpClient.GetFromJsonAsync<PretalxSchedule<PretalxSlot>>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/latest/?expand=slots,slots.room,slots.submission,slots.submission.speakers,slots.submission.submission_type,slots.submission.track");
 
                 var tags = new List<PretalxTag>();
                 var tagsUrl = $"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/tags/";
@@ -167,12 +167,21 @@ namespace Eurofurence.App.Server.Services.Events
                     tagsUrl = tagsPage.Next;
                 } while (tagsUrl != null);
 
-                // For some reason, slots in a published Pretalx schedule can come without a
-                // start/end time, so we have to filter them out.
-                var slots = pretalxSchedule.Slots.Where(slot => slot.Start != null && slot.End != null);
-                var slotsPublic = slots.Where(slot => !slot.Submission.Tags.Contains(_eventOptions.InternalTagId));
+                // Blockers used for internal slots like e.g. setup are not visible in the public schedule
+                // and must be obtained from the wip schedule. They can be identified by having a start and
+                // end time, but no submission.
+                var pretalxScheduleWip = await httpClient.GetFromJsonAsync<PretalxSchedule<PretalxSlotWip>>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/wip/?expand=slots,slots.room");
+                var slotsBlocker = pretalxScheduleWip.Slots.Where(slot => slot.Start != null && slot.End != null && slot.Submission == null);
 
-                var tracks = slots.Select(slot => slot.Submission.Track).ToHashSet();
+                // For some reason, slots in a published Pretalx schedule can come without a start or end
+                // time, which seems to be a bug, so we have to filter them out.
+                // Public slots without submissions would be breaks, but these are currently not in use for
+                // Eurofurence and thus filtered out as well.
+                // Subsequently, all slots without submission can be considered internal blockers.
+                var slots = pretalxSchedule.Slots.Where(slot => slot.Start != null && slot.End != null && slot.Submission != null).Concat(slotsBlocker);
+                var slotsPublic = slots.Where(slot => (!slot.Submission?.Tags.Contains(_eventOptions.InternalTagId)) ?? false);
+
+                var tracks = slots.Where(slot => slot.Submission != null).Select(slot => slot.Submission.Track).ToHashSet();
                 var tracksPublic = slotsPublic.Select(slot => slot.Submission.Track).ToHashSet();
 
                 var rooms = slots.Select(slot => slot.Room).ToHashSet();
@@ -286,14 +295,15 @@ namespace Eurofurence.App.Server.Services.Events
                 (source, targets) => targets.SingleOrDefault(target => target.SourceId == source.Id)
             );
 
+            // Public breaks have no submission; their title can be found in the slot description.
             patch.Map(source => source.Id, target => target.SourceId)
-                .Map(source => $"{source.Submission.Code}-{source.Id}", target => target.Slug)
-                .Map(source => source.Submission.Title.Split('–')[0]?.Trim(), target => target.Title)
-                .Map(source => (source.Submission.Title + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
-                .Map(source => source.Submission.Abstract, target => target.Abstract)
-                .Map(source => source.Submission.Description ?? source.Description, target => target.Description)
+                .Map(source => $"{source.Submission?.Code ?? "BLOCKER"}-{source.Id}", target => target.Slug)
+                .Map(source => (source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
+                .Map(source => ((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
+                .Map(source => source.Submission?.Abstract, target => target.Abstract)
+                .Map(source => source.Submission?.Description ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "", target => target.Description)
                 .Map(
-                    source => currentConferenceTracks.Single(track => track.SourceId == source.Submission.Track.Id).Id,
+                    source => currentConferenceTracks.SingleOrDefault(track => track.SourceId == (source.Submission?.Track.Id ?? _eventOptions.InternalTrackId)).Id,
                     target => target.ConferenceTrackId)
                 .Map(
                     source => currentConferenceRooms.SingleOrDefault(room => room.SourceId == source.Room?.Id).Id,
@@ -304,11 +314,11 @@ namespace Eurofurence.App.Server.Services.Events
                 .Map(source => TimeSpan.FromMinutes(source.Duration), target => target.Duration)
                 .Map(source => source.Start.Value, target => target.StartDateTimeUtc)
                 .Map(source => source.End.Value, target => target.EndDateTimeUtc)
-                .Map(source => string.Join(", ", source.Submission.Speakers.Select(speaker => speaker.Name)), target => target.PanelHosts)
-                .Map(source => source.Submission.Tags.Contains(_eventOptions.AcceptsFeedbackTagId),
+                .Map(source => string.Join(", ", source.Submission?.Speakers.Select(speaker => speaker.Name) ?? []), target => target.PanelHosts)
+                .Map(source => source.Submission?.Tags.Contains(_eventOptions.AcceptsFeedbackTagId) ?? false,
                     target => target.IsAcceptingFeedback)
-                .Map(source => source.Submission.Tags.Select(tagId => tags.GetOrDefault(tagId, null)?.Tag).ToArray(), target => target.Tags)
-                .Map(source => source.Submission.Tags.Contains(_eventOptions.InternalTagId), target => target.IsInternal);
+                .Map(source => source.Submission?.Tags.Select(tagId => tags.GetOrDefault(tagId, null)?.Tag).ToArray() ?? [tags.GetOrDefault(_eventOptions.InternalTagId, null)?.Tag], target => target.Tags)
+                .Map(source => source.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? true, target => target.IsInternal);
 
             var diff = patch.Patch(importEventEntries, eventRecords);
 

@@ -9,6 +9,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         public string EventSlug { get; init; }
         public string DefaultLocale { get; init; }
         public int InternalTagId { get; init; }
+        public int InternalTrackId { get; init; }
         public int AcceptsFeedbackTagId { get; init; }
         public Dictionary<string, string> EventDays { get; init; }
     }
