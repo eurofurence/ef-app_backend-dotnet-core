@@ -85,39 +85,41 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// Returns a data matrix code for the current user.
-        ///
-        /// The code is generated from the reg id of the user and returned as an image.
-        /// The image format can be specified by the Accept header.
-        /// It should be the same as the code on the con badge.
+        /// Returns a scannable convention pass for the current user, if they have a valid registration.
         /// </summary>
-        /// <param name="imageType">The image type the resulting data matrix code should have.</param>
-        /// <returns>Data matrix code as svg.</returns>
+        /// <param name="imageType">The MIME type the resulting pass should have. Supported values are: <c>image/svg+xml</c> (default)</param>
+        /// <returns>Convention pass in requested format.</returns>
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
         [Authorize]
-        public ActionResult GetDataMatrixCode([Required][FromQuery] string imageType)
+        //FIXME: imageType should be renamed to mimeType
+        public ActionResult GetPass([FromQuery] string imageType = "image/svg+xml")
         {
             if (User.Identity is not ClaimsIdentity identity)
             {
                 return Unauthorized();
             }
 
-            if (_identityService.GetRegistrationsIds(identity).Any())
+            if (_identityService.GetRegistrationsIds(identity).FirstOrDefault() is string registrationId)
             {
                 try
                 {
-                    string fileExtension = MimeTypes.MimeTypeMap.GetExtension(imageType);
-                    return File(
-                        Encoding.UTF8.GetBytes(
-                            _identityService.GenerateUserMatrixCode(identity)),
-                        imageType,
-                        $"matrix{fileExtension}");
+                    switch (imageType)
+                    {
+                        case "image/svg+xml":
+                            return File(
+                                Encoding.UTF8.GetBytes(
+                                    _identityService.GenerateDataMatrixCode(identity)),
+                                "image/svg+xml",
+                                $"convention-pass-{registrationId}.svg");
+                        default:
+                            throw new FormatException("Unsupported MIME type");
+                    }
                 }
                 catch (Exception e) when (e is ArgumentException or FormatException)
                 {
-                    return BadRequest("Image type not recognized - unknown or unsupported format");
+                    return BadRequest($"Unable to generate pass: {e.Message}");
                 }
             }
             return NotFound();

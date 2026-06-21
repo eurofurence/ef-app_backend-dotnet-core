@@ -18,11 +18,11 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
         CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Generates a matrix code for the user based on their reg ID as a svg file.
+        /// Generates a data matrix code for the user based on their registration as SVG.
         /// </summary>
-        /// <param name="identity">Users identity</param>
-        /// <returns>The svg image data</returns>
-        public string GenerateUserMatrixCode(ClaimsIdentity identity);
+        /// <param name="identity">identity of the user</param>
+        /// <returns>The SVG image data</returns>
+        public string GenerateDataMatrixCode(ClaimsIdentity identity);
 
         /// <summary>
         /// Finds all registrations ids of the user.

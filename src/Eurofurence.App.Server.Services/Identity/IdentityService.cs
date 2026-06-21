@@ -257,7 +257,7 @@ namespace Eurofurence.App.Server.Services.Identity
                     .ToListAsync(cancellationToken);
         }
 
-        public string GenerateUserMatrixCode(ClaimsIdentity identity)
+        public string GenerateDataMatrixCode(ClaimsIdentity identity)
         {
             string userRegID = GetRegistrationsIds(identity).FirstOrDefault() ?? string.Empty;
 
