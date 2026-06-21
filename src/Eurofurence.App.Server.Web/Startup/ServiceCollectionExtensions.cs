@@ -224,9 +224,9 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateEvents.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(eventOptions.Url))
+                    if (string.IsNullOrWhiteSpace(eventOptions.ApiUrl) || string.IsNullOrWhiteSpace(eventOptions.ApiKey))
                     {
-                        logger.Error("Update events job can't be added: Empty source url");
+                        logger.Error("Update events job can't be added: missing API URL or key");
                     }
                     else
                     {

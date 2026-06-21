@@ -20,7 +20,7 @@ namespace Eurofurence.App.Domain.Model.Events
         public string ShortName { get; set; }
 
         [DataMember]
-        public int Capacity { get; set; }
+        public int? Capacity { get; set; }
 
         [DataMember]
         public bool IsInternal { get; set; }

@@ -4,9 +4,9 @@ namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
     public class PretalxSubmissionType
     {
-        public int Id { get; set; }
-        public Dictionary<string, string> Name { get; set; }
-        public bool RequireAccessCode { get; set; }
-        public bool AttendeeSignupRequired { get; set; }
+        public int Id { get; init; }
+        public Dictionary<string, string> Name { get; init; }
+        public bool RequireAccessCode { get; init; }
+        public bool AttendeeSignupRequired { get; init; }
     }
 }

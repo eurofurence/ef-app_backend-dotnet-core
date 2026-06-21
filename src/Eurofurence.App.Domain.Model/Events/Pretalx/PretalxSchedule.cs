@@ -5,10 +5,10 @@ namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
     public class PretalxSchedule
     {
-        public int Id { get; set; }
-        public string Version { get; set; }
-        public DateTime Published { get; set; }
-        public Dictionary<string, string> Comment { get; set; }
-        public PretalxSlot[] slots { get; set; }
+        public int Id { get; init; }
+        public string Version { get; init; }
+        public DateTime Published { get; init; }
+        public Dictionary<string, string> Comment { get; init; }
+        public PretalxSlot[] Slots { get; init; }
     }
 }

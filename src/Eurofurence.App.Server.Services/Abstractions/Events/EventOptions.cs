@@ -8,9 +8,8 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         public string ApiKey { get; init; }
         public string EventSlug { get; init; }
         public string DefaultLocale { get; init; }
-        // Deprecated Option
-        public string Url { get; init; }
-        // Deprecated Option
-        public HashSet<string> InternalTracksLowerCase { get; init; }
+        public int InternalTagId { get; init; }
+        public int AcceptsFeedbackTagId { get; init; }
+        public Dictionary<string, string> EventDays { get; init; }
     }
 }

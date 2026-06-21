@@ -3,13 +3,28 @@ using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
-    public class PretalxRoom
+    public class PretalxRoom : IEquatable<PretalxRoom>
     {
-        public int Id { get; set; }
-        public Dictionary<string, string> Name { get; set; }
-        public Dictionary<string, string> Description { get; set; }
-        public Guid Uuid { get; set; }
-        public int Capacity { get; set; }
-        public int Position { get; set; }
+        public int Id { get; init; }
+        public Dictionary<string, string> Name { get; init; }
+        public Dictionary<string, string> Description { get; init; }
+        public Guid Uuid { get; init; }
+        public int? Capacity { get; init; }
+        public int? Position { get; init; }
+
+        public bool Equals(PretalxRoom other)
+        {
+            return Id == other.Id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj as PretalxRoom);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
     }
 }

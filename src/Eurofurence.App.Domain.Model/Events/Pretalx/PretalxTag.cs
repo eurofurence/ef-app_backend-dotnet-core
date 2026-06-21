@@ -1,14 +1,30 @@
+using System;
 using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
-    public class PretalxTag
+    public class PretalxTag : IEquatable<PretalxTag>
     {
-        public int Id { get; set; }
-        public string Tag { get; set; }
-        public Dictionary<string, string> Description { get; set; }
-        public string Color { get; set; }
-        public bool IsPublic { get; set; }
+        public int Id { get; init; }
+        public string Tag { get; init; }
+        public Dictionary<string, string> Description { get; init; }
+        public string Color { get; init; }
+        public bool IsPublic { get; init; }
+
+        public bool Equals(PretalxTag other)
+        {
+            return Id == other.Id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj as PretalxTag);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
 
     }
 }
