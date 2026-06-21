@@ -258,7 +258,7 @@ namespace Eurofurence.App.Server.Web.Startup
                     }
                     else if (!int.IsPositive(eventOptions.InternalTrackId))
                     {
-                        logger.Error("Update events job cannot be enabled: Events.EventDays must not be a positive integer.");
+                        logger.Error("Update events job cannot be enabled: Events.InternalTrackId must be a positive integer.");
                     }
                     else if (eventOptions.EventDays.Count == 0)
                     {
