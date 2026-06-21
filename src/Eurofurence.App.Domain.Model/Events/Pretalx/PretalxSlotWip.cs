@@ -7,6 +7,7 @@ namespace Eurofurence.App.Domain.Model.Events.Pretalx
     /// retrieving blockers which do not have a submission.
     /// When not expanded, the submission field will be either <c>null</c> or the submissions <c>code</c>.
     /// </summary>
+    /// <seealso cref="PretalxSlot" />
     public class PretalxSlotWip : PretalxSlot
     {
         [JsonPropertyName("submission")]

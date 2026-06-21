@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
+    /// <summary>
+    /// Used for deserialization of the slot model from the pretalx API.
+    /// 
+    /// see https://docs.pretalx.org/api/resources/#tag/tracks/operation/tracks_retrieve
+    /// </summary>
     public class PretalxTrack : IEquatable<PretalxTrack>
     {
         public int Id { get; init; }

@@ -1,5 +1,10 @@
 namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
+    /// <summary>
+    /// Used for deserialization of the submission model from the pretalx API.
+    /// 
+    /// see https://docs.pretalx.org/api/resources/#tag/submissions/operation/submissions_retrieve
+    /// </summary>
     public class PretalxSubmission
     {
         public string Code { get; init; }

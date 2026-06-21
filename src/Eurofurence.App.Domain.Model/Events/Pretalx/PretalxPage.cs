@@ -1,5 +1,10 @@
 namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
+    /// <summary>
+    /// Used for deserialization of pagination from the pretalx API.
+    /// 
+    /// see https://docs.pretalx.org/api/fundamentals/#pagination
+    /// </summary>
     public class PretalxPage<PageType>
     {
         public int Count { get; init; }

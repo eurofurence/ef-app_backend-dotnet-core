@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace Eurofurence.App.Domain.Model.Events.Pretalx
 {
+    /// <summary>
+    /// Used for deserialization of the tag model from the pretalx API.
+    /// 
+    /// see https://docs.pretalx.org/api/resources/#tag/tags/operation/tags_retrieve
+    /// </summary>
     public class PretalxTag : IEquatable<PretalxTag>
     {
         public int Id { get; init; }
