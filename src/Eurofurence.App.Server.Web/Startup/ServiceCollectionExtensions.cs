@@ -34,6 +34,7 @@ using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
+using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
@@ -182,9 +183,9 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateAnnouncements.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(announcementOptions.Url))
+                    if (string.IsNullOrWhiteSpace(announcementOptions.Url) || !announcementOptions.Url.CheckIsValidHttpsUrl())
                     {
-                        logger.Error("Update announcements job can't be added: Empty source url");
+                        logger.Error("Update announcements job cannot be enabled: Announcements.Url must be a valid HTTPS URL");
                     }
                     else
                     {
@@ -203,9 +204,17 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateDealers.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(dealerOptions.Url))
+                    if (string.IsNullOrWhiteSpace(dealerOptions.Url) || !dealerOptions.Url.CheckIsValidHttpsUrl())
                     {
-                        logger.Error("Update dealers job can't be added: Empty source url");
+                        logger.Error("Update dealers job cannot be enabled: Dealers.Url must be a valid HTTPS URL.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(dealerOptions.User))
+                    {
+                        logger.Error("Update dealers job cannot be enabled: Dealers.User must not be empty.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(dealerOptions.Password))
+                    {
+                        logger.Error("Update dealers job cannot be enabled: Dealers.Password must not be empty.");
                     }
                     else
                     {
@@ -224,9 +233,36 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateEvents.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(eventOptions.Url))
+                    if (
+                        string.IsNullOrWhiteSpace(eventOptions.ApiUrl) ||
+                        !eventOptions.ApiUrl.CheckIsValidHttpsUrl()
+                        )
                     {
-                        logger.Error("Update events job can't be added: Empty source url");
+                        logger.Error("Update events job cannot be enabled: Events.ApiUrl must be a valid HTTPS URL.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(eventOptions.ApiKey))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.ApiKey must not be empty.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(eventOptions.EventSlug))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.EventSlug must not be empty.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(eventOptions.DefaultLocale))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.DefaultLocale must not be empty.");
+                    }
+                    else if (!int.IsPositive(eventOptions.InternalTagId))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.InternalTagId must be a positive integer.");
+                    }
+                    else if (!int.IsPositive(eventOptions.InternalTrackId))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.InternalTrackId must be a positive integer.");
+                    }
+                    else if (eventOptions.EventDays.Count == 0)
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.EventDays must contain one or more elements.");
                     }
                     else
                     {
@@ -245,9 +281,13 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateLostAndFound.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl))
+                    if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl) || !lassieOptions.BaseApiUrl.CheckIsValidHttpsUrl())
                     {
-                        logger.Error("Update lost and found job can't be added: Empty source url");
+                        logger.Error("Update lost and found job cannot be enabled: Lassie.BaseApiUrl must be a valid HTTPS URL.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(lassieOptions.ApiKey))
+                    {
+                        logger.Error("Update lost and found job cannot be enabled: Lassie.ApiKey must not be empty.");
                     }
                     else
                     {
@@ -268,7 +308,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (artistAlleyOptions.ExpirationTimeInHours == null)
                     {
-                        logger.Error("Delete Expired Artist Alley Registrations job can't be added: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
+                        logger.Error("Delete Expired Artist Alley Registrations job cannot be enabled: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
                     }
                     else
                     {

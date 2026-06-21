@@ -55,7 +55,7 @@ build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'): (_create_if_not_exi
 	dotnet restore
 	dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release --property:Version=$BUILD_VERSION
 	dotnet build src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --configuration Release --property:Version=$BUILD_VERSION
-	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Server.Web
+	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Infrastructure.EntityFramework
 	dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --output "$(pwd)/artifacts/backend" --configuration Release --property:Version=$BUILD_VERSION
 	dotnet publish src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --output "$(pwd)/artifacts/backoffice" --configuration Release --property:Version=$BUILD_VERSION
 
@@ -131,3 +131,11 @@ create-migration MIGRATION_NAME $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERS
 	docker compose start db
 	cd src/Eurofurence.App.Infrastructure.EntityFramework
 	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations add {{MIGRATION_NAME}}
+
+# Remove last EntityFramework migration
+remove-migration $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'):
+	#!/usr/bin/env bash
+	set -euxo pipefail
+	docker compose start db
+	cd src/Eurofurence.App.Infrastructure.EntityFramework
+	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations remove

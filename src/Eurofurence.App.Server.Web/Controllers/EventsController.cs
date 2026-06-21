@@ -162,15 +162,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Adds an event to favorites
         /// </summary>
-        /// <remarks>
-        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
-        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
-        /// This endpoint works without authentication.
-        /// </remarks>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
-        [Authorize]
-        [AllowAnonymous]
         [Authorize]
         [HttpPost("{id}/:favorite")]
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
@@ -190,15 +183,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Removes an event from favorites
         /// </summary>
-        /// <remarks>
-        /// The combination of Authorize and AllowAnonymous attributes is needed so Swagger correctly authorizes against the endpoint when a token is provided.
-        /// It should not affect API behaviour as Authorize is ignored when AllowAnonymous is provided.
-        /// This endpoint works without authentication.
-        /// </remarks>
         /// <param name="id">The id of the event</param>
         /// <returns>Just a status code</returns>
-        [Authorize]
-        [AllowAnonymous]
         [Authorize]
         [HttpDelete("{id}/:favorite")]
         public async Task<ActionResult> UnmarkEventAsFavorite([FromRoute] Guid id)

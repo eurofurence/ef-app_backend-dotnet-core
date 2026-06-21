@@ -1,14 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using CsvHelper.Configuration;
-using CsvHelper;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Infrastructure.EntityFramework;
@@ -24,6 +19,10 @@ using Ical.Net.DataTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Calendar = Ical.Net.Calendar;
+using System.Net.Http.Json;
+using Eurofurence.App.Domain.Model.Events.Pretalx;
+using System.Collections.Immutable;
+using AngleSharp.Common;
 
 namespace Eurofurence.App.Server.Services.Events
 {
@@ -156,55 +155,49 @@ namespace Eurofurence.App.Server.Services.Events
                 _logger.LogDebug(LogEvents.Import, "Starting event import.");
 
                 var httpClient = new HttpClient();
-                var fileStream = await httpClient.GetStreamAsync(_eventOptions.Url);
-                TextReader reader = new StreamReader(fileStream);
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _eventOptions.ApiKey);
+                var pretalxSchedule = await httpClient.GetFromJsonAsync<PretalxSchedule<PretalxSlot>>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/latest/?expand=slots,slots.room,slots.submission,slots.submission.speakers,slots.submission.submission_type,slots.submission.track");
 
-                using var csv = new CsvReader(reader,
-                    new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," });
-                csv.Context.RegisterClassMap<EventImportRowClassMap>();
-                var csvRecords = csv.GetRecords<EventImportRow>().ToList();
-                csvRecords = csvRecords
-                    .Where(a => !a.Abstract.Equals("[CANCELLED]", StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
+                var tags = new List<PretalxTag>();
+                var tagsUrl = $"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/tags/";
+                do
+                {
+                    var tagsPage = await httpClient.GetFromJsonAsync<PretalxPage<PretalxTag>>(tagsUrl);
+                    tags.AddRange(tagsPage.Results);
+                    tagsUrl = tagsPage.Next;
+                } while (tagsUrl != null);
 
-                if (csvRecords.Count == 0) return;
+                // Blockers used for internal slots like e.g. setup are not visible in the public schedule
+                // and must be obtained from the wip schedule. They can be identified by having a start and
+                // end time, but no submission.
+                var pretalxScheduleWip = await httpClient.GetFromJsonAsync<PretalxSchedule<PretalxSlotWip>>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/wip/?expand=slots,slots.room");
+                var slotsBlocker = pretalxScheduleWip.Slots.Where(slot => slot.Start != null && slot.End != null && slot.Submission == null);
 
-                var internalTrackNamesLowerCase = _eventOptions.InternalTracksLowerCase ?? new HashSet<string>();
-                var csvRecordsPublic = csvRecords.Where(r => !internalTrackNamesLowerCase.Contains(r.ConferenceTrack.ToLowerInvariant()));
+                // For some reason, slots in a published Pretalx schedule can come without a start or end
+                // time, which seems to be a bug, so we have to filter them out.
+                // Public slots without submissions would be breaks, but these are currently not in use for
+                // Eurofurence and thus filtered out as well.
+                // Subsequently, all slots without submission can be considered internal blockers.
+                var slots = pretalxSchedule.Slots.Where(slot => slot.Start != null && slot.End != null && slot.Submission != null).Concat(slotsBlocker);
+                var slotsPublic = slots.Where(slot => (!slot.Submission?.Tags.Contains(_eventOptions.InternalTagId)) ?? false);
 
-                foreach (var record in csvRecords)
-                    record.ConferenceDayName = record.ConferenceDayName.Contains(" - ")
-                        ? record.ConferenceDayName.Split(new[] { " - " }, StringSplitOptions.None)[1].Trim()
-                        : record.ConferenceDayName.Trim();
+                var tracks = slots.Where(slot => slot.Submission != null).Select(slot => slot.Submission.Track).ToHashSet();
+                var tracksPublic = slotsPublic.Select(slot => slot.Submission.Track).ToHashSet();
 
-                var conferenceTracks = csvRecords.Select(a => a.ConferenceTrack)
-                    .Distinct().OrderBy(a => a).ToList();
-                var conferenceTracksPublic = csvRecordsPublic.Select(r => r.ConferenceTrack).ToHashSet();
+                var rooms = slots.Select(slot => slot.Room).ToHashSet();
+                var roomsPublic = slotsPublic.Select(slot => slot.Room).ToHashSet();
 
-                var conferenceRooms = csvRecords.Select(a => a.ConferenceRoom)
-                    .Distinct().OrderBy(a => a).ToList();
-                var conferenceRoomsPublic = csvRecordsPublic.Select(r => r.ConferenceRoom).ToHashSet();
+                var days = _eventOptions.EventDays.Select(eventDay => Tuple.Create(DateTime.Parse($"{eventDay.Key}T00:00:00Z"), eventDay.Value)).ToList();
+                var daysPublic = slotsPublic.Select(slot => slot.Start.Value.Date).ToHashSet();
 
-                var conferenceDays = csvRecords.Select(a =>
-                        new Tuple<DateTime, string>(
-                            DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture),
-                                DateTimeKind.Utc),
-                            a.ConferenceDayName))
-                    .Distinct().OrderBy(a => a).ToList();
-                var conferenceDaysPublic = csvRecordsPublic.Select(a =>
-                        new Tuple<DateTime, string>(
-                            DateTime.SpecifyKind(DateTime.Parse(a.ConferenceDay, CultureInfo.InvariantCulture),
-                                DateTimeKind.Utc),
-                            a.ConferenceDayName)).ToHashSet();
-
-                var eventConferenceTracks = await UpdateEventConferenceTracksAsync(conferenceTracks, conferenceTracksPublic);
-                var eventConferenceRooms = await UpdateEventConferenceRoomsAsync(conferenceRooms, conferenceRoomsPublic);
-                var eventConferenceDays = await UpdateEventConferenceDaysAsync(conferenceDays, conferenceDaysPublic);
-                var eventEntries = await UpdateEventEntriesAsync(csvRecords,
+                var eventConferenceTracks = await UpdateEventConferenceTracksAsync(tracks, tracksPublic);
+                var eventConferenceRooms = await UpdateEventConferenceRoomsAsync(rooms, roomsPublic);
+                var eventConferenceDays = await UpdateEventConferenceDaysAsync(days, daysPublic);
+                var eventEntries = await UpdateEventEntriesAsync(slots,
                     eventConferenceTracks.Item2,
                     eventConferenceRooms.Item2,
                     eventConferenceDays.Item2,
-                    internalTrackNamesLowerCase);
+                    tags.ToDictionary(tag => tag.Id, tag => tag));
 
                 _logger.LogInformation(LogEvents.Import,
                     $"Event import finished successfully modifying {eventConferenceTracks.Item1} EventConferenceTrack(s), {eventConferenceRooms.Item1} EventConferenceRoom(s), {eventConferenceDays.Item1} EventConferenceDay(s) and {eventEntries.Item1} Event(s).");
@@ -216,8 +209,8 @@ namespace Eurofurence.App.Server.Services.Events
         }
 
         private async Task<Tuple<int, List<EventConferenceDayRecord>>> UpdateEventConferenceDaysAsync(
-            IList<Tuple<DateTime, string>> importConferenceDays,
-            ISet<Tuple<DateTime, string>> importConferenceDaysPublic
+            IList<Tuple<DateTime, string>> importDays,
+            ISet<DateTime> importDaysPublic
         )
         {
             var eventConferenceDayRecords = _appDbContext.EventConferenceDays.AsNoTracking();
@@ -226,11 +219,11 @@ namespace Eurofurence.App.Server.Services.Events
                 (source, list) => list.SingleOrDefault(a => a.Date == source.Item1)
             );
 
-            patch.Map(s => s.Item1, t => t.Date)
-                .Map(s => s.Item2, t => t.Name)
-                .Map(s => !importConferenceDaysPublic.Contains(s), t => t.IsInternal);
+            patch.Map(source => source.Item1, target => target.Date)
+                .Map(source => source.Item2, target => target.Name)
+                .Map(source => !importDaysPublic.Contains(source.Item1), target => target.IsInternal);
 
-            var diff = patch.Patch(importConferenceDays, eventConferenceDayRecords);
+            var diff = patch.Patch(importDays, eventConferenceDayRecords);
 
             await _eventConferenceDayService.ApplyPatchOperationAsync(diff);
 
@@ -240,19 +233,21 @@ namespace Eurofurence.App.Server.Services.Events
 
 
         private async Task<Tuple<int, List<EventConferenceTrackRecord>>> UpdateEventConferenceTracksAsync(
-            IList<string> importConferenceTracks,
-            ISet<string> importConferenceTracksPublic
+            ISet<PretalxTrack> importTracks,
+            ISet<PretalxTrack> importTracksPublic
         )
         {
             var eventConferenceTrackRecords = _appDbContext.EventConferenceTracks.AsNoTracking();
-
-            var patch = new PatchDefinition<string, EventConferenceTrackRecord>(
-                (source, list) => list.SingleOrDefault(a => a.Name == source)
+            var patch = new PatchDefinition<PretalxTrack, EventConferenceTrackRecord>(
+                (source, list) => list.SingleOrDefault(target => target.SourceId == source.Id)
             );
 
-            patch.Map(s => s, t => t.Name)
-                .Map(s => !importConferenceTracksPublic.Contains(s), t => t.IsInternal);
-            var diff = patch.Patch(importConferenceTracks, eventConferenceTrackRecords);
+            patch.Map(source => source.Id, target => target.SourceId)
+                .Map(source => source.Name.GetValueOrDefault(_eventOptions.DefaultLocale), target => target.Name)
+                .Map(source => source.Description.GetValueOrDefault(_eventOptions.DefaultLocale), target => target.Description)
+                .Map(source => source.Color, target => target.Color)
+                .Map(source => !importTracksPublic.Contains(source), target => target.IsInternal);
+            var diff = patch.Patch(importTracks, eventConferenceTrackRecords);
 
             await _eventConferenceTrackService.ApplyPatchOperationAsync(diff);
 
@@ -261,34 +256,24 @@ namespace Eurofurence.App.Server.Services.Events
         }
 
         private async Task<Tuple<int, List<EventConferenceRoomRecord>>> UpdateEventConferenceRoomsAsync(
-            IList<string> importConferenceRooms,
-            ISet<string> importConferenceRoomsPublic
+            ISet<PretalxRoom> importRooms,
+            ISet<PretalxRoom> importRoomsPublic
         )
         {
             var eventConferenceRoomRecords = _appDbContext.EventConferenceRooms.AsNoTracking();
 
-            var patch = new PatchDefinition<string, EventConferenceRoomRecord>(
-                (source, list) => list.SingleOrDefault(a => a.Name == source)
+            var patch = new PatchDefinition<PretalxRoom, EventConferenceRoomRecord>(
+                (source, targets) => targets.SingleOrDefault(target => target.SourceId == source.Id)
             );
 
-            var roomShortNameRegex = new Regex("(\\P{Pd}+)\\p{Pd}(\\P{Pd}+)");
+            patch.Map(source => source.Id, target => target.SourceId)
+                .Map(source => source.Name.GetValueOrDefault(_eventOptions.DefaultLocale), target => target.Name)
+                .Map(source => source.Description.GetValueOrDefault(_eventOptions.DefaultLocale), target => target.Description)
+                .Map(source => source.Name.GetValueOrDefault(_eventOptions.DefaultLocale).Split('–')[0]?.Trim(), target => target.ShortName)
+                .Map(source => source.Capacity, target => target.Capacity)
+                .Map(source => !importRoomsPublic.Contains(source), target => target.IsInternal);
 
-            patch
-                .Map(s => s, t => t.Name)
-                .Map(s =>
-                    {
-                        if (roomShortNameRegex.IsMatch(s))
-                        {
-                            var matches = roomShortNameRegex.Matches(s);
-                            return matches[0].Groups[1].Value.Trim();
-                        }
-                        else
-                            return s;
-                    },
-                    t => t.ShortName)
-                .Map(s => !importConferenceRoomsPublic.Contains(s), t => t.IsInternal);
-
-            var diff = patch.Patch(importConferenceRooms, eventConferenceRoomRecords);
+            var diff = patch.Patch(importRooms, eventConferenceRoomRecords);
 
             await _eventConferenceRoomService.ApplyPatchOperationAsync(diff);
 
@@ -297,47 +282,43 @@ namespace Eurofurence.App.Server.Services.Events
         }
 
         private async Task<Tuple<int, List<EventRecord>>> UpdateEventEntriesAsync(
-            IList<EventImportRow> importEventEntries,
+            IEnumerable<PretalxSlot> importEventEntries,
             IList<EventConferenceTrackRecord> currentConferenceTracks,
             IList<EventConferenceRoomRecord> currentConferenceRooms,
             IList<EventConferenceDayRecord> currentConferenceDays,
-            ISet<string> internalTrackNamesLowerCase
+            IDictionary<int, PretalxTag> tags
         )
         {
             var eventRecords = FindAll();
 
-            var patch = new PatchDefinition<EventImportRow, EventRecord>(
-                (source, list) => list.SingleOrDefault(a => a.SourceEventId == source.EventId)
+            var patch = new PatchDefinition<PretalxSlot, EventRecord>(
+                (source, targets) => targets.SingleOrDefault(target => target.SourceId == source.Id)
             );
 
-            patch.Map(s => s.EventId, t => t.SourceEventId)
-                .Map(s => s.Slug, t => t.Slug)
-                .Map(s => s.Title.Split('�')[0]?.Trim(), t => t.Title)
-                .Map(s => (s.Title + '�').Split('�')[1]?.Trim(), t => t.SubTitle)
-                .Map(s => s.Abstract, t => t.Abstract)
+            // Public breaks have no submission; their title can be found in the slot description.
+            patch.Map(source => source.Id, target => target.SourceId)
+                .Map(source => $"{source.Submission?.Code ?? "BLOCKER"}-{source.Id}", target => target.Slug)
+                .Map(source => (source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
+                .Map(source => ((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
+                .Map(source => source.Submission?.Abstract, target => target.Abstract)
+                .Map(source => source.Submission?.Description ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "", target => target.Description)
                 .Map(
-                    s => currentConferenceTracks.Single(a => a.Name == s.ConferenceTrack).Id,
-                    t => t.ConferenceTrackId)
+                    source => currentConferenceTracks.SingleOrDefault(track => track.SourceId == (source.Submission?.Track.Id ?? _eventOptions.InternalTrackId)).Id,
+                    target => target.ConferenceTrackId)
                 .Map(
-                    s => currentConferenceRooms.Single(a => a.Name == s.ConferenceRoom).Id,
-                    t => t.ConferenceRoomId)
+                    source => currentConferenceRooms.SingleOrDefault(room => room.SourceId == source.Room?.Id).Id,
+                    target => target.ConferenceRoomId)
                 .Map(
-                    s => currentConferenceDays.Single(a => a.Name == s.ConferenceDayName).Id,
-                    t => t.ConferenceDayId)
-                .Map(s => s.Description, t => t.Description)
-                .Map(s => s.Duration, t => t.Duration)
-                .Map(s => s.StartTime, t => t.StartTime)
-                .Map(s => s.EndTime, t => t.EndTime)
-                .Map(s => DateTime.SpecifyKind(currentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
-                    .Date.Add(s.StartTime), DateTimeKind.Utc).AddHours(-2), t => t.StartDateTimeUtc)
-                .Map(s => DateTime.SpecifyKind(currentConferenceDays.Single(a => a.Name == s.ConferenceDayName)
-                        .Date.Add(s.EndTime).AddDays(s.StartTime < s.EndTime ? 0 : 1).AddHours(-2), DateTimeKind.Utc),
-                    t => t.EndDateTimeUtc)
-                .Map(s => s.PanelHosts, t => t.PanelHosts)
-                .Map(s => s.AppFeedback.Equals("yes", StringComparison.InvariantCultureIgnoreCase),
-                    t => t.IsAcceptingFeedback)
-                .Map(s => s.CalculateTags(), t => t.Tags)
-                .Map(s => internalTrackNamesLowerCase.Contains(s.ConferenceTrack.ToLowerInvariant()), t => t.IsInternal);
+                    source => currentConferenceDays.SingleOrDefault(day => day.Date == source.Start?.Date).Id,
+                    target => target.ConferenceDayId)
+                .Map(source => TimeSpan.FromMinutes(source.Duration), target => target.Duration)
+                .Map(source => source.Start.Value, target => target.StartDateTimeUtc)
+                .Map(source => source.End.Value, target => target.EndDateTimeUtc)
+                .Map(source => string.Join(", ", source.Submission?.Speakers.Select(speaker => speaker.Name) ?? []), target => target.PanelHosts)
+                .Map(source => source.Submission?.Tags.Contains(_eventOptions.AcceptsFeedbackTagId) ?? false,
+                    target => target.IsAcceptingFeedback)
+                .Map(source => source.Submission?.Tags.Select(tagId => tags.GetOrDefault(tagId, null)?.Tag).ToArray() ?? [tags.GetOrDefault(_eventOptions.InternalTagId, null)?.Tag], target => target.Tags)
+                .Map(source => source.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? true, target => target.IsInternal);
 
             var diff = patch.Patch(importEventEntries, eventRecords);
 
@@ -345,61 +326,6 @@ namespace Eurofurence.App.Server.Services.Events
 
             var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
             return new Tuple<int, List<EventRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
-        }
-
-        public class EventImportRow
-        {
-            public int EventId { get; set; }
-            public string Slug { get; set; }
-            public string Title { get; set; }
-            public string ConferenceTrack { get; set; }
-            public string Abstract { get; set; }
-            public string Description { get; set; }
-            public string ConferenceDay { get; set; }
-            public string ConferenceDayName { get; set; }
-            public TimeSpan StartTime { get; set; }
-            public TimeSpan EndTime { get; set; }
-            public TimeSpan Duration { get; set; }
-            public string ConferenceRoom { get; set; }
-            public string PanelHosts { get; set; }
-            public string AppFeedback { get; set; }
-            public string Tags { get; set; }
-            public string CustomTags { get; set; }
-
-            public string[] CalculateTags()
-            {
-                var tags = this.Tags.Split(",")
-                    .Union(this.CustomTags.Split(","))
-                    .Where(tag => !string.IsNullOrWhiteSpace(tag))
-                    .Select(tag => tag.Trim())
-                    .Select(tag => tag.Replace("fsps", "photoshoot"))
-                    .ToArray();
-
-                return tags;
-            }
-        }
-
-        public class EventImportRowClassMap : ClassMap<EventImportRow>
-        {
-            public EventImportRowClassMap()
-            {
-                Map(m => m.EventId).Name("event_id");
-                Map(m => m.Slug).Name("slug");
-                Map(m => m.Title).Name("title");
-                Map(m => m.ConferenceTrack).Name("conference_track");
-                Map(m => m.Abstract).Name("abstract");
-                Map(m => m.Description).Name("description");
-                Map(m => m.ConferenceDay).Name("conference_day");
-                Map(m => m.ConferenceDayName).Name("conference_day_name");
-                Map(m => m.StartTime).Name("start_time");
-                Map(m => m.EndTime).Name("end_time");
-                Map(m => m.Duration).Name("duration");
-                Map(m => m.ConferenceRoom).Name("conference_room");
-                Map(m => m.PanelHosts).Name("pannel_hosts");
-                Map(m => m.AppFeedback).Name("appfeedback");
-                Map(m => m.Tags).Name("tags");
-                Map(m => m.CustomTags).Name("custom_tags");
-            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Eurofurence.App.Domain.Model.Events
     public class EventRecord : EntityBase, IDtoRecordTransformable<EventRequest, EventResponse, EventRecord>
     {
         [JsonIgnore]
-        public int SourceEventId { get; set; }
+        public int SourceId { get; set; }
 
         [DataMember]
         public string Slug { get; set; }
@@ -39,12 +39,6 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public TimeSpan Duration { get; set; }
-
-        [DataMember]
-        public TimeSpan StartTime { get; set; }
-
-        [DataMember]
-        public TimeSpan EndTime { get; set; }
 
         [DataMember]
         public DateTime StartDateTimeUtc { get; set; }

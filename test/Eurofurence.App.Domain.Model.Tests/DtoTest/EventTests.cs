@@ -24,13 +24,11 @@ public class EventTests
             Description = "Event Description",
             Duration = System.TimeSpan.FromMinutes(60),
             EndDateTimeUtc = System.DateTime.UtcNow,
-            EndTime = System.TimeSpan.FromHours(12),
             IsAcceptingFeedback = true,
             IsDeviatingFromConBook = true,
             PanelHosts = "Panel Hosts",
             Slug = "Event Slug",
             StartDateTimeUtc = System.DateTime.UtcNow,
-            StartTime = System.TimeSpan.FromHours(10),
             SubTitle = "Event SubTitle",
             Tags = ["Tag1", "Tag2"],
             BannerImageId = Guid.NewGuid(),
@@ -47,18 +45,16 @@ public class EventTests
             Description = "Event Description",
             Duration = System.TimeSpan.FromMinutes(60),
             EndDateTimeUtc = System.DateTime.UtcNow,
-            EndTime = System.TimeSpan.FromHours(12),
             IsAcceptingFeedback = true,
             IsDeviatingFromConBook = true,
             PanelHosts = "Panel Hosts",
             Slug = "Event Slug",
             StartDateTimeUtc = System.DateTime.UtcNow,
-            StartTime = System.TimeSpan.FromHours(10),
             SubTitle = "Event SubTitle",
             Tags = ["Tag1", "Tag2"],
             BannerImageId = Guid.NewGuid(),
             PosterImageId = Guid.NewGuid(),
-            SourceEventId = 1,
+            SourceId = 1,
             BannerImage = new ImageRecord(),
             PosterImage = new ImageRecord(),
             ConferenceTrack = new EventConferenceTrackRecord(),
@@ -102,7 +98,7 @@ public class EventTests
 
         var oldGuid = _record.Id;
 
-        var oldSourceEventId = _record.SourceEventId;
+        var oldSourceId = _record.SourceId;
         var oldBannerImage = _record.BannerImage;
         var oldPosterImage = _record.PosterImage;
         var oldConferenceTrack = _record.ConferenceTrack;
@@ -118,13 +114,11 @@ public class EventTests
         _request.Description = "Something totally different";
         _request.Duration = System.TimeSpan.FromMinutes(120);
         _request.EndDateTimeUtc = System.DateTime.UtcNow;
-        _request.EndTime = System.TimeSpan.FromHours(14);
         _request.IsAcceptingFeedback = false;
         _request.IsDeviatingFromConBook = false;
         _request.PanelHosts = "Something totally different";
         _request.Slug = "Something totally different";
         _request.StartDateTimeUtc = System.DateTime.UtcNow;
-        _request.StartTime = System.TimeSpan.FromHours(12);
         _request.SubTitle = "Something totally different";
         _request.Tags = ["Tag3", "Tag4"];
         _request.BannerImageId = Guid.NewGuid();
@@ -134,7 +128,7 @@ public class EventTests
 
         Assert.Equal(oldGuid, _record.Id);
 
-        Assert.Equal(oldSourceEventId, _record.SourceEventId);
+        Assert.Equal(oldSourceId, _record.SourceId);
         Assert.Equal(oldBannerImage, _record.BannerImage);
         Assert.Equal(oldPosterImage, _record.PosterImage);
         Assert.Equal(oldConferenceTrack, _record.ConferenceTrack);
@@ -159,13 +153,11 @@ public class EventTests
         Assert.Equal(_record.Description, res.Description);
         Assert.Equal(_record.Duration, res.Duration);
         Assert.Equal(_record.EndDateTimeUtc, res.EndDateTimeUtc);
-        Assert.Equal(_record.EndTime, res.EndTime);
         Assert.Equal(_record.IsAcceptingFeedback, res.IsAcceptingFeedback);
         Assert.Equal(_record.IsDeviatingFromConBook, res.IsDeviatingFromConBook);
         Assert.Equal(_record.PanelHosts, res.PanelHosts);
         Assert.Equal(_record.Slug, res.Slug);
         Assert.Equal(_record.StartDateTimeUtc, res.StartDateTimeUtc);
-        Assert.Equal(_record.StartTime, res.StartTime);
         Assert.Equal(_record.SubTitle, res.SubTitle);
         Assert.Equal(_record.Tags, res.Tags);
         Assert.Equal(_record.BannerImageId, res.BannerImageId);
@@ -182,13 +174,11 @@ public class EventTests
         Assert.Equal(record.Description, request.Description);
         Assert.Equal(record.Duration, request.Duration);
         Assert.Equal(record.EndDateTimeUtc, request.EndDateTimeUtc);
-        Assert.Equal(record.EndTime, request.EndTime);
         Assert.Equal(record.IsAcceptingFeedback, request.IsAcceptingFeedback);
         Assert.Equal(record.IsDeviatingFromConBook, request.IsDeviatingFromConBook);
         Assert.Equal(record.PanelHosts, request.PanelHosts);
         Assert.Equal(record.Slug, request.Slug);
         Assert.Equal(record.StartDateTimeUtc, request.StartDateTimeUtc);
-        Assert.Equal(record.StartTime, request.StartTime);
         Assert.Equal(record.SubTitle, request.SubTitle);
         Assert.Equal(record.Tags, request.Tags);
         Assert.Equal(record.BannerImageId, request.BannerImageId);
