@@ -114,7 +114,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                                 "image/svg+xml",
                                 $"convention-pass-{registrationId}.svg");
                         default:
-                            throw new FormatException("Unsupported MIME type");
+                            return BadRequest($"Unsupported MIME type: {imageType}");
                     }
                 }
                 catch (Exception e) when (e is ArgumentException or FormatException)
