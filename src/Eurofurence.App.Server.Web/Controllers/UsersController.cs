@@ -106,7 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return Unauthorized();
             }
 
-            if (_identityService.GetRegistrationsIds(identity).FirstOrDefault() is string registrationId)
+            if (_identityService.GetRegistrationsIds(identity).FirstOrDefault() is { } registrationId)
             {
                 try
                 {
