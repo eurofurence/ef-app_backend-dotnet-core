@@ -257,12 +257,12 @@ namespace Eurofurence.App.Server.Services.Identity
                     .ToListAsync(cancellationToken);
         }
 
-        public string GenerateDataMatrixCode(ClaimsIdentity identity)
+        public string GenerateDataMatrixCode(string registrationId)
         {
-            string userRegID = GetRegistrationsIds(identity).FirstOrDefault() ?? string.Empty;
-
+            if (string.IsNullOrEmpty(registrationId))
+                return "";
             BarcodeWriterSvg writer = new BarcodeWriterSvg() { Format = BarcodeFormat.DATA_MATRIX };
-            SvgRenderer.SvgImage svgImage = writer.Write(userRegID);
+            SvgRenderer.SvgImage svgImage = writer.Write(registrationId);
 
             return svgImage.Content;
         }

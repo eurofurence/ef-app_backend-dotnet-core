@@ -20,9 +20,9 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
         /// <summary>
         /// Generates a data matrix code for the user based on their registration as SVG.
         /// </summary>
-        /// <param name="identity">identity of the user</param>
+        /// <param name="registrationId">Registration id of the user.</param>
         /// <returns>The SVG image data</returns>
-        public string GenerateDataMatrixCode(ClaimsIdentity identity);
+        public string GenerateDataMatrixCode(string registrationId);
 
         /// <summary>
         /// Finds all registrations ids of the user.

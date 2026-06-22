@@ -115,7 +115,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                         case SvgMimeType:
                             return File(
                                 Encoding.UTF8.GetBytes(
-                                    _identityService.GenerateDataMatrixCode(identity)),
+                                    _identityService.GenerateDataMatrixCode(registrationId)),
                                 SvgMimeType,
                                 $"convention-pass-{registrationId}.svg");
                         default:
