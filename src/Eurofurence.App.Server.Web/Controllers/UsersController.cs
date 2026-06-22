@@ -105,7 +105,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 try
                 {
-                    switch (imageType)
+                    switch (imageType.ToLower())
                     {
                         case "image/svg+xml":
                             return File(
