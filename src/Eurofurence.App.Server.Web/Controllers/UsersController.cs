@@ -20,6 +20,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
 
         /// <summary>
+        /// Mime type definition for SVG images.
+        /// </summary>
+        private const string SvgMimeType = "image/svg+xml";
+
+        /// <summary>
         /// Identity service for user identity management.
         /// </summary>
         private readonly IIdentityService _identityService;
@@ -94,7 +99,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         [Authorize]
         //FIXME: imageType should be renamed to mimeType
-        public ActionResult GetPass([FromQuery] string imageType = "image/svg+xml")
+        public ActionResult GetPass([FromQuery] string imageType = SvgMimeType)
         {
             if (User.Identity is not ClaimsIdentity identity)
             {
@@ -107,11 +112,11 @@ namespace Eurofurence.App.Server.Web.Controllers
                 {
                     switch (imageType.ToLower())
                     {
-                        case "image/svg+xml":
+                        case SvgMimeType:
                             return File(
                                 Encoding.UTF8.GetBytes(
                                     _identityService.GenerateDataMatrixCode(identity)),
-                                "image/svg+xml",
+                                SvgMimeType,
                                 $"convention-pass-{registrationId}.svg");
                         default:
                             return BadRequest($"Unsupported MIME type: {imageType}");
