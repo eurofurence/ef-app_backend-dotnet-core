@@ -17,9 +17,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using DataMatrix.NetCore;
 using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Duende.IdentityModel.Client;
+using ZXing;
+using ZXing.Rendering;
 
 namespace Eurofurence.App.Server.Services.Identity
 {
@@ -256,13 +257,14 @@ namespace Eurofurence.App.Server.Services.Identity
                     .ToListAsync(cancellationToken);
         }
 
-        public string GenerateUserMatrixCode(ClaimsIdentity identity)
+        public string GenerateDataMatrixCode(string registrationId)
         {
-            string userRegID = GetRegistrationsIds(identity).FirstOrDefault() ?? string.Empty;
-            DmtxImageEncoder encoder = new DmtxImageEncoder();
-            string img = encoder.EncodeSvgImage(userRegID);
+            if (string.IsNullOrEmpty(registrationId))
+                return "";
+            BarcodeWriterSvg writer = new BarcodeWriterSvg() { Format = BarcodeFormat.DATA_MATRIX };
+            SvgRenderer.SvgImage svgImage = writer.Write(registrationId);
 
-            return img;
+            return svgImage.Content;
         }
 
         public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity)

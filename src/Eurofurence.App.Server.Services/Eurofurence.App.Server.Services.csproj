@@ -18,7 +18,6 @@
     <PackageReference Include="Blurhash.ImageSharp" Version="4.0.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="dotAPNS" Version="4.6.0" />
-    <PackageReference Include="DataMatrix.NetCore" Version="0.4.2" />
     <PackageReference Include="dotAPNS.AspNetCore" Version="2.2.2" />
     <PackageReference Include="Duende.AspNetCore.Authentication.OAuth2Introspection" Version="7.0.1" />
     <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
@@ -38,6 +37,7 @@
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
     <PackageReference Include="System.Linq.Async" Version="7.0.1" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
