@@ -9,6 +9,8 @@ updates:
       interval: "daily"
     labels:
       - "dependencies"
+    commit-message:
+      prefix: "build(docker)"
     reviewers:
       - "Fenrikur"
       - "Metawolve"
@@ -20,6 +22,8 @@ updates:
       interval: "daily"
     labels:
       - "dependencies"
+    commit-message:
+      prefix: "build(deps)"
     reviewers:
       - "Fenrikur"
       - "Metawolve"
@@ -35,6 +39,8 @@ updates:
         patterns: [ "*" ]
     labels:
       - "dependencies"
+    commit-message:
+      prefix: "build(gha)"
     reviewers:
       - "Fenrikur"
       - "Metawolve"
