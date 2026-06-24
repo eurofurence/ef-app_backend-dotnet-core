@@ -18,7 +18,7 @@
     <ProjectReference Include="..\Eurofurence.App.Common\Eurofurence.App.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="10.0.8" />
+    <PackageReference Include="Mapster" Version="10.0.9" />
     <PackageReference Include="Mapster.Core" Version="10.0.9" />
   </ItemGroup>
   <Target Name="Husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != 0">
