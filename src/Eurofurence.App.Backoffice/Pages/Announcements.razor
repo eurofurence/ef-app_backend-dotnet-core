@@ -1,0 +1,86 @@
+@page "/Announcements"
+@using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Announcements
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+@inject IAnnouncementService AnnouncementService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudToolBar>
+    <MudText Typo="Typo.h6">Announcements</MudText>
+    <MudSpacer />
+    <MudButton Class="ml-4" Variant="Variant.Filled" Color="Color.Primary" OnClick="OnClickNewAnnouncement">Add New
+    </MudButton>
+</MudToolBar>
+
+
+<MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
+    FilterMode="@DataGridFilterMode.ColumnFilterMenu">
+    <Columns>
+        <PropertyColumn Title="Title" Property="arg => arg.Title"></PropertyColumn>
+        <PropertyColumn Title="Author" Property="arg => arg.Author"></PropertyColumn>
+        <PropertyColumn Title="Area" Property="arg => arg.Area"></PropertyColumn>
+        <PropertyColumn Title="Content" Property="arg => arg.Content"></PropertyColumn>
+        <PropertyColumn Title="ValidFromDateTimeUtc" Property="arg => arg.ValidFromDateTimeUtc"></PropertyColumn>
+        <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="AnnouncementResponse" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+
+    /// <summary>
+    /// A collection of the loaded announcements to display in the data grid.
+    /// </summary>
+    private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
+
+    /// <summary>
+    /// Is called when the "Add New" button is clicked.
+    /// Opens a dialog to create a new announcement.
+    /// </summary>
+    public async Task OnClickNewAnnouncement()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AnnouncementDialog>("Create a new Announcement", options);
+
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            _items = await AnnouncementService.GetAnnouncementsAsync();
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Called after the component has rendered.
+    /// Will load the announcements from the service if this is the first render.
+    /// </summary>
+    /// <param name="firstRender">Specifies if the component is rendered for the first time.</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            try
+            {
+                _items = await AnnouncementService.GetAnnouncementsAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}
