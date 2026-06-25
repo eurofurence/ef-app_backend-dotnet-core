@@ -1,10 +1,10 @@
-using Eurofurence.App.Domain.Model.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Ical.Net;
 
@@ -51,5 +51,17 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         /// <param name="user">The user whose events should be returned</param>
         /// <returns>A <see cref="Calendar"/> instance with all favorite events of the user </returns>
         Calendar GetFavoriteEventsFromUserAsIcal([NotNull] UserRecord user);
+
+        /// <summary>
+        /// Retrieve the last successfully synced version of the schedule since launch of the current
+        /// backend instance.
+        /// 
+        /// See: https://docs.pretalx.org/api/resources/#tag/schedules
+        /// </summary>
+        /// <returns>
+        /// Version string from last successfully synced schedule or <c>null</c> if no successful
+        /// sync since launch.
+        /// </returns>
+        string GetScheduleVersion();
     }
 }

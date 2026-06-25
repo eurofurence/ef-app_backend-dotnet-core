@@ -144,16 +144,6 @@ namespace Eurofurence.App.Server.Services.Events
             await _appDbContext.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Retrieve the last successfully synced version of the schedule since launch of the current
-        /// backend instance.
-        /// 
-        /// See: https://docs.pretalx.org/api/resources/#tag/schedules
-        /// </summary>
-        /// <returns>
-        /// Version string from last successfully synced schedule or <c>null</c> if no successful
-        /// sync since launch.
-        /// </returns>
         public string GetScheduleVersion()
         {
             return _cache.GetString(ScheduleVersionCacheKey);
