@@ -55,6 +55,26 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
+        ///     Retrieves the last successfully synced schedule version string.
+        /// </summary>
+        /// <returns>Schedule version or 404 if no sync has run since last restart.</returns>
+        [AllowAnonymous]
+        [HttpGet("Version")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(string), 200)]
+        public ActionResult GetScheduleVersion()
+        {
+            if (_eventService.GetScheduleVersion() is string scheduleVersion)
+            {
+                return Ok(scheduleVersion);
+            }
+            else
+            {
+                return NotFound("Schedule sync pending.");
+            }
+        }
+
+        /// <summary>
         ///     Retrieves a list of all events in the event schedule that
         ///     conflict with the specified start/end time, +/- a tolerance
         ///     in minutes that is considered when calculating overlaps.

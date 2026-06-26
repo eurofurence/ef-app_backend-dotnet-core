@@ -1,28 +1,29 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Common;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Events.Pretalx;
+using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Events;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
-using System.Security.Claims;
-using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Calendar = Ical.Net.Calendar;
-using System.Net.Http.Json;
-using Eurofurence.App.Domain.Model.Events.Pretalx;
-using System.Collections.Immutable;
-using AngleSharp.Common;
 
 namespace Eurofurence.App.Server.Services.Events
 {
@@ -35,10 +36,16 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly EventOptions _eventOptions;
         private readonly AppDbContext _appDbContext;
+        private readonly IDistributedCache _cache;
 
         private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
         private TimeSpan DateTimeOffset { get; set; }
+
+        /// <summary>
+        /// Cache key used for storing the last successfully synced schedule version.
+        /// </summary>
+        private const string ScheduleVersionCacheKey = "EventService::LastSyncedScheduleVersion";
 
         public EventService(
             AppDbContext appDbContext,
@@ -47,7 +54,8 @@ namespace Eurofurence.App.Server.Services.Events
             IEventConferenceRoomService eventConferenceRoomService,
             IEventConferenceTrackService eventConferenceTrackService,
             ILoggerFactory loggerFactory,
-            IOptions<EventOptions> eventOptions
+            IOptions<EventOptions> eventOptions,
+            IDistributedCache cache
         )
             : base(appDbContext, storageServiceFactory)
         {
@@ -58,6 +66,7 @@ namespace Eurofurence.App.Server.Services.Events
             _eventOptions = eventOptions.Value;
             DateTimeOffset = TimeSpan.Zero;
             _logger = loggerFactory.CreateLogger(GetType());
+            _cache = cache;
         }
 
 
@@ -135,6 +144,21 @@ namespace Eurofurence.App.Server.Services.Events
             await _appDbContext.SaveChangesAsync();
         }
 
+        public string GetScheduleVersion()
+        {
+            return _cache.GetString(ScheduleVersionCacheKey);
+        }
+
+        /// <summary>
+        /// Update the last successfully synced schedule version, preventing a schedule with the same
+        /// version from being imported again.
+        /// </summary>
+        /// <param name="scheduleVersion">Version string or <c>null</c> to force import on next sync.</param>
+        private void SetScheduleVersion(string scheduleVersion)
+        {
+            _cache.SetString(ScheduleVersionCacheKey, scheduleVersion);
+        }
+
         public IQueryable<EventRecord> FindConflicts(DateTime conflictStartTime, DateTime conflictEndTime,
             TimeSpan tolerance, bool includeInternal)
         {
@@ -156,6 +180,16 @@ namespace Eurofurence.App.Server.Services.Events
 
                 var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _eventOptions.ApiKey);
+
+                var pretalxSchedulePrefetch = await httpClient.GetFromJsonAsync<PretalxSchedule<int>>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/latest/");
+                var lastScheduleVersion = GetScheduleVersion();
+                if (pretalxSchedulePrefetch.Version.Equals(lastScheduleVersion))
+                {
+                    _logger.LogInformation(LogEvents.Import,
+                        $"Last successfully imported version {lastScheduleVersion ?? "<none>"} is equal to latest available version {pretalxSchedulePrefetch.Version}. Skipping import…");
+                    return;
+                }
+
                 var pretalxSchedule = await httpClient.GetFromJsonAsync<PretalxSchedule<PretalxSlot>>($"{_eventOptions.ApiUrl}/events/{_eventOptions.EventSlug}/schedules/latest/?expand=slots,slots.room,slots.submission,slots.submission.speakers,slots.submission.submission_type,slots.submission.track");
 
                 var tags = new List<PretalxTag>();
@@ -199,8 +233,10 @@ namespace Eurofurence.App.Server.Services.Events
                     eventConferenceDays.Item2,
                     tags.ToDictionary(tag => tag.Id, tag => tag));
 
+                SetScheduleVersion(pretalxSchedule.Version);
+
                 _logger.LogInformation(LogEvents.Import,
-                    $"Event import finished successfully modifying {eventConferenceTracks.Item1} EventConferenceTrack(s), {eventConferenceRooms.Item1} EventConferenceRoom(s), {eventConferenceDays.Item1} EventConferenceDay(s) and {eventEntries.Item1} Event(s).");
+                    $"Event import for schedule version {pretalxSchedule.Version} finished successfully modifying {eventConferenceTracks.Item1} of {tracks.Count} EventConferenceTrack(s), {eventConferenceRooms.Item1} of {rooms.Count} EventConferenceRoom(s), {eventConferenceDays.Item1} of {days.Count} EventConferenceDay(s) and {eventEntries.Item1} of {slots.Count()} Event(s) from previously imported version {lastScheduleVersion ?? "<none>"}.");
             }
             finally
             {
