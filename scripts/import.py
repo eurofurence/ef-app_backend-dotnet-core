@@ -144,6 +144,7 @@ def loadSchemas(api: urllib3.connectionpool.ConnectionPool, api_base: str):
 def getSourceData(http: urllib3.connectionpool.ConnectionPool, source: str):
     if source.startswith("https://") or source.startswith("http://"):
         try:
+            logger.info(f"Getting source data from {source}…")
             data_response = http.request("GET", source)
             if data_response.status != 200:
                 logger.error(f"Failed to get source data from {source}: [{data_response.status}]")
@@ -232,10 +233,14 @@ def processData(
     image_source: str,
 ):
     for item in data:
+        # Strip timestamp from import as it will always be set by the backend.
+        if "LastChangeDateTimeUtc" in item: del item["LastChangeDateTimeUtc"]
+        # KnowledgeEntries should be unpublished on import.
+        if "Published" in item: del item["Published"]
         try:
             validator.validate(item)
-        except ValidationError:
-            logger.error(f"Unable to import {type_name} with ID {item["Id"]} due to failed validation.", exc_info=debug)
+        except ValidationError as err:
+            logger.error(f"Unable to import {type_name} with ID {item["Id"]} due to failed validation: {err}", exc_info=debug)
             continue
 
         if image_source is not None and item["ImageIds"] is not None and len(item["ImageIds"]) > 0:
