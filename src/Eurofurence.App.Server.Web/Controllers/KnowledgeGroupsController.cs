@@ -6,8 +6,8 @@ using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -88,6 +88,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromBody] KnowledgeGroupRequest request
         )
         {
+            if (request.Id is Guid id && await _knowledgeGroupService.HasOneAsync(id)) return Conflict($"Record with ID {id} already exists");
             KnowledgeGroupRecord record = request.Transform();
             record.Touch();
             await _knowledgeGroupService.InsertOneAsync(record);
