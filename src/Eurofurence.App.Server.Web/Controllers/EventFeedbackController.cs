@@ -59,6 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>A list of all event's (or filtered) feedback.</returns>
         [Authorize(Roles = "EventFeedbackManager")]
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<EventFeedbackResponse>), 200)]
         public ActionResult GetEventFeedback(Guid filterId)
         {
             IEnumerable<EventFeedbackRecord> records = _eventFeedbackService.FindAll();
