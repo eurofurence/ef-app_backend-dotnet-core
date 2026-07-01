@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="filterId">Optional event filter.</param>
         /// <returns>A list of all event's (or filtered) feedback.</returns>
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "EventFeedbackManager")]
         [HttpGet]
         public ActionResult GetEventFeedback(Guid filterId)
         {
