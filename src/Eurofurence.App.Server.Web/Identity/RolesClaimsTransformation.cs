@@ -63,6 +63,11 @@ public class RolesClaimsTransformation(
                 roles.Add("AttendeeCheckedIn");
             }
 
+            if (authorizationOptions.Value.EventFeedbackManager.Contains(claim.Value))
+            {
+                roles.Add("EventFeedbackManager");
+            }
+
             if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
             {
                 roles.Add("KnowledgeBaseEditor");
