@@ -55,18 +55,18 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Returns all event feedback records filterable by event id.
         /// </summary>
-        /// <param name="filterEventId">Optional event source id filter.</param>
+        /// <param name="eventSourceId">Optional event source id filter.</param>
         /// <returns>A list of all event's (or filtered) feedback.</returns>
         [Authorize(Roles = "EventFeedbackManager")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<EventFeedbackResponse>), 200)]
-        public ActionResult GetEventFeedback(int? filterEventId)
+        public ActionResult GetEventFeedback(int? eventSourceId)
         {
             IEnumerable<EventFeedbackRecord> records = _eventFeedbackService.FindAll();
             EventFeedbackRecord first = records.FirstOrDefault();
-            if (filterEventId != null)
+            if (eventSourceId != null)
             {
-                records = records.Where(x => x.Event.SourceId == filterEventId);
+                records = records.Where(x => x.Event.SourceId == eventSourceId);
             }
             return Ok(records.Select(x => x.Transform()));
         }
