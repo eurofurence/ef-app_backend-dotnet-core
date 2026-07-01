@@ -63,7 +63,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         public ActionResult GetEventFeedback(int? eventSourceId)
         {
             IEnumerable<EventFeedbackRecord> records = _eventFeedbackService.FindAll();
-            EventFeedbackRecord first = records.FirstOrDefault();
             if (eventSourceId != null)
             {
                 records = records.Where(x => x.Event.SourceId == eventSourceId);
