@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="eventSourceId">Optional event source id filter.</param>
         /// <returns>A list of all event's (or filtered) feedback.</returns>
-        [Authorize(Roles = "EventFeedbackManager")]
+        [Authorize(Roles = "Admin, EventFeedbackManager")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<EventFeedbackResponse>), 200)]
         public ActionResult GetEventFeedback(int? eventSourceId)
