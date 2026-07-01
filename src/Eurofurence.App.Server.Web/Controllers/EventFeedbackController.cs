@@ -1,5 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +50,23 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _eventFeedbackService.InsertOneAsync(record);
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Returns all event feedback records filterable by event id.
+        /// </summary>
+        /// <param name="filterId">Optional event filter.</param>
+        /// <returns>A list of all event's (or filtered) feedback.</returns>
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public ActionResult GetEventFeedback(Guid filterId)
+        {
+            IEnumerable<EventFeedbackRecord> records = _eventFeedbackService.FindAll();
+            if (filterId != Guid.Empty)
+            {
+                records = records.Where(x => x.EventId == filterId);
+            }
+            return Ok(records.Select(x => x.Transform()));
         }
     }
 }
