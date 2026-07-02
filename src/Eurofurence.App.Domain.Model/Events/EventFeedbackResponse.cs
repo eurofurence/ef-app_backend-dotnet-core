@@ -9,6 +9,12 @@ namespace Eurofurence.App.Domain.Model.Events
         public Guid EventId { get; set; }
 
         [DataMember]
+        public string EventSlug { get; set; }
+
+        [DataMember]
+        public string EventSourceId { get; set; }
+
+        [DataMember]
         public int Rating { get; set; }
 
         [DataMember]

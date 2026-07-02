@@ -1,7 +1,9 @@
-﻿using Eurofurence.App.Domain.Model.Events;
+﻿using System.Linq;
+using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eurofurence.App.Server.Services.Events
 {
@@ -14,6 +16,11 @@ namespace Eurofurence.App.Server.Services.Events
         )
             : base(appDbContext, storageServiceFactory)
         {
+        }
+
+        public override IQueryable<EventFeedbackRecord> FindAll()
+        {
+            return base.FindAll().Include(x => x.Event);
         }
     }
 }
