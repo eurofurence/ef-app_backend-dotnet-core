@@ -110,8 +110,8 @@ import SOURCE TARGET_API TOKEN TYPE *ARGS:
 	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s {{SOURCE}} -t {{TYPE}} {{ARGS}}
 
 # List types supported for import.
-import-list-types TARGET_API:
-	python ./scripts/import.py {{TARGET_API}} --list-types
+import-list-types TARGET_API *ARGS:
+	python ./scripts/import.py {{TARGET_API}} --list-types {{ARGS}}
 
 # Create a new EntityFramework migration
 create-migration MIGRATION_NAME $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'):
