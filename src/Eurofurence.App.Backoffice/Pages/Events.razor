@@ -1,5 +1,5 @@
 ﻿@page "/events"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin,EventFeedbackManager")]
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Events

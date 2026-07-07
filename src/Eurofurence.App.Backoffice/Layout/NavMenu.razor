@@ -4,8 +4,10 @@
         <MudNavLink Href="knowledgebase" Icon="@Icons.Material.Outlined.Info" Match="NavLinkMatch.Prefix">Knowledge Base
         </MudNavLink>
     </AuthorizeView>
-    <AuthorizeView Roles="Admin">
+    <AuthorizeView Roles="Admin,EventFeedbackManager">
         <MudNavLink Href="events" Icon="@Icons.Material.Outlined.Event" Match="NavLinkMatch.Prefix">Events</MudNavLink>
+    </AuthorizeView>
+    <AuthorizeView Roles="Admin">
         <MudNavLink Href="images" Icon="@Icons.Material.Outlined.Image" Match="NavLinkMatch.Prefix">Images</MudNavLink>
     </AuthorizeView>
     <AuthorizeView Policy="RequireArtistAlleyModerator">
