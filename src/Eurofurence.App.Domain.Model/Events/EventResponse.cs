@@ -68,4 +68,7 @@ public class EventResponse : ResponseBase
 
     [DataMember]
     public bool IsInternal { get; set; }
+
+    [DataMember]
+    public int FavoredByCount { get; set; }
 }

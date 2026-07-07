@@ -51,7 +51,9 @@ namespace Eurofurence.App.Server.Web.Controllers
         public IQueryable<EventResponse> GetEventsAsync()
         {
             var isStaff = User?.IsInRole("Staff") ?? false;
-            return _eventService.FindAll(e => isStaff || !e.IsInternal).Select(x => x.Transform());
+            return _eventService.FindAll(e => isStaff || !e.IsInternal)
+                .Include(e => e.FavoredBy)
+                .Select(x => x.Transform());
         }
 
         /// <summary>
