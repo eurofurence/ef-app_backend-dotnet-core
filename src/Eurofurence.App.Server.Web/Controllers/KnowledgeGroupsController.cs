@@ -68,6 +68,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             var existingRecord = await _knowledgeGroupService.FindOneAsync(id);
             if (existingRecord == null) return NotFound($"No record found with id {id}");
 
+            // Prevent `null` in `request.Id` from overwriting `existingRecord.Id` causing creation of a new 
+            // group instead of updating an existing one.
+            request.Id = id;
             existingRecord.Merge(request);
             existingRecord.Touch();
             await _knowledgeGroupService.ReplaceOneAsync(existingRecord);

@@ -104,7 +104,9 @@ def parse_arguments():
 
 def loadSchemas(api: urllib3.connectionpool.ConnectionPool, api_base: str):
     try:
-        openapi_schema_response = api.request("GET", f"{api_base}/swagger/api/swagger.json")
+        openapi_schema_path = f"{api_base}/swagger/api/swagger.json"
+        logger.info(f"Querying {openapi_schema_path} on {api.host} using {api.port}")
+        openapi_schema_response = api.request("GET", openapi_schema_path)
         if openapi_schema_response.status != 200:
             logger.error(
                 f"Failed to get OpenAPI schema from {openapi_schema_response.url}: [{openapi_schema_response.status}]"
@@ -195,11 +197,11 @@ def processImages(
             image_id_new = json.loads(image_post_response.data)["Id"]
             image_ids_new.append(image_id_new)
             logger.info(
-                f"Successfully uploaded image {image_id} ({image_meta_data["InternalReference"]}) to {api.host} with new ID {image_id_new}."
+                f"Successfully uploaded image {image_id} ({image_meta_data['InternalReference']}) to {api.host} with new ID {image_id_new}."
             )
         else:
             logger.warning(
-                f"Failed to upload {image_id} ({image_meta_data["InternalReference"]}) to {api.host}: [{image_post_response.status}]"
+                f"Failed to upload {image_id} ({image_meta_data['InternalReference']}) to {api.host}: [{image_post_response.status}]"
             )
             break
 
@@ -211,11 +213,11 @@ def processImages(
             image_delete_response = api.request("DELETE", f"{api_base}/Api/Images/{image_id}")
             if image_delete_response.status == 204:
                 logger.info(
-                    f"Successfully deleted image {image_id_new} ({image_meta_data["InternalReference"]}) from {image_source}."
+                    f"Successfully deleted image {image_id_new} ({image_meta_data['InternalReference']}) from {image_source}."
                 )
             else:
                 logger.warning(
-                    f"Failed to delete {image_id_new} ({image_meta_data["InternalReference"]}) from {api.host}: [{image_delete_response.status}]"
+                    f"Failed to delete {image_id_new} ({image_meta_data['InternalReference']}) from {api.host}: [{image_delete_response.status}]"
                 )
         raise ProcessImagesError()
     else:
@@ -234,41 +236,45 @@ def processData(
 ):
     for item in data:
         # Strip timestamp from import as it will always be set by the backend.
-        if "LastChangeDateTimeUtc" in item: del item["LastChangeDateTimeUtc"]
+        if "LastChangeDateTimeUtc" in item:
+            del item["LastChangeDateTimeUtc"]
         # KnowledgeEntries should be unpublished on import.
-        if "Published" in item: del item["Published"]
+        if "Published" in item:
+            del item["Published"]
         try:
             validator.validate(item)
         except ValidationError as err:
-            logger.error(f"Unable to import {type_name} with ID {item["Id"]} due to failed validation: {err}", exc_info=debug)
+            logger.error(
+                f"Unable to import {type_name} with ID {item['Id']} due to failed validation: {err}", exc_info=debug
+            )
             continue
 
         if image_source is not None and item["ImageIds"] is not None and len(item["ImageIds"]) > 0:
-            if api.request("GET", f"{api_base}{types[type_name]["path"]}/{item["Id"]}").status != 404:
-                logger.warning(f"{type_name} with ID {item["Id"]} seems to already exist, skipping image upload…")
+            if api.request("GET", f"{api_base}{types[type_name]['path']}/{item['Id']}").status != 404:
+                logger.warning(f"{type_name} with ID {item['Id']} seems to already exist, skipping image upload…")
                 continue
             else:
-                logger.info(f"Found {len(item["ImageIds"])} image IDs on {type_name} with ID {item["Id"]}.")
+                logger.info(f"Found {len(item['ImageIds'])} image IDs on {type_name} with ID {item['Id']}.")
                 try:
                     item["ImageIds"] = processImages(http, api, api_base, item["ImageIds"], image_source=image_source)
                 except ProcessImagesError:
-                    logger.warning(f"Failed to process images for {type_name} with ID {item["Id"]}, skipping…")
+                    logger.warning(f"Failed to process images for {type_name} with ID {item['Id']}, skipping…")
                     continue
 
         try:
-            api_response = api.request("POST", f"{api_base}{types[type_name]["path"]}", json=item)
+            api_response = api.request("POST", f"{api_base}{types[type_name]['path']}", json=item)
 
             if api_response.status != 200 and api_response.status != 204:
                 logger.error(
-                    f"Failed to import {type_name} with ID {item["Id"]}: [{api_response.status}] {api_response.data.decode("UTF-8")}"
+                    f"Failed to import {type_name} with ID {item['Id']}: [{api_response.status}] {api_response.data.decode('UTF-8')}"
                 )
                 logger.debug(f"Problematic item: {json.dumps(item)}")
             else:
                 logger.info(
-                    f"Successfully imported {type_name} with ID {item["Id"]}: {api_response.data.decode('UTF-8')}."
+                    f"Successfully imported {type_name} with ID {item['Id']}: {api_response.data.decode('UTF-8')}."
                 )
         except urllib3.exceptions.HTTPError:
-            logger.error(f"Failed to POST {type_name} with ID {item["Id"]}.", exc_info=debug)
+            logger.error(f"Failed to POST {type_name} with ID {item['Id']}.", exc_info=debug)
             continue
 
 
@@ -282,13 +288,16 @@ def main():
         urllib3.connection_from_url(args.api, headers={"Authorization": f"Bearer {args.token}"}) as api,
         urllib3.PoolManager() as http,
     ):
-        api_base = urllib3.util.parse_url(args.api).request_uri.removeprefix("/")
+        api_base = urllib3.util.parse_url(args.api).request_uri
+        if api_base == "/":
+            api_base = ""
         schemas, types = loadSchemas(api, api_base)
 
         if args.list:
             type_info = reduce(
-                lambda type_string,
-                key: f"{type_string}\n - {key} ({";".join("{}={}".format(*i) for i in types[key].items())})",
+                lambda type_string, key: (
+                    f"{type_string}\n - {key} ({';'.join('{}={}'.format(*i) for i in types[key].items())})"
+                ),
                 types,
                 "",
             )

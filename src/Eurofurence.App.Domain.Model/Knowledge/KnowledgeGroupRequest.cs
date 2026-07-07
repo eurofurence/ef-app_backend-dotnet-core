@@ -9,7 +9,8 @@ namespace Eurofurence.App.Domain.Model.Knowledge
     public class KnowledgeGroupRequest : IDtoTransformable<KnowledgeGroupRecord>
     {
         /// <summary>
-        /// Optionally needed when importing KnowledgeGroups ahead of KnowledgeEntry import.
+        /// Optionally needed when importing KnowledgeGroups ahead of KnowledgeEntry import via POST to 
+        /// maintain ID references from KnowledgeEntries.
         /// </summary>
         [DataMember]
         public Guid? Id { get; set; }
