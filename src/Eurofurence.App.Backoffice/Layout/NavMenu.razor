@@ -5,6 +5,7 @@
         </MudNavLink>
     </AuthorizeView>
     <AuthorizeView Roles="Admin">
+        <MudNavLink Href="events" Icon="@Icons.Material.Outlined.Event" Match="NavLinkMatch.Prefix">Events</MudNavLink>
         <MudNavLink Href="images" Icon="@Icons.Material.Outlined.Image" Match="NavLinkMatch.Prefix">Images</MudNavLink>
     </AuthorizeView>
     <AuthorizeView Policy="RequireArtistAlleyModerator">
