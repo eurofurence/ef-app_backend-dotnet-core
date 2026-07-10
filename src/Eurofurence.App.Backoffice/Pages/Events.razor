@@ -3,7 +3,6 @@
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Events
-@inject ISnackbar Snackbar
 @inject IEventService EventService
 @using MudBlazor;
 
@@ -21,7 +20,7 @@
                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 
-<MudDataGrid T="EventStatisticsResponse" @ref="_dataGrid" Items="@_events" LoadingProgressColor="Color.Primary"
+<MudDataGrid T="EventStatisticsResponse" Items="@_events" LoadingProgressColor="Color.Primary"
               SortMode="@SortMode.Multiple" Groupable="false">
     <Columns>
         <PropertyColumn Title="ID" Property="e => e.Id" />
@@ -96,7 +95,6 @@
     private List<EventStatisticsResponse> _events = new();
     private List<EventConferenceDayResponse> _eventConferenceDays = new();
     private Guid? _selectedEventConferenceDayId;
-    private MudDataGrid<EventStatisticsResponse>? _dataGrid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,7 +111,7 @@
     private async Task<List<EventConferenceDayResponse>> GetEventConferenceDays()
         => (await EventService.GetEventConferenceDaysAsync()).OrderBy(day => day.Date).ToList();
 
-    private async Task Search(string searchString)
+    private async Task Search(string? searchString)
     {
         _eventSearch = searchString;
         _events = await GetEvents();

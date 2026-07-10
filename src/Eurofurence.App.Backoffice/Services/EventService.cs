@@ -1,7 +1,5 @@
-﻿using System.Net;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using Eurofurence.App.Domain.Model.Events;
-using static System.Net.WebRequestMethods;
 
 namespace Eurofurence.App.Backoffice.Services
 {
