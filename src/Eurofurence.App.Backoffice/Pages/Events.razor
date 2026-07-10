@@ -21,7 +21,7 @@
                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 
-<MudDataGrid T="EventResponse" @ref="_dataGrid" Items="@_events" LoadingProgressColor="Color.Primary"
+<MudDataGrid T="EventStatisticsResponse" @ref="_dataGrid" Items="@_events" LoadingProgressColor="Color.Primary"
               SortMode="@SortMode.Multiple" Groupable="false">
     <Columns>
         <PropertyColumn Title="ID" Property="e => e.Id" />
@@ -48,23 +48,37 @@
         <TemplateColumn Sortable="true" SortBy="e => e.FavoredByCount">
             <HeaderTemplate>
                 <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1"/>
+                <MudText>
+                    Total
+                </MudText>
             </HeaderTemplate>
             <CellTemplate>
                 @context.Item.FavoredByCount
             </CellTemplate>
         </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByCount">
+            <HeaderTemplate>
+                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1" />
+                <MudText>
+                    Checked In
+                </MudText>
+            </HeaderTemplate>
+            <CellTemplate>
+                @context.Item.FavoredByCheckedInCount
+            </CellTemplate>
+        </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="EventResponse" />
+        <MudDataGridPager T="EventStatisticsResponse" />
     </PagerContent>
 </MudDataGrid>
 
 @code {
     private string? _eventSearch;
-    private List<EventResponse> _events = new();
+    private List<EventStatisticsResponse> _events = new();
     private List<EventConferenceDayResponse> _eventConferenceDays = new();
     private Guid? _selectedEventConferenceDayId;
-    private MudDataGrid<EventResponse>? _dataGrid;
+    private MudDataGrid<EventStatisticsResponse>? _dataGrid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -72,9 +86,9 @@
         _eventConferenceDays = await GetEventConferenceDays();
     }
 
-    private async Task<List<EventResponse>> GetEvents()
+    private async Task<List<EventStatisticsResponse>> GetEvents()
     {
-        var response = (await EventService.GetEventsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
+        var response = (await EventService.GetEventStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
         return FilterEvents(response, _eventSearch).ToList();
     }
 
@@ -93,7 +107,7 @@
         _events = await GetEvents();
     }
 
-    private IEnumerable<EventResponse> FilterEvents(IEnumerable<EventResponse> entries, string?
+    private IEnumerable<EventStatisticsResponse> FilterEvents(IEnumerable<EventStatisticsResponse> entries, string?
     searchString)
     {
         if (_selectedEventConferenceDayId is not null)

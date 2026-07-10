@@ -7,9 +7,9 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public class EventService(HttpClient http) : IEventService
     {
-        public async Task<EventResponse[]> GetEventsAsync()
+        public async Task<EventStatisticsResponse[]> GetEventStatisticsAsync()
         {
-            return (await http.GetFromJsonAsync<EventResponse[]>("events"))?.ToArray() ?? [];
+            return (await http.GetFromJsonAsync<EventStatisticsResponse[]>("events/statistics"))?.ToArray() ?? [];
         }
 
         public async Task<EventConferenceDayResponse[]> GetEventConferenceDaysAsync()

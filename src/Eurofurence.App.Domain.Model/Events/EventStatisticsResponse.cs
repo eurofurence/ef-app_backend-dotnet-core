@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace Eurofurence.App.Domain.Model.Events;
 
 [DataContract]
-public class EventResponse : ResponseBase
+public class EventStatisticsResponse : ResponseBase
 {
     [DataMember]
     public string? Slug { get; set; }
@@ -68,4 +68,22 @@ public class EventResponse : ResponseBase
 
     [DataMember]
     public bool IsInternal { get; set; }
+
+    /// <summary>
+    ///     Total count of users, who have favored this event, regardless of whether they are checked in or not.
+    /// </summary>
+    [DataMember]
+    public int FavoredByCount { get; set; }
+
+    /// <summary>
+    ///    Total count of users, who have favored this event and are currently checked in at the convention.
+    /// </summary>
+    [DataMember]
+    public int FavoredByCheckedInCount { get; set; }
+
+    /// <summary>
+    ///    Total count of users, who have favored this event around the start time of the event.
+    /// </summary>
+    [DataMember]
+    public int FavoredByAtStartCount { get; set; }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Events;
+﻿using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -11,10 +6,16 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
 using Ical.Net;
 using Ical.Net.Serialization;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -25,13 +26,15 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IEventService _eventService;
         private readonly IImageService _imageService;
         private readonly IUserService _userService;
+        private readonly IMapper _mapper;
 
         public EventsController(IEventService eventService,
-            IImageService imageService, IUserService userService)
+            IImageService imageService, IUserService userService, IMapper mapper)
         {
             _eventService = eventService;
             _imageService = imageService;
             _userService = userService;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -52,7 +55,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var isStaff = User?.IsInRole("Staff") ?? false;
             return _eventService.FindAll(e => isStaff || !e.IsInternal)
-                .Include(e => e.FavoredBy)
                 .Select(x => x.Transform());
         }
 
@@ -153,6 +155,24 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
 
             return Ok(userToken);
+        }
+
+        /// <summary>
+        ///     Retrieves a list of all events in the event schedule, including statistics on favorite counts.
+        /// </summary>
+        /// <returns>
+        /// All events in the event schedule, including statistics on favorite counts.
+        /// </returns>
+        [Authorize(Roles = "Admin,EventFeedbackManager")]
+        [HttpGet("Statistics")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<EventStatisticsResponse>), 200)]
+        public IEnumerable<EventStatisticsResponse> GetEventStatisticsAsync()
+        {
+            var isStaff = User?.IsInRole("Staff") ?? false;
+            return _mapper.Map<IEnumerable<EventStatisticsResponse>>(
+                _eventService.FindAll(e => isStaff || !e.IsInternal).Include(e => e.FavoredBy)
+            );
         }
 
         [HttpGet("Favorites/calendar.ics/")]
