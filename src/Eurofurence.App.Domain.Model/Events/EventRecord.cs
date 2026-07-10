@@ -92,5 +92,11 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [JsonIgnore]
         public List<UserRecord> FavoredBy { get; set; } = new();
+
+        /// <summary>
+        ///    Total count of users, who have favored this event around the start time of the event.
+        /// </summary>
+        [DataMember]
+        public int? FavoredByAtStartCount { get; set; }
     }
 }

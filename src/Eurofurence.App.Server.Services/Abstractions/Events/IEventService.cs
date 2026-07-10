@@ -20,7 +20,16 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
             TimeSpan tolerance,
             bool includeInternal);
 
+        /// <summary>
+        /// Runs the import of events from the pretalx API into the local database.
+        /// </summary>
         public Task RunImportAsync();
+
+        /// <summary>
+        /// Sets the FavoredByAtStartCount for all events in the database, that don't have it set yet and started in the past.
+        /// This is used to keep track of how many users approximately have favored an event when it started.
+        /// </summary>
+        Task UpdateFavoredByAtStartCountsAsync();
 
         /// <summary>
         /// Adds the given event to the users (<paramref name="user"/>) favorites

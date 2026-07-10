@@ -171,6 +171,7 @@ namespace Eurofurence.App.Server.Services.Events
                 e.EndDateTimeUtc >= queryConflictStartTime);
         }
 
+        /// <inheritdoc/>
         public async Task RunImportAsync()
         {
             try
@@ -242,6 +243,22 @@ namespace Eurofurence.App.Server.Services.Events
             {
                 Semaphore.Release();
             }
+        }
+
+        /// <inheritdoc/>
+        public async Task UpdateFavoredByAtStartCountsAsync()
+        {
+            var eventsWithoutCount = FindAll()
+                .AsTracking()
+                .Include(e => e.FavoredBy)
+                .Where(e => e.FavoredByAtStartCount == null && e.StartDateTimeUtc <= DateTime.UtcNow);
+
+            foreach (var eventWithoutCount in eventsWithoutCount)
+            {
+                eventWithoutCount.FavoredByAtStartCount = eventWithoutCount.FavoredBy.Count;
+            }
+
+            await _appDbContext.SaveChangesAsync();
         }
 
         private async Task<Tuple<int, List<EventConferenceDayRecord>>> UpdateEventConferenceDaysAsync(

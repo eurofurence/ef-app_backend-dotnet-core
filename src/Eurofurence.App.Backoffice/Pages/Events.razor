@@ -56,7 +56,7 @@
                 @context.Item.FavoredByCount
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByCount">
+        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByCheckedInCount">
             <HeaderTemplate>
                 <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1" />
                 <MudText>
@@ -65,6 +65,24 @@
             </HeaderTemplate>
             <CellTemplate>
                 @context.Item.FavoredByCheckedInCount
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByAtStartCount">
+            <HeaderTemplate>
+                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1" />
+                <MudText>
+                    At Start Time
+                </MudText>
+            </HeaderTemplate>
+            <CellTemplate>
+                @if (@context.Item.FavoredByAtStartCount != null)
+                {
+                    @context.Item.FavoredByAtStartCount
+                }
+                else
+                {
+                    <span class="text-secondary">N/A</span>
+                }
             </CellTemplate>
         </TemplateColumn>
     </Columns>

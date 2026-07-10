@@ -298,7 +298,6 @@ namespace Eurofurence.App.Server.Services.Identity
             var newIds = new HashSet<string>(registrations.Keys);
 
             var existingUsers = _appDbContext.Users
-                .AsNoTracking()
                 .Where(x => newIds.Contains(x.RegSysId));
 
             foreach (var existingUser in existingUsers)
@@ -310,7 +309,6 @@ namespace Eurofurence.App.Server.Services.Identity
                 {
                     existingUser.RegistrationStatus = registrations[existingUser.RegSysId];
                     existingUser.Touch();
-                    _appDbContext.Update(existingUser);
                 }
             }
 

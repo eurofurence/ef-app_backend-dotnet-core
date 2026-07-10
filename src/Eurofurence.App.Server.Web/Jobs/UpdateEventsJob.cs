@@ -35,6 +35,11 @@ namespace Eurofurence.App.Server.Web.Jobs
                 SentrySdk.CaptureException(e);
                 _logger.LogError(LogEvents.Import, $"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
             }
+            finally
+            {
+                // Update the favored by at event start counters for all events, regardless of import success or failure
+                await _eventService.UpdateFavoredByAtStartCountsAsync();
+            }
         }
     }
 }

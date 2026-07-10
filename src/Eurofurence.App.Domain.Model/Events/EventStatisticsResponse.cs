@@ -85,5 +85,5 @@ public class EventStatisticsResponse : ResponseBase
     ///    Total count of users, who have favored this event around the start time of the event.
     /// </summary>
     [DataMember]
-    public int FavoredByAtStartCount { get; set; }
+    public int? FavoredByAtStartCount { get; set; }
 }
