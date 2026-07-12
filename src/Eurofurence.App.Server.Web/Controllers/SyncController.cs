@@ -3,6 +3,7 @@ using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -36,6 +37,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IMapService _mapService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly GlobalOptions _globalOptions;
+        private readonly AppConfigOptions _appConfigOptions;
         private readonly IMapper _mapper;
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -51,6 +53,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IMapService mapService,
             ITableRegistrationService tableRegistrationService,
             IOptions<GlobalOptions> globalOptions,
+            IOptions<AppConfigOptions> appConfigOptions,
             IMapper mapper
         )
         {
@@ -67,6 +70,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _mapService = mapService;
             _tableRegistrationService = tableRegistrationService;
             _globalOptions = globalOptions.Value;
+            _appConfigOptions = appConfigOptions.Value;
             _mapper = mapper;
         }
 
@@ -116,6 +120,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Announcements = await _announcementService.GetDeltaResponseAsync(since),
                 Maps = await _mapService.GetDeltaResponseAsync(since),
                 TableRegistrations = tableRegistrations,
+                AppConfig = _appConfigOptions,
             };
 
             // Filter internal event-related entities for non-staff

@@ -3,6 +3,7 @@ using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -86,6 +87,7 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<MapOptions>(builder.Configuration.GetSection("Maps"));
             builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Identity"));
             builder.Services.Configure<AuthorizationOptions>(builder.Configuration.GetSection("Authorization"));
+            builder.Services.Configure<AppConfigOptions>(builder.Configuration.GetSection("AppConfig"));
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;
