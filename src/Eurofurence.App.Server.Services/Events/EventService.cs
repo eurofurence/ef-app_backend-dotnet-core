@@ -213,7 +213,12 @@ namespace Eurofurence.App.Server.Services.Events
                 // Eurofurence and thus filtered out as well.
                 // Subsequently, all slots without submission can be considered internal blockers.
                 var slots = pretalxSchedule.Slots.Where(slot => slot.Start != null && slot.End != null && slot.Submission != null).Concat(slotsBlocker);
-                var slotsPublic = slots.Where(slot => (!slot.Submission?.Tags.Contains(_eventOptions.InternalTagId)) ?? false);
+                var slotsPublic = _eventOptions.MarkAllInternal ?
+                    new HashSet<PretalxSlot>()
+                    :
+                    slots.Where(slot =>
+                        !slot.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? false
+                    ).ToHashSet();
 
                 var tracks = slots.Where(slot => slot.Submission != null).Select(slot => slot.Submission.Track).ToHashSet();
                 var tracksPublic = slotsPublic.Select(slot => slot.Submission.Track).ToHashSet();
