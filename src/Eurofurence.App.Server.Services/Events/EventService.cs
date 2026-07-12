@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Common;
@@ -213,6 +214,13 @@ namespace Eurofurence.App.Server.Services.Events
                 // Eurofurence and thus filtered out as well.
                 // Subsequently, all slots without submission can be considered internal blockers.
                 var slots = pretalxSchedule.Slots.Where(slot => slot.Start != null && slot.End != null && slot.Submission != null).Concat(slotsBlocker);
+
+                // Try to ensure we have a stable way of identifying slots across multiple schedule versions
+                foreach (var slot in slots)
+                {
+                    slot.SourceId = GenerateUniquePretalxSlotSourceId(slots, slot);
+                }
+
                 var slotsPublic = _eventOptions.MarkAllInternal ?
                     new HashSet<PretalxSlot>()
                     :
@@ -249,6 +257,24 @@ namespace Eurofurence.App.Server.Services.Events
             {
                 Semaphore.Release();
             }
+        }
+
+        private string GenerateUniquePretalxSlotSourceId(IEnumerable<PretalxSlot> importEventEntries, PretalxSlot source)
+        {
+            // Slots without submissions attached are either blockers or breaks, so if they move,
+            // we just recreate them for the time being. This will break favorites on blockers and
+            // breaks, but they are internal and limited use only anyways.
+            var submissionCode = source.Submission?.Code ?? Convert.ToHexString(
+                MD5.HashData(System.Text.Encoding.UTF8.GetBytes(
+                    $"BLOCKR-{((DateTimeOffset?)source.Start)?.ToUnixTimeSeconds()}-{((DateTimeOffset?)source.End)?.ToUnixTimeSeconds()}-{source.Room.Id}"
+                    )
+                )
+            ).Substring(0, 6);
+
+            // Since the same submission may be in multiple 
+            var slotIndex = importEventEntries.Where(entry => entry.Submission?.Code == source.Submission?.Code).OrderBy(entry => entry.Start).Index().SingleOrDefault(indexed => indexed.Item.Id == source.Id, new(0, null)).Index;
+
+            return $"{submissionCode}-{slotIndex}";
         }
 
         private async Task<Tuple<int, List<EventConferenceDayRecord>>> UpdateEventConferenceDaysAsync(
@@ -336,12 +362,12 @@ namespace Eurofurence.App.Server.Services.Events
             var eventRecords = FindAll();
 
             var patch = new PatchDefinition<PretalxSlot, EventRecord>(
-                (source, targets) => targets.SingleOrDefault(target => target.SourceId == source.Id)
+                (source, targets) => targets.SingleOrDefault(target => target.SourceId == source.SourceId)
             );
 
             // Public breaks have no submission; their title can be found in the slot description.
-            patch.Map(source => source.Id, target => target.SourceId)
-                .Map(source => $"{source.Submission?.Code ?? "BLOCKER"}-{source.Id}", target => target.Slug)
+            patch.Map(source => source.SourceId, target => target.SourceId)
+                .Map(source => source.SourceId, target => target.Slug)
                 .Map(source => (source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
                 .Map(source => ((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
                 .Map(source => source.Submission?.Abstract, target => target.Abstract)

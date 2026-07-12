@@ -15,7 +15,7 @@ namespace Eurofurence.App.Domain.Model.Events.Pretalx
         [JsonIgnore]
         public new PretalxSubmission Submission
         {
-            get => SubmissionCode != null ? new PretalxSubmission() : null;
+            get => SubmissionCode != null ? new PretalxSubmission { Code = SubmissionCode } : null;
         }
     }
 }

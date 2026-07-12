@@ -54,7 +54,7 @@ public class EventTests
             Tags = ["Tag1", "Tag2"],
             BannerImageId = Guid.NewGuid(),
             PosterImageId = Guid.NewGuid(),
-            SourceId = 1,
+            SourceId = "ABCDEF0",
             BannerImage = new ImageRecord(),
             PosterImage = new ImageRecord(),
             ConferenceTrack = new EventConferenceTrackRecord(),
