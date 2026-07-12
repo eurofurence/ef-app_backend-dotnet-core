@@ -169,7 +169,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventWithStatisticsResponse>), 200)]
         public async Task<IEnumerable<EventWithStatisticsResponse>> GetEventStatisticsAsync()
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User.IsInRole("Staff");
             var events = await _eventService.FindAllWithStatisticsAsync(e => isStaff || !e.IsInternal);
             var result = _mapper.Map<List<EventWithStatisticsResponse>>(events);
 
