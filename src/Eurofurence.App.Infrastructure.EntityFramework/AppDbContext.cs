@@ -41,6 +41,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework
         public virtual DbSet<EventConferenceTrackRecord> EventConferenceTracks { get; set; }
         public virtual DbSet<EventFeedbackRecord> EventFeedbacks { get; set; }
         public virtual DbSet<EventRecord> Events { get; set; }
+        public virtual DbSet<EventFavoriteStatisticsRecord> EventFavoriteStatistics { get; set; }
         public virtual DbSet<ImageRecord> Images { get; set; }
         public virtual DbSet<KnowledgeEntryRecord> KnowledgeEntries { get; set; }
         public virtual DbSet<KnowledgeGroupRecord> KnowledgeGroups { get; set; }

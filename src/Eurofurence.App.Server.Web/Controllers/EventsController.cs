@@ -166,13 +166,14 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin,EventFeedbackManager")]
         [HttpGet("Statistics")]
         [ProducesResponseType(typeof(string), 404)]
-        [ProducesResponseType(typeof(IEnumerable<EventStatisticsResponse>), 200)]
-        public IEnumerable<EventStatisticsResponse> GetEventStatisticsAsync()
+        [ProducesResponseType(typeof(IEnumerable<EventWithStatisticsResponse>), 200)]
+        public async Task<IEnumerable<EventWithStatisticsResponse>> GetEventStatisticsAsync()
         {
             var isStaff = User?.IsInRole("Staff") ?? false;
-            return _mapper.Map<IEnumerable<EventStatisticsResponse>>(
-                _eventService.FindAll(e => isStaff || !e.IsInternal).Include(e => e.FavoredBy)
-            );
+            var events = await _eventService.FindAllWithStatisticsAsync(e => isStaff || !e.IsInternal);
+            var result = _mapper.Map<List<EventWithStatisticsResponse>>(events);
+
+            return result;
         }
 
         [HttpGet("Favorites/calendar.ics/")]

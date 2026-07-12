@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260710210239_AddFavoredByAtStartCountToEvents")]
-    partial class AddFavoredByAtStartCountToEvents
+    [Migration("20260711164807_AddEventFavoriteStatistics")]
+    partial class AddEventFavoriteStatistics
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -569,6 +569,34 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.ToTable("EventConferenceTracks");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFavoriteStatisticsRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("IsDeleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastChangeDateTimeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UserRegistrationStatus")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("EventFavoriteStatistics");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFeedbackRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -626,9 +654,6 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.Property<DateTime>("EndDateTimeUtc")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("FavoredByAtStartCount")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsAcceptingFeedback")
                         .HasColumnType("tinyint(1)");
@@ -1118,6 +1143,17 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Navigation("ArtistThumbnailImage");
                 });
 
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFavoriteStatisticsRecord", b =>
+                {
+                    b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", "Event")
+                        .WithMany("FavoriteStatistics")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+                });
+
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFeedbackRecord", b =>
                 {
                     b.HasOne("Eurofurence.App.Domain.Model.Events.EventRecord", "Event")
@@ -1272,6 +1308,11 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceTrackRecord", b =>
                 {
                     b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventRecord", b =>
+                {
+                    b.Navigation("FavoriteStatistics");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>

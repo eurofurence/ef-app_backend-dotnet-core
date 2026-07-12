@@ -3,6 +3,7 @@
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Events
+@using Eurofurence.App.Domain.Model.Users
 @inject IEventService EventService
 @using MudBlazor;
 
@@ -20,79 +21,88 @@
                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 
-<MudDataGrid T="EventStatisticsResponse" Items="@_events" LoadingProgressColor="Color.Primary"
+<MudDataGrid T="EventWithStatisticsResponse" Items="@_events" LoadingProgressColor="Color.Primary"
               SortMode="@SortMode.Multiple" Groupable="false">
     <Columns>
         <PropertyColumn Title="ID" Property="e => e.Id" />
         <PropertyColumn Title="Title" Property="e => e.Title" />
         <TemplateColumn Title="Description">
             <CellTemplate>
-                <MudTooltip Text="@context.Item.Description" Disabled="@(string.IsNullOrEmpty(context.Item.Description))" TooltipClass="multiline-tooltip"> 
-                    <ChildContent>
-                        <div style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            @context.Item.Description
-                        </div>
-                    </ChildContent>
-                    <TooltipContent>
-                        <div style="max-width:240px;">
-                            @context.Item.Description
-                        </div>
-                    </TooltipContent>
-                </MudTooltip>
+                <div class="d-flex align-center gap-2">
+                    <MudTooltip Text="@context.Item.Description" Disabled="@(string.IsNullOrEmpty(context.Item.Description))" TooltipClass="multiline-tooltip">
+                        <ChildContent>
+                            <div style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                @context.Item.Description
+                            </div>
+                        </ChildContent>
+                        <TooltipContent>
+                            <div style="max-width:240px;">
+                                @context.Item.Description
+                            </div>
+                        </TooltipContent>
+                    </MudTooltip>
+                </div>
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Title="Slug" Property="e => e.Slug" />
         <PropertyColumn Title="Start Time" Property="e => e.StartDateTimeUtc" Format="yyyy-MM-dd HH:mm (ddd) zzz" />
         <PropertyColumn Title="Duration" Property="e => e.Duration" Format="hh\:mm" />
-        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByCount">
+        <TemplateColumn Sortable="true" SortBy="e => e.FavoriteStatistics.Sum(s => s.Count)">
             <HeaderTemplate>
-                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1"/>
-                <MudText>
-                    Total
-                </MudText>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                    <MudText>
+                        Total
+                    </MudText>
+                </div>
             </HeaderTemplate>
             <CellTemplate>
-                @context.Item.FavoredByCount
+                <div class="d-flex align-center gap-2">
+                    <MudText>
+                        @context.Item.FavoriteStatistics.Sum(s => s.Count)
+                    </MudText>
+
+                    @if (context.Item.StartDateTimeUtc < DateTime.UtcNow)
+                    {
+                        <MudTooltip Text="Event has started. Favorite counter is locked since the start time." Class="mt-1">
+                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Tertiary" />
+                        </MudTooltip>
+                    }
+                </div>
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByCheckedInCount">
+        <TemplateColumn Sortable="true" SortBy="e => e.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == UserRegistrationStatus.CheckedIn)?.Count ?? 0">
+
             <HeaderTemplate>
-                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1" />
-                <MudText>
-                    Checked In
-                </MudText>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                    <MudText>Checked In</MudText>
+                </div>
             </HeaderTemplate>
             <CellTemplate>
-                @context.Item.FavoredByCheckedInCount
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Sortable="true" SortBy="e => e.FavoredByAtStartCount">
-            <HeaderTemplate>
-                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Class="mt-1" />
-                <MudText>
-                    At Start Time
-                </MudText>
-            </HeaderTemplate>
-            <CellTemplate>
-                @if (@context.Item.FavoredByAtStartCount != null)
-                {
-                    @context.Item.FavoredByAtStartCount
-                }
-                else
-                {
-                    <span class="text-secondary">N/A</span>
-                }
+                <div class="d-flex align-center gap-2">
+                    <MudText>
+                        @context.Item.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == UserRegistrationStatus.CheckedIn)?.Count
+                    </MudText>
+
+                    @if (context.Item.StartDateTimeUtc < DateTime.UtcNow)
+                    {
+                        <MudTooltip Text="Event has started. Favorite count is locked since the start time." Class="mt-1">
+                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Tertiary" />
+                        </MudTooltip>
+                    }
+                </div>
             </CellTemplate>
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="EventStatisticsResponse" />
+        <MudDataGridPager T="EventWithStatisticsResponse" />
     </PagerContent>
 </MudDataGrid>
 
 @code {
     private string? _eventSearch;
-    private List<EventStatisticsResponse> _events = new();
+    private List<EventWithStatisticsResponse> _events = new();
     private List<EventConferenceDayResponse> _eventConferenceDays = new();
     private Guid? _selectedEventConferenceDayId;
 
@@ -102,9 +112,9 @@
         _eventConferenceDays = await GetEventConferenceDays();
     }
 
-    private async Task<List<EventStatisticsResponse>> GetEvents()
+    private async Task<List<EventWithStatisticsResponse>> GetEvents()
     {
-        var response = (await EventService.GetEventStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
+        var response = (await EventService.GetEventsWithStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
         return FilterEvents(response, _eventSearch).ToList();
     }
 
@@ -123,7 +133,7 @@
         _events = await GetEvents();
     }
 
-    private IEnumerable<EventStatisticsResponse> FilterEvents(IEnumerable<EventStatisticsResponse> entries, string?
+    private IEnumerable<EventWithStatisticsResponse> FilterEvents(IEnumerable<EventWithStatisticsResponse> entries, string?
     searchString)
     {
         if (_selectedEventConferenceDayId is not null)

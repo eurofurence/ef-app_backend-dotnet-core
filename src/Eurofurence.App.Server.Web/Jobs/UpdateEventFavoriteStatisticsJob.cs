@@ -1,24 +1,24 @@
 ﻿using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Events;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using System.Threading.Tasks;
-using System;
-using Eurofurence.App.Server.Services.Abstractions.Events;
 using Sentry;
+using System;
+using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Jobs
 {
     [DisallowConcurrentExecution]
-    public class UpdateEventsJob : IJob
+    public class UpdateEventFavoriteStatisticsJob : IJob
     {
-        private readonly IEventService _eventService;
+        private readonly IEventFavoriteStatisticsService _eventFavoriteStatisticsService;
         private readonly ILogger _logger;
 
-        public UpdateEventsJob(
+        public UpdateEventFavoriteStatisticsJob(
             ILoggerFactory loggerFactory,
-            IEventService eventService)
+            IEventFavoriteStatisticsService eventFavoriteStatisticsService)
         {
-            _eventService = eventService;
+            _eventFavoriteStatisticsService = eventFavoriteStatisticsService;
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
             try
             {
-                await _eventService.RunImportAsync();
+                await _eventFavoriteStatisticsService.InsertForAllStartedEvents();
             }
             catch (Exception e)
             {

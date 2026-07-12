@@ -4,7 +4,7 @@ namespace Eurofurence.App.Backoffice.Services
 {
     public interface IEventService
     {
-        public Task<EventStatisticsResponse[]> GetEventStatisticsAsync();
+        public Task<EventWithStatisticsResponse[]> GetEventsWithStatisticsAsync();
 
         public Task<EventConferenceDayResponse[]> GetEventConferenceDaysAsync();
     }
