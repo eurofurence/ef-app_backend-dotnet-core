@@ -217,7 +217,8 @@ namespace Eurofurence.App.Server.Services.Events
                     new HashSet<PretalxSlot>()
                     :
                     slots.Where(slot =>
-                        !slot.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? false
+                        (!slot.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? false) &&
+                        (!slot.Submission?.Track.Id.Equals(_eventOptions.InternalTrackId) ?? false)
                     ).ToHashSet();
 
                 var tracks = slots.Where(slot => slot.Submission != null).Select(slot => slot.Submission.Track).ToHashSet();
@@ -233,6 +234,7 @@ namespace Eurofurence.App.Server.Services.Events
                 var eventConferenceRooms = await UpdateEventConferenceRoomsAsync(rooms, roomsPublic);
                 var eventConferenceDays = await UpdateEventConferenceDaysAsync(days, daysPublic);
                 var eventEntries = await UpdateEventEntriesAsync(slots,
+                    slotsPublic,
                     eventConferenceTracks.Item2,
                     eventConferenceRooms.Item2,
                     eventConferenceDays.Item2,
@@ -241,7 +243,7 @@ namespace Eurofurence.App.Server.Services.Events
                 SetScheduleVersion(pretalxSchedule.Version);
 
                 _logger.LogInformation(LogEvents.Import,
-                    $"Event import for schedule version {pretalxSchedule.Version} finished successfully modifying {eventConferenceTracks.Item1} of {tracks.Count} EventConferenceTrack(s), {eventConferenceRooms.Item1} of {rooms.Count} EventConferenceRoom(s), {eventConferenceDays.Item1} of {days.Count} EventConferenceDay(s) and {eventEntries.Item1} of {slots.Count()} Event(s) from previously imported version {lastScheduleVersion ?? "<none>"}.");
+                    $"Event import for schedule version {pretalxSchedule.Version} finished successfully modifying {eventConferenceTracks.Item1} of {tracks.Count} ({tracksPublic.Count()} public) EventConferenceTrack(s), {eventConferenceRooms.Item1} of {rooms.Count} ({roomsPublic.Count()} public) EventConferenceRoom(s), {eventConferenceDays.Item1} of {days.Count} ({daysPublic.Count()} public) EventConferenceDay(s) and {eventEntries.Item1} of {slots.Count()} ({slotsPublic.Count()} public) Event(s) from previously imported version {lastScheduleVersion ?? "<none>"}.");
             }
             finally
             {
@@ -324,6 +326,7 @@ namespace Eurofurence.App.Server.Services.Events
 
         private async Task<Tuple<int, List<EventRecord>>> UpdateEventEntriesAsync(
             IEnumerable<PretalxSlot> importEventEntries,
+            ISet<PretalxSlot> importEventEntriesPublic,
             IList<EventConferenceTrackRecord> currentConferenceTracks,
             IList<EventConferenceRoomRecord> currentConferenceRooms,
             IList<EventConferenceDayRecord> currentConferenceDays,
@@ -359,7 +362,7 @@ namespace Eurofurence.App.Server.Services.Events
                 .Map(source => source.Submission?.Tags.Contains(_eventOptions.AcceptsFeedbackTagId) ?? false,
                     target => target.IsAcceptingFeedback)
                 .Map(source => source.Submission?.Tags.Select(tagId => tags.GetOrDefault(tagId, null)?.Tag).ToArray() ?? [tags.GetOrDefault(_eventOptions.InternalTagId, null)?.Tag], target => target.Tags)
-                .Map(source => source.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? true, target => target.IsInternal);
+                .Map(source => !importEventEntriesPublic.Contains(source), target => target.IsInternal);
 
             var diff = patch.Patch(importEventEntries, eventRecords);
 
