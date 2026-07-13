@@ -13,7 +13,7 @@ namespace Eurofurence.App.Domain.Model.Events.Pretalx
         [JsonPropertyName("submission")]
         public string SubmissionCode { get; init; }
         [JsonIgnore]
-        public new PretalxSubmission Submission
+        public new PretalxSubmission? Submission
         {
             get => SubmissionCode != null ? new PretalxSubmission { Code = SubmissionCode } : null;
         }
