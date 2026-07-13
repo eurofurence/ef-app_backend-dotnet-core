@@ -272,7 +272,7 @@ namespace Eurofurence.App.Server.Services.Events
             ).Substring(0, 6);
 
             // Since the same submission may be in multiple 
-            var slotIndex = importEventEntries.Where(entry => entry.Submission?.Code == source.Submission?.Code).OrderBy(entry => entry.Start).Index().SingleOrDefault(indexed => indexed.Item.Id == source.Id, new(0, null)).Index;
+            var slotIndex = source.Submission != null ? importEventEntries.Where(entry => entry.Submission?.Code == source.Submission?.Code).OrderBy(entry => entry.Start).Index().SingleOrDefault(indexed => indexed.Item.Id == source.Id, new(0, null)).Index.ToString() : "BLOCKER";
 
             return $"{submissionCode}-{slotIndex}";
         }
@@ -367,7 +367,7 @@ namespace Eurofurence.App.Server.Services.Events
 
             // Public breaks have no submission; their title can be found in the slot description.
             patch.Map(source => source.SourceId, target => target.SourceId)
-                .Map(source => source.SourceId, target => target.Slug)
+                .Map(source => source.Submission?.Code ?? source.SourceId?.Split('-')[0] ?? "UNKNWN", target => target.Slug)
                 .Map(source => (source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
                 .Map(source => ((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
                 .Map(source => source.Submission?.Abstract, target => target.Abstract)
