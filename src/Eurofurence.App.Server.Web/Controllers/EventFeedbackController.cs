@@ -60,7 +60,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = "Admin, EventFeedbackManager")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<EventFeedbackResponse>), 200)]
-        public ActionResult GetEventFeedback(int? eventSourceId)
+        public ActionResult GetEventFeedback(string? eventSourceId)
         {
             IEnumerable<EventFeedbackRecord> records = _eventFeedbackService.FindAll();
             if (eventSourceId != null)
