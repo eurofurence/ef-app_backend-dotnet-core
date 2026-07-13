@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using AngleSharp.Common;
 using Eurofurence.App.Common.DataDiffUtils;
 using Eurofurence.App.Domain.Model.Events;
@@ -23,7 +13,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using Calendar = Ical.Net.Calendar;
+using EventRecord = Eurofurence.App.Domain.Model.Events.EventRecord;
 
 namespace Eurofurence.App.Server.Services.Events
 {
@@ -34,6 +35,7 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly IEventConferenceDayService _eventConferenceDayService;
         private readonly IEventConferenceRoomService _eventConferenceRoomService;
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
+        private readonly IEventFavoriteStatisticsService _eventFavoriteStatisticsService;
         private readonly EventOptions _eventOptions;
         private readonly AppDbContext _appDbContext;
         private readonly IDistributedCache _cache;
@@ -53,6 +55,7 @@ namespace Eurofurence.App.Server.Services.Events
             IEventConferenceDayService eventConferenceDayService,
             IEventConferenceRoomService eventConferenceRoomService,
             IEventConferenceTrackService eventConferenceTrackService,
+            IEventFavoriteStatisticsService eventFavoriteStatisticsService,
             ILoggerFactory loggerFactory,
             IOptions<EventOptions> eventOptions,
             IDistributedCache cache
@@ -63,6 +66,7 @@ namespace Eurofurence.App.Server.Services.Events
             _eventConferenceDayService = eventConferenceDayService;
             _eventConferenceRoomService = eventConferenceRoomService;
             _eventConferenceTrackService = eventConferenceTrackService;
+            _eventFavoriteStatisticsService = eventFavoriteStatisticsService;
             _eventOptions = eventOptions.Value;
             DateTimeOffset = TimeSpan.Zero;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -130,6 +134,23 @@ namespace Eurofurence.App.Server.Services.Events
             return calendar;
         }
 
+        public async Task<IEnumerable<EventRecord>> FindAllWithStatisticsAsync(Expression<Func<EventRecord, bool>> filter)
+        {
+            var events = await _appDbContext.Events
+                .AsNoTracking()
+                .Include(e => e.FavoredBy)
+                .Include(e => e.FavoriteStatistics)
+                .Where(filter)
+                .ToListAsync();
+
+            foreach (var eventRecord in events.Where(e => e.StartDateTimeUtc > DateTime.UtcNow && e.FavoriteStatistics.Count == 0))
+            {
+                eventRecord.FavoriteStatistics.AddRange(_eventFavoriteStatisticsService.ComputeEventFavoriteStatistics(eventRecord));
+            }
+
+            return events;
+        }
+
         public async Task RemoveEventFromFavoritesIfExist(ClaimsPrincipal user, EventRecord eventRecord)
         {
             var foundRecord = _appDbContext.Users
@@ -171,6 +192,7 @@ namespace Eurofurence.App.Server.Services.Events
                 e.EndDateTimeUtc >= queryConflictStartTime);
         }
 
+        /// <inheritdoc/>
         public async Task RunImportAsync()
         {
             try

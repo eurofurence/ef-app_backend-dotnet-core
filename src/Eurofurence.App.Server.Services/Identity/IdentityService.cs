@@ -189,7 +189,7 @@ namespace Eurofurence.App.Server.Services.Identity
             if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
                 identity.FindFirst("name")?.Value is { Length: > 0 } nickname)
             {
-                await UpdateRegSysIdsInDb(registrations.Keys.ToList(), identityId, nickname);
+                await UpdateRegistrationsInDatabase(registrations, identityId, nickname);
             }
 
             var exp = identity.FindFirst(x => x.Type == "exp");
@@ -261,7 +261,7 @@ namespace Eurofurence.App.Server.Services.Identity
         {
             if (string.IsNullOrEmpty(registrationId))
                 return "";
-            BarcodeWriterSvg writer = new BarcodeWriterSvg() { Format = BarcodeFormat.DATA_MATRIX };
+            BarcodeWriterSvg writer = new() { Format = BarcodeFormat.DATA_MATRIX };
             SvgRenderer.SvgImage svgImage = writer.Write(registrationId);
 
             return svgImage.Content;
@@ -293,21 +293,26 @@ namespace Eurofurence.App.Server.Services.Identity
             return status;
         }
 
-        private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId, string nickname)
+        private async Task UpdateRegistrationsInDatabase(Dictionary<string, UserRegistrationStatus> registrations, string identityId, string nickname)
         {
-            var newIds = new HashSet<string>(ids);
+            var newIds = new HashSet<string>(registrations.Keys);
 
-            var existingIds = await _appDbContext.Users
-                .AsNoTracking()
-                .Where(x => newIds.Contains(x.RegSysId))
-                .Select(x => x.RegSysId)
-                .ToListAsync();
+            var existingUsers = _appDbContext.Users
+                .Where(x => newIds.Contains(x.RegSysId));
 
-            foreach (var existingId in existingIds)
+            foreach (var existingUser in existingUsers)
             {
-                newIds.Remove(existingId);
+                newIds.Remove(existingUser.RegSysId);
+
+                // Update registration status of existing user if it has changed
+                if (existingUser.RegistrationStatus != registrations[existingUser.RegSysId])
+                {
+                    existingUser.RegistrationStatus = registrations[existingUser.RegSysId];
+                    existingUser.Touch();
+                }
             }
 
+            // Add new registration IDs 
             if (newIds.Count > 0)
             {
                 await _appDbContext.Users.AddRangeAsync(newIds.Select(x => new UserRecord
@@ -315,23 +320,18 @@ namespace Eurofurence.App.Server.Services.Identity
                     RegSysId = x,
                     IdentityId = identityId,
                     Nickname = nickname,
+                    RegistrationStatus = registrations[x]
                 }));
-
-                await _appDbContext.SaveChangesAsync();
             }
+
+            await _appDbContext.SaveChangesAsync();
         }
 
-        private sealed class CachedClaim
+        private sealed class CachedClaim(string type, string value)
         {
-            public string Type { get; set; }
+            public string Type { get; set; } = type;
 
-            public string Value { get; set; }
-
-            public CachedClaim(string type, string value)
-            {
-                Type = type;
-                Value = value;
-            }
+            public string Value { get; set; } = value;
         }
 
         private sealed class GroupMembersResponse : ProtocolResponse

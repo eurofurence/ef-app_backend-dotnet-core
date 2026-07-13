@@ -62,6 +62,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IEventConferenceRoomService, EventConferenceRoomService>();
             services.AddTransient<IEventConferenceTrackService, EventConferenceTrackService>();
             services.AddTransient<IEventFeedbackService, EventFeedbackService>();
+            services.AddTransient<IEventFavoriteStatisticsService, EventFavoriteStatisticsService>();
             services.AddTransient<IEventService, EventService>();
             services.AddTransient<IPushNotificationChannelManager, PushNotificationChannelManager>();
             services.AddTransient<IHtmlSanitizer, GanssHtmlSanitizer>();
@@ -277,6 +278,21 @@ namespace Eurofurence.App.Server.Web.Startup
                                     s.RepeatForever();
                                 }));
                     }
+                }
+
+                if (jobsOptions.UpdateEventFavoriteStatistics.Enabled)
+                {
+                    var updateEventFavoriteStatisticsKey = new JobKey(nameof(UpdateEventFavoriteStatisticsJob));
+                    q.AddJob<UpdateEventFavoriteStatisticsJob>(opts =>
+                        opts.WithIdentity(updateEventFavoriteStatisticsKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateEventFavoriteStatisticsKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(jobsOptions.UpdateEventFavoriteStatistics
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
                 }
 
                 if (jobsOptions.UpdateLostAndFound.Enabled)
