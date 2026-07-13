@@ -1,5 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
-using Eurofurence.App.Domain.Model.Events;
+﻿using Eurofurence.App.Domain.Model.Events;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;

@@ -1,7 +1,6 @@
 ﻿using Eurofurence.App.Domain.Model.Users;
 using System;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Domain.Model.Events
 {
@@ -12,7 +11,7 @@ namespace Eurofurence.App.Domain.Model.Events
         public Guid EventId { get; set; }
 
         [DataMember]
-        public UserRegistrationStatus UserRegistrationStatus { get; set; } = new UserRegistrationStatus();
+        public UserRegistrationStatus UserRegistrationStatus { get; set; }
 
         [DataMember]
         public int Count { get; set; }
