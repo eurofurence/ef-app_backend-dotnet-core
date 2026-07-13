@@ -20,6 +20,7 @@ builder.UseSentry(options =>
 builder.Services.AddMudServices();
 
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
+builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IArtistAlleyService, ArtistAlleyService>();
 builder.Services.AddScoped<IDealerService, DealerService>();

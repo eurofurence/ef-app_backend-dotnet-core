@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _logger.LogInformation(LogEvents.Audit, $"Starting job {context.JobDetail.Key.Name}");
+            _logger.LogInformation(LogEvents.Audit, "Starting job {Name}", context.JobDetail.Key.Name);
 
             try
             {
@@ -40,8 +40,7 @@ namespace Eurofurence.App.Server.Web.Jobs
             catch (Exception e)
             {
                 SentrySdk.CaptureException(e);
-                _logger.LogError(LogEvents.Audit,
-                    $"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
+                _logger.LogError(LogEvents.Audit, e, "Job {Name} failed with exception", context.JobDetail.Key.Name);
             }
         }
     }

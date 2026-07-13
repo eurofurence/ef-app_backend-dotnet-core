@@ -91,6 +91,16 @@ namespace Eurofurence.App.Domain.Model.Events
         public virtual EventConferenceRoomRecord ConferenceRoom { get; set; }
 
         [JsonIgnore]
-        public List<UserRecord> FavoredBy { get; set; } = new();
+        public List<UserRecord> FavoredBy { get; set; } = [];
+
+        /// <summary>
+        ///     List of counts of users for every registration status, who have favored this event.
+        /// </summary>
+        /// <remarks>
+        ///     Is filled around the start time of the event.
+        ///     Before, statistics data is calculated live on-demand.
+        /// </remarks>
+        [JsonIgnore]
+        public List<EventFavoriteStatisticsRecord> FavoriteStatistics { get; set; }
     }
 }

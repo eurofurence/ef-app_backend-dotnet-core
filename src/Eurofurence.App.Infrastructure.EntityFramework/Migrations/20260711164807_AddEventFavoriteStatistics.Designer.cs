@@ -4,6 +4,7 @@ using Eurofurence.App.Infrastructure.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260711164807_AddEventFavoriteStatistics")]
+    partial class AddEventFavoriteStatistics
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,7 +72,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("ImageId");
 
-                    b.ToTable("Announcements", (string)null);
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Announcements.IdentityAnnouncementGroupsRecord", b =>
@@ -94,7 +97,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("IdentityAnnouncementGroups", (string)null);
+                    b.ToTable("IdentityAnnouncementGroups");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtShow.AgentClosingResultRecord", b =>
@@ -147,7 +150,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AgentClosingResults", (string)null);
+                    b.ToTable("AgentClosingResults");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtShow.ItemActivityRecord", b =>
@@ -194,7 +197,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ItemActivitys", (string)null);
+                    b.ToTable("ItemActivitys");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord", b =>
@@ -219,7 +222,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ArtistAlleyUserPenalties", (string)null);
+                    b.ToTable("ArtistAlleyUserPenalties");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.ArtistAlleyUserPenaltyRecord+StateChangeRecord", b =>
@@ -255,7 +258,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("UserPenaltyRecordId");
 
-                    b.ToTable("ArtistAlleyUserPenaltyChangeRecord", (string)null);
+                    b.ToTable("ArtistAlleyUserPenaltyChangeRecord");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.TableRegistrationRecord", b =>
@@ -307,7 +310,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("ImageId");
 
-                    b.ToTable("TableRegistrations", (string)null);
+                    b.ToTable("TableRegistrations");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.ArtistsAlley.TableRegistrationRecord+StateChangeRecord", b =>
@@ -341,7 +344,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("TableRegistrationRecordId");
 
-                    b.ToTable("StateChangeRecord", (string)null);
+                    b.ToTable("StateChangeRecord");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Communication.PrivateMessageRecord", b =>
@@ -385,7 +388,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PrivateMessages", (string)null);
+                    b.ToTable("PrivateMessages");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Dealers.DealerRecord", b =>
@@ -470,7 +473,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("ArtistThumbnailImageId");
 
-                    b.ToTable("Dealers", (string)null);
+                    b.ToTable("Dealers");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceDayRecord", b =>
@@ -496,7 +499,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventConferenceDays", (string)null);
+                    b.ToTable("EventConferenceDays");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceRoomRecord", b =>
@@ -531,7 +534,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventConferenceRooms", (string)null);
+                    b.ToTable("EventConferenceRooms");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventConferenceTrackRecord", b =>
@@ -563,7 +566,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventConferenceTracks", (string)null);
+                    b.ToTable("EventConferenceTracks");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFavoriteStatisticsRecord", b =>
@@ -591,7 +594,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("EventFavoriteStatistics", (string)null);
+                    b.ToTable("EventFavoriteStatistics");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventFeedbackRecord", b =>
@@ -619,7 +622,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("EventFeedbacks", (string)null);
+                    b.ToTable("EventFeedbacks");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Events.EventRecord", b =>
@@ -676,8 +679,8 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
                     b.Property<string>("Slug")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("SourceId")
-                        .HasColumnType("longtext");
+                    b.Property<int>("SourceId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDateTimeUtc")
                         .HasColumnType("datetime(6)");
@@ -703,7 +706,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("PosterImageId");
 
-                    b.ToTable("Events", (string)null);
+                    b.ToTable("Events");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Fragments.LinkFragment", b =>
@@ -745,7 +748,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("MapEntryRecordId");
 
-                    b.ToTable("LinkFragments", (string)null);
+                    b.ToTable("LinkFragments");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Images.ImageRecord", b =>
@@ -798,7 +801,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Images", (string)null);
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeEntryRecord", b =>
@@ -834,7 +837,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("KnowledgeGroupId");
 
-                    b.ToTable("KnowledgeEntries", (string)null);
+                    b.ToTable("KnowledgeEntries");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Knowledge.KnowledgeGroupRecord", b =>
@@ -868,7 +871,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KnowledgeGroups", (string)null);
+                    b.ToTable("KnowledgeGroups");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.LostAndFound.LostAndFoundRecord", b =>
@@ -909,7 +912,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LostAndFounds", (string)null);
+                    b.ToTable("LostAndFounds");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapEntryRecord", b =>
@@ -934,7 +937,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("MapId");
 
-                    b.ToTable("MapEntries", (string)null);
+                    b.ToTable("MapEntries");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Maps.MapRecord", b =>
@@ -966,7 +969,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("ImageId");
 
-                    b.ToTable("Maps", (string)null);
+                    b.ToTable("Maps");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.DeviceIdentityRecord", b =>
@@ -993,7 +996,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DeviceIdentities", (string)null);
+                    b.ToTable("DeviceIdentities");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.PushNotifications.UserRecord", b =>
@@ -1027,7 +1030,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Sync.EntityStorageInfoRecord", b =>
@@ -1050,7 +1053,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EntityStorageInfos", (string)null);
+                    b.ToTable("EntityStorageInfos");
                 });
 
             modelBuilder.Entity("EventRecordUserRecord", b =>
@@ -1065,7 +1068,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("FavoriteEventsId");
 
-                    b.ToTable("EventRecordUserRecord", (string)null);
+                    b.ToTable("EventRecordUserRecord");
                 });
 
             modelBuilder.Entity("ImageRecordKnowledgeEntryRecord", b =>
@@ -1080,7 +1083,7 @@ namespace Eurofurence.App.Infrastructure.EntityFramework.Migrations
 
                     b.HasIndex("KnowledgeEntriesId");
 
-                    b.ToTable("ImageRecordKnowledgeEntryRecord", (string)null);
+                    b.ToTable("ImageRecordKnowledgeEntryRecord");
                 });
 
             modelBuilder.Entity("Eurofurence.App.Domain.Model.Announcements.AnnouncementRecord", b =>

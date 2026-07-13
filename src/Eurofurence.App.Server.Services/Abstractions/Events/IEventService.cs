@@ -1,12 +1,13 @@
+using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.PushNotifications;
+using Ical.Net;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Events;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Ical.Net;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Events
 {
@@ -20,6 +21,9 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
             TimeSpan tolerance,
             bool includeInternal);
 
+        /// <summary>
+        /// Runs the import of events from the pretalx API into the local database.
+        /// </summary>
         public Task RunImportAsync();
 
         /// <summary>
@@ -51,6 +55,14 @@ namespace Eurofurence.App.Server.Services.Abstractions.Events
         /// <param name="user">The user whose events should be returned</param>
         /// <returns>A <see cref="Calendar"/> instance with all favorite events of the user </returns>
         Calendar GetFavoriteEventsFromUserAsIcal([NotNull] UserRecord user);
+
+        /// <summary>
+        /// Returns all events including statistics about how many users have favored them.
+        /// </summary>
+        /// <returns>
+        /// A enumerable of events including statistics about how many users have favored them.
+        /// </returns>
+        Task<IEnumerable<EventRecord>> FindAllWithStatisticsAsync(Expression<Func<EventRecord, bool>> filter);
 
         /// <summary>
         /// Retrieve the last successfully synced version of the schedule since launch of the current
