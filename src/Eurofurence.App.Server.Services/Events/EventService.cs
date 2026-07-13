@@ -224,10 +224,10 @@ namespace Eurofurence.App.Server.Services.Events
                 var slotsPublic = _eventOptions.MarkAllInternal ?
                     new HashSet<PretalxSlot>()
                     :
-                    slots.Where(slot =>
+                    [.. slots.Where(slot =>
                         (!slot.Submission?.Tags.Contains(_eventOptions.InternalTagId) ?? false) &&
                         (!slot.Submission?.Track.Id.Equals(_eventOptions.InternalTrackId) ?? false)
-                    ).ToHashSet();
+                    )];
 
                 var tracks = slots.Where(slot => slot.Submission != null).Select(slot => slot.Submission.Track).ToHashSet();
                 var tracksPublic = slotsPublic.Select(slot => slot.Submission.Track).ToHashSet();
@@ -259,7 +259,7 @@ namespace Eurofurence.App.Server.Services.Events
             }
         }
 
-        private string GenerateUniquePretalxSlotSourceId(IEnumerable<PretalxSlot> importEventEntries, PretalxSlot source)
+        private static string GenerateUniquePretalxSlotSourceId(IEnumerable<PretalxSlot> importEventEntries, PretalxSlot source)
         {
             // Slots without submissions attached are either blockers or breaks, so if they move,
             // we just recreate them for the time being. This will break favorites on blockers and
@@ -269,17 +269,24 @@ namespace Eurofurence.App.Server.Services.Events
                     $"BLOCKR-{((DateTimeOffset?)source.Start)?.ToUnixTimeSeconds()}-{((DateTimeOffset?)source.End)?.ToUnixTimeSeconds()}-{source.Room.Id}"
                     )
                 )
-            ).Substring(0, 6);
+            )[..6];
 
             // Since the same submission may be in multiple 
-            var slotIndex = source.Submission != null ? importEventEntries.Where(entry => entry.Submission?.Code == source.Submission?.Code).OrderBy(entry => entry.Start).Index().SingleOrDefault(indexed => indexed.Item.Id == source.Id, new(0, null)).Index.ToString() : "BLOCKER";
+            var slotIndex = source.Submission == null ?
+                "BLOCKER"
+                :
+                importEventEntries.Where(entry => entry.Submission?.Code == source.Submission?.Code)
+                    .OrderBy(entry => entry.Start)
+                    .Index()
+                    .SingleOrDefault(indexed => indexed.Item.Id == source.Id, new(0, null))
+                    .Index.ToString();
 
             return $"{submissionCode}-{slotIndex}";
         }
 
         private async Task<Tuple<int, List<EventConferenceDayRecord>>> UpdateEventConferenceDaysAsync(
             IList<Tuple<DateTime, string>> importDays,
-            ISet<DateTime> importDaysPublic
+            HashSet<DateTime> importDaysPublic
         )
         {
             var eventConferenceDayRecords = _appDbContext.EventConferenceDays.AsNoTracking();
@@ -302,8 +309,8 @@ namespace Eurofurence.App.Server.Services.Events
 
 
         private async Task<Tuple<int, List<EventConferenceTrackRecord>>> UpdateEventConferenceTracksAsync(
-            ISet<PretalxTrack> importTracks,
-            ISet<PretalxTrack> importTracksPublic
+            HashSet<PretalxTrack> importTracks,
+            HashSet<PretalxTrack> importTracksPublic
         )
         {
             var eventConferenceTrackRecords = _appDbContext.EventConferenceTracks.AsNoTracking();
@@ -325,8 +332,8 @@ namespace Eurofurence.App.Server.Services.Events
         }
 
         private async Task<Tuple<int, List<EventConferenceRoomRecord>>> UpdateEventConferenceRoomsAsync(
-            ISet<PretalxRoom> importRooms,
-            ISet<PretalxRoom> importRoomsPublic
+            HashSet<PretalxRoom> importRooms,
+            HashSet<PretalxRoom> importRoomsPublic
         )
         {
             var eventConferenceRoomRecords = _appDbContext.EventConferenceRooms.AsNoTracking();
@@ -352,7 +359,7 @@ namespace Eurofurence.App.Server.Services.Events
 
         private async Task<Tuple<int, List<EventRecord>>> UpdateEventEntriesAsync(
             IEnumerable<PretalxSlot> importEventEntries,
-            ISet<PretalxSlot> importEventEntriesPublic,
+            HashSet<PretalxSlot> importEventEntriesPublic,
             IList<EventConferenceTrackRecord> currentConferenceTracks,
             IList<EventConferenceRoomRecord> currentConferenceRooms,
             IList<EventConferenceDayRecord> currentConferenceDays,
@@ -395,7 +402,7 @@ namespace Eurofurence.App.Server.Services.Events
             await ApplyPatchOperationAsync(diff);
 
             var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
-            return new Tuple<int, List<EventRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
+            return new Tuple<int, List<EventRecord>>(modifiedRecords, [.. diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity)]);
         }
     }
 }
