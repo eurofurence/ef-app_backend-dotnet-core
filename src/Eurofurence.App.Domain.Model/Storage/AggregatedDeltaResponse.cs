@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Dealers;
@@ -28,6 +29,7 @@ namespace Eurofurence.App.Domain.Model.Sync
         public DeltaResponse<AnnouncementResponse> Announcements { get; set; }
         public DeltaResponse<MapResponse> Maps { get; set; }
         public DeltaResponse<ArtistAlleyResponse> TableRegistrations { get; set; }
+        public Dictionary<string, string> AppConfig { get; set; }
     }
 
 
