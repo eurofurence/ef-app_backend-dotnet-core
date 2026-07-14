@@ -92,14 +92,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Returns a scannable convention pass for the current user, if they have a valid registration.
         /// </summary>
-        /// <param name="imageType">The MIME type the resulting pass should have. Supported values are: <c>image/svg+xml</c> (default)</param>
+        /// <param name="mimeType">The MIME type the resulting pass should have. Supported values are: <c>image/svg+xml</c> (default)</param>
         /// <returns>Convention pass in requested format.</returns>
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
         [Authorize]
-        //FIXME: imageType should be renamed to mimeType
-        public ActionResult GetPass([FromQuery] string imageType = SvgMimeType)
+        public ActionResult GetPass([FromQuery] string mimeType = SvgMimeType)
         {
             if (User.Identity is not ClaimsIdentity identity)
             {
@@ -110,7 +109,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             {
                 try
                 {
-                    switch (imageType.ToLower())
+                    switch (mimeType.ToLower())
                     {
                         case SvgMimeType:
                             return File(
@@ -119,7 +118,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                                 SvgMimeType,
                                 $"convention-pass-{registrationId}.svg");
                         default:
-                            return BadRequest($"Unsupported MIME type: {imageType}");
+                            return BadRequest($"Unsupported MIME type: {mimeType}");
                     }
                 }
                 catch (Exception e) when (e is ArgumentException or FormatException)
