@@ -19,8 +19,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Duende.IdentityModel.Client;
-using ZXing;
-using ZXing.Rendering;
 
 namespace Eurofurence.App.Server.Services.Identity
 {
@@ -255,16 +253,6 @@ namespace Eurofurence.App.Server.Services.Identity
                         && iag.LastChangeDateTimeUtc.CompareTo(DateTime.UtcNow.AddDays(-1 * _identityOptionsMonitor.CurrentValue.GroupCacheExpirationInHours)) > 0)
                     .Select(iag => iag.IdentityId)
                     .ToListAsync(cancellationToken);
-        }
-
-        public string GenerateDataMatrixCode(string registrationId)
-        {
-            if (string.IsNullOrEmpty(registrationId))
-                return "";
-            BarcodeWriterSvg writer = new() { Format = BarcodeFormat.DATA_MATRIX };
-            SvgRenderer.SvgImage svgImage = writer.Write(registrationId);
-
-            return svgImage.Content;
         }
 
         public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity)

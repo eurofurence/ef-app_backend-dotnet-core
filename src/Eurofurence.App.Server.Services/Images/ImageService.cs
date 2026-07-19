@@ -211,7 +211,7 @@ namespace Eurofurence.App.Server.Services.Images
             return existingRecord;
         }
 
-        public async Task<Stream> GetImageContentByImageIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<MemoryStream?> GetImageStreamByImageIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var existingRecord = await
                 _appDbContext.Images
@@ -235,6 +235,11 @@ namespace Eurofurence.App.Server.Services.Images
             return ms;
         }
 
+        public async Task<byte[]> GetImageContentByImageIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return (await GetImageStreamByImageIdAsync(id, cancellationToken)).ToArray();
+        }
+
         public Stream GeneratePlaceholderImage()
         {
             var image = new Image<Rgba32>(1, 1);
@@ -256,7 +261,7 @@ namespace Eurofurence.App.Server.Services.Images
             if (scaling >= 1) return image;
 
             await using Stream resizedImageStream = new MemoryStream(),
-                stream = await GetImageContentByImageIdAsync(image.Id, cancellationToken);
+                stream = await GetImageStreamByImageIdAsync(image.Id, cancellationToken);
             await ResizeToMaximumDimensionsAsync(stream, resizedImageStream, height, width, cancellationToken);
             var newImage = await ReplaceImageAsync(
                 image.Id,

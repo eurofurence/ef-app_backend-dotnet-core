@@ -19,6 +19,7 @@
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="dotAPNS" Version="4.6.0" />
     <PackageReference Include="dotAPNS.AspNetCore" Version="2.2.2" />
+    <PackageReference Include="dotnet-passbook" Version="4.0.1" />
     <PackageReference Include="Duende.AspNetCore.Authentication.OAuth2Introspection" Version="7.0.1" />
     <PackageReference Include="FirebaseAdmin" Version="3.6.0" />
     <PackageReference Include="HtmlSanitizer" Version="9.0.892" />

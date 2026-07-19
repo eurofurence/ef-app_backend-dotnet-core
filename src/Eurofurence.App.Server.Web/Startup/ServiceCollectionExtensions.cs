@@ -11,6 +11,7 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
+using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
@@ -28,6 +29,7 @@ using Eurofurence.App.Server.Services.Knowledge;
 using Eurofurence.App.Server.Services.Lassie;
 using Eurofurence.App.Server.Services.LostAndFound;
 using Eurofurence.App.Server.Services.Maps;
+using Eurofurence.App.Server.Services.Passes;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Services.Sanitization;
@@ -88,6 +90,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
+            services.AddTransient<IPassService, PassService>();
 
             return services;
         }

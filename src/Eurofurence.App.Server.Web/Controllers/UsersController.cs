@@ -2,11 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -20,19 +20,20 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
 
         /// <summary>
-        /// Mime type definition for SVG images.
-        /// </summary>
-        private const string SvgMimeType = "image/svg+xml";
-
-        /// <summary>
         /// Identity service for user identity management.
         /// </summary>
         private readonly IIdentityService _identityService;
 
-        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService, IIdentityService identityService)
+        /// <summary>
+        /// Provides different kinds of passes to be used in the app or in wallets.
+        /// </summary>
+        private readonly IPassService _passService;
+
+        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService, IIdentityService identityService, IPassService passService)
         {
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
             _identityService = identityService;
+            _passService = passService;
         }
 
         [Authorize]
@@ -92,40 +93,43 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <summary>
         /// Returns a scannable convention pass for the current user, if they have a valid registration.
         /// </summary>
-        /// <param name="mimeType">The MIME type the resulting pass should have. Supported values are: <c>image/svg+xml</c> (default)</param>
+        /// <param name="mimeType">The MIME type the resulting pass should have. Supported values are: <c>image/svg+xml</c> (default) and <c>application/vnd.apple.pkpass</c></param>
         /// <returns>Convention pass in requested format.</returns>
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
         [Authorize]
-        public ActionResult GetPass([FromQuery] string mimeType = SvgMimeType)
+        public async Task<ActionResult> GetPass([FromQuery] string mimeType = IPassService.MimeTypeSvg)
         {
             if (User.Identity is not ClaimsIdentity identity)
             {
                 return Unauthorized();
             }
 
-            if (_identityService.GetRegistrationsIds(identity).FirstOrDefault() is { } registrationId)
+            PassFile? passFile;
+            try
             {
-                try
+                switch (mimeType.ToLower())
                 {
-                    switch (mimeType.ToLower())
-                    {
-                        case SvgMimeType:
-                            return File(
-                                Encoding.UTF8.GetBytes(
-                                    _identityService.GenerateDataMatrixCode(registrationId)),
-                                SvgMimeType,
-                                $"convention-pass-{registrationId}.svg");
-                        default:
-                            return BadRequest($"Unsupported MIME type: {mimeType}");
-                    }
-                }
-                catch (Exception e) when (e is ArgumentException or FormatException)
-                {
-                    return BadRequest($"Unable to generate pass: {e.Message}");
+                    case IPassService.MimeTypeSvg:
+                        passFile = _passService.GenerateDataMatrixCode(identity);
+                        break;
+                    case IPassService.MimeTypePkpass:
+                        passFile = await _passService.GeneratePkpassAsync(identity);
+                        break;
+                    default:
+                        return BadRequest($"Unsupported MIME type: {mimeType}");
                 }
             }
+            catch (Exception e) when (e is ArgumentException or FormatException)
+            {
+                return BadRequest($"Unable to generate pass: {e.Message}");
+            }
+            if (passFile is not null)
+            {
+                return File(passFile.data, passFile.mimeType, passFile.name);
+            }
+
             return NotFound();
         }
     }

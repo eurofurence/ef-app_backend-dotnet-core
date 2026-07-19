@@ -25,7 +25,11 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
             int? height = null,
             CancellationToken cancellationToken = default);
 
-        Task<Stream> GetImageContentByImageIdAsync(
+        Task<MemoryStream> GetImageStreamByImageIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default);
+
+        Task<byte[]> GetImageContentByImageIdAsync(
             Guid id,
             CancellationToken cancellationToken = default);
 
