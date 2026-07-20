@@ -23,7 +23,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Passes
         /// </summary>
         /// <param name="identity">ClaimsIdentity for the registration ID of which the code should be generated.</param>
         /// <returns>Pass containing SVG image data and metadata or <c>null</c> if no registration is attached to given identity.</returns>
-        public PassFile? GenerateDataMatrixCode(ClaimsIdentity identity);
+        public PassFile GenerateDataMatrixCode(ClaimsIdentity identity);
 
         /// <summary>
         /// Generates a wallet pass conformant to Apple's pkpass format, which can be imported into
@@ -31,6 +31,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Passes
         /// </summary>
         /// <param name="identity">ClaimsIdentity the associated registration of which should be used for generating the pass.</param>
         /// <returns>Wallet pass containing the registration data or <c>null</c> if no registration is attached to given identity.</returns>
-        public Task<PassFile?> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default);
+        public Task<PassFile> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default);
     }
 }

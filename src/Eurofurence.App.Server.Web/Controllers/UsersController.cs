@@ -106,7 +106,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return Unauthorized();
             }
 
-            PassFile? passFile;
+            PassFile passFile;
             try
             {
                 switch (mimeType.ToLower())

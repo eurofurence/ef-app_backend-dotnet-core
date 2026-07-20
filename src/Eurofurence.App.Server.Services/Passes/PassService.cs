@@ -61,7 +61,7 @@ namespace Eurofurence.App.Server.Services.Passes
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
-        public PassFile? GenerateDataMatrixCode(ClaimsIdentity identity)
+        public PassFile GenerateDataMatrixCode(ClaimsIdentity identity)
         {
             var registrationId = _identityService.GetRegistrationsIds(identity).FirstOrDefault();
 
@@ -109,7 +109,7 @@ namespace Eurofurence.App.Server.Services.Passes
         /// </param>
         private class VenueRegionName(string value) : SemanticTagBaseValue("venueRegionName", value);
 
-        public async Task<PassFile?> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default)
+        public async Task<PassFile> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default)
         {
             var registrationId = _identityService.GetRegistrationsIds(identity).FirstOrDefault();
 
