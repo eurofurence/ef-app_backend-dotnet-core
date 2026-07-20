@@ -25,10 +25,30 @@ namespace Eurofurence.App.Server.Services.Abstractions.Images
             int? height = null,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Retrieve a <c>MemoryStream</c> of the image for the given ID from storage.
+        /// </summary>
+        /// <param name="id">ID of the <c>ImageRecord</c></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Stream of image data or <c>null</c> if no <c>ImageRecord</c> with given ID exists.</returns>
+        /// <exception cref="Minio.Exceptions.ObjectNotFoundException">
+        /// Thrown when file associated to existing <c>ImageRecord</c> has unexpectedly been deleted
+        /// from storage.
+        /// </exception>
         Task<MemoryStream> GetImageStreamByImageIdAsync(
             Guid id,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Retrieve contents of the image for the given ID from storage.
+        /// </summary>
+        /// <param name="id">ID of the <c>ImageRecord</c></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>byte array with image data or <c>null</c> if no <c>ImageRecord</c> with given ID exists.</returns>
+        /// <exception cref="Minio.Exceptions.ObjectNotFoundException">
+        /// Thrown when file associated to existing <c>ImageRecord</c> has unexpectedly been deleted
+        /// from storage.
+        /// </exception>
         Task<byte[]> GetImageContentByImageIdAsync(
             Guid id,
             CancellationToken cancellationToken = default);
