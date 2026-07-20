@@ -408,7 +408,7 @@ namespace Eurofurence.App.Server.Services.Events
                     source => currentConferenceRooms.SingleOrDefault(room => room.SourceId == source.Room?.Id).Id,
                     target => target.ConferenceRoomId)
                 .Map(
-                    source => currentConferenceDays.SingleOrDefault(day => day.Date == source.Start?.Date).Id,
+                    source => currentConferenceDays.SingleOrDefault(day => day.Date == source.Start?.Date)?.Id,
                     target => target.ConferenceDayId)
                 .Map(source => TimeSpan.FromMinutes(source.Duration), target => target.Duration)
                 .Map(source => source.Start.Value, target => target.StartDateTimeUtc)
