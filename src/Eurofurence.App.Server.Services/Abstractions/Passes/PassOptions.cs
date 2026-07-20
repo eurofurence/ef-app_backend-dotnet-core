@@ -13,5 +13,13 @@ namespace Eurofurence.App.Server.Services.Abstractions.Passes
         public Guid IconImageId { get; init; }
         public Guid Icon2XImageId { get; init; }
         public Guid Icon3XImageId { get; init; }
+        public Guid LogoImageId { get; init; }
+        public Guid Logo2XImageId { get; init; }
+        public Guid Logo3XImageId { get; init; }
+        public Guid BackgroundImageId { get; init; }
+        public string BackgroundColor { get; init; }
+        public string LabelColor { get; init; }
+        public string ForegroundColor { get; init; }
+        public string Information { get; init; }
     }
 }

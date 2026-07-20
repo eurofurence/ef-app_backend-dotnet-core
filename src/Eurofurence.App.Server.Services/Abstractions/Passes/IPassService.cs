@@ -9,12 +9,12 @@ namespace Eurofurence.App.Server.Services.Abstractions.Passes
     public interface IPassService
     {
         /// <summary>
-        /// Mime type definition for SVG images.
+        /// MIME type definition for SVG images.
         /// </summary>
         public const string MimeTypeSvg = "image/svg+xml";
 
         /// <summary>
-        /// Mime type definition for Apple's pkpass format.
+        /// MIME type definition for Apple's pkpass format.
         /// </summary>
         public const string MimeTypePkpass = "application/vnd.apple.pkpass";
 

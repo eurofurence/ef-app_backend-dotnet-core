@@ -131,15 +131,16 @@ namespace Eurofurence.App.Server.Services.Passes
                 SerialNumber = serialNumber,
                 Description = $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber} – {_globalOptions.ConventionTheme}",
                 OrganizationName = _globalOptions.ConventionOrganization,
-                BackgroundColor = "#005953",
-                LabelColor = "#FFFFFF",
-                ForegroundColor = "#FFFFFF",
+                BackgroundColor = _passOptions.BackgroundColor,
+                LabelColor = _passOptions.LabelColor,
+                ForegroundColor = _passOptions.ForegroundColor,
                 AppleWWDRCACertificate = _appleWwdrCertificate,
                 PassbookCertificate = _passbookCertificate,
                 Style = PassStyle.EventTicket,
                 ExpirationDate = _globalOptions.ConventionEndDateTime,
                 LogoText = $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}",
-                RelevantDate = _globalOptions.ConventionStartDateTime,
+                // Ignore since only one relevant date possible, but the pass should be visible whole con.
+                //RelevantDate = _globalOptions.ConventionStartDateTime,
             };
 
             request.RelevantLocations.Add(new RelevantLocation
@@ -222,6 +223,13 @@ namespace Eurofurence.App.Server.Services.Passes
                 Value = _globalOptions.ConventionContact,
                 TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
             });
+            request.AddBackField(new StandardField
+            {
+                Key = "information",
+                Label = "Information",
+                Value = _passOptions.Information,
+                TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
+            });
 
             request.Images.Add(PassbookImage.Icon,
                 await _cache.GetOrCreateAsync("PassService.Pkpass.Icon", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.IconImageId, cancel), cancellationToken: cancellationToken)
@@ -233,7 +241,16 @@ namespace Eurofurence.App.Server.Services.Passes
                 await _cache.GetOrCreateAsync("PassService.Pkpass.Icon3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Icon3XImageId, cancel), cancellationToken: cancellationToken)
             );
             request.Images.Add(PassbookImage.Logo,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Icon3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Icon3XImageId, cancel), cancellationToken: cancellationToken)
+                await _cache.GetOrCreateAsync("PassService.Pkpass.Logo", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.LogoImageId, cancel), cancellationToken: cancellationToken)
+            );
+            request.Images.Add(PassbookImage.Logo2X,
+                await _cache.GetOrCreateAsync("PassService.Pkpass.Logo2X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Logo2XImageId, cancel), cancellationToken: cancellationToken)
+            );
+            request.Images.Add(PassbookImage.Logo3X,
+                await _cache.GetOrCreateAsync("PassService.Pkpass.Logo3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Logo3XImageId, cancel), cancellationToken: cancellationToken)
+            );
+            request.Images.Add(PassbookImage.Background,
+                await _cache.GetOrCreateAsync("PassService.Pkpass.Background", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.BackgroundImageId, cancel), cancellationToken: cancellationToken)
             );
 
             if (identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value is var avatarUrl && avatarUrl.StartsWith("https://"))
@@ -250,7 +267,6 @@ namespace Eurofurence.App.Server.Services.Passes
                 }
             }
 
-            request.SemanticTags.Add(new AttendeeName(identity.Name));
             request.SemanticTags.Add(new EventType(EventTypes.PKEventTypeConvention));
             request.SemanticTags.Add(new EventName($"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}"));
             request.SemanticTags.Add(new EventStartDate(_globalOptions.ConventionStartDateTime.ToString("o", System.Globalization.CultureInfo.InvariantCulture)));
