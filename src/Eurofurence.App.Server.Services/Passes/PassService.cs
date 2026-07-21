@@ -20,8 +20,6 @@ using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Passbook.Generator.Fields;
-using System.Text.Json.Nodes;
-using System.IO;
 
 namespace Eurofurence.App.Server.Services.Passes
 {
@@ -139,6 +137,7 @@ namespace Eurofurence.App.Server.Services.Passes
                 Style = PassStyle.EventTicket,
                 ExpirationDate = _globalOptions.ConventionEndDateTime,
                 LogoText = $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}",
+                SharingProhibited = true
                 // Ignore since only one relevant date possible, but the pass should be visible whole con.
                 //RelevantDate = _globalOptions.ConventionStartDateTime,
             };
