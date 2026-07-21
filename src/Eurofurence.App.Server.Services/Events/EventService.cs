@@ -110,7 +110,7 @@ namespace Eurofurence.App.Server.Services.Events
             var favoriteEvents = user.FavoriteEvents;
 
             Calendar calendar = new Calendar();
-            calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
+            calendar.AddTimeZone(new VTimeZone("UTC"));
 
             foreach (var item in favoriteEvents)
             {
@@ -120,8 +120,8 @@ namespace Eurofurence.App.Server.Services.Events
                 {
                     Summary = item.Title,
                     Description = item.Description + "\n" + $"Held by: {item.PanelHosts ?? "unknown fluff"}",
-                    Start = new CalDateTime(item.StartDateTimeUtc),
-                    End = new CalDateTime(item.EndDateTimeUtc),
+                    Start = new CalDateTime(item.StartDateTimeUtc, "UTC"),
+                    End = new CalDateTime(item.EndDateTimeUtc, "UTC"),
                     Location = item.ConferenceRoom?.Name,
                 };
                 calendar.Events.Add(calendarEvent);
