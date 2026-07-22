@@ -110,23 +110,18 @@ namespace Eurofurence.App.Server.Services.Events
             var favoriteEvents = user.FavoriteEvents;
 
             Calendar calendar = new Calendar();
-            calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
+            calendar.AddTimeZone(new VTimeZone("UTC"));
 
             foreach (var item in favoriteEvents)
             {
-                // TODO: Check user authorisation for internal events if we wish to allow them in
-                //       favorites iCal? An issue would only arise if somebody favs internal events
-                //       and then is removed from staff, which should likely not be an issue.
-                if (item.IsInternal) continue;
-
                 // Include for each event the title, start time/end time and the description of the event including
                 // the organizer of the panel.
                 CalendarEvent calendarEvent = new CalendarEvent()
                 {
                     Summary = item.Title,
                     Description = item.Description + "\n" + $"Held by: {item.PanelHosts ?? "unknown fluff"}",
-                    Start = new CalDateTime(item.StartDateTimeUtc),
-                    End = new CalDateTime(item.EndDateTimeUtc),
+                    Start = new CalDateTime(item.StartDateTimeUtc, "UTC"),
+                    End = new CalDateTime(item.EndDateTimeUtc, "UTC"),
                     Location = item.ConferenceRoom?.Name,
                 };
                 calendar.Events.Add(calendarEvent);
