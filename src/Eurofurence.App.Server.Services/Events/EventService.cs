@@ -83,7 +83,7 @@ namespace Eurofurence.App.Server.Services.Events
                 .Include(userRecord => userRecord.FavoriteEvents)
                 .FirstOrDefault(x => x.IdentityId == user.GetSubject());
 
-            if (userRecord != null && userRecord.FavoriteEvents.FirstOrDefault(favorite => favorite.Id == eventRecord.Id) is null)
+            if (userRecord != null && !userRecord.FavoriteEvents.Any(favorite => favorite.Id == eventRecord.Id))
             {
                 userRecord.FavoriteEvents.Add(eventRecord);
                 await _appDbContext.SaveChangesAsync();
