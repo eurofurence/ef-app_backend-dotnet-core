@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Users;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Passes;
@@ -67,7 +68,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="changeRequest"></param>
         /// <returns></returns>
         [HttpPut("{id}/:artist_alley_penalty")]
-        [Authorize(Roles = "Admin,ArtistAlleyAdmin")]
+        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtistAlleyAdmin}")]
         public async Task<ActionResult> PutArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id,
             [Required][FromBody] ArtistAlleyUserPenaltyChangeRequest changeRequest)
         {
@@ -84,7 +85,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">The ID of the user</param>
         /// <returns>The penalty status as a string</returns>
         [HttpGet("{id}/:artist_alley_penalty")]
-        [Authorize(Roles = "Admin,ArtistAlleyAdmin")]
+        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtistAlleyAdmin}")]
         public async Task<ArtistAlleyUserPenaltyRecord.PenaltyStatus> GetArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id)
         {
             return await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(id);

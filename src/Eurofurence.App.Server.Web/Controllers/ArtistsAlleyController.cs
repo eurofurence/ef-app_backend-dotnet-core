@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -42,7 +43,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
 
         [HttpPut("{id}/:status")]
-        [Authorize(Roles = "Admin, ArtistAlleyAdmin, ArtistAlleyModerator")]
+        [Authorize(Roles = $"{IdentityRole.Admin}, {IdentityRole.ArtistAlleyModerator}, {IdentityRole.ArtistAlleyAdmin}")]
         public async Task<ActionResult> PutTableRegistrationStatusAsync([EnsureNotNull][FromRoute] Guid id,
             [FromBody] TableRegistrationRecord.RegistrationStateEnum state)
         {
@@ -76,7 +77,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<TableRegistrationRecord>), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
+        [Authorize(Roles = $"{IdentityRole.Admin}, {IdentityRole.ArtistAlleyModerator}, {IdentityRole.ArtistAlleyAdmin}")]
         [HttpGet("all")]
         public IEnumerable<TableRegistrationRecord> GetAllTableRegistrationRecords()
         {
@@ -89,7 +90,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>All table registrations.</returns>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<ArtistAlleyResponse>), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin, AttendeeCheckedIn")]
+        [Authorize(Roles = $"{IdentityRole.Admin}, {IdentityRole.ArtistAlleyModerator}, {IdentityRole.ArtistAlleyAdmin}, {IdentityRole.AttendeeCheckedIn}")]
         [HttpGet]
         public IEnumerable<ArtistAlleyResponse> GetTableRegistrationsAsync()
         {
@@ -102,7 +103,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">id of the requested entity</param>
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(TableRegistrationResponse), 200)]
-        [Authorize(Roles = "Admin, ArtistAlleyModerator, ArtistAlleyAdmin")]
+        [Authorize(Roles = $"{IdentityRole.Admin}, {IdentityRole.ArtistAlleyModerator}, {IdentityRole.ArtistAlleyAdmin}")]
         [HttpGet("{id}")]
         public async Task<TableRegistrationResponse> GetTableRegistrationAsync(
             [EnsureNotNull][FromRoute] Guid id
@@ -116,7 +117,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// This will delete the registration of the current authenticated user.
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "AttendeeCheckedIn")]
+        [Authorize(Roles = IdentityRole.AttendeeCheckedIn)]
         [HttpDelete("TableRegistration/:my-latest")]
         [ProducesResponseType(404)]
         [ProducesResponseType(204)]
@@ -151,7 +152,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request">details of the table registration</param>
         /// <param name="requestImageFile">mandatory image to be attached to the registration</param>
-        [Authorize(Roles = "AttendeeCheckedIn")]
+        [Authorize(Roles = IdentityRole.AttendeeCheckedIn)]
         [HttpPost("TableRegistrationRequest")]
         public async Task<ActionResult> PostTableRegistrationRequestAsync([EnsureNotNull][FromForm] TableRegistrationRequest request, [Required] IFormFile requestImageFile)
         {
@@ -190,7 +191,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "AttendeeCheckedIn")]
+        [Authorize(Roles = IdentityRole.AttendeeCheckedIn)]
         [HttpGet("TableRegistration/:my-latest")]
         public async Task<TableRegistrationResponse> GetMyLatestTableRegistrationRequestAsync()
         {
@@ -204,7 +205,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">The table registration id.</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRole.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteTableRegistrationAsync([EnsureNotNull][FromRoute] Guid id)

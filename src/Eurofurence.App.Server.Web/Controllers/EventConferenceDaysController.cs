@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Web.Extensions;
@@ -38,7 +39,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventConferenceDayResponse>), 200)]
         public IQueryable<EventConferenceDayResponse> GetEventConferenceDaysAsync()
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
             return _eventConferenceDayService.FindAll(x => isStaff || !x.IsInternal).Select(x => x.Transform());
         }
 
@@ -58,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceDayResponse), 200)]
         public async Task<EventConferenceDayResponse> GetEventConferenceDayAsync([FromRoute] Guid id)
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
             return (await _eventConferenceDayService.FindAll(x => x.Id == id && (isStaff || !x.IsInternal)).FirstOrDefaultAsync()).Transient404(HttpContext)?.Transform();
         }
     }

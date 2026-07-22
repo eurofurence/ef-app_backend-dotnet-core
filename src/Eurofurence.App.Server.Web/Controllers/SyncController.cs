@@ -1,4 +1,5 @@
 ﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -89,11 +90,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
             _logger.LogDebug($"Execute=Sync, Since={since}, IsStaff={isStaff}");
 
             var tableRegistrations =
-                (User.IsInRole("AttendeeCheckedIn") || User.IsInRole("ArtistAlleyModerator") || User.IsInRole("ArtistAlleyAdmin") || User.IsInRole("Admin")) ?
+                (User.IsInRole(IdentityRole.AttendeeCheckedIn) || User.IsInRole(IdentityRole.ArtistAlleyModerator) || User.IsInRole(IdentityRole.ArtistAlleyAdmin) || User.IsInRole(IdentityRole.Admin)) ?
                 _mapper.Map<DeltaResponse<ArtistAlleyResponse>>(await _tableRegistrationService.GetDeltaResponseAsync(since))
                 : new DeltaResponse<ArtistAlleyResponse>
                 {

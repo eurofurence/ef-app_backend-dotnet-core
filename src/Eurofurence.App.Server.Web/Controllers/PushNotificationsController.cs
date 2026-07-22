@@ -7,6 +7,7 @@ using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Eurofurence.App.Domain.Model.Identity;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -25,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPost("SyncRequest")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRole.Admin)]
         [ProducesResponseType(204)]
         public async Task<ActionResult> PushSyncRequestAsync(CancellationToken cancellationToken = default)
         {
@@ -54,7 +55,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("Statistics")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRole.Admin)]
         [ProducesResponseType(typeof(PushNotificationChannelStatistics), 200)]
         public async Task<PushNotificationChannelStatistics> GetStatisticsAsync(
             [FromQuery] DateTime? Since,

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
@@ -56,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
@@ -83,7 +84,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Id of the newly created knowledge group</returns>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
@@ -102,7 +103,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a knowledge group.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]

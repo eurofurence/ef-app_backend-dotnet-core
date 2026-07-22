@@ -1,6 +1,7 @@
 using Eurofurence.App.Backoffice;
 using Eurofurence.App.Backoffice.Authentication;
 using Eurofurence.App.Backoffice.Services;
+using Eurofurence.App.Domain.Model.Identity;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -44,13 +45,13 @@ builder.Services.AddOidcAuthentication(options =>
 builder.Services.AddAuthorizationCore(config =>
 {
     config.AddPolicy("RequireKnowledgeBaseEditor", policy =>
-        policy.RequireRole(["KnowledgeBaseEditor", "Admin"])
+        policy.RequireRole([IdentityRole.KnowledgeBaseEditor, IdentityRole.Admin])
         );
     config.AddPolicy("RequireArtistAlleyModerator", policy =>
-        policy.RequireRole(["ArtistAlleyModerator", "ArtistAlleyAdmin", "Admin"])
+        policy.RequireRole([IdentityRole.ArtistAlleyModerator, IdentityRole.ArtistAlleyAdmin, IdentityRole.Admin])
         );
     config.AddPolicy("RequireArtistAlleyAdmin", policy =>
-        policy.RequireRole(["ArtistAlleyAdmin", "Admin"])
+        policy.RequireRole([IdentityRole.ArtistAlleyAdmin, IdentityRole.Admin])
         );
 }
 );

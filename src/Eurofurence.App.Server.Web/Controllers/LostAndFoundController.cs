@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.LostAndFound;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
@@ -17,7 +18,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _lostAndFoundService = lostAndFoundService;
         }
 
-        [Authorize(Roles = "Attendee")]
+        [Authorize(Roles = IdentityRole.Attendee)]
         [HttpGet("Items")]
         public IQueryable<LostAndFoundResponse> GetItemsAsync()
         {

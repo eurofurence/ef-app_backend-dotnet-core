@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Microsoft.AspNetCore.Authorization;
@@ -27,7 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        [Authorize(Roles = "Attendee")]
+        [Authorize(Roles = IdentityRole.Attendee)]
         public async Task<ActionResult> PostEventFeedbackAsync([FromBody] PostEventFeedbackRequest request)
         {
             if (request == null) return BadRequest();
@@ -57,7 +58,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="eventSourceId">Optional event source id filter.</param>
         /// <returns>A list of all event's (or filtered) feedback.</returns>
-        [Authorize(Roles = "Admin, EventFeedbackManager")]
+        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.EventFeedbackManager}")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<EventFeedbackResponse>), 200)]
         public ActionResult GetEventFeedback(string? eventSourceId)
