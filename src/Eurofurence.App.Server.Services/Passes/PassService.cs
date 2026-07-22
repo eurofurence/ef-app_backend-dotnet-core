@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,10 +26,9 @@ namespace Eurofurence.App.Server.Services.Passes
         private readonly IImageService _imageService;
         private readonly GlobalOptions _globalOptions;
         private readonly PassOptions _passOptions;
+        private readonly IPassCertificateProvider _passCertificateProvider;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly HybridCache _cache;
-        private readonly X509Certificate2 _appleWwdrCertificate;
-        private readonly X509Certificate2 _passbookCertificate;
         private readonly PassGenerator _passGenerator;
         private readonly ILogger _logger;
 
@@ -42,6 +39,7 @@ namespace Eurofurence.App.Server.Services.Passes
             IImageService imageService,
             IOptions<GlobalOptions> globalOptions,
             IOptions<PassOptions> passOptions,
+            IPassCertificateProvider passCertificateProvider,
             IHttpClientFactory httpClientFactory,
             HybridCache cache,
             ILoggerFactory loggerFactory)
@@ -50,11 +48,10 @@ namespace Eurofurence.App.Server.Services.Passes
             _imageService = imageService;
             _globalOptions = globalOptions.Value;
             _passOptions = passOptions.Value;
+            _passCertificateProvider = passCertificateProvider;
             _httpClientFactory = httpClientFactory;
             _cache = cache;
             _passGenerator = new PassGenerator();
-            _appleWwdrCertificate = X509Certificate2.CreateFromPem(_passOptions.AppleWwdrX509CertificatePem);
-            _passbookCertificate = X509Certificate2.CreateFromPem(_passOptions.PassbookX509CertificatePem, _passOptions.PassbookX509KeyPem);
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
@@ -113,12 +110,7 @@ namespace Eurofurence.App.Server.Services.Passes
             if (string.IsNullOrEmpty(registrationId))
                 return null;
 
-            var serialNumber = Convert.ToHexString(
-                MD5.HashData(Encoding.UTF8.GetBytes(
-                    $"{_globalOptions.ConventionIdentifier}-{registrationId}"
-                    )
-                )
-            );
+            var serialNumber = $"{_globalOptions.ConventionIdentifier}-{registrationId}";
 
             var request = new PassGeneratorRequest
             {
@@ -131,8 +123,8 @@ namespace Eurofurence.App.Server.Services.Passes
                 BackgroundColor = _passOptions.BackgroundColor,
                 LabelColor = _passOptions.LabelColor,
                 ForegroundColor = _passOptions.ForegroundColor,
-                AppleWWDRCACertificate = _appleWwdrCertificate,
-                PassbookCertificate = _passbookCertificate,
+                AppleWWDRCACertificate = _passCertificateProvider.AppleWwdrCertificate,
+                PassbookCertificate = _passCertificateProvider.PassbookCertificate,
                 Style = PassStyle.EventTicket,
                 ExpirationDate = _globalOptions.ConventionEndDateTime,
                 LogoText = $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}",

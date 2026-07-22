@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Server.Services.Abstractions;
+﻿using System;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
@@ -49,7 +50,6 @@ using Microsoft.OpenApi;
 using Quartz;
 using Quartz.Impl.Matchers;
 using Serilog;
-using System;
 
 namespace Eurofurence.App.Server.Web.Startup
 {
@@ -90,6 +90,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
+            services.AddSingleton<IPassCertificateProvider, PassCertificateProvider>();
             services.AddTransient<IPassService, PassService>();
 
             return services;
