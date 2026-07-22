@@ -1,25 +1,24 @@
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Options;
+using System;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Eurofurence.App.Server.Services.Abstractions.Images;
+using Eurofurence.App.Server.Services.Abstractions.Passes;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Passbook.Generator;
+using Passbook.Generator.Fields;
+using Passbook.Generator.Tags;
 using ZXing;
 using ZXing.Rendering;
-using Passbook.Generator;
-using System.Security.Cryptography.X509Certificates;
-using Passbook.Generator.Tags;
-using Eurofurence.App.Server.Services.Abstractions.Passes;
-using System.Security.Claims;
-using System.Linq;
-using System.Text;
-using Eurofurence.App.Server.Services.Abstractions;
-using System;
-using System.Security.Cryptography;
-using Eurofurence.App.Server.Services.Abstractions.Images;
-using Microsoft.Extensions.Caching.Hybrid;
-using System.Threading.Tasks;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using Passbook.Generator.Fields;
 
 namespace Eurofurence.App.Server.Services.Passes
 {
@@ -36,7 +35,7 @@ namespace Eurofurence.App.Server.Services.Passes
         private readonly PassGenerator _passGenerator;
         private readonly ILogger _logger;
 
-        private static string AvatarHttpClientName = "Eurofurence.App.Server.Services.Passes.AvatarHttpClientName";
+        private const double AvatarHttpClientTimeout = 10.0;
 
         public PassService(
             IIdentityService identityService,
@@ -59,7 +58,7 @@ namespace Eurofurence.App.Server.Services.Passes
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
-        public PassFile GenerateDataMatrixCode(ClaimsIdentity identity)
+        public PassFile GenerateSvg(ClaimsIdentity identity)
         {
             var registrationId = _identityService.GetRegistrationsIds(identity).FirstOrDefault();
 
@@ -71,9 +70,9 @@ namespace Eurofurence.App.Server.Services.Passes
 
             return new PassFile
             {
-                data = Encoding.UTF8.GetBytes(svgImage.Content),
-                name = $"convention-pass-{registrationId}.svg",
-                mimeType = IPassService.MimeTypeSvg
+                Data = Encoding.UTF8.GetBytes(svgImage.Content),
+                Name = $"convention-pass-{registrationId}.svg",
+                MimeType = IPassService.MimeTypeSvg
             };
         }
 
@@ -121,7 +120,7 @@ namespace Eurofurence.App.Server.Services.Passes
                 )
             );
 
-            PassGeneratorRequest request = new PassGeneratorRequest
+            var request = new PassGeneratorRequest
             {
                 PassTypeIdentifier = _passOptions.PassTypeIdentifier,
                 TeamIdentifier = _passOptions.TeamIdentifier,
@@ -252,13 +251,17 @@ namespace Eurofurence.App.Server.Services.Passes
                 await _cache.GetOrCreateAsync("PassService.Pkpass.Background", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.BackgroundImageId, cancel), cancellationToken: cancellationToken)
             );
 
-            if (identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value is var avatarUrl && avatarUrl.StartsWith("https://"))
+            if (identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value is { } avatarUrl && avatarUrl.StartsWith("https://"))
             {
                 try
                 {
-                    using var httpClient = _httpClientFactory.CreateClient(AvatarHttpClientName);
-                    var avatarImage = await httpClient.GetByteArrayAsync(avatarUrl);
-                    request.Images.Add(PassbookImage.Thumbnail, avatarImage);
+                    using var httpClient = _httpClientFactory.CreateClient();
+                    httpClient.Timeout = TimeSpan.FromSeconds(AvatarHttpClientTimeout);
+                    var avatarImage = await httpClient.GetByteArrayAsync(avatarUrl, cancellationToken);
+                    if (avatarImage is not null)
+                    {
+                        request.Images.Add(PassbookImage.Thumbnail, avatarImage);
+                    }
                 }
                 catch
                 {
@@ -280,15 +283,17 @@ namespace Eurofurence.App.Server.Services.Passes
             );
 
             request.SemanticTags.Add(new AttendeeName(identity.Name));
-            request.SemanticTags.Add(new AdmissionLevel("Cookie Connoisseur"));
+            // TODO: Get Admission Level (attendee/staff/director & regular/sponsor/super sponsor)
+            // from Claims and Registration System
+            //request.SemanticTags.Add(new AdmissionLevel("Cookie Connoisseur"));
 
             request.AddBarcode(BarcodeType.PKBarcodeFormatAztec, registrationId, "UTF-8", registrationId);
 
             return new PassFile
             {
-                data = _passGenerator.Generate(request),
-                mimeType = IPassService.MimeTypePkpass,
-                name = $"convention-pass-{registrationId}.pkpass"
+                Data = _passGenerator.Generate(request),
+                MimeType = IPassService.MimeTypePkpass,
+                Name = $"convention-pass-{registrationId}.pkpass"
             };
         }
     }

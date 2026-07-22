@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,11 +17,11 @@ namespace Eurofurence.App.Server.Services.Abstractions.Passes
         public const string MimeTypePkpass = "application/vnd.apple.pkpass";
 
         /// <summary>
-        /// Generates a data matrix code for the user based on their registration as SVG.
+        /// Generates a SVG for the user based on their registration.
         /// </summary>
         /// <param name="identity">ClaimsIdentity for the registration ID of which the code should be generated.</param>
         /// <returns>Pass containing SVG image data and metadata or <c>null</c> if no registration is attached to given identity.</returns>
-        public PassFile GenerateDataMatrixCode(ClaimsIdentity identity);
+        public PassFile GenerateSvg(ClaimsIdentity identity);
 
         /// <summary>
         /// Generates a wallet pass conformant to Apple's pkpass format, which can be imported into

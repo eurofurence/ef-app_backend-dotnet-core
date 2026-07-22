@@ -112,7 +112,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 switch (mimeType.ToLower())
                 {
                     case IPassService.MimeTypeSvg:
-                        passFile = _passService.GenerateDataMatrixCode(identity);
+                        passFile = _passService.GenerateSvg(identity);
                         break;
                     case IPassService.MimeTypePkpass:
                         passFile = await _passService.GeneratePkpassAsync(identity);
@@ -127,7 +127,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
             if (passFile is not null)
             {
-                return File(passFile.data, passFile.mimeType, passFile.name);
+                return File(passFile.Data, passFile.MimeType, passFile.Name);
             }
 
             return NotFound();
