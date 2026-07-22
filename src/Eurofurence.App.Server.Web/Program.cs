@@ -11,6 +11,7 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
+using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Web.Extensions;
@@ -88,6 +89,7 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Identity"));
             builder.Services.Configure<AuthorizationOptions>(builder.Configuration.GetSection("Authorization"));
             builder.Services.Configure<AppConfigOptions>(builder.Configuration.GetSection("AppConfig"));
+            builder.Services.Configure<PassOptions>(builder.Configuration.GetSection("Passes"));
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;

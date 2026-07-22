@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Eurofurence.App.Common.Utility;
-using Eurofurence.App.Domain.Model.Images;
-using Eurofurence.App.Server.Services.Abstractions;
-using Eurofurence.App.Server.Services.Abstractions.Images;
-using SixLabors.ImageSharp;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Blurhash.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using Eurofurence.App.Common.Utility;
+using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions;
+using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Processors.Transforms;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 
 namespace Eurofurence.App.Server.Services.Images
 {
@@ -211,18 +211,19 @@ namespace Eurofurence.App.Server.Services.Images
             return existingRecord;
         }
 
-        public async Task<Stream> GetImageContentByImageIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<MemoryStream> GetImageStreamByImageIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var existingRecord = await
-                _appDbContext.Images
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+            if (await _appDbContext.Images.AsNoTracking()
+                    .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken)
+                is not { } existingRecord)
+            {
+                return null;
+            }
 
-            // Checks if the object exists
+            // Checks if the object exists or throws Minio.Exceptions.ObjectNotFoundException
             await _minIoClient.StatObjectAsync(new StatObjectArgs()
                     .WithBucket(_minIoOptions.Bucket)
-                    .WithObject(existingRecord.InternalFileName),
-                cancellationToken);
+                    .WithObject(existingRecord.InternalFileName), cancellationToken);
 
             var ms = new MemoryStream();
             await _minIoClient.GetObjectAsync(new GetObjectArgs()
@@ -233,6 +234,11 @@ namespace Eurofurence.App.Server.Services.Images
 
             ms.Position = 0;
             return ms;
+        }
+
+        public async Task<byte[]> GetImageContentByImageIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return (await GetImageStreamByImageIdAsync(id, cancellationToken))?.ToArray();
         }
 
         public Stream GeneratePlaceholderImage()
@@ -256,7 +262,7 @@ namespace Eurofurence.App.Server.Services.Images
             if (scaling >= 1) return image;
 
             await using Stream resizedImageStream = new MemoryStream(),
-                stream = await GetImageContentByImageIdAsync(image.Id, cancellationToken);
+                stream = await GetImageStreamByImageIdAsync(image.Id, cancellationToken);
             await ResizeToMaximumDimensionsAsync(stream, resizedImageStream, height, width, cancellationToken);
             var newImage = await ReplaceImageAsync(
                 image.Id,
