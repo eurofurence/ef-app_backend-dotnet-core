@@ -168,7 +168,9 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var claims = new Dictionary<string, string>
             {
+                // Required for obtaining registration data in <c>GetPass()</c>
                 {"token", identityToken},
+                // Contains optional avatar URL if set in and provided by the IDP.
                 {"avatar", identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value},
             };
 

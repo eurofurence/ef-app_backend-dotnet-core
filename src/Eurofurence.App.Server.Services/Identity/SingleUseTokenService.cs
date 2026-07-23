@@ -11,9 +11,18 @@ namespace Eurofurence.App.Server.Services.Identity
 {
     public class SingleUseTokenService : ISingleUseTokenService
     {
+        /// <summary>
+        /// Length of the token without scope prefix and separator.
+        /// </summary>
         public const int TokenLength = 128;
-        private const int PruneInterval = 100;
+        /// <summary>
+        /// Separator inserted between scope prefix and actual token.
+        /// </summary>
         public const string ScopeSeparator = "-";
+        /// <summary>
+        /// Perform pruning of expired tokens after this many token creations.
+        /// </summary>
+        private const int PruneInterval = 100;
         private static int createdSinceLastPrune = 0;
         ConcurrentDictionary<string, SingleUseTokenPayload> _tokens;
 

@@ -6,6 +6,9 @@ public class SingleUseTokenAuthenticationDefaults
     /// The default authentication scheme.
     /// </summary>
     public const string AuthenticationScheme = "SingleUseToken";
+    /// <summary>
+    /// Authentication scheme that can be used to fall back to OAuth2 if no token is provided.
+    /// </summary>
     public const string TokenOrOAuth2AuthenticationPolicyScheme = "SingleUseTokenOrOAuth2";
 
     /// <summary>

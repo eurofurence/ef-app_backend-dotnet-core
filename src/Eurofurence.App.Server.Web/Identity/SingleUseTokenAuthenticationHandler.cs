@@ -10,6 +10,10 @@ using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Web.Identity;
 
+/// <summary>
+/// Enable authentication using single-use tokens generated via <c>>SingleUseTokenService</c>
+/// with support for custom claims as well as roles.
+/// </summary>
 public class SingleUseTokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     private readonly ISingleUseTokenService _tokenService;
