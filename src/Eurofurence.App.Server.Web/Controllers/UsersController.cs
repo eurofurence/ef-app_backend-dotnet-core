@@ -3,20 +3,17 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Users;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -31,14 +28,17 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         private readonly IPassService _passService;
 
-        private readonly IDistributedCache _cache;
-        private const string PassTokenPrefix = "pass-";
+        private readonly ISingleUseTokenService _tokenService;
+        private const string PassTokenScope = "pass";
 
-        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService, IPassService passService, IDistributedCache cache)
+        public UsersController(
+            IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService,
+            IPassService passService,
+            ISingleUseTokenService tokenService)
         {
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
             _passService = passService;
-            _cache = cache;
+            _tokenService = tokenService;
         }
 
         [Authorize]
@@ -104,7 +104,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        [Authorize(AuthenticationSchemes = $"{SingleUseTokenAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = IdentityRoles.Attendee)]
+        [Authorize(AuthenticationSchemes = SingleUseTokenAuthenticationDefaults.TokenOrOAuth2AuthenticationPolicyScheme, Roles = IdentityRoles.Attendee)]
         public async Task<ActionResult> GetPass([FromQuery] string mimeType = IPassService.MimeTypeSvg, [FromQuery] string token = null)
         {
             if (User.Identity is not ClaimsIdentity identity)
@@ -114,7 +114,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             // Enforce that if using single-use token authentication, only a Pass token can be used
             // with this endpoint.
-            if (!string.IsNullOrEmpty(token) && !token.StartsWith(PassTokenPrefix))
+            if (!string.IsNullOrEmpty(token) && !_tokenService.ValidateScope(PassTokenScope, token))
             {
                 return Unauthorized();
             }
@@ -172,18 +172,16 @@ namespace Eurofurence.App.Server.Web.Controllers
                 {"avatar", identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value},
             };
 
-            var token = new SingleUseToken
+            var payload = new SingleUseTokenPayload
             {
                 ValidUntil = DateTimeOffset.UtcNow.AddMinutes(5),
                 PrincipalName = identity.Name,
-                Token = $"{PassTokenPrefix}{RandomNumberGenerator.GetHexString(128, true)}",
                 Roles = [IdentityRoles.Attendee],
                 AdditionalClaims = claims
             };
+            var token = _tokenService.CreateToken(PassTokenScope, payload);
 
-            _cache.SetString(token.Token, JsonSerializer.Serialize(token), new DistributedCacheEntryOptions { AbsoluteExpiration = token.ValidUntil });
-
-            return Ok(token.Token);
+            return Ok(token);
         }
     }
 

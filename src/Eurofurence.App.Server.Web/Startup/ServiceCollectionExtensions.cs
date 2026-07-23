@@ -90,6 +90,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
+            services.AddSingleton<ISingleUseTokenService, SingleUseTokenService>();
             services.AddSingleton<IPassCertificateProvider, PassCertificateProvider>();
             services.AddTransient<IPassService, PassService>();
 
