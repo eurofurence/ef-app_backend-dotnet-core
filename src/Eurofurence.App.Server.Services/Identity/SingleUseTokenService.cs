@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
 
@@ -11,7 +12,9 @@ namespace Eurofurence.App.Server.Services.Identity
     public class SingleUseTokenService : ISingleUseTokenService
     {
         public const int TokenLength = 128;
+        private const int PruneInterval = 100;
         public const string ScopeSeparator = "-";
+        private static int createdSinceLastPrune = 0;
         ConcurrentDictionary<string, SingleUseTokenPayload> _tokens;
 
         public SingleUseTokenService()
@@ -26,6 +29,11 @@ namespace Eurofurence.App.Server.Services.Identity
             {
                 token = $"{scope}{ScopeSeparator}{RandomNumberGenerator.GetHexString(TokenLength, true)}";
             } while (!_tokens.TryAdd(token, payload));
+
+            if (Interlocked.Increment(ref createdSinceLastPrune) > PruneInterval)
+            {
+                PruneExpiredTokens();
+            }
 
             return token;
         }
@@ -55,6 +63,7 @@ namespace Eurofurence.App.Server.Services.Identity
             {
                 _tokens.TryRemove(expiredToken);
             }
+            Interlocked.Exchange(ref createdSinceLastPrune, 0);
         }
     }
 }
