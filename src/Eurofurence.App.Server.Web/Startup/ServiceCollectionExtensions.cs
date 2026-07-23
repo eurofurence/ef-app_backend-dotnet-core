@@ -135,6 +135,14 @@ namespace Eurofurence.App.Server.Web.Startup
                         In = ParameterLocation.Header,
                         Type = SecuritySchemeType.ApiKey
                     });
+                options.AddSecurityDefinition(SingleUseTokenAuthenticationDefaults.AuthenticationScheme,
+                    new OpenApiSecurityScheme
+                    {
+                        Name = SingleUseTokenAuthenticationDefaults.QueryName,
+                        Description = "Authenticate with a single-use token",
+                        In = ParameterLocation.Query,
+                        Type = SecuritySchemeType.ApiKey
+                    });
 
                 //options.DescribeAllEnumsAsStrings();
                 options.IncludeXmlComments($@"{AppContext.BaseDirectory}/Eurofurence.App.Server.Web.xml");

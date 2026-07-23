@@ -1,40 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Users;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Web.Extensions;
+using Eurofurence.App.Server.Web.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
+
     [Route("Api/[controller]")]
     public class UsersController : BaseController
     {
         private readonly IArtistAlleyUserPenaltyService _artistAlleyUserPenaltyService;
 
         /// <summary>
-        /// Identity service for user identity management.
-        /// </summary>
-        private readonly IIdentityService _identityService;
-
-        /// <summary>
         /// Provides different kinds of passes to be used in the app or in wallets.
         /// </summary>
         private readonly IPassService _passService;
 
-        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService, IIdentityService identityService, IPassService passService)
+        private readonly IDistributedCache _cache;
+        private const string PassTokenPrefix = "pass-";
+
+        public UsersController(IArtistAlleyUserPenaltyService artistAlleyUserPenaltyService, IPassService passService, IDistributedCache cache)
         {
             _artistAlleyUserPenaltyService = artistAlleyUserPenaltyService;
-            _identityService = identityService;
             _passService = passService;
+            _cache = cache;
         }
 
         [Authorize]
@@ -99,7 +103,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = $"{SingleUseTokenAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = IdentityRole.Attendee)]
         public async Task<ActionResult> GetPass([FromQuery] string mimeType = IPassService.MimeTypeSvg)
         {
             if (User.Identity is not ClaimsIdentity identity)
@@ -132,6 +136,46 @@ namespace Eurofurence.App.Server.Web.Controllers
             }
 
             return NotFound();
+        }
+
+        /// <summary>
+        /// Retrieve a single-use token that can be used to download a pass once.
+        /// </summary>
+        /// <returns>Single-use token that can be used with the <c>Pass</c> endpoint.</returns>
+        [HttpGet("Pass/:token")]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(string), 404)]
+        [Authorize(Roles = IdentityRole.Attendee)]
+        public async Task<ActionResult> GetPassToken()
+        {
+            if (User.Identity is not ClaimsIdentity identity)
+            {
+                return Unauthorized();
+            }
+
+            if (identity.FindFirst("token")?.Value is not { Length: > 0 } identityToken)
+            {
+                return Unauthorized();
+            }
+
+            var claims = new Dictionary<string, string>
+            {
+                {"token", identityToken},
+                {"avatar", identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value},
+            };
+
+            var token = new SingleUseToken
+            {
+                ValidUntil = DateTimeOffset.UtcNow.AddMinutes(5),
+                PrincipalName = identity.Name,
+                Token = $"{PassTokenPrefix}{RandomNumberGenerator.GetHexString(128, true)}",
+                Roles = [IdentityRole.Attendee],
+                AdditionalClaims = claims
+            };
+
+            _cache.SetString(token.Token, JsonSerializer.Serialize(token), new DistributedCacheEntryOptions { AbsoluteExpiration = token.ValidUntil });
+
+            return Ok(token.Token);
         }
     }
 

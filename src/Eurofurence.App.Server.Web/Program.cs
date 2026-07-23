@@ -143,6 +143,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
                 .AddOAuth2Introspection()
+                .AddScheme<AuthenticationSchemeOptions, SingleUseTokenAuthenticationHandler>(SingleUseTokenAuthenticationDefaults.AuthenticationScheme, null)
                 .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>
                 (ApiKeyAuthenticationDefaults.AuthenticationScheme,
                     options =>
