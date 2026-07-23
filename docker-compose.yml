@@ -63,7 +63,7 @@ services:
       retries: 30
 
   minio:
-    image: minio/minio
+    image: 'minio/minio:latest'
     ports:
       - "9000:9000"
       - "9001:9001"
