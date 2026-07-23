@@ -99,14 +99,22 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// Returns a scannable convention pass for the current user, if they have a valid registration.
         /// </summary>
         /// <param name="mimeType">The MIME type the resulting pass should have. Supported values are: <c>image/svg+xml</c> (default) and <c>application/vnd.apple.pkpass</c></param>
+        /// <param name="token">Optional single-use token obtained from <c>/Users/Pass/:token</c> that can be used instead of the bearer token in the <c>Authorization</c> header.</param>
         /// <returns>Convention pass in requested format.</returns>
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
         [Authorize(AuthenticationSchemes = $"{SingleUseTokenAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = IdentityRole.Attendee)]
-        public async Task<ActionResult> GetPass([FromQuery] string mimeType = IPassService.MimeTypeSvg)
+        public async Task<ActionResult> GetPass([FromQuery] string mimeType = IPassService.MimeTypeSvg, [FromQuery] string token = null)
         {
             if (User.Identity is not ClaimsIdentity identity)
+            {
+                return Unauthorized();
+            }
+
+            // Enforce that if using single-use token authentication, only a Pass token can be used
+            // with this endpoint.
+            if (!string.IsNullOrEmpty(token) && !token.StartsWith(PassTokenPrefix))
             {
                 return Unauthorized();
             }
