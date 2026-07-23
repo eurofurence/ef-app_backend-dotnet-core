@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <param name="id"></param>
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
@@ -84,7 +84,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Id of the newly created knowledge group</returns>
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
@@ -103,7 +103,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a knowledge group.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]

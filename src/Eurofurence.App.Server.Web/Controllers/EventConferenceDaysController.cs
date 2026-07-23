@@ -39,7 +39,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventConferenceDayResponse>), 200)]
         public IQueryable<EventConferenceDayResponse> GetEventConferenceDaysAsync()
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return _eventConferenceDayService.FindAll(x => isStaff || !x.IsInternal).Select(x => x.Transform());
         }
 
@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceDayResponse), 200)]
         public async Task<EventConferenceDayResponse> GetEventConferenceDayAsync([FromRoute] Guid id)
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return (await _eventConferenceDayService.FindAll(x => x.Id == id && (isStaff || !x.IsInternal)).FirstOrDefaultAsync()).Transient404(HttpContext)?.Transform();
         }
     }

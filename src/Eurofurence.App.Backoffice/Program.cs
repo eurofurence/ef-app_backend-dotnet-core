@@ -45,13 +45,13 @@ builder.Services.AddOidcAuthentication(options =>
 builder.Services.AddAuthorizationCore(config =>
 {
     config.AddPolicy("RequireKnowledgeBaseEditor", policy =>
-        policy.RequireRole([IdentityRole.KnowledgeBaseEditor, IdentityRole.Admin])
+        policy.RequireRole([IdentityRoles.KnowledgeBaseEditor, IdentityRoles.Admin])
         );
     config.AddPolicy("RequireArtistAlleyModerator", policy =>
-        policy.RequireRole([IdentityRole.ArtistAlleyModerator, IdentityRole.ArtistAlleyAdmin, IdentityRole.Admin])
+        policy.RequireRole([IdentityRoles.ArtistAlleyModerator, IdentityRoles.ArtistAlleyAdmin, IdentityRoles.Admin])
         );
     config.AddPolicy("RequireArtistAlleyAdmin", policy =>
-        policy.RequireRole([IdentityRole.ArtistAlleyAdmin, IdentityRole.Admin])
+        policy.RequireRole([IdentityRoles.ArtistAlleyAdmin, IdentityRoles.Admin])
         );
 }
 );

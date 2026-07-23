@@ -90,11 +90,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             _logger.LogDebug($"Execute=Sync, Since={since}, IsStaff={isStaff}");
 
             var tableRegistrations =
-                (User.IsInRole(IdentityRole.AttendeeCheckedIn) || User.IsInRole(IdentityRole.ArtistAlleyModerator) || User.IsInRole(IdentityRole.ArtistAlleyAdmin) || User.IsInRole(IdentityRole.Admin)) ?
+                (User.IsInRole(IdentityRoles.AttendeeCheckedIn) || User.IsInRole(IdentityRoles.ArtistAlleyModerator) || User.IsInRole(IdentityRoles.ArtistAlleyAdmin) || User.IsInRole(IdentityRoles.Admin)) ?
                 _mapper.Map<DeltaResponse<ArtistAlleyResponse>>(await _tableRegistrationService.GetDeltaResponseAsync(since))
                 : new DeltaResponse<ArtistAlleyResponse>
                 {

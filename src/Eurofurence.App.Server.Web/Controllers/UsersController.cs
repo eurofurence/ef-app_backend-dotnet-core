@@ -72,7 +72,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="changeRequest"></param>
         /// <returns></returns>
         [HttpPut("{id}/:artist_alley_penalty")]
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtistAlleyAdmin}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtistAlleyAdmin}")]
         public async Task<ActionResult> PutArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id,
             [Required][FromBody] ArtistAlleyUserPenaltyChangeRequest changeRequest)
         {
@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">The ID of the user</param>
         /// <returns>The penalty status as a string</returns>
         [HttpGet("{id}/:artist_alley_penalty")]
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtistAlleyAdmin}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtistAlleyAdmin}")]
         public async Task<ArtistAlleyUserPenaltyRecord.PenaltyStatus> GetArtistAlleyUserPenaltyAsync([EnsureNotNull][FromRoute] string id)
         {
             return await _artistAlleyUserPenaltyService.GetUserPenaltyAsync(id);
@@ -104,7 +104,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        [Authorize(AuthenticationSchemes = $"{SingleUseTokenAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = IdentityRole.Attendee)]
+        [Authorize(AuthenticationSchemes = $"{SingleUseTokenAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = IdentityRoles.Attendee)]
         public async Task<ActionResult> GetPass([FromQuery] string mimeType = IPassService.MimeTypeSvg, [FromQuery] string token = null)
         {
             if (User.Identity is not ClaimsIdentity identity)
@@ -153,7 +153,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass/:token")]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        [Authorize(Roles = IdentityRole.Attendee)]
+        [Authorize(Roles = IdentityRoles.Attendee)]
         public async Task<ActionResult> GetPassToken()
         {
             if (User.Identity is not ClaimsIdentity identity)
@@ -177,7 +177,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 ValidUntil = DateTimeOffset.UtcNow.AddMinutes(5),
                 PrincipalName = identity.Name,
                 Token = $"{PassTokenPrefix}{RandomNumberGenerator.GetHexString(128, true)}",
-                Roles = [IdentityRole.Attendee],
+                Roles = [IdentityRoles.Attendee],
                 AdditionalClaims = claims
             };
 

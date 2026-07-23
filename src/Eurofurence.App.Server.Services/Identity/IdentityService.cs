@@ -124,7 +124,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (await _cache.GetStringAsync($"{token}_regsys") is { Length: > 0 } cached)
             {
-                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRole.Attendee));
+                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
 
                 var cachedRegistrations =
                     JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
@@ -139,7 +139,7 @@ namespace Eurofurence.App.Server.Services.Identity
                 if (cachedRegistrations.Any(registrationStatus =>
                         registrationStatus.Value == UserRegistrationStatus.CheckedIn))
                 {
-                    identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRole.AttendeeCheckedIn));
+                    identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
                 }
 
                 return;
@@ -178,11 +178,11 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
-            identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRole.Attendee));
+            identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
 
             if (registrations.Any(registration => registration.Value == UserRegistrationStatus.CheckedIn))
             {
-                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRole.AttendeeCheckedIn));
+                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
             }
 
             if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&

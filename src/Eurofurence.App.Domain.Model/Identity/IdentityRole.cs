@@ -1,6 +1,6 @@
 namespace Eurofurence.App.Domain.Model.Identity
 {
-    public class IdentityRole
+    public class IdentityRoles
     {
         public const string Admin = "Admin";
         public const string ArtistAlleyAdmin = "ArtistAlleyAdmin";

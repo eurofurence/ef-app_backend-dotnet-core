@@ -73,7 +73,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">ID of the announcement to be deleted</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
@@ -93,7 +93,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="request">New announcement to be pushed</param>
         /// <returns></returns>
         [HttpPost]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         public async Task<ActionResult> PostAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRequest request)
@@ -126,7 +126,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="request">Updated announcement record</param>
         /// <returns></returns>
         [HttpPut("{id}")]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> PutAnnouncementAsync([FromRoute] Guid id,
@@ -156,7 +156,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpDelete]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         public async Task<ActionResult> ClearAnnouncementAsync()
         {

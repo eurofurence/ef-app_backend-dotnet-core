@@ -39,7 +39,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventConferenceRoomResponse>), 200)]
         public async Task<IEnumerable<EventConferenceRoomResponse>> GetEventConferenceRoomsAsync()
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             var result = await _eventConferenceRoomService.FindAll(x => isStaff || !x.IsInternal).Select(x => x.Transform()).ToListAsync();
             result.ForEach(r => r.MapLink = _eventConferenceRoomService.GetMapLink(r.Id));
             return result;
@@ -61,7 +61,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceRoomResponse), 200)]
         public async Task<EventConferenceRoomResponse> GetEventConferenceRoomAsync([FromRoute] Guid id)
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             var result = (await _eventConferenceRoomService.FindAll(x => x.Id == id && (isStaff || !x.IsInternal)).FirstOrDefaultAsync()).Transient404(HttpContext)?.Transform();
             if (result is not null) result.MapLink = _eventConferenceRoomService.GetMapLink(result.Id);
             return result;

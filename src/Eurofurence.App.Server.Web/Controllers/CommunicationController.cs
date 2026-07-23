@@ -34,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     that have not been retrieved in a previous call.
         /// </remarks>
         /// <returns>A list of all private messages for the authorized attendee</returns>
-        [Authorize(Roles = IdentityRole.Attendee)]
+        [Authorize(Roles = IdentityRoles.Attendee)]
         [HttpGet("PrivateMessages")]
         [ProducesResponseType(typeof(IEnumerable<PrivateMessageResponse>), 200)]
         public async Task<IEnumerable<PrivateMessageResponse>> GetMyPrivateMessagesAsync(CancellationToken cancellationToken = default)
@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="cancellationToken">Token for request cancellation</param>
         /// <returns>The current timestamp on the server that will be persisted in the messages `ReadDateTimeUtc` property.</returns>
         /// <response code="400">`MessageId` is invalid or not accessible by the user.</response>
-        [Authorize(Roles = IdentityRole.Attendee)]
+        [Authorize(Roles = IdentityRoles.Attendee)]
         [HttpPost("PrivateMessages/{messageId}/Read")]
         [ProducesResponseType(typeof(DateTime), 200)]
         public async Task<ActionResult> MarkMyPrivateMessageAsReadAsync(
@@ -91,7 +91,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="cancellationToken">Token for Cancelling the operation.</param>
         /// <returns>The `ID` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRole.Admin},{IdentityRole.PrivateMessageSender}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.PrivateMessageSender}")]
         [HttpPost("PrivateMessages")]
         [HttpPost("PrivateMessages/:byRegistrationId")]
         [ProducesResponseType(typeof(Guid), 200)]
@@ -126,7 +126,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="cancellationToken">Token for Cancelling the operation.</param>
         /// <returns>The `ID` of the message that has been delivered.</returns>
         /// <response code="400">Unable to parse `Request`</response>
-        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRole.Admin},{IdentityRole.PrivateMessageSender}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.PrivateMessageSender}")]
         [HttpPost("PrivateMessages/:byIdentityId")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> SendPrivateMessageIdentityAsync(
@@ -169,7 +169,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("NotificationQueue/Count")]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(typeof(int), 200)]
         public int GetNotificationQueueSize()
         {

@@ -39,7 +39,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventConferenceTrackResponse>), 200)]
         public IQueryable<EventConferenceTrackResponse> GetEventConferenceTracksAsync()
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return _eventConferenceTrackService.FindAll(x => isStaff || !x.IsInternal).Select(x => x.Transform());
         }
 
@@ -59,7 +59,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventConferenceTrackResponse), 200)]
         public async Task<EventConferenceTrackResponse> GetEventConferenceTrackAsync([FromRoute] Guid id)
         {
-            var isStaff = User?.IsInRole(IdentityRole.Staff) ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return (await _eventConferenceTrackService.FindAll(x => x.Id == id && (isStaff || !x.IsInternal)).FirstOrDefaultAsync()).Transient404(HttpContext)?.Transform();
         }
     }

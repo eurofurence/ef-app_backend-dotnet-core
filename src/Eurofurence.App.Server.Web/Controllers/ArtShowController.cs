@@ -31,7 +31,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// There's a row-hash built from the mentioned import fields. If a row with the same hash is already present, it will be skipped.
         /// (Importing the same data multiple times does not lead to duplicates.)
         /// </remarks> 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpPost("ItemActivites/Log")]
         [ProducesResponseType(201)]
         [BinaryPayload(Description = "Art show log contents")]
@@ -49,7 +49,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// as well as items going into auction (`IdsToAuction`) with their current bid on top. <br /><br />
         /// <b>Calling this endpoint does not modify any data and does not send any messages.</b>
         /// </remarks> 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpGet("ItemActivites/NotificationBundles/Simulation")]
         [ProducesResponseType(200)]
         public IList<ItemActivityNotificationResult> SimulateItemActivitiesNotificationRunAsync()
@@ -66,7 +66,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <b><u>Calling this endpoint will produce and queue all notifications/messages for delivery. Notifications are sent asynchronously and in queue,
         /// so full delivery may take a few minutes.</u></b>
         /// </remarks> 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpPost("ItemActivites/NotificationBundles/Send")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> ExecuteNotificationRunAsync()
@@ -83,7 +83,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// Deletes any imported data for which no notification has been sent yet.<br /><br />
         /// <b>Use this to remove imported data if the simulation does not check out.</b>
         /// </remarks>
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpDelete("ItemActivites/NotificationBundles/:unprocessed")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> DeleteUnprocessedItemActivitiesImportRowsAsync()
@@ -101,7 +101,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// There's a row-hash built from the mentioned import fields. If a row with the same hash is already present, it will be skipped.
         /// (Importing the same data multiple times does not lead to duplicates.)
         /// </remarks> 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpPost("AgentClosingResults/Log")]
         [ProducesResponseType(201)]
         [BinaryPayload(Description = "Agent closing result log contents")]
@@ -118,7 +118,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// The simulation data shows individual notification data for every agent (`AgentBadgeNo`).<br /><br />
         /// <b>Calling this endpoint does not modify any data and does not send any messages.</b>
         /// </remarks> 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpGet("AgentClosingResults/NotificationBundles/Simulation")]
         [ProducesResponseType(200)]
         public IList<AgentClosingNotificationResult> SimulateAgentClosingResultsNotificationRunAsync()
@@ -135,7 +135,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <b><u>Calling this endpoint will produce and queue all notifications/messages for delivery. Notifications are sent asynchronously and in queue,
         /// so full delivery may take a few minutes.</u></b>
         /// </remarks> 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpPost("AgentClosingResults/NotificationBundles/Send")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> ExecuteAgentNotificationRunAsync()
@@ -151,7 +151,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// Deletes any imported data for which no notification has been sent yet.<br /><br />
         /// <b>Use this to remove imported data if the simulation does not check out.</b>
         /// </remarks>
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.ArtShow}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.ArtShow}")]
         [HttpDelete("AgentClosingResults/NotificationBundles/:unprocessed")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> DeleteUnprocessedAgentClosingResultsImportRowsAsync()

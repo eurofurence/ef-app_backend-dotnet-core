@@ -36,57 +36,57 @@ public class RolesClaimsTransformation(
         {
             if (authorizationOptions.Value.Admin.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.Admin);
+                roles.Add(IdentityRoles.Admin);
             }
 
             if (authorizationOptions.Value.ArtistAlleyAdmin.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.ArtistAlleyAdmin);
+                roles.Add(IdentityRoles.ArtistAlleyAdmin);
             }
 
             if (authorizationOptions.Value.ArtistAlleyModerator.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.ArtistAlleyModerator);
+                roles.Add(IdentityRoles.ArtistAlleyModerator);
             }
 
             if (authorizationOptions.Value.ArtShow.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.ArtShow);
+                roles.Add(IdentityRoles.ArtShow);
             }
 
             if (authorizationOptions.Value.Attendee.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.Attendee);
+                roles.Add(IdentityRoles.Attendee);
             }
 
             if (authorizationOptions.Value.AttendeeCheckedIn.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.AttendeeCheckedIn);
+                roles.Add(IdentityRoles.AttendeeCheckedIn);
             }
 
             if (authorizationOptions.Value.EventFeedbackManager.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.EventFeedbackManager);
+                roles.Add(IdentityRoles.EventFeedbackManager);
             }
 
             if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.KnowledgeBaseEditor);
+                roles.Add(IdentityRoles.KnowledgeBaseEditor);
             }
 
             if (authorizationOptions.Value.MapEditor.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.MapEditor);
+                roles.Add(IdentityRoles.MapEditor);
             }
 
             if (authorizationOptions.Value.PrivateMessageSender.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.PrivateMessageSender);
+                roles.Add(IdentityRoles.PrivateMessageSender);
             }
 
             if (authorizationOptions.Value.Staff.Contains(claim.Value))
             {
-                roles.Add(IdentityRole.Staff);
+                roles.Add(IdentityRoles.Staff);
             }
         }
 

@@ -44,7 +44,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all images including restricted ones.
         /// </summary>
         /// <returns>All images.</returns>
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [HttpGet(":all")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<ImageResponse>), 200)]
@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Retrieves a list of all images with related IDs.
         /// </summary>
         /// <returns>All images with related IDs.</returns>
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [HttpGet("with-relations")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<ImageWithRelationsResponse>), 200)]
@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _imageService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<ImageResponse>();
         }
 
-        [Authorize(Roles = $"{IdentityRole.Admin},{IdentityRole.KnowledgeBaseEditor}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [HttpPost]
         public async Task<ActionResult> PostImageAsync(IFormFile file)
         {
@@ -104,7 +104,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return Ok(result.Transform<ImageResponse>());
         }
 
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [HttpPut("{id}")]
         public async Task<ActionResult> PutImageAsync([FromRoute] Guid id, IFormFile file)
         {
@@ -121,7 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete an image.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]

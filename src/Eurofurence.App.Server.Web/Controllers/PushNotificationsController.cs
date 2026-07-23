@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpPost("SyncRequest")]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         public async Task<ActionResult> PushSyncRequestAsync(CancellationToken cancellationToken = default)
         {
@@ -55,7 +55,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         [HttpGet("Statistics")]
-        [Authorize(Roles = IdentityRole.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(typeof(PushNotificationChannelStatistics), 200)]
         public async Task<PushNotificationChannelStatistics> GetStatisticsAsync(
             [FromQuery] DateTime? Since,
