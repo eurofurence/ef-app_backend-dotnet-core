@@ -45,7 +45,10 @@ public class SingleUseTokenAuthenticationHandler : AuthenticationHandler<Authent
             return AuthenticateResult.Fail("Invalid or expired token.");
         }
 
-        Logger.LogInformation($"Matched token for {tokenPayload.PrincipalName} with roles {string.Join(',', tokenPayload.Roles)} valid until {tokenPayload.ValidUntil:u}.");
+        Logger.LogInformation("Matched token for {PrincipalName} with roles {Roles} valid until {ValidUntil}.",
+            tokenPayload.PrincipalName,
+            string.Join(',', tokenPayload.Roles),
+            tokenPayload.ValidUntil.ToString("u"));
 
         var claims = new List<Claim>
             {

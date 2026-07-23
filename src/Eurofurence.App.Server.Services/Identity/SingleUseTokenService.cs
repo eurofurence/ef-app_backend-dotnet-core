@@ -14,22 +14,26 @@ namespace Eurofurence.App.Server.Services.Identity
         /// <summary>
         /// Length of the token without scope prefix and separator.
         /// </summary>
-        public const int TokenLength = 128;
+        private const int TokenLength = 128;
+
         /// <summary>
         /// Separator inserted between scope prefix and actual token.
         /// </summary>
-        public const string ScopeSeparator = "-";
+        private const string ScopeSeparator = "-";
+
         /// <summary>
         /// Perform pruning of expired tokens after this many token creations.
         /// </summary>
         private const int PruneInterval = 100;
+
         private static int createdSinceLastPrune = 0;
-        ConcurrentDictionary<string, SingleUseTokenPayload> _tokens;
+        private readonly ConcurrentDictionary<string, SingleUseTokenPayload> _tokens;
 
         public SingleUseTokenService()
         {
             _tokens = new();
         }
+
         public string CreateToken(string scope, SingleUseTokenPayload payload)
         {
             string token;

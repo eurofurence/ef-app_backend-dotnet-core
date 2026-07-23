@@ -1,11 +1,12 @@
 namespace Eurofurence.App.Server.Web.Identity;
 
-public class SingleUseTokenAuthenticationDefaults
+public static class SingleUseTokenAuthenticationDefaults
 {
     /// <summary>
     /// The default authentication scheme.
     /// </summary>
     public const string AuthenticationScheme = "SingleUseToken";
+
     /// <summary>
     /// Authentication scheme that can be used to fall back to OAuth2 if no token is provided.
     /// </summary>
