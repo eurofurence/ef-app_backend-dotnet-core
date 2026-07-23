@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Domain.Model.Identity;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -33,7 +34,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var knowledgeEntries = _knowledgeEntryService.FindAll();
 
-            if (!includeNonPublished || !(User.IsInRole("KnowledgeBaseEditor") || User.IsInRole("Admin")))
+            if (!includeNonPublished || !(User.IsInRole(IdentityRoles.KnowledgeBaseEditor) || User.IsInRole(IdentityRoles.Admin)))
             {
                 knowledgeEntries = knowledgeEntries.Where(ke => ke.Published != null);
             }
@@ -52,7 +53,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         {
             var knowledgeEntryResponse = (await _knowledgeEntryService.FindOneAsync(id)).Transform();
 
-            if (knowledgeEntryResponse?.Published == null && !User.IsInRole("KnowledgeBaseEditor") && !User.IsInRole("Admin"))
+            if (knowledgeEntryResponse?.Published == null && !User.IsInRole(IdentityRoles.KnowledgeBaseEditor) && !User.IsInRole(IdentityRoles.Admin))
             {
                 knowledgeEntryResponse = null;
             }
@@ -66,7 +67,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
@@ -88,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Id of the newly created knowledge entry</returns>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
@@ -115,7 +116,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a knowledge entry.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]

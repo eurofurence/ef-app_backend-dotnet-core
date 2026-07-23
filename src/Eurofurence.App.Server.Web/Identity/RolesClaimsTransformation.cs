@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
@@ -35,57 +36,57 @@ public class RolesClaimsTransformation(
         {
             if (authorizationOptions.Value.Admin.Contains(claim.Value))
             {
-                roles.Add("Admin");
+                roles.Add(IdentityRoles.Admin);
             }
 
             if (authorizationOptions.Value.ArtistAlleyAdmin.Contains(claim.Value))
             {
-                roles.Add("ArtistAlleyAdmin");
+                roles.Add(IdentityRoles.ArtistAlleyAdmin);
             }
 
             if (authorizationOptions.Value.ArtistAlleyModerator.Contains(claim.Value))
             {
-                roles.Add("ArtistAlleyModerator");
+                roles.Add(IdentityRoles.ArtistAlleyModerator);
             }
 
             if (authorizationOptions.Value.ArtShow.Contains(claim.Value))
             {
-                roles.Add("ArtShow");
+                roles.Add(IdentityRoles.ArtShow);
             }
 
             if (authorizationOptions.Value.Attendee.Contains(claim.Value))
             {
-                roles.Add("Attendee");
+                roles.Add(IdentityRoles.Attendee);
             }
 
             if (authorizationOptions.Value.AttendeeCheckedIn.Contains(claim.Value))
             {
-                roles.Add("AttendeeCheckedIn");
+                roles.Add(IdentityRoles.AttendeeCheckedIn);
             }
 
             if (authorizationOptions.Value.EventFeedbackManager.Contains(claim.Value))
             {
-                roles.Add("EventFeedbackManager");
+                roles.Add(IdentityRoles.EventFeedbackManager);
             }
 
             if (authorizationOptions.Value.KnowledgeBaseEditor.Contains(claim.Value))
             {
-                roles.Add("KnowledgeBaseEditor");
+                roles.Add(IdentityRoles.KnowledgeBaseEditor);
             }
 
             if (authorizationOptions.Value.MapEditor.Contains(claim.Value))
             {
-                roles.Add("MapEditor");
+                roles.Add(IdentityRoles.MapEditor);
             }
 
             if (authorizationOptions.Value.PrivateMessageSender.Contains(claim.Value))
             {
-                roles.Add("PrivateMessageSender");
+                roles.Add(IdentityRoles.PrivateMessageSender);
             }
 
             if (authorizationOptions.Value.Staff.Contains(claim.Value))
             {
-                roles.Add("Staff");
+                roles.Add(IdentityRoles.Staff);
             }
         }
 

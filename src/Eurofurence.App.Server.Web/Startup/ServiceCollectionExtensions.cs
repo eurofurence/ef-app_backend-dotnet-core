@@ -90,6 +90,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
+            services.AddSingleton<ISingleUseTokenService, SingleUseTokenService>();
             services.AddSingleton<IPassCertificateProvider, PassCertificateProvider>();
             services.AddTransient<IPassService, PassService>();
 
@@ -133,6 +134,14 @@ namespace Eurofurence.App.Server.Web.Startup
                         Name = ApiKeyAuthenticationDefaults.HeaderName,
                         Description = "Authenticate with a static API key",
                         In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey
+                    });
+                options.AddSecurityDefinition(SingleUseTokenAuthenticationDefaults.AuthenticationScheme,
+                    new OpenApiSecurityScheme
+                    {
+                        Name = SingleUseTokenAuthenticationDefaults.QueryName,
+                        Description = "Authenticate with a single-use token",
+                        In = ParameterLocation.Query,
                         Type = SecuritySchemeType.ApiKey
                     });
 

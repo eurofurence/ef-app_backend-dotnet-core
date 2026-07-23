@@ -1,4 +1,5 @@
 ﻿using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
@@ -53,7 +54,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventResponse>), 200)]
         public IQueryable<EventResponse> GetEventsAsync()
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return _eventService.FindAll(e => isStaff || !e.IsInternal)
                 .Select(x => x.Transform());
         }
@@ -100,7 +101,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             int toleranceInMinutes
         )
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return _eventService.FindConflicts(conflictStartTime, conflictEndTime,
                 TimeSpan.FromMinutes(toleranceInMinutes), isStaff).Select(x => x.Transform());
         }
@@ -121,7 +122,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(EventResponse), 200)]
         public async Task<EventResponse> GetEventAsync([FromRoute] Guid id)
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             var eventEntry = await _eventService.FindAll(e => e.Id == id && (isStaff || !e.IsInternal)).FirstOrDefaultAsync();
             return eventEntry.Transient404(HttpContext)?.Transform();
         }
@@ -135,7 +136,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType<EventResponse>(200)]
         public ActionResult GetMyFavorites()
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             return Ok(_eventService.GetFavoriteEventsFromUser(User)?
                 .Where(e => isStaff || !e.IsInternal)
                 .Select(x => x.Transform()));
@@ -163,13 +164,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>
         /// All events in the event schedule, including statistics on favorite counts.
         /// </returns>
-        [Authorize(Roles = "Admin,EventFeedbackManager")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventFeedbackManager}")]
         [HttpGet("Statistics")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventWithStatisticsResponse>), 200)]
         public async Task<IEnumerable<EventWithStatisticsResponse>> GetEventStatisticsAsync()
         {
-            var isStaff = User.IsInRole("Staff");
+            var isStaff = User.IsInRole(IdentityRoles.Staff);
             var events = await _eventService.FindAllWithStatisticsAsync(e => isStaff || !e.IsInternal);
             var result = _mapper.Map<List<EventWithStatisticsResponse>>(events);
 
@@ -212,7 +213,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<ActionResult> MarkEventAsFavorite([FromRoute] Guid id)
         {
             var foundEvent = await _eventService.FindOneAsync(id);
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
 
             if (foundEvent == null || (foundEvent.IsInternal && !isStaff))
             {
@@ -249,7 +250,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]
@@ -277,7 +278,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [EnsureNotNull]

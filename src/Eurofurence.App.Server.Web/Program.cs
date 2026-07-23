@@ -1,4 +1,8 @@
-﻿using dotAPNS.AspNetCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using dotAPNS.AspNetCore;
 using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
@@ -31,10 +35,6 @@ using Sentry;
 using Serilog;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -143,6 +143,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
                 .AddOAuth2Introspection()
+                .AddScheme<AuthenticationSchemeOptions, SingleUseTokenAuthenticationHandler>(SingleUseTokenAuthenticationDefaults.AuthenticationScheme, null)
                 .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>
                 (ApiKeyAuthenticationDefaults.AuthenticationScheme,
                     options =>
@@ -153,7 +154,21 @@ namespace Eurofurence.App.Server.Web
                         {
                             logger.Information($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
                         }
-                    });
+                    })
+                .AddPolicyScheme(SingleUseTokenAuthenticationDefaults.TokenOrOAuth2AuthenticationPolicyScheme, displayName: null, options =>
+                {
+                    // Only challenge SingleUseToken scheme if token provided,
+                    // otherwise default to OAuth2.
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.Request.Query.ContainsKey(SingleUseTokenAuthenticationDefaults.QueryName))
+                        {
+                            return SingleUseTokenAuthenticationDefaults.AuthenticationScheme;
+                        }
+
+                        return OAuth2IntrospectionDefaults.AuthenticationScheme;
+                    };
+                });
 
             builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
