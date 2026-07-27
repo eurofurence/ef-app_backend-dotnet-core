@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -198,9 +199,11 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             Calendar favoriteEvents = _eventService.GetFavoriteEventsFromUserAsIcal(userRecord);
             var serializer = new CalendarSerializer();
-            var serializedCalendar = serializer.SerializeToString(favoriteEvents);
+            var ms = new MemoryStream();
+            serializer.Serialize(favoriteEvents, ms, Encoding.UTF8);
+            ms.Seek(0, SeekOrigin.Begin);
 
-            return File(Encoding.ASCII.GetBytes(serializedCalendar), "text/calendar", "calendar.ics");
+            return File(ms, "text/calendar", "calendar.ics");
         }
 
         /// <summary>
