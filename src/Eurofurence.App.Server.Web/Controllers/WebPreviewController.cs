@@ -79,17 +79,21 @@ namespace Eurofurence.App.Server.Web.Controllers
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
             var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
             var eventConferenceTrack = await _eventConferenceTrackService.FindOneAsync(@event.ConferenceTrackId);
+            var eventStartDateTime = TimeZoneInfo.ConvertTime(@event.StartDateTimeUtc, _globalOptions.ConventionTimeZoneInfo);
+            var eventEndDateTime = TimeZoneInfo.ConvertTime(@event.EndDateTimeUtc, _globalOptions.ConventionTimeZoneInfo);
 
             PopulateViewData();
-
-            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
-                .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {@event.StartDateTimeUtc:HH\\:mm}-{@event.EndDateTimeUtc:HH\\:mm}, {eventConferenceRoom.Name}\n\n{@event.Description}")
-                .WithImage(previewImageUrl);
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
             ViewData["eventConferenceRoom"] = eventConferenceRoom;
             ViewData["eventConferenceTrack"] = eventConferenceTrack;
+            ViewData["eventStartDateTime"] = eventStartDateTime;
+            ViewData["eventEndDateTime"] = eventEndDateTime;
+
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                .WithTitle(@event.Title)
+                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {eventStartDateTime:HH\\:mm}-{eventEndDateTime:HH\\:mm}, {eventConferenceRoom.Name}\n\n{@event.Description}")
+                .WithImage(previewImageUrl);
 
             return View("EventPreview", @event);
         }

@@ -4,6 +4,8 @@ namespace Eurofurence.App.Server.Services.Abstractions
 {
     public class GlobalOptions
     {
+        private TimeZoneInfo _conventionTimeZoneInfo;
+
         /// <summary>
         /// Unique identifier for the convention and iteration (e.g. "EF30").
         /// </summary>
@@ -58,6 +60,24 @@ namespace Eurofurence.App.Server.Services.Abstractions
         /// URL or email address via which the convention can be contacted.
         /// </summary>
         public string ConventionContact { get; init; }
+        /// <summary>
+        /// Timezone identifier used when rendering UTC dates in web previews.
+        /// </summary>
+        public string ConventionTimeZone { get; init; }
+        /// <summary>
+        /// TimeZoneInfo object based on time zone name in <c>ConventionTimeZone</c>.
+        /// </summary>
+        public TimeZoneInfo ConventionTimeZoneInfo
+        {
+            get
+            {
+                if (_conventionTimeZoneInfo is null)
+                {
+                    _conventionTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(ConventionTimeZone);
+                }
+                return _conventionTimeZoneInfo;
+            }
+        }
         /// <summary>
         /// TODO: Seems to be unused? Check and potentially drop during next cleanup.
         /// </summary>

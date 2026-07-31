@@ -1,6 +1,7 @@
-﻿@using Eurofurence.App.Server.Web.Controllers
-@using Eurofurence.App.Domain.Model.Events
+﻿@using Eurofurence.App.Domain.Model.Events
+@using Eurofurence.App.Server.Web.Controllers
 @model EventRecord
+
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
 
@@ -11,6 +12,8 @@
     var eventConferenceDay = (ViewData["eventConferenceDay"] as EventConferenceDayRecord);
     var eventConferenceRoom = (ViewData["eventConferenceRoom"] as EventConferenceRoomRecord);
     var eventConferenceTrack = (ViewData["eventConferenceTrack"] as EventConferenceTrackRecord);
+    var eventStartDateTime = (ViewData["eventStartDateTime"] as DateTime?);
+    var eventEndDateTime = (ViewData["eventEndDateTime"] as DateTime?);
 
     var title = Model.Title;
     var subTitle = Model.SubTitle;
@@ -36,10 +39,9 @@
 </header>
 
 <section class="summary">
-    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name
-        (@Model.StartDateTimeUtc.ToString("dddd"))</div>
-    <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @Model.StartDateTimeUtc.ToString("HH\\:mm")</div>
-    <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @Model.EndDateTimeUtc.ToString("HH\\:mm")</div>
+    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name</div>
+    <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @eventStartDateTime?.ToString("HH\\:mm")</div>
+    <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @eventEndDateTime?.ToString("HH\\:mm")</div>
     <div class="infobox"><label><i class="fas fa-map-marker-alt"></i>Where:</label> @eventConferenceRoom.Name</div>
 </section>
 
