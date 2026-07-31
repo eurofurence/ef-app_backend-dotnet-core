@@ -67,17 +67,8 @@ namespace Eurofurence.App.Server.Services.Abstractions
         /// <summary>
         /// TimeZoneInfo object based on time zone name in <c>ConventionTimeZone</c>.
         /// </summary>
-        public TimeZoneInfo ConventionTimeZoneInfo
-        {
-            get
-            {
-                if (_conventionTimeZoneInfo is null)
-                {
-                    _conventionTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(ConventionTimeZone);
-                }
-                return _conventionTimeZoneInfo;
-            }
-        }
+        public TimeZoneInfo ConventionTimeZoneInfo =>
+            _conventionTimeZoneInfo ??= TimeZoneInfo.FindSystemTimeZoneById(ConventionTimeZone);
         /// <summary>
         /// TODO: Seems to be unused? Check and potentially drop during next cleanup.
         /// </summary>
