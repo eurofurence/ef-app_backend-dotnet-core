@@ -153,6 +153,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass/:token")]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(string), 400)]
         [Authorize(Roles = IdentityRoles.Attendee)]
         public async Task<ActionResult> GetPassToken()
         {
@@ -164,6 +165,11 @@ namespace Eurofurence.App.Server.Web.Controllers
             if (identity.FindFirst("token")?.Value is not { Length: > 0 } identityToken)
             {
                 return Unauthorized();
+            }
+
+            if (string.IsNullOrEmpty(identity.Name))
+            {
+                return BadRequest("Malformed authentication.");
             }
 
             var claims = new Dictionary<string, string>

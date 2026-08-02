@@ -1,12 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Users;
-using Eurofurence.App.Infrastructure.EntityFramework;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -19,7 +11,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Duende.IdentityModel.Client;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.Identity;
+using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Identity
 {
@@ -29,6 +30,7 @@ namespace Eurofurence.App.Server.Services.Identity
         private readonly IOptionsMonitor<IdentityOptions> _identityOptionsMonitor;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IDistributedCache _cache;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// The name of the claim type for IDP groups.
@@ -39,12 +41,14 @@ namespace Eurofurence.App.Server.Services.Identity
             AppDbContext appDbContext,
             IOptionsMonitor<IdentityOptions> identityOptions,
             IHttpClientFactory httpClientFactory,
-            IDistributedCache cache)
+            IDistributedCache cache,
+            ILoggerFactory loggerFactory)
         {
             _appDbContext = appDbContext;
             _identityOptionsMonitor = identityOptions;
             _httpClientFactory = httpClientFactory;
             _cache = cache;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         public async Task ReadUserInfo(ClaimsIdentity identity)
@@ -74,8 +78,19 @@ namespace Eurofurence.App.Server.Services.Identity
 
             identity.AddClaims(response.Claims);
 
+            // FIX: IDP will occasionally omit name claim on userinfo; can be fixed by retrying later.
+            //      This only rarely happens (every few hundred requests) so we can simply not cache
+            //      the broken response and try again next time.
+            var hasMissingNameBug = string.IsNullOrEmpty(
+                response.Claims.FirstOrDefault(claim => claim.Type == "name")?.Value
+            );
+            if (hasMissingNameBug)
+            {
+                _logger.LogInformation("Response to userinfo request missing 'name' claim will not be cached.");
+            }
+
             var exp = identity.FindFirst(x => x.Type == "exp");
-            if (exp is not null && long.TryParse(exp.Value, out var seconds))
+            if (!hasMissingNameBug && exp is not null && long.TryParse(exp.Value, out var seconds))
             {
                 await _cache.SetStringAsync(
                     $"{token}_userinfo",
