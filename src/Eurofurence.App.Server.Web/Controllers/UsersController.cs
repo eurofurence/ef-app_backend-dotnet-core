@@ -153,6 +153,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("Pass/:token")]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(string), 400)]
         [Authorize(Roles = IdentityRoles.Attendee)]
         public async Task<ActionResult> GetPassToken()
         {

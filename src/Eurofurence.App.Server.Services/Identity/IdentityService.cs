@@ -81,7 +81,9 @@ namespace Eurofurence.App.Server.Services.Identity
             // FIX: IDP will occasionally omit name claim on userinfo; can be fixed by retrying later.
             //      This only rarely happens (every few hundred requests) so we can simply not cache
             //      the broken response and try again next time.
-            var hasMissingNameBug = !response.Claims.Any(claim => claim.Type == "name");
+            var hasMissingNameBug = string.IsNullOrEmpty(
+                response.Claims.FirstOrDefault(claim => claim.Type == "name")?.Type
+            );
             if (hasMissingNameBug)
             {
                 _logger.LogInformation("Response to userinfo request missing 'name' claim will not be cached.");
