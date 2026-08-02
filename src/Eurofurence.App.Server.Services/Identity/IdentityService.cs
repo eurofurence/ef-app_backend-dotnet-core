@@ -82,7 +82,7 @@ namespace Eurofurence.App.Server.Services.Identity
             //      This only rarely happens (every few hundred requests) so we can simply not cache
             //      the broken response and try again next time.
             var hasMissingNameBug = string.IsNullOrEmpty(
-                response.Claims.FirstOrDefault(claim => claim.Type == "name")?.Type
+                response.Claims.FirstOrDefault(claim => claim.Type == "name")?.Value
             );
             if (hasMissingNameBug)
             {
