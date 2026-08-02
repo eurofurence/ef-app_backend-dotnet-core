@@ -6,8 +6,6 @@ namespace Eurofurence.App.Server.Web.Controllers
 {
     [Route("qr")]
     [Route("qrcode")]
-    //FIXME: Temporary solution for EF29
-    [Route("wifi")]
     public class QrCodeController : BaseController
     {
         private readonly IQrCodeService _qrCodeService;
@@ -19,13 +17,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             _qrCodeService = qrCodeService;
         }
 
-        //FIXME: Temporary solution for EF29
-        [HttpGet("")]
-        public ActionResult GetTargetRedirect()
-        {
-            return GetTargetRedirect("wifi");
-        }
-
+        /// <summary>
+        /// Offers link-shortening capabilities for use in printed QR codes to allow changing their
+        /// targets even after they have been printed (e.g. in case of URLs changing at a later point).
+        /// </summary>
+        /// <param name="targetId">Short name for the redirection target.</param>
+        /// <returns>HTTP redirect to the target specified by <c>targetId</c>.</returns>
         [HttpGet("{targetId}")]
         public ActionResult GetTargetRedirect(string targetId)
         {
