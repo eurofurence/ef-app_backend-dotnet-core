@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.AppConfig;
+﻿#nullable enable
+using Eurofurence.App.Domain.Model.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Microsoft.Extensions.Options;
 
@@ -7,7 +8,7 @@ namespace Eurofurence.App.Server.Services.AppConfig
     public class AppConfigService : IAppConfigService
     {
         private readonly IOptionsMonitor<AppConfigOptions> _appConfigOptions;
-        private AppConfigData _appConfig;
+        private AppConfigData _appConfig = new();
         public AppConfigService(
             IOptionsMonitor<AppConfigOptions> appConfigOptions
             )
@@ -25,15 +26,31 @@ namespace Eurofurence.App.Server.Services.AppConfig
         {
             AppConfigData appConfig = new()
             {
-                { "LatestRelease", appConfigOptions.LatestRelease },
-                { "MapsUrl", appConfigOptions.MapsUrl },
-                { "CmaUrl", appConfigOptions.CmaUrl }
+                { "LatestRelease", appConfigOptions.LatestRelease }
             };
+
+            if (appConfigOptions.MapsUrl is string mapsUrl)
+            {
+                appConfig.Add("MapsUrl", mapsUrl);
+            }
+
+            if (appConfigOptions.CmaUrl is string cmaUrl)
+            {
+                appConfig.Add("CmaUrl", cmaUrl);
+            }
+
+            if (appConfigOptions.PublicWifiSsid is string publicWifiSsid)
+            {
+                appConfig.Add("PublicWifiSsid", publicWifiSsid);
+            }
 
             foreach (var featureFlag in appConfigOptions.FeatureFlags)
             {
-                var featureFlagName = FeatureFlag.GetName(featureFlag);
-                appConfig.Add(featureFlagName, featureFlag.Value.Value);
+                if (featureFlag.Value.Value is string featureFlagValue)
+                {
+                    var featureFlagName = FeatureFlag.GetName(featureFlag);
+                    appConfig.Add(featureFlagName, featureFlagValue);
+                }
             }
             _appConfig = appConfig;
         }
