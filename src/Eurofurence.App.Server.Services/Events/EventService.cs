@@ -43,7 +43,8 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly AppDbContext _appDbContext;
         private readonly IDistributedCache _cache;
         private readonly IHtmlSanitizer _htmlSanitizer;
-        private readonly Regex _markdownEmbed = new(@"\!\[[^\]]*\]\([^)]*\)");
+        private readonly Regex _markdownImageEmbed = new(@"\!\[([^\]]|\\\])*\]\(([^\)]|\\\))*\)");
+        private readonly Regex _markdownImageReference = new(@"\!\[([^\]]|\\\])*\]\[([^\]]|\\\])*\]");
 
         private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
@@ -431,7 +432,11 @@ namespace Eurofurence.App.Server.Services.Events
         {
             if (string.IsNullOrEmpty(input)) return input;
 
-            return _markdownEmbed.Replace(_htmlSanitizer.Sanitize(input), "");
+            var sanitizedInput = _htmlSanitizer.Sanitize(input);
+            sanitizedInput = _markdownImageEmbed.Replace(sanitizedInput, "");
+            sanitizedInput = _markdownImageReference.Replace(sanitizedInput, "");
+
+            return sanitizedInput;
         }
     }
 }
