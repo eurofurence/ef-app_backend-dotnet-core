@@ -11,16 +11,16 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
     /// </para>
     /// 
     /// <para>
-    /// Each feature flag follows the naming scheme <c>FeatureFlag{Name}{Type}</c>, where its type 
+    /// Each feature flag follows the naming scheme <c>Feature{Name}{Type}</c>, where its type 
     /// states the default from the app perspective. The rationale behind this is if
-    /// <c>FeatureFlagFoobarEnabled</c> is not explicitly set, the app can safely assume the inverse
+    /// <c>FeatureFoobarEnabled</c> is not explicitly set, the app can safely assume the inverse
     /// to be true and disable the feature until the flag is explicitly set by the backend.
     /// </para>
     /// 
     /// Examples for resulting feature flag names:
     /// <list>
     ///     <item>
-    ///         <term>FeatureFlagFoobarEnabled</term>
+    ///         <term>FeatureFoobarEnabled</term>
     ///         <description>
     ///             Feature is disabled in app if flag is not explicitly provided.
     ///             Value <c>true</c> will enable the feature.
@@ -28,7 +28,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
     ///         </description>
     ///     </item>
     ///     <item>
-    ///         <term>FeatureFlagFoobarDisabled</term>
+    ///         <term>FeatureFoobarDisabled</term>
     ///         <description>
     ///             Feature is enabled in app if flag is not explicitly provided.
     ///             Value <c>true</c> will disable the feature.
@@ -36,7 +36,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
     ///         </description>
     ///     </item>
     ///     <item>
-    ///         <term>FeatureFlagFoobar</term>
+    ///         <term>FeatureFoobar</term>
     ///         <description>
     ///             Dynamic feature configuration; value can be any <c>string</c>-y expression e.g.
     ///             <c>true</c>, <c>621</c> or <c>"foobar"</c>.
@@ -49,23 +49,23 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
         public enum FlagType
         {
             /// <summary>
-            /// Feature is disabled by default. Flag name: <c>FeatureFlag{Name}Enabled</c>
+            /// Feature is disabled by default. Flag name: <c>Feature{Name}Enabled</c>
             /// </summary>
             Enabled,
             /// <summary>
-            /// Feature is enabled by default. Flag name: <c>FeatureFlag{Name}Disabled</c>
+            /// Feature is enabled by default. Flag name: <c>Feature{Name}Disabled</c>
             /// </summary>
             Disabled,
             /// <summary>
             /// Feature flag default is not defined by backend. Can be used for setting arbitrary
             /// <c>string</c>-y values.
-            /// Flag name: <c>FeatureFlag{Name}</c>
+            /// Flag name: <c>Feature{Name}</c>
             /// </summary>
             Dynamic
         }
 
         /// <summary>
-        /// <para>Type part of the flag naming scheme <c>FeatureFlag{Name}{Type}</c>.</para>
+        /// <para>Type part of the flag naming scheme <c>Feature{Name}{Type}</c>.</para>
         /// Default value: <c>Dynamic</c>
         /// </summary>
         public FlagType Type { get; init; } = FlagType.Dynamic;
@@ -86,7 +86,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
                 FlagType.Dynamic => "",
                 _ => throw new System.NotImplementedException(),
             };
-            return $"FeatureFlag{featureFlag.Key}{typeSuffix}";
+            return $"Feature{featureFlag.Key}{typeSuffix}";
         }
     }
 }
