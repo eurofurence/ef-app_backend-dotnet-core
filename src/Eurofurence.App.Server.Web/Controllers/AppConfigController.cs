@@ -19,40 +19,26 @@ namespace Eurofurence.App.Server.Web.Controllers
         }
 
         /// <summary>
-        /// <para>Dynamic configuration that is fetched by the app to allow reconfiguration of certain
-        /// options without having to republish the app.</para>
-        /// 
-        /// Feature flag suffixes work as follows:
-        /// <list>
-        ///     <item>
-        ///         <term>…Enabled</term>
-        ///         <description>
-        ///             Feature is disabled in app if flag is not provided.
-        ///             Value <c>true</c> will enable the feature.
-        ///             Value <c>false</c> is the assumed default.
-        ///         </description>
-        ///     </item>
-        ///     <item>
-        ///         <term>…Disabled</term>
-        ///         <description>
-        ///             Feature is enabled in app if flag is not provided.
-        ///             Value <c>true</c> will disable the feature.
-        ///             Value <c>false</c> is the assumed default.
-        ///         </description>
-        ///     </item>
-        ///     <item>
-        ///         <term>No Suffix on Feature Flag</term>
-        ///         <description>
-        ///             App defaults to state not explicitly known to or defined by the backend.
-        ///             Value can be any <c>string</c>-y expression e.g.
-        ///             <c>true</c>, <c>621</c> or <c>"foobar"</c>.
-        ///         </description>
-        ///     </item>
-        /// </list>
+        /// Dynamic configuration that is fetched by the app to allow reconfiguration of certain
+        /// options without having to republish the app.
         /// </summary>
         /// <returns>
         ///     Dictionary with key value pairs for feature flags and predefined configuration options.
         /// </returns>
+        /// <response code="200">
+        /// Feature flag suffixes work as follows:
+        /// - **…Enabled:**
+        ///   Feature is disabled in app if flag is not explicitly provided.
+        ///   Value <c>true</c> will enable the feature.
+        ///   Value <c>false</c> is the assumed default.
+        /// - **…Disabled:**
+        ///   Feature is enabled in app if flag is not explicitly provided.
+        ///   Value <c>true</c> will disable the feature.
+        ///   Value <c>false</c> is the assumed default.
+        /// - **No suffix on feature flag:**
+        ///   Dynamic feature configuration; value can be any <c>string</c>-y expression e.g.
+        ///   <c>true</c>, <c>621</c> or <c>"foobar"</c>.
+        /// </response>
         [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(Dictionary<string, string>), 200)]

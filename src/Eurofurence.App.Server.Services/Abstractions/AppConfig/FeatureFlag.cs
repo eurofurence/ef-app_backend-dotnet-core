@@ -22,7 +22,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
     ///     <item>
     ///         <term>FeatureFlagFoobarEnabled</term>
     ///         <description>
-    ///             Feature is disabled in app if flag is not provided.
+    ///             Feature is disabled in app if flag is not explicitly provided.
     ///             Value <c>true</c> will enable the feature.
     ///             Value <c>false</c> is the assumed default.
     ///         </description>
@@ -30,7 +30,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
     ///     <item>
     ///         <term>FeatureFlagFoobarDisabled</term>
     ///         <description>
-    ///             Feature is enabled in app if flag is not provided.
+    ///             Feature is enabled in app if flag is not explicitly provided.
     ///             Value <c>true</c> will disable the feature.
     ///             Value <c>false</c> is the assumed default.
     ///         </description>
@@ -38,8 +38,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
     ///     <item>
     ///         <term>FeatureFlagFoobar</term>
     ///         <description>
-    ///             App defaults to state not explicitly known to or defined by the backend.
-    ///             Value can be any <c>string</c>-y expression e.g.
+    ///             Dynamic feature configuration; value can be any <c>string</c>-y expression e.g.
     ///             <c>true</c>, <c>621</c> or <c>"foobar"</c>.
     ///         </description>
     ///     </item>
