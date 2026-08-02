@@ -26,7 +26,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Dictionary with key value pairs for feature flags and predefined configuration options.
         /// </returns>
         /// <response code="200">
-        /// Feature flag suffixes work as follows:
+        /// Feature flags are named `Feature{Name}{Suffix}` with suffixes as follows:
         /// - **…Enabled:**
         ///   Feature is disabled in app if flag is not explicitly provided.
         ///   Value <c>true</c> will enable the feature.
