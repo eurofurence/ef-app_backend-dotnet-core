@@ -17,6 +17,12 @@ namespace Eurofurence.App.Server.Web.Controllers
             _qrCodeService = qrCodeService;
         }
 
+        /// <summary>
+        /// Offers link-shortening capabilities for use in printed QR codes to allow changing their
+        /// targets even after they have been printed (e.g. in case of URLs changing at a later point).
+        /// </summary>
+        /// <param name="targetId">Short name for the redirection target.</param>
+        /// <returns>HTTP redirect to the target specified by <c>targetId</c>.</returns>
         [HttpGet("{targetId}")]
         public ActionResult GetTargetRedirect(string targetId)
         {

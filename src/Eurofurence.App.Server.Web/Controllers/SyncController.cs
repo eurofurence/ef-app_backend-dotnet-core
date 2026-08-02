@@ -38,7 +38,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IMapService _mapService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly GlobalOptions _globalOptions;
-        private readonly AppConfigOptions _appConfigOptions;
+        private readonly IAppConfigService _appConfigService;
         private readonly IMapper _mapper;
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -53,8 +53,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             IAnnouncementService announcementService,
             IMapService mapService,
             ITableRegistrationService tableRegistrationService,
+            IAppConfigService appConfigService,
             IOptions<GlobalOptions> globalOptions,
-            IOptions<AppConfigOptions> appConfigOptions,
             IMapper mapper
         )
         {
@@ -70,8 +70,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             _announcementService = announcementService;
             _mapService = mapService;
             _tableRegistrationService = tableRegistrationService;
+            _appConfigService = appConfigService;
             _globalOptions = globalOptions.Value;
-            _appConfigOptions = appConfigOptions.Value;
             _mapper = mapper;
         }
 
@@ -121,7 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Announcements = await _announcementService.GetDeltaResponseAsync(since),
                 Maps = await _mapService.GetDeltaResponseAsync(since),
                 TableRegistrations = tableRegistrations,
-                AppConfig = _appConfigOptions,
+                AppConfig = _appConfigService.Get(),
             };
 
             // Filter internal event-related entities for non-staff

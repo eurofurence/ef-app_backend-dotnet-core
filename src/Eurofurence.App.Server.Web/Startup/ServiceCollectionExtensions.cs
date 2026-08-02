@@ -1,6 +1,7 @@
 ﻿using System;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -19,6 +20,7 @@ using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
+using Eurofurence.App.Server.Services.AppConfig;
 using Eurofurence.App.Server.Services.ArtistsAlley;
 using Eurofurence.App.Server.Services.ArtShow;
 using Eurofurence.App.Server.Services.Communication;
@@ -93,6 +95,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddSingleton<ISingleUseTokenService, SingleUseTokenService>();
             services.AddSingleton<IPassCertificateProvider, PassCertificateProvider>();
             services.AddTransient<IPassService, PassService>();
+            services.AddTransient<IAppConfigService, AppConfigService>();
 
             return services;
         }
