@@ -166,6 +166,11 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return Unauthorized();
             }
 
+            if (string.IsNullOrEmpty(identity.Name))
+            {
+                return BadRequest("Malformed authentication.");
+            }
+
             var claims = new Dictionary<string, string>
             {
                 // Required for obtaining registration data in <c>GetPass()</c>
