@@ -79,6 +79,11 @@ section.nomargin>* {
     margin-bottom: 0.70em;
 }
 
+.infobox.warning {
+    background: #fefecc;
+    border-color: #aaaa55;
+}
+
 .infobox>label {
     margin: 0;
     white-space: nowrap;

@@ -16,6 +16,7 @@
     var eventConferenceTrack = (ViewData["eventConferenceTrack"] as EventConferenceTrackRecord);
     var eventStartDateTime = (ViewData["eventStartDateTime"] as DateTime?);
     var eventEndDateTime = (ViewData["eventEndDateTime"] as DateTime?);
+    var tryFeedback = ViewData["tryFeedback"] as bool?;
 
     var title = Model.Title;
     var subTitle = Model.SubTitle;
@@ -45,6 +46,13 @@
     <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @eventStartDateTime?.ToString("HH\\:mm")</div>
     <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @eventEndDateTime?.ToString("HH\\:mm")</div>
     <div class="infobox"><label><i class="fas fa-map-marker-alt"></i>Where:</label> @eventConferenceRoom.Name</div>
+
+    @if (tryFeedback ?? false)
+    {
+        <div class="infobox warning">
+            <i class="fas fa-warning"></i> Please note that giving feedback on events is only possible via the app.
+        </div>
+    }
 </section>
 
 <section class="row">

@@ -71,8 +71,14 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData[VIEWDATA_APPID_PLAY] = _globalOptions.AppIdPlay;
         }
 
+        [HttpGet("Events/{id}/Feedback")]
+        public async Task<ActionResult> GetEventByIdWithFeedback(Guid id)
+        {
+            return await GetEventById(id, true);
+        }
+
         [HttpGet("Events/{id}")]
-        public async Task<ActionResult> GetEventById(Guid id)
+        public async Task<ActionResult> GetEventById(Guid id, bool tryFeedback = false)
         {
             var @event = await _eventService.FindAll(e => !e.IsInternal).Include(e => e.BannerImage).Include(e => e.PosterImage).FirstOrDefaultAsync(e => e.Id == id);
             if (@event == null) return NotFound();
@@ -92,6 +98,8 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData["eventConferenceTrack"] = eventConferenceTrack;
             ViewData["eventStartDateTime"] = eventStartDateTime;
             ViewData["eventEndDateTime"] = eventEndDateTime;
+
+            ViewData["tryFeedback"] = tryFeedback;
 
             ViewData["markdownPipeline"] = _markdownPipeline;
 
