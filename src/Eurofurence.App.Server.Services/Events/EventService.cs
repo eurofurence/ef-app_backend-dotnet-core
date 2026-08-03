@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Common;
@@ -17,6 +18,7 @@ using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
@@ -40,6 +42,9 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly EventOptions _eventOptions;
         private readonly AppDbContext _appDbContext;
         private readonly IDistributedCache _cache;
+        private readonly IHtmlSanitizer _htmlSanitizer;
+        private readonly Regex _markdownImageEmbed = new(@"\!\[([^\]]|\\\])*\]\(([^\)]|\\\))*\)");
+        private readonly Regex _markdownImageReference = new(@"\!\[([^\]]|\\\])*\]\[([^\]]|\\\])*\]");
 
         private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
@@ -59,7 +64,8 @@ namespace Eurofurence.App.Server.Services.Events
             IEventFavoriteStatisticsService eventFavoriteStatisticsService,
             ILoggerFactory loggerFactory,
             IOptions<EventOptions> eventOptions,
-            IDistributedCache cache
+            IDistributedCache cache,
+            IHtmlSanitizer htmlSanitizer
         )
             : base(appDbContext, storageServiceFactory)
         {
@@ -72,6 +78,7 @@ namespace Eurofurence.App.Server.Services.Events
             DateTimeOffset = TimeSpan.Zero;
             _logger = loggerFactory.CreateLogger(GetType());
             _cache = cache;
+            _htmlSanitizer = htmlSanitizer;
         }
 
 
@@ -391,10 +398,10 @@ namespace Eurofurence.App.Server.Services.Events
             // Public breaks have no submission; their title can be found in the slot description.
             patch.Map(source => source.SourceId, target => target.SourceId)
                 .Map(source => source.Submission?.Code ?? source.SourceId?.Split('-')[0] ?? "UNKNWN", target => target.Slug)
-                .Map(source => (source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
-                .Map(source => ((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
-                .Map(source => source.Submission?.Abstract, target => target.Abstract)
-                .Map(source => source.Submission?.Description ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "", target => target.Description)
+                .Map(source => SanitizeUserInput(source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
+                .Map(source => SanitizeUserInput((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
+                .Map(source => SanitizeUserInput(source.Submission?.Abstract), target => target.Abstract)
+                .Map(source => SanitizeUserInput(source.Submission?.Description ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? ""), target => target.Description)
                 .Map(
                     source => currentConferenceTracks.SingleOrDefault(track => track.SourceId == (source.Submission?.Track.Id ?? _eventOptions.InternalTrackId)).Id,
                     target => target.ConferenceTrackId)
@@ -419,6 +426,17 @@ namespace Eurofurence.App.Server.Services.Events
 
             var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
             return new Tuple<int, List<EventRecord>>(modifiedRecords, [.. diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity)]);
+        }
+
+        private string SanitizeUserInput(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+
+            var sanitizedInput = _htmlSanitizer.Sanitize(input);
+            sanitizedInput = _markdownImageEmbed.Replace(sanitizedInput, "");
+            sanitizedInput = _markdownImageReference.Replace(sanitizedInput, "");
+
+            return sanitizedInput;
         }
     }
 }
