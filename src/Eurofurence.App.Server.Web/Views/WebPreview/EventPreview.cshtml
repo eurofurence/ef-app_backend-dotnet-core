@@ -1,9 +1,11 @@
 ﻿@using Eurofurence.App.Domain.Model.Events
 @using Eurofurence.App.Server.Web.Controllers
+@using Markdig
 @model EventRecord
 
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+    var markdownPipeline = ViewData["markdownPipeline"] as MarkdownPipeline;
 
     var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
     var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
@@ -34,7 +36,7 @@
 
     @if (showAbstract)
     {
-        @Html.Raw(Markdig.Markdown.ToHtml(Model.Abstract))
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Abstract, markdownPipeline))
     }
 </header>
 
@@ -47,7 +49,7 @@
 
 <section class="row">
     <div class="@(Model.PosterImage != null ? "one-half" : "three") column">
-        @Html.Raw(Markdig.Markdown.ToHtml(Model.Description))
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Description, markdownPipeline))
     </div>
 
     @if (Model.PosterImage != null)
