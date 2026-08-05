@@ -2,9 +2,9 @@
 
 namespace Eurofurence.App.Server.Services.Sanitization
 {
-    public class GanssHtmlSanitizer : Eurofurence.App.Server.Services.Abstractions.Sanitization.IHtmlSanitizer
+    public class GanssHtmlSanitizer : Abstractions.Sanitization.IHtmlSanitizer
     {
-        private static readonly HtmlSanitizer _htmlSanitizer = new HtmlSanitizer();
+        private static readonly HtmlSanitizer _htmlSanitizer = new();
 
         public GanssHtmlSanitizer()
         {
