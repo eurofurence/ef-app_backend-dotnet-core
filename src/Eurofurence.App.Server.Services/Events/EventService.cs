@@ -398,8 +398,8 @@ namespace Eurofurence.App.Server.Services.Events
             // Public breaks have no submission; their title can be found in the slot description.
             patch.Map(source => source.SourceId, target => target.SourceId)
                 .Map(source => source.Submission?.Code ?? source.SourceId?.Split('-')[0] ?? "UNKNWN", target => target.Slug)
-                .Map(source => SanitizeUserInput(source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
-                .Map(source => SanitizeUserInput((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
+                .Map(source => (source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "").Split('–')[0]?.Trim(), target => target.Title)
+                .Map(source => ((source.Submission?.Title ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? "") + '–').Split('–')[1]?.Trim(), target => target.SubTitle)
                 .Map(source => SanitizeUserInput(source.Submission?.Abstract), target => target.Abstract)
                 .Map(source => SanitizeUserInput(source.Submission?.Description ?? source.Description?.GetValueOrDefault(_eventOptions.DefaultLocale) ?? ""), target => target.Description)
                 .Map(
