@@ -350,7 +350,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var invalidDeviceIdentityIds = new List<Guid>();
             foreach (var apnsResult in apnsResults)
             {
-                if (apnsResult.ApnsResponse.IsSuccessful) continue;
+                // No pruning needed for successful requests or those that failed with an exception.
+                if (apnsResult.ApnsResponse?.IsSuccessful ?? true) continue;
 
                 var responseReason = apnsResult.ApnsResponse.Reason;
                 if (responseReason == ApnsResponseReason.BadDeviceToken
@@ -485,10 +486,20 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 TeamId = _apnsOptions.TeamId,
             };
 
+            ApnsResponse apnsResponse = null;
+            try
+            {
+                apnsResponse = await _apnsService.SendPush(applePush, apnsJwtOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send APNs push to {deviceIdentity} for type {pushEventType} with related ID {relatedId}", deviceIdentity, eventType, relatedId);
+            }
+
             return new ApnsResult()
             {
                 DeviceIdentity = deviceIdentity,
-                ApnsResponse = await _apnsService.SendPush(applePush, apnsJwtOptions)
+                ApnsResponse = apnsResponse
             };
         }
 
