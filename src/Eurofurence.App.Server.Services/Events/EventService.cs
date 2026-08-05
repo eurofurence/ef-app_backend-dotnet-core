@@ -31,7 +31,7 @@ using EventRecord = Eurofurence.App.Domain.Model.Events.EventRecord;
 
 namespace Eurofurence.App.Server.Services.Events
 {
-    public class EventService : EntityServiceBase<EventRecord, EventResponse>,
+    public partial class EventService : EntityServiceBase<EventRecord, EventResponse>,
         IEventService
     {
         private readonly ILogger _logger;
@@ -43,12 +43,17 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly AppDbContext _appDbContext;
         private readonly IDistributedCache _cache;
         private readonly IHtmlSanitizer _htmlSanitizer;
-        private readonly Regex _markdownImageEmbed = new(@"\!\[([^\]]|\\\])*\]\(([^\)]|\\\))*\)");
-        private readonly Regex _markdownImageReference = new(@"\!\[([^\]]|\\\])*\]\[([^\]]|\\\])*\]");
+        private readonly Regex _markdownImageEmbed = MarkdownImageEmbed();
+        private readonly Regex _markdownImageReference = MarkdownImageReference();
 
         private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
-        private TimeSpan DateTimeOffset { get; set; }
+
+        [GeneratedRegex(@"\!\[([^\]]|\\\])*\]\(([^\)]|\\\))*\)")]
+        private static partial Regex MarkdownImageEmbed();
+
+        [GeneratedRegex(@"\!\[([^\]]|\\\])*\]\[([^\]]|\\\])*\]")]
+        private static partial Regex MarkdownImageReference();
 
         /// <summary>
         /// Cache key used for storing the last successfully synced schedule version.
@@ -75,7 +80,6 @@ namespace Eurofurence.App.Server.Services.Events
             _eventConferenceTrackService = eventConferenceTrackService;
             _eventFavoriteStatisticsService = eventFavoriteStatisticsService;
             _eventOptions = eventOptions.Value;
-            DateTimeOffset = TimeSpan.Zero;
             _logger = loggerFactory.CreateLogger(GetType());
             _cache = cache;
             _htmlSanitizer = htmlSanitizer;
@@ -84,7 +88,7 @@ namespace Eurofurence.App.Server.Services.Events
 
         public async Task AddEventToFavoritesIfNotExist([NotNull] ClaimsPrincipal user, EventRecord eventRecord)
         {
-            if (user == null) throw new ArgumentNullException(nameof(user));
+            ArgumentNullException.ThrowIfNull(user);
 
             UserRecord userRecord = _appDbContext.Users
                 .Include(userRecord => userRecord.FavoriteEvents)
@@ -115,14 +119,14 @@ namespace Eurofurence.App.Server.Services.Events
         {
             var favoriteEvents = user.FavoriteEvents;
 
-            Calendar calendar = new Calendar();
+            Calendar calendar = new();
             calendar.AddTimeZone(new VTimeZone("UTC"));
 
             foreach (var item in favoriteEvents)
             {
                 // Include for each event the title, start time/end time and the description of the event including
                 // the organizer of the panel.
-                CalendarEvent calendarEvent = new CalendarEvent()
+                CalendarEvent calendarEvent = new()
                 {
                     Summary = item.Title,
                     Description = item.Description + "\n" + $"Held by: {item.PanelHosts ?? "unknown fluff"}",
@@ -327,7 +331,7 @@ namespace Eurofurence.App.Server.Services.Events
             await _eventConferenceDayService.ApplyPatchOperationAsync(diff);
 
             var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
-            return new Tuple<int, List<EventConferenceDayRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
+            return new Tuple<int, List<EventConferenceDayRecord>>(modifiedRecords, [.. diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity)]);
         }
 
 
@@ -351,7 +355,7 @@ namespace Eurofurence.App.Server.Services.Events
             await _eventConferenceTrackService.ApplyPatchOperationAsync(diff);
 
             var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
-            return new Tuple<int, List<EventConferenceTrackRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
+            return new Tuple<int, List<EventConferenceTrackRecord>>(modifiedRecords, [.. diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity)]);
         }
 
         private async Task<Tuple<int, List<EventConferenceRoomRecord>>> UpdateEventConferenceRoomsAsync(
@@ -377,7 +381,7 @@ namespace Eurofurence.App.Server.Services.Events
             await _eventConferenceRoomService.ApplyPatchOperationAsync(diff);
 
             var modifiedRecords = diff.Count(a => a.Action != ActionEnum.NotModified);
-            return new Tuple<int, List<EventConferenceRoomRecord>>(modifiedRecords, diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity).ToList());
+            return new Tuple<int, List<EventConferenceRoomRecord>>(modifiedRecords, [.. diff.Where(a => a.Entity.IsDeleted == 0).Select(a => a.Entity)]);
         }
 
         private async Task<Tuple<int, List<EventRecord>>> UpdateEventEntriesAsync(
