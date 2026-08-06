@@ -9,9 +9,10 @@ namespace Eurofurence.App.Domain.Model.PushNotifications;
 
 public class UserRecord : EntityBase, IDtoTransformable<UserResponse>
 {
-    [Required]
+#nullable enable
     [DataMember]
-    public string RegSysId { get; set; }
+    public string? RegSysId { get; set; }
+#nullable disable
 
     [Required]
     [DataMember]
