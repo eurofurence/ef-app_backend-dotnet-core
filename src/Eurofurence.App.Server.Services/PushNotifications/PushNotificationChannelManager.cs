@@ -109,7 +109,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 catch (Exception ex)
                 {
                     SentrySdk.CaptureException(ex);
-                    _logger.LogError($"Error when trying to get members of IDP group {groupId}: {ex.Message}");
+                    _logger.LogError(ex, "Error when trying to get members of IDP group {groupId}.", groupId);
                     identityIds = [];
                 }
                 var cachedGroupMembers = await _identityService.GetCachedGroupMembers(groupId);

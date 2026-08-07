@@ -72,7 +72,7 @@ namespace Eurofurence.App.Server.Web.Jobs
                 catch (Exception ex)
                 {
                     SentrySdk.CaptureException(ex);
-                    _logger.LogError(LogEvents.Import, "Failed to retrieve data from announcements API: {message}", ex.Message);
+                    _logger.LogError(LogEvents.Import, ex, "Failed to retrieve data from announcements API");
                     return;
                 }
 

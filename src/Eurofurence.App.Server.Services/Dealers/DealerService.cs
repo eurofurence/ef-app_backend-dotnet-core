@@ -207,7 +207,7 @@ namespace Eurofurence.App.Server.Services.Dealers
                 catch (Exception ex)
                 {
                     SentrySdk.CaptureException(ex);
-                    _logger.LogError(LogEvents.Import, "Failed to download dealer export data: {exception}", ex.Message);
+                    _logger.LogError(LogEvents.Import, ex, "Failed to download dealer export data.");
                     return;
                 }
 
@@ -294,10 +294,14 @@ namespace Eurofurence.App.Server.Services.Dealers
                         }
                     }
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     SentrySdk.CaptureException(ex);
-                    _logger.LogError(LogEvents.Import, "Failed to process dealer export: {exception}", ex.Message);
+                    _logger.LogError(LogEvents.Import, ex, "Failed to process dealer export.");
                     return;
                 }
 
