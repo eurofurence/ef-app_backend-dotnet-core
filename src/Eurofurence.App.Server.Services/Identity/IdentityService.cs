@@ -283,7 +283,7 @@ namespace Eurofurence.App.Server.Services.Identity
             if (!statusResponse.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to get registration information from regsys for reg ID {id}: Status {httpStatus}", id, statusResponse.StatusCode);
-                return new RegistrationData(null, UserRegistrationStatus.Unknown);
+                return new RegistrationData(id, UserRegistrationStatus.Unknown);
             }
 
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
