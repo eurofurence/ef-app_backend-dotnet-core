@@ -23,5 +23,12 @@ namespace Eurofurence.App.Backoffice.Services
             using var response = await http.PostAsync($"Announcements", content);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task UpdateAnnouncementAsync(Guid id, AnnouncementRequest request)
+        {
+            JsonContent content = JsonContent.Create(request);
+            using var response = await http.PutAsync($"Announcements/{id}", content);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

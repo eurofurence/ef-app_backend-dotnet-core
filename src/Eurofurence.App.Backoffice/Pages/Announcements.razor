@@ -25,6 +25,11 @@
         <PropertyColumn Title="Content" Property="arg => arg.Content"></PropertyColumn>
         <PropertyColumn Title="ValidFromDateTimeUtc" Property="arg => arg.ValidFromDateTimeUtc"></PropertyColumn>
         <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
+        <TemplateColumn>
+            <CellTemplate>
+                <MudButton Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OnClickEdit(context.Item))">Edit</MudButton>
+            </CellTemplate>
+        </TemplateColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="AnnouncementResponse" />
@@ -38,6 +43,31 @@
     /// </summary>
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
 
+    public async Task OnClickEdit(AnnouncementResponse item)
+    {
+        
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var parameters = new DialogParameters<EditAnnouncementDialog>
+        {
+            {x => x.Announcement, item}
+        };
+        
+        var dialog = await DialogService.ShowAsync<EditAnnouncementDialog>("Create a new Announcement", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            _items = await AnnouncementService.GetAnnouncementsAsync();
+            StateHasChanged();
+        }
+    }
+    
     /// <summary>
     /// Is called when the "Add New" button is clicked.
     /// Opens a dialog to create a new announcement.
@@ -51,7 +81,7 @@
             CloseButton = true
         };
 
-        var dialog = await DialogService.ShowAsync<AnnouncementDialog>("Create a new Announcement", options);
+        var dialog = await DialogService.ShowAsync<EditAnnouncementDialog>("Create a new Announcement", options);
 
         var result = await dialog.Result;
         if (result is { Canceled: false })

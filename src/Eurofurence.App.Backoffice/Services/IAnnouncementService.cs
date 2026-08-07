@@ -19,5 +19,12 @@ namespace Eurofurence.App.Backoffice.Services
         /// <param name="request">The announcement details to be submitted, including required fields such as validity period, area, author, title, and content.</param>
         /// <return>A task representing the asynchronous operation.</return>
         Task SubmitAnnouncementAsync(AnnouncementRequest request);
+
+        /// <summary>
+        /// Updates an existing announcement by sending the provided response data to the server.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        Task UpdateAnnouncementAsync(Guid id, AnnouncementRequest request);
     }
 }
