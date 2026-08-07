@@ -10,7 +10,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
 using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Duende.IdentityModel.Client;
 using Eurofurence.App.Domain.Model.Announcements;
@@ -142,7 +141,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (await _cache.GetStringAsync($"{token}_regsys") is { Length: > 0 } cached)
             {
-                if (JsonSerializer.Deserialize<RegistrationData>(cached) is RegistrationData cachedRegistrationData)
+                if (JsonSerializer.Deserialize<RegistrationData>(cached) is { } cachedRegistrationData)
                 {
                     AddRegistrationToClaims(identity, cachedRegistrationData);
                     return;
@@ -304,11 +303,8 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
-            var existingUsers = _appDbContext.Users
-                .SingleOrDefault(x => x.IdentityId == identityId);
-
             if (_appDbContext.Users
-                .SingleOrDefault(x => x.IdentityId == identityId) is UserRecord user)
+                .SingleOrDefault(x => x.IdentityId == identityId) is { } user)
             {
                 if (user.RegSysId != registrationData?.Id ||
                 user.RegistrationStatus != registrationData?.Status)

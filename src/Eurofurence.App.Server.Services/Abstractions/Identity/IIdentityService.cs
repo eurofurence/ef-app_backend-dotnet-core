@@ -38,7 +38,7 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
         public Task<IEnumerable<string>> GetGroupMembers(string groupId);
 
         /// <summary>
-        /// Retrieve unexpired, cached identity IDs associated to given group ID.
+        /// Retrieve unexpired, cached identity IDs associated with given group ID.
         /// Groups get cached every time userinfo is refreshed.
         /// Caching is only active if reading group memberships from IDP is not configured.
         /// </summary>
