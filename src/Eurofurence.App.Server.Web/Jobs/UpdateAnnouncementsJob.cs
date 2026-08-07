@@ -78,7 +78,7 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 if (response == "null")
                 {
-                    SentrySdk.CaptureMessage("Received 'null' response from announcements API.", SentryLevel.Error);
+                    SentrySdk.CaptureMessage("Received 'null' response from announcements API.", SentryLevel.Debug);
                     _logger.LogDebug(LogEvents.Import, "Received null response");
                     return;
                 }

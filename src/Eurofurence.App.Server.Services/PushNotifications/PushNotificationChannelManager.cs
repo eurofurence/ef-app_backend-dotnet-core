@@ -15,7 +15,6 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -110,7 +109,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 {
                     SentrySdk.CaptureException(ex);
                     _logger.LogError(ex, "Error when trying to get members of IDP group {groupId}.", groupId);
-                    identityIds = [];
                 }
                 var cachedGroupMembers = await _identityService.GetCachedGroupMembers(groupId);
                 identityIds.AddRange(cachedGroupMembers);
