@@ -173,6 +173,7 @@
             Area = Announcement.Area,
             Content = Announcement.Content,
             ImageId = Announcement.ImageId,
+            ValidFromDateTimeUtc = Announcement.ValidFromDateTimeUtc,
             ValidUntilDateTimeUtc = endDateTime.Value,
             Groups = _groups
                 .Split(",", StringSplitOptions.RemoveEmptyEntries)
@@ -183,6 +184,7 @@
      
         try
         {
+            _submissionInProgress = true;
             await AnnouncementService.UpdateAnnouncementAsync(Announcement.Id, request);
             Snackbar.Add("Announcement successfully submitted", Severity.Success);
             MudDialog?.Close(DialogResult.Ok(request));
