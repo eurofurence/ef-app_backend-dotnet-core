@@ -88,15 +88,15 @@ namespace Eurofurence.App.Common.DataDiffUtils
                         return false;
 
                     if (sourceValue.GetType().IsArray)
-                        return ArraysEqual((sourceValue as Array), (targetValue as Array));
+                        return ArraysEqual(sourceValue as Array, targetValue as Array);
 
-                    if (sourceValue is IDictionary &&
+                    if (sourceValue is IDictionary dictionary &&
                         sourceValue.GetType().IsGenericType)
-                        return DictionariesEqual((IDictionary)sourceValue, (IDictionary)targetValue);
+                        return DictionariesEqual(dictionary, (IDictionary)targetValue);
 
-                    if (sourceValue is ICollection &&
+                    if (sourceValue is ICollection collection &&
                         sourceValue.GetType().IsGenericType)
-                        return CollectionsEqual((ICollection)sourceValue, (ICollection)targetValue);
+                        return CollectionsEqual(collection, (ICollection)targetValue);
 
                     return (bool)sourceValue?.Equals(targetValue);
                 },
@@ -106,7 +106,7 @@ namespace Eurofurence.App.Common.DataDiffUtils
                         var value = sourceValueSelector(source);
                         if (targetSelector.Body is not MemberExpression memberSelectorExpression) return;
                         var property = memberSelectorExpression.Member as PropertyInfo;
-                        if (property != null) property.SetValue(target, value, null);
+                        property?.SetValue(target, value, null);
                     }
             };
 

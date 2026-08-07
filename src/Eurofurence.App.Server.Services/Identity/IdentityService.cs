@@ -1,14 +1,4 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
-using Eurofurence.App.Domain.Model.PushNotifications;
-using Eurofurence.App.Domain.Model.Users;
-using Eurofurence.App.Infrastructure.EntityFramework;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using IdentityModel.AspNetCore.OAuth2Introspection;
-using IdentityModel.Client;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -19,6 +9,18 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
+using Duende.IdentityModel.Client;
+using Eurofurence.App.Domain.Model.Announcements;
+using Eurofurence.App.Domain.Model.Identity;
+using Eurofurence.App.Domain.Model.PushNotifications;
+using Eurofurence.App.Domain.Model.Users;
+using Eurofurence.App.Infrastructure.EntityFramework;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Eurofurence.App.Server.Services.Identity
 {
@@ -28,6 +30,7 @@ namespace Eurofurence.App.Server.Services.Identity
         private readonly IOptionsMonitor<IdentityOptions> _identityOptionsMonitor;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IDistributedCache _cache;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// The name of the claim type for IDP groups.
@@ -38,12 +41,14 @@ namespace Eurofurence.App.Server.Services.Identity
             AppDbContext appDbContext,
             IOptionsMonitor<IdentityOptions> identityOptions,
             IHttpClientFactory httpClientFactory,
-            IDistributedCache cache)
+            IDistributedCache cache,
+            ILoggerFactory loggerFactory)
         {
             _appDbContext = appDbContext;
             _identityOptionsMonitor = identityOptions;
             _httpClientFactory = httpClientFactory;
             _cache = cache;
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         public async Task ReadUserInfo(ClaimsIdentity identity)
@@ -73,8 +78,19 @@ namespace Eurofurence.App.Server.Services.Identity
 
             identity.AddClaims(response.Claims);
 
+            // FIX: IDP will occasionally omit name claim on userinfo; can be fixed by retrying later.
+            //      This only rarely happens (every few hundred requests) so we can simply not cache
+            //      the broken response and try again next time.
+            var hasMissingNameBug = string.IsNullOrEmpty(
+                response.Claims.FirstOrDefault(claim => claim.Type == "name")?.Value
+            );
+            if (hasMissingNameBug)
+            {
+                _logger.LogInformation("Response to userinfo request missing 'name' claim will not be cached.");
+            }
+
             var exp = identity.FindFirst(x => x.Type == "exp");
-            if (exp is not null && long.TryParse(exp.Value, out var seconds))
+            if (!hasMissingNameBug && exp is not null && long.TryParse(exp.Value, out var seconds))
             {
                 await _cache.SetStringAsync(
                     $"{token}_userinfo",
@@ -123,7 +139,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (await _cache.GetStringAsync($"{token}_regsys") is { Length: > 0 } cached)
             {
-                identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
+                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
 
                 var cachedRegistrations =
                     JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
@@ -138,7 +154,7 @@ namespace Eurofurence.App.Server.Services.Identity
                 if (cachedRegistrations.Any(registrationStatus =>
                         registrationStatus.Value == UserRegistrationStatus.CheckedIn))
                 {
-                    identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
+                    identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
                 }
 
                 return;
@@ -177,17 +193,17 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
-            identity.AddClaim(new Claim(identity.RoleClaimType, "Attendee"));
+            identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
 
             if (registrations.Any(registration => registration.Value == UserRegistrationStatus.CheckedIn))
             {
-                identity.AddClaim(new Claim(identity.RoleClaimType, "AttendeeCheckedIn"));
+                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
             }
 
             if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
                 identity.FindFirst("name")?.Value is { Length: > 0 } nickname)
             {
-                await UpdateRegSysIdsInDb(registrations.Keys.ToList(), identityId, nickname);
+                await UpdateRegistrationsInDatabase(registrations, identityId, nickname);
             }
 
             var exp = identity.FindFirst(x => x.Type == "exp");
@@ -255,6 +271,11 @@ namespace Eurofurence.App.Server.Services.Identity
                     .ToListAsync(cancellationToken);
         }
 
+        public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity)
+        {
+            return identity.FindAll(UserRegistrationClaims.Id).Select(x => x.Value);
+        }
+
         private async Task<UserRegistrationStatus> GetRegistrationStatus(string token, string id)
         {
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
@@ -276,21 +297,26 @@ namespace Eurofurence.App.Server.Services.Identity
             return status;
         }
 
-        private async Task UpdateRegSysIdsInDb(List<string> ids, string identityId, string nickname)
+        private async Task UpdateRegistrationsInDatabase(Dictionary<string, UserRegistrationStatus> registrations, string identityId, string nickname)
         {
-            var newIds = new HashSet<string>(ids);
+            var newIds = new HashSet<string>(registrations.Keys);
 
-            var existingIds = await _appDbContext.Users
-                .AsNoTracking()
-                .Where(x => newIds.Contains(x.RegSysId))
-                .Select(x => x.RegSysId)
-                .ToListAsync();
+            var existingUsers = _appDbContext.Users
+                .Where(x => newIds.Contains(x.RegSysId));
 
-            foreach (var existingId in existingIds)
+            foreach (var existingUser in existingUsers)
             {
-                newIds.Remove(existingId);
+                newIds.Remove(existingUser.RegSysId);
+
+                // Update registration status of existing user if it has changed
+                if (existingUser.RegistrationStatus != registrations[existingUser.RegSysId])
+                {
+                    existingUser.RegistrationStatus = registrations[existingUser.RegSysId];
+                    existingUser.Touch();
+                }
             }
 
+            // Add new registration IDs 
             if (newIds.Count > 0)
             {
                 await _appDbContext.Users.AddRangeAsync(newIds.Select(x => new UserRecord
@@ -298,23 +324,18 @@ namespace Eurofurence.App.Server.Services.Identity
                     RegSysId = x,
                     IdentityId = identityId,
                     Nickname = nickname,
+                    RegistrationStatus = registrations[x]
                 }));
-
-                await _appDbContext.SaveChangesAsync();
             }
+
+            await _appDbContext.SaveChangesAsync();
         }
 
-        private sealed class CachedClaim
+        private sealed class CachedClaim(string type, string value)
         {
-            public string Type { get; set; }
+            public string Type { get; set; } = type;
 
-            public string Value { get; set; }
-
-            public CachedClaim(string type, string value)
-            {
-                Type = type;
-                Value = value;
-            }
+            public string Value { get; set; } = value;
         }
 
         private sealed class GroupMembersResponse : ProtocolResponse

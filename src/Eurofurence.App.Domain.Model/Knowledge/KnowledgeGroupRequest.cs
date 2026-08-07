@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using Eurofurence.App.Domain.Model.Transformers;
@@ -7,6 +8,13 @@ namespace Eurofurence.App.Domain.Model.Knowledge
     [DataContract]
     public class KnowledgeGroupRequest : IDtoTransformable<KnowledgeGroupRecord>
     {
+        /// <summary>
+        /// Optionally needed when importing KnowledgeGroups ahead of KnowledgeEntry import via POST to 
+        /// maintain ID references from KnowledgeEntries.
+        /// </summary>
+        [DataMember]
+        public Guid? Id { get; set; }
+
         [Required]
         [DataMember]
         public string Name { get; set; }

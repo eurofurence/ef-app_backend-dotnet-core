@@ -1,15 +1,16 @@
-﻿using Eurofurence.App.Domain.Model.Maps;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Web.Extensions;
+using Markdig;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -27,6 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IKnowledgeGroupService _knowledgeGroupService;
         private readonly IKnowledgeEntryService _knowledgeEntryService;
         private readonly IMapService _mapService;
+        private readonly MarkdownPipeline _markdownPipeline;
 
         public const string VIEWDATA_OPENGRAPH_METADATA = nameof(OpenGraphMetadata);
         public const string VIEWDATA_APPID_ITUNES = nameof(GlobalOptions.AppIdITunes);
@@ -56,6 +58,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _knowledgeGroupService = knowledgeGroupService;
             _knowledgeEntryService = knowledgeEntryService;
             _mapService = mapService;
+            _markdownPipeline = new MarkdownPipelineBuilder().UseSoftlineBreakAsHardlineBreak().Build();
         }
 
         private void PopulateViewData()
@@ -68,8 +71,14 @@ namespace Eurofurence.App.Server.Web.Controllers
             ViewData[VIEWDATA_APPID_PLAY] = _globalOptions.AppIdPlay;
         }
 
+        [HttpGet("Events/{id}/Feedback")]
+        public async Task<ActionResult> GetEventByIdWithFeedback(Guid id)
+        {
+            return await GetEventById(id, true);
+        }
+
         [HttpGet("Events/{id}")]
-        public async Task<ActionResult> GetEventById(Guid id)
+        public async Task<ActionResult> GetEventById(Guid id, bool tryFeedback = false)
         {
             var @event = await _eventService.FindAll(e => !e.IsInternal).Include(e => e.BannerImage).Include(e => e.PosterImage).FirstOrDefaultAsync(e => e.Id == id);
             if (@event == null) return NotFound();
@@ -79,17 +88,25 @@ namespace Eurofurence.App.Server.Web.Controllers
             var eventConferenceDay = await _eventConferenceDayService.FindOneAsync(@event.ConferenceDayId);
             var eventConferenceRoom = await _eventConferenceRoomService.FindOneAsync(@event.ConferenceRoomId);
             var eventConferenceTrack = await _eventConferenceTrackService.FindOneAsync(@event.ConferenceTrackId);
+            var eventStartDateTime = TimeZoneInfo.ConvertTime(@event.StartDateTimeUtc, _globalOptions.ConventionTimeZoneInfo);
+            var eventEndDateTime = TimeZoneInfo.ConvertTime(@event.EndDateTimeUtc, _globalOptions.ConventionTimeZoneInfo);
 
             PopulateViewData();
-
-            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
-                .WithTitle(@event.Title)
-                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {@event.StartTime:hh\\:mm}-{@event.EndTime:hh\\:mm}, {eventConferenceRoom.Name}\n\n{@event.Description}")
-                .WithImage(previewImageUrl);
 
             ViewData["eventConferenceDay"] = eventConferenceDay;
             ViewData["eventConferenceRoom"] = eventConferenceRoom;
             ViewData["eventConferenceTrack"] = eventConferenceTrack;
+            ViewData["eventStartDateTime"] = eventStartDateTime;
+            ViewData["eventEndDateTime"] = eventEndDateTime;
+
+            ViewData["tryFeedback"] = tryFeedback;
+
+            ViewData["markdownPipeline"] = _markdownPipeline;
+
+            ViewData[VIEWDATA_OPENGRAPH_METADATA] = new OpenGraphMetadata()
+                .WithTitle(@event.Title)
+                .WithDescription($"{eventConferenceDay.Date.DayOfWeek} ({eventConferenceDay.Name}) {eventStartDateTime:HH\\:mm}-{eventEndDateTime:HH\\:mm}, {eventConferenceRoom.Name}\n\n{@event.Description}")
+                .WithImage(previewImageUrl);
 
             return View("EventPreview", @event);
         }

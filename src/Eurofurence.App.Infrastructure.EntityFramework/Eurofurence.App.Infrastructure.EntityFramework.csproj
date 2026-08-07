@@ -14,17 +14,17 @@
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.25" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.25">
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.8">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
-	<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
+	<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.10" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10" />
+	<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.10" />
 	<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
 	<PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Json.Microsoft" Version="8.0.3" />
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Eurofurence.App.Domain.Model\Eurofurence.App.Domain.Model.csproj" />

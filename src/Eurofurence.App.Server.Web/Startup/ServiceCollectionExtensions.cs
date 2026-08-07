@@ -1,5 +1,7 @@
-﻿using Eurofurence.App.Server.Services.Abstractions;
+﻿using System;
+using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.ArtShow;
 using Eurofurence.App.Server.Services.Abstractions.Communication;
@@ -11,12 +13,14 @@ using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.LostAndFound;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
+using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Services.Abstractions.Sanitization;
 using Eurofurence.App.Server.Services.Abstractions.Users;
 using Eurofurence.App.Server.Services.Abstractions.Validation;
 using Eurofurence.App.Server.Services.Announcements;
+using Eurofurence.App.Server.Services.AppConfig;
 using Eurofurence.App.Server.Services.ArtistsAlley;
 using Eurofurence.App.Server.Services.ArtShow;
 using Eurofurence.App.Server.Services.Communication;
@@ -28,12 +32,14 @@ using Eurofurence.App.Server.Services.Knowledge;
 using Eurofurence.App.Server.Services.Lassie;
 using Eurofurence.App.Server.Services.LostAndFound;
 using Eurofurence.App.Server.Services.Maps;
+using Eurofurence.App.Server.Services.Passes;
 using Eurofurence.App.Server.Services.PushNotifications;
 using Eurofurence.App.Server.Services.QrCode;
 using Eurofurence.App.Server.Services.Sanitization;
 using Eurofurence.App.Server.Services.Storage;
 using Eurofurence.App.Server.Services.Users;
 using Eurofurence.App.Server.Services.Validation;
+using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using Eurofurence.App.Server.Web.Jobs;
 using Eurofurence.App.Server.Web.Swagger;
@@ -46,7 +52,6 @@ using Microsoft.OpenApi;
 using Quartz;
 using Quartz.Impl.Matchers;
 using Serilog;
-using System;
 
 namespace Eurofurence.App.Server.Web.Startup
 {
@@ -61,6 +66,7 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IEventConferenceRoomService, EventConferenceRoomService>();
             services.AddTransient<IEventConferenceTrackService, EventConferenceTrackService>();
             services.AddTransient<IEventFeedbackService, EventFeedbackService>();
+            services.AddTransient<IEventFavoriteStatisticsService, EventFavoriteStatisticsService>();
             services.AddTransient<IEventService, EventService>();
             services.AddTransient<IPushNotificationChannelManager, PushNotificationChannelManager>();
             services.AddTransient<IHtmlSanitizer, GanssHtmlSanitizer>();
@@ -86,6 +92,10 @@ namespace Eurofurence.App.Server.Web.Startup
             services.AddTransient<IArtistAlleyUserPenaltyService, ArtistAlleyUserPenaltyService>();
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddSingleton<IPrivateMessageQueueService, PrivateMessageQueueService>();
+            services.AddSingleton<ISingleUseTokenService, SingleUseTokenService>();
+            services.AddSingleton<IPassCertificateProvider, PassCertificateProvider>();
+            services.AddTransient<IPassService, PassService>();
+            services.AddTransient<IAppConfigService, AppConfigService>();
 
             return services;
         }
@@ -116,12 +126,25 @@ namespace Eurofurence.App.Server.Web.Startup
                     Type = SecuritySchemeType.Http
                 });
 
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                });
+
                 options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme,
                     new OpenApiSecurityScheme
                     {
                         Name = ApiKeyAuthenticationDefaults.HeaderName,
                         Description = "Authenticate with a static API key",
                         In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey
+                    });
+                options.AddSecurityDefinition(SingleUseTokenAuthenticationDefaults.AuthenticationScheme,
+                    new OpenApiSecurityScheme
+                    {
+                        Name = SingleUseTokenAuthenticationDefaults.QueryName,
+                        Description = "Authenticate with a single-use token",
+                        In = ParameterLocation.Query,
                         Type = SecuritySchemeType.ApiKey
                     });
 
@@ -177,9 +200,9 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateAnnouncements.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(announcementOptions.Url))
+                    if (string.IsNullOrWhiteSpace(announcementOptions.Url) || !announcementOptions.Url.CheckIsValidHttpsUrl())
                     {
-                        logger.Error("Update announcements job can't be added: Empty source url");
+                        logger.Error("Update announcements job cannot be enabled: Announcements.Url must be a valid HTTPS URL");
                     }
                     else
                     {
@@ -198,9 +221,17 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateDealers.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(dealerOptions.Url))
+                    if (string.IsNullOrWhiteSpace(dealerOptions.Url) || !dealerOptions.Url.CheckIsValidHttpsUrl())
                     {
-                        logger.Error("Update dealers job can't be added: Empty source url");
+                        logger.Error("Update dealers job cannot be enabled: Dealers.Url must be a valid HTTPS URL.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(dealerOptions.User))
+                    {
+                        logger.Error("Update dealers job cannot be enabled: Dealers.User must not be empty.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(dealerOptions.Password))
+                    {
+                        logger.Error("Update dealers job cannot be enabled: Dealers.Password must not be empty.");
                     }
                     else
                     {
@@ -219,9 +250,36 @@ namespace Eurofurence.App.Server.Web.Startup
 
                 if (jobsOptions.UpdateEvents.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(eventOptions.Url))
+                    if (
+                        string.IsNullOrWhiteSpace(eventOptions.ApiUrl) ||
+                        !eventOptions.ApiUrl.CheckIsValidHttpsUrl()
+                        )
                     {
-                        logger.Error("Update events job can't be added: Empty source url");
+                        logger.Error("Update events job cannot be enabled: Events.ApiUrl must be a valid HTTPS URL.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(eventOptions.ApiKey))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.ApiKey must not be empty.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(eventOptions.EventSlug))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.EventSlug must not be empty.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(eventOptions.DefaultLocale))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.DefaultLocale must not be empty.");
+                    }
+                    else if (!int.IsPositive(eventOptions.InternalTagId))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.InternalTagId must be a positive integer.");
+                    }
+                    else if (!int.IsPositive(eventOptions.InternalTrackId))
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.InternalTrackId must be a positive integer.");
+                    }
+                    else if (eventOptions.EventDays.Count == 0)
+                    {
+                        logger.Error("Update events job cannot be enabled: Events.EventDays must contain one or more elements.");
                     }
                     else
                     {
@@ -238,11 +296,30 @@ namespace Eurofurence.App.Server.Web.Startup
                     }
                 }
 
+                if (jobsOptions.UpdateEventFavoriteStatistics.Enabled)
+                {
+                    var updateEventFavoriteStatisticsKey = new JobKey(nameof(UpdateEventFavoriteStatisticsJob));
+                    q.AddJob<UpdateEventFavoriteStatisticsJob>(opts =>
+                        opts.WithIdentity(updateEventFavoriteStatisticsKey));
+                    q.AddTrigger(t =>
+                        t.ForJob(updateEventFavoriteStatisticsKey)
+                            .WithSimpleSchedule(s =>
+                            {
+                                s.WithIntervalInSeconds(jobsOptions.UpdateEventFavoriteStatistics
+                                    .SecondsInterval);
+                                s.RepeatForever();
+                            }));
+                }
+
                 if (jobsOptions.UpdateLostAndFound.Enabled)
                 {
-                    if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl))
+                    if (string.IsNullOrWhiteSpace(lassieOptions.BaseApiUrl) || !lassieOptions.BaseApiUrl.CheckIsValidHttpsUrl())
                     {
-                        logger.Error("Update lost and found job can't be added: Empty source url");
+                        logger.Error("Update lost and found job cannot be enabled: Lassie.BaseApiUrl must be a valid HTTPS URL.");
+                    }
+                    else if (string.IsNullOrWhiteSpace(lassieOptions.ApiKey))
+                    {
+                        logger.Error("Update lost and found job cannot be enabled: Lassie.ApiKey must not be empty.");
                     }
                     else
                     {
@@ -263,7 +340,7 @@ namespace Eurofurence.App.Server.Web.Startup
                 {
                     if (artistAlleyOptions.ExpirationTimeInHours == null)
                     {
-                        logger.Error("Delete Expired Artist Alley Registrations job can't be added: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
+                        logger.Error("Delete Expired Artist Alley Registrations job cannot be enabled: Artist alley ExpirationTimeInHours is not configured. Artist alley registrations will not expire");
                     }
                     else
                     {
@@ -297,10 +374,16 @@ namespace Eurofurence.App.Server.Web.Startup
             return services;
         }
 
-        public static IServiceCollection AddFirebase(this IServiceCollection services, FirebaseOptions firebaseOptions)
+        public static IServiceCollection AddFirebase(this IServiceCollection services, ILogger logger, FirebaseOptions firebaseOptions)
         {
             if (string.IsNullOrEmpty(firebaseOptions.GoogleServiceCredentialKeyFile))
                 return services;
+
+            if (!System.IO.File.Exists(firebaseOptions.GoogleServiceCredentialKeyFile))
+            {
+                logger.Error($"Google credentials file for Firebase was not found: {firebaseOptions.GoogleServiceCredentialKeyFile}");
+                return services;
+            }
 
             var credential = CredentialFactory.FromFile<ServiceAccountCredential>(firebaseOptions.GoogleServiceCredentialKeyFile)
                                   .ToGoogleCredential();

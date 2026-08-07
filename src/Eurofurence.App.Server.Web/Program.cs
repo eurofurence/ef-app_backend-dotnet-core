@@ -1,7 +1,13 @@
-﻿using dotAPNS.AspNetCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using dotAPNS.AspNetCore;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -9,12 +15,12 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Lassie;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
 using Eurofurence.App.Server.Services.Abstractions.MinIO;
+using Eurofurence.App.Server.Services.Abstractions.Passes;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.QrCode;
 using Eurofurence.App.Server.Web.Extensions;
 using Eurofurence.App.Server.Web.Identity;
 using Eurofurence.App.Server.Web.Startup;
-using IdentityModel.AspNetCore.OAuth2Introspection;
 using Mapster;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -29,10 +35,6 @@ using Sentry;
 using Serilog;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Eurofurence.App.Server.Web
 {
@@ -86,6 +88,8 @@ namespace Eurofurence.App.Server.Web
             builder.Services.Configure<MapOptions>(builder.Configuration.GetSection("Maps"));
             builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Identity"));
             builder.Services.Configure<AuthorizationOptions>(builder.Configuration.GetSection("Authorization"));
+            builder.Services.Configure<AppConfigOptions>(builder.Configuration.GetSection("AppConfig"));
+            builder.Services.Configure<PassOptions>(builder.Configuration.GetSection("Passes"));
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All;
@@ -133,8 +137,13 @@ namespace Eurofurence.App.Server.Web
             builder.Services.AddSwagger(globalOptions);
 
             builder.Services.AddTransient<IClaimsTransformation, RolesClaimsTransformation>();
+
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddHybridCache();
+
             builder.Services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
-                .AddOAuth2Introspection(options => { options.EnableCaching = true; })
+                .AddOAuth2Introspection()
+                .AddScheme<AuthenticationSchemeOptions, SingleUseTokenAuthenticationHandler>(SingleUseTokenAuthenticationDefaults.AuthenticationScheme, null)
                 .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>
                 (ApiKeyAuthenticationDefaults.AuthenticationScheme,
                     options =>
@@ -145,7 +154,21 @@ namespace Eurofurence.App.Server.Web
                         {
                             logger.Information($"Configured API key for {apiKey.PrincipalName} with roles {string.Join(',', apiKey.Roles)} valid until {apiKey.ValidUntil}.");
                         }
-                    });
+                    })
+                .AddPolicyScheme(SingleUseTokenAuthenticationDefaults.TokenOrOAuth2AuthenticationPolicyScheme, displayName: null, options =>
+                {
+                    // Only challenge SingleUseToken scheme if token provided,
+                    // otherwise default to OAuth2.
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.Request.Query.ContainsKey(SingleUseTokenAuthenticationDefaults.QueryName))
+                        {
+                            return SingleUseTokenAuthenticationDefaults.AuthenticationScheme;
+                        }
+
+                        return OAuth2IntrospectionDefaults.AuthenticationScheme;
+                    };
+                });
 
             builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
@@ -170,7 +193,7 @@ namespace Eurofurence.App.Server.Web
 
             builder.Services.AddApns();
 
-            builder.Services.AddFirebase(firebaseOptions);
+            builder.Services.AddFirebase(logger, firebaseOptions);
 
             builder.Services.AddQuartzJobs(logger, jobsOptions, lassieOptions, dealerOptions, announcementOptions, eventOptions, artistAlleyOptions);
 

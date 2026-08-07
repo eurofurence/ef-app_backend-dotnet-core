@@ -55,7 +55,7 @@ build $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'): (_create_if_not_exi
 	dotnet restore
 	dotnet build src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --configuration Release --property:Version=$BUILD_VERSION
 	dotnet build src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --configuration Release --property:Version=$BUILD_VERSION
-	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Server.Web
+	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations bundle -o "$(pwd)/artifacts/db-migration-bundle" -p src/Eurofurence.App.Infrastructure.EntityFramework
 	dotnet publish src/Eurofurence.App.Server.Web/Eurofurence.App.Server.Web.csproj --output "$(pwd)/artifacts/backend" --configuration Release --property:Version=$BUILD_VERSION
 	dotnet publish src/Eurofurence.App.Backoffice/Eurofurence.App.Backoffice.csproj --output "$(pwd)/artifacts/backoffice" --configuration Release --property:Version=$BUILD_VERSION
 
@@ -103,26 +103,15 @@ verify-aasa DOMAIN PATH:
 	echo "Performing verification of URL https://{{DOMAIN}}/{{PATH}} via swcutil…"
 	sudo swcutil verify -d {{DOMAIN}} -j $AASA_TEMP_PATH -u https://{{DOMAIN}}/{{PATH}}
 
-# Import knowledgebase from an EF27 backend into a latest version target via API.
-import-kb-ef27 SOURCE_API TARGET_API TOKEN:
-	#!/usr/bin/env bash
-	set -euxo pipefail
-	echo "Retrieving source data from {{SOURCE_API}} and patching compatibility…"
-	SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH=$(mktemp)
-	trap 'rm -f -- "$SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH"' EXIT
-	curl {{SOURCE_API}}/Api/KnowledgeGroups | sed 's/"FontAwesomeIconCharacterUnicodeAddress": "[^"]*"/"FontAwesomeIconName": ""/' > $SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH
-	echo "Importing KnowledgeGroups to {{TARGET_API}}…"
-	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s $SOURCE_KNOWLEDGE_GROUPS_TEMP_PATH -t KnowledgeGroups
-	echo "Importing KnowledgeEntries to {{TARGET_API}}…"
-	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s {{SOURCE_API}}/Api/KnowledgeEntries -t KnowledgeEntries --with-images-from {{SOURCE_API}}
-
 # Import data from source URL or path to the target API.
 import SOURCE TARGET_API TOKEN TYPE *ARGS:
+	#!/usr/bin/env bash
+	set -euo pipefail
 	python ./scripts/import.py {{TARGET_API}} -p {{TOKEN}} -s {{SOURCE}} -t {{TYPE}} {{ARGS}}
 
 # List types supported for import.
-import-list-types TARGET_API:
-	python ./scripts/import.py {{TARGET_API}} --list-types
+import-list-types TARGET_API *ARGS:
+	python ./scripts/import.py {{TARGET_API}} --list-types {{ARGS}}
 
 # Create a new EntityFramework migration
 create-migration MIGRATION_NAME $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'):
@@ -131,3 +120,11 @@ create-migration MIGRATION_NAME $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERS
 	docker compose start db
 	cd src/Eurofurence.App.Infrastructure.EntityFramework
 	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations add {{MIGRATION_NAME}}
+
+# Remove last EntityFramework migration
+remove-migration $MYSQL_VERSION=env_var('EF_MOBILE_APP_MYSQL_VERSION'):
+	#!/usr/bin/env bash
+	set -euxo pipefail
+	docker compose start db
+	cd src/Eurofurence.App.Infrastructure.EntityFramework
+	ASPNETCORE_ENVIRONMENT="sample" dotnet ef migrations remove

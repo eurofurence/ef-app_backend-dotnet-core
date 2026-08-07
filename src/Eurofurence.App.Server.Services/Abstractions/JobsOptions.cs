@@ -6,6 +6,7 @@
         public JobOption UpdateAnnouncements { get; set; }
         public JobOption UpdateDealers { get; set; }
         public JobOption UpdateEvents { get; set; }
+        public JobOption UpdateEventFavoriteStatistics { get; set; }
         public JobOption UpdateLostAndFound { get; set; }
         public JobOption DeleteExpiredArtistAlleyRegistrations { get; set; }
     }

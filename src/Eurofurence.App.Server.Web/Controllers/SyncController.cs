@@ -1,8 +1,10 @@
 ﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
@@ -36,6 +38,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly IMapService _mapService;
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly GlobalOptions _globalOptions;
+        private readonly IAppConfigService _appConfigService;
         private readonly IMapper _mapper;
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -50,6 +53,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IAnnouncementService announcementService,
             IMapService mapService,
             ITableRegistrationService tableRegistrationService,
+            IAppConfigService appConfigService,
             IOptions<GlobalOptions> globalOptions,
             IMapper mapper
         )
@@ -66,6 +70,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _announcementService = announcementService;
             _mapService = mapService;
             _tableRegistrationService = tableRegistrationService;
+            _appConfigService = appConfigService;
             _globalOptions = globalOptions.Value;
             _mapper = mapper;
         }
@@ -85,11 +90,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
-            var isStaff = User?.IsInRole("Staff") ?? false;
+            var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             _logger.LogDebug($"Execute=Sync, Since={since}, IsStaff={isStaff}");
 
             var tableRegistrations =
-                (User.IsInRole("AttendeeCheckedIn") || User.IsInRole("ArtistAlleyModerator") || User.IsInRole("ArtistAlleyAdmin") || User.IsInRole("Admin")) ?
+                (User.IsInRole(IdentityRoles.AttendeeCheckedIn) || User.IsInRole(IdentityRoles.ArtistAlleyModerator) || User.IsInRole(IdentityRoles.ArtistAlleyAdmin) || User.IsInRole(IdentityRoles.Admin)) ?
                 _mapper.Map<DeltaResponse<ArtistAlleyResponse>>(await _tableRegistrationService.GetDeltaResponseAsync(since))
                 : new DeltaResponse<ArtistAlleyResponse>
                 {
@@ -116,6 +121,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 Announcements = await _announcementService.GetDeltaResponseAsync(since),
                 Maps = await _mapService.GetDeltaResponseAsync(since),
                 TableRegistrations = tableRegistrations,
+                AppConfig = _appConfigService.Get(),
             };
 
             // Filter internal event-related entities for non-staff

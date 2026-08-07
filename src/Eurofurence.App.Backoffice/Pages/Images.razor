@@ -14,7 +14,7 @@
     <MudSpacer />
     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                @onclick="AddImage">New image</MudButton>
-    <MudTextField Class="ml-4" T="string" ValueChanged="Search" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
+    <MudTextField Class="ml-4" T="string" ValueChanged="Search" Clearable="true" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 <MudDataGrid T="ImageWithRelationsResponse" @ref="_dataGrid" LoadingProgressColor="Color.Primary"

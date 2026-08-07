@@ -16,5 +16,13 @@ namespace Eurofurence.App.Server.Services.Abstractions.Identity
         public Task<IEnumerable<string>> GetGroupMembers(string groupId);
         public Task<List<string>> GetCachedGroupMembers(string groupId,
         CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Finds all registrations ids of the user.
+        /// Assumes, that <see cref="ReadRegSys"/> was called before (which it should in the authentication pipeline).
+        /// </summary>
+        /// <param name="identity">The <see cref="ClaimsIdentity"/> of the user.</param>
+        /// <returns>A sequence of all reg id of the user.</returns>
+        public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity);
     }
 }

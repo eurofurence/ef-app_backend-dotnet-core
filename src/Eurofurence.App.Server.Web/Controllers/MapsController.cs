@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Maps;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
@@ -86,7 +87,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Id of the newly created map</returns>
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(typeof(Guid), 200)]
         [HttpPost("")]
         public async Task<ActionResult> PostMapAsync(
@@ -102,7 +103,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a map.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]
@@ -126,7 +127,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for the given `id`
         /// </response>
         [HttpDelete("{id}/Entries")]
-        [Authorize(Roles = "Admin,MapEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.MapEditor}")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> DeleteMapEntriesAsync([FromRoute] Guid id)
         {
@@ -148,7 +149,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found for the given `id`
         /// </response>
         [HttpDelete("{id}/Entries/{entryId}")]
-        [Authorize(Roles = "Admin,MapEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.MapEditor}")]
         [ProducesResponseType(204)]
         public async Task<ActionResult> DeleteSingleMapEntryAsync([FromRoute] Guid id, [FromRoute] Guid entryId)
         {
@@ -177,7 +178,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * Unable to parse `record` or `id`
         /// </response>
         [HttpPost("{id}/Entries")]
-        [Authorize(Roles = "Admin,MapEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.MapEditor}")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> PostSingleMapEntryAsync([FromBody] MapEntryRequest request, [FromRoute] Guid id)
         {
@@ -210,7 +211,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     * No map found with for the specified id.
         /// </response>
         [HttpPut("{id}/Entries/{entryId}")]
-        [Authorize(Roles = "Admin,MapEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.MapEditor}")]
         [ProducesResponseType(typeof(Guid), 200)]
         public async Task<ActionResult> PutSingleMapEntryAsync([FromBody] MapEntryRequest request, [FromRoute] Guid id,
             [FromRoute] Guid entryId)

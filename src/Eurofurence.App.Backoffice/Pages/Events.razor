@@ -1,0 +1,158 @@
+﻿@page "/events"
+@attribute [Authorize(Roles = "Admin,EventFeedbackManager")]
+@using Eurofurence.App.Backoffice.Services
+@using Microsoft.AspNetCore.Authorization
+@using Eurofurence.App.Domain.Model.Events
+@using Eurofurence.App.Domain.Model.Users
+@inject IEventService EventService
+
+<MudToolBar>
+    <MudText Typo="Typo.h6">Events</MudText>
+    <MudSpacer />
+    <MudToggleGroup T="Guid?" Color="Color.Primary" Value="_selectedEventConferenceDayId" ValueChanged="EventConferenceDayChanged" Class="mt-1">
+        <MudToggleItem T="Guid?" Value="@(null)">All</MudToggleItem>
+        @foreach (var day in _eventConferenceDays)
+        {
+            <MudToggleItem T="Guid?" Value="@day.Id">@day.Date.ToString("ddd")</MudToggleItem>
+        }
+    </MudToggleGroup>
+    <MudTextField Class="ml-4" T="string" ValueChanged="Search" Clearable="true" Label="Search" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
+</MudToolBar>
+
+<MudDataGrid T="EventWithStatisticsResponse" Items="@_events" LoadingProgressColor="Color.Primary"
+             SortMode="@SortMode.Multiple" Groupable="false">
+    <Columns>
+        <PropertyColumn Title="ID" Property="e => e.Id" />
+        <PropertyColumn Title="Title" Property="e => e.Title" />
+        <TemplateColumn Title="Description">
+            <CellTemplate>
+                <div class="d-flex align-center gap-2">
+                    <MudTooltip Text="@context.Item.Description" Disabled="@(string.IsNullOrEmpty(context.Item.Description))" TooltipClass="multiline-tooltip">
+                        <ChildContent>
+                            <div style="max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                @context.Item.Description
+                            </div>
+                        </ChildContent>
+                        <TooltipContent>
+                            <div style="max-width:150px;">
+                                @context.Item.Description
+                            </div>
+                        </TooltipContent>
+                    </MudTooltip>
+                </div>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Title="Slug" Property="e => e.Slug" />
+        <PropertyColumn Title="Start Time" Property="e => e.StartDateTimeUtc" Format="yyyy-MM-dd HH:mm (ddd) zzz" />
+        <PropertyColumn Title="Duration" Property="e => e.Duration" Format="hh\:mm" />
+        <TemplateColumn Sortable="true" SortBy="e => e.FavoriteStatistics.Sum(s => s.Count)">
+            <HeaderTemplate>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                    <MudText>
+                        Total
+                    </MudText>
+                </div>
+            </HeaderTemplate>
+            <CellTemplate>
+                <div class="d-flex align-center gap-2">
+                    <MudText>
+                        @context.Item.FavoriteStatistics.Sum(s => s.Count)
+                    </MudText>
+
+                    @if (context.Item.StartDateTimeUtc < DateTime.UtcNow)
+                    {
+                        <MudTooltip Text="Event has started. Favorite counter is locked since the start time." Class="mt-1">
+                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Secondary" />
+                        </MudTooltip>
+                    }
+                </div>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn HeaderStyle="min-width: 150px;" Sortable="true" SortBy="e => e.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == UserRegistrationStatus.CheckedIn)?.Count ?? 0">
+            <HeaderTemplate>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                    <MudSelect Required="true" T="UserRegistrationStatus" @bind-Value="_selectedUserRegistrationStatus" FullWidth="true">
+                        @foreach (var status in Enum.GetValues<UserRegistrationStatus>())
+                        {
+                            <MudSelectItem T="UserRegistrationStatus" Value="@status"></MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            </HeaderTemplate>
+            <CellTemplate>
+                <div class="d-flex align-center gap-2">
+                    <MudText>
+                        @context.Item.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == _selectedUserRegistrationStatus)?.Count
+                    </MudText>
+
+                    @if (context.Item.StartDateTimeUtc < DateTime.UtcNow)
+                    {
+                        <MudTooltip Text="Event has started. Favorite count is locked since the start time." Class="mt-1">
+                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Secondary" />
+                        </MudTooltip>
+                    }
+                </div>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="EventWithStatisticsResponse" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private string? _eventSearch;
+    private List<EventWithStatisticsResponse> _events = new();
+    private List<EventConferenceDayResponse> _eventConferenceDays = new();
+    private Guid? _selectedEventConferenceDayId;
+    private UserRegistrationStatus _selectedUserRegistrationStatus = UserRegistrationStatus.CheckedIn;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _events = await GetEvents();
+        _eventConferenceDays = await GetEventConferenceDays();
+    }
+
+    private async Task<List<EventWithStatisticsResponse>> GetEvents()
+    {
+        var response = (await EventService.GetEventsWithStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
+        return FilterEvents(response, _eventSearch).ToList();
+    }
+
+    private async Task<List<EventConferenceDayResponse>> GetEventConferenceDays()
+        => (await EventService.GetEventConferenceDaysAsync()).OrderBy(day => day.Date).ToList();
+
+    private async Task Search(string? searchString)
+    {
+        _eventSearch = searchString;
+        _events = await GetEvents();
+    }
+
+    private async Task EventConferenceDayChanged(Guid? selectedDayId)
+    {
+        _selectedEventConferenceDayId = selectedDayId;
+        _events = await GetEvents();
+    }
+
+    private IEnumerable<EventWithStatisticsResponse> FilterEvents(IEnumerable<EventWithStatisticsResponse> entries, string?
+    searchString)
+    {
+        if (_selectedEventConferenceDayId is not null)
+        {
+            entries = entries.Where(entry => entry.ConferenceDayId == _selectedEventConferenceDayId);
+        }
+
+        return string.IsNullOrEmpty(searchString)
+            ? entries
+            : entries.Where(entry =>
+                entry.Id.ToString().ToLower().Contains(searchString.ToLower())
+                || (entry.Title is not null && entry.Title.ToLower().Contains(searchString.ToLower()))
+                || (entry.SubTitle is not null && entry.SubTitle.ToLower().Contains(searchString.ToLower()))
+                || (entry.Abstract is not null && entry.Abstract.ToLower().Contains(searchString.ToLower()))
+                || (entry.Slug is not null && entry.Slug.ToLower().Contains(searchString.ToLower()))
+                || (entry.Description is not null && entry.Description.ToLower().Contains(searchString.ToLower())));
+    }
+}

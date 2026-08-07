@@ -1,6 +1,7 @@
 using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Images;
 using Eurofurence.App.Domain.Model.Transformers;
+using Eurofurence.App.Server.Web.Mapper;
 using Mapster;
 using Xunit;
 
@@ -13,11 +14,6 @@ public class TableRegistrationRequestTests
 
     public TableRegistrationRequestTests()
     {
-        TypeAdapterConfig typeAdapterConfig;
-        typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
-        typeAdapterConfig.Default.PreserveReference(true);
-        typeAdapterConfig.Scan(typeof(TableRegistrationRecord).Assembly);
-
         _request = new TableRegistrationRequest()
         {
             DisplayName = "John Doe",
@@ -52,6 +48,8 @@ public class TableRegistrationRequestTests
             OwnerUid = "bla bla",
             OwnerUsername = "doejohn",
         };
+
+        TypeAdapterConfig.GlobalSettings.Scan(typeof(TableRegistrationRecord).Assembly);
     }
 
     [Fact]

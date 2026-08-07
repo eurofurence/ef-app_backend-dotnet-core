@@ -1,5 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Eurofurence.App.Domain.Model.Events;
+using Eurofurence.App.Domain.Model.Identity;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +28,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        [Authorize(Roles = "Attendee")]
+        [Authorize(Roles = IdentityRoles.Attendee)]
         public async Task<ActionResult> PostEventFeedbackAsync([FromBody] PostEventFeedbackRequest request)
         {
             if (request == null) return BadRequest();
@@ -46,6 +51,24 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _eventFeedbackService.InsertOneAsync(record);
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Returns all event feedback records filterable by event id.
+        /// </summary>
+        /// <param name="eventSourceId">Optional event source id filter.</param>
+        /// <returns>A list of all event's (or filtered) feedback.</returns>
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventFeedbackManager}")]
+        [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<EventFeedbackResponse>), 200)]
+        public ActionResult GetEventFeedback(string? eventSourceId)
+        {
+            IEnumerable<EventFeedbackRecord> records = _eventFeedbackService.FindAll();
+            if (eventSourceId != null)
+            {
+                records = records.Where(x => x.Event.SourceId == eventSourceId);
+            }
+            return Ok(records.Select(x => x.Transform()));
         }
     }
 }

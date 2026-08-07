@@ -56,14 +56,17 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             _apnsService = apnsService;
             _logger = loggerFactory.CreateLogger(GetType());
 
-            _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
+            if (FirebaseApp.DefaultInstance is not null)
+            {
+                _firebaseMessaging = FirebaseMessaging.GetMessaging(FirebaseApp.DefaultInstance);
+            }
         }
 
         public async Task PushAnnouncementNotificationAsync(
             AnnouncementRecord announcement,
             CancellationToken cancellationToken = default)
         {
-            if (FirebaseApp.DefaultInstance is not null)
+            if (_firebaseMessaging is not null)
             {
                 var androidMessage = CreateAndroidFcmMessage(null, PushEventType.Announcement, announcement.Title.RemoveMarkdown(), announcement.Content.RemoveMarkdown(), announcement.Id);
 
@@ -116,7 +119,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             {
                 var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
-                if (FirebaseApp.DefaultInstance is not null)
+                if (_firebaseMessaging is not null)
                 {
                     var firebaseDeviceIdentities = devices.Where(d => d.DeviceType == DeviceType.Android);
 
@@ -158,7 +161,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (FirebaseApp.DefaultInstance is null && !_apnsOptions.IsConfigured) return;
+            if (_firebaseMessaging is null && !_apnsOptions.IsConfigured) return;
 
             var devices = await _deviceService.FindByIdentityId(identityId, cancellationToken);
 
@@ -177,7 +180,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             Guid relatedId,
             CancellationToken cancellationToken = default)
         {
-            if (FirebaseApp.DefaultInstance is null && !_apnsOptions.IsConfigured) return;
+            if (_firebaseMessaging is null && !_apnsOptions.IsConfigured) return;
 
             var devices = await _deviceService.FindByRegSysId(regSysId, cancellationToken);
 
@@ -191,7 +194,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
 
         public async Task PushSyncRequestAsync(CancellationToken cancellationToken = default)
         {
-            if (FirebaseApp.DefaultInstance is not null)
+            if (_firebaseMessaging is not null)
             {
                 var androidMessage = new Message()
                 {
@@ -347,7 +350,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             var invalidDeviceIdentityIds = new List<Guid>();
             foreach (var apnsResult in apnsResults)
             {
-                if (apnsResult.ApnsResponse.IsSuccessful) continue;
+                // No pruning needed for successful requests or those that failed with an exception.
+                if (apnsResult.ApnsResponse?.IsSuccessful ?? true) continue;
 
                 var responseReason = apnsResult.ApnsResponse.Reason;
                 if (responseReason == ApnsResponseReason.BadDeviceToken
@@ -414,7 +418,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 }
             }
 
-            if (FirebaseApp.DefaultInstance is not null && firebaseMessages.Any())
+            if (_firebaseMessaging is not null && firebaseMessages.Any())
             {
                 _logger.LogDebug($"Pushing private message {relatedId} to {firebaseMessages.Count()} devices on FCM…");
                 await _firebaseMessaging.SendEachAsync(firebaseMessages, cancellationToken);
@@ -482,10 +486,20 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 TeamId = _apnsOptions.TeamId,
             };
 
+            ApnsResponse apnsResponse = null;
+            try
+            {
+                apnsResponse = await _apnsService.SendPush(applePush, apnsJwtOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send APNs push to {deviceIdentity} for type {pushEventType} with related ID {relatedId}", deviceIdentity, eventType, relatedId);
+            }
+
             return new ApnsResult()
             {
                 DeviceIdentity = deviceIdentity,
-                ApnsResponse = await _apnsService.SendPush(applePush, apnsJwtOptions)
+                ApnsResponse = apnsResponse
             };
         }
 

@@ -20,6 +20,10 @@ public class UserRecord : EntityBase, IDtoTransformable<UserResponse>
     [DataMember]
     public string Nickname { get; set; }
 
+    [Required]
+    [DataMember]
+    public UserRegistrationStatus RegistrationStatus { get; set; } = UserRegistrationStatus.Unknown;
+
     public List<EventRecord> FavoriteEvents { get; set; } = new();
 
 #nullable enable

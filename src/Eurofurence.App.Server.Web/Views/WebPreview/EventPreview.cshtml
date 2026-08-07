@@ -1,8 +1,11 @@
-﻿@using Eurofurence.App.Server.Web.Controllers
-@using Eurofurence.App.Domain.Model.Events
+﻿@using Eurofurence.App.Domain.Model.Events
+@using Eurofurence.App.Server.Web.Controllers
+@using Markdig
 @model EventRecord
+
 @{
     Layout = "~/Views/Shared/_WebPreviewLayout.cshtml";
+    var markdownPipeline = ViewData["markdownPipeline"] as MarkdownPipeline;
 
     var apiBaseUrl = ViewData[WebPreviewController.VIEWDATA_API_BASE_URL] as string;
     var webBaseUrl = ViewData[WebPreviewController.VIEWDATA_WEB_BASE_URL] as string;
@@ -11,6 +14,9 @@
     var eventConferenceDay = (ViewData["eventConferenceDay"] as EventConferenceDayRecord);
     var eventConferenceRoom = (ViewData["eventConferenceRoom"] as EventConferenceRoomRecord);
     var eventConferenceTrack = (ViewData["eventConferenceTrack"] as EventConferenceTrackRecord);
+    var eventStartDateTime = (ViewData["eventStartDateTime"] as DateTime?);
+    var eventEndDateTime = (ViewData["eventEndDateTime"] as DateTime?);
+    var tryFeedback = ViewData["tryFeedback"] as bool?;
 
     var title = Model.Title;
     var subTitle = Model.SubTitle;
@@ -31,21 +37,27 @@
 
     @if (showAbstract)
     {
-        @Html.Raw(Markdig.Markdown.ToHtml(Model.Abstract))
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Abstract, markdownPipeline))
     }
 </header>
 
 <section class="summary">
-    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name
-        (@Model.StartDateTimeUtc.ToString("dddd"))</div>
-    <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @Model.StartTime.ToString("hh\\:mm")</div>
-    <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @Model.EndTime.ToString("hh\\:mm")</div>
+    <div class="infobox"><label><i class="fas fa-calendar"></i>When:</label> @eventConferenceDay.Name</div>
+    <div class="infobox"><label><i class="fas fa-clock"></i>From:</label> @eventStartDateTime?.ToString("HH\\:mm")</div>
+    <div class="infobox"><label><i class="fas fa-step-forward"></i>To:</label> @eventEndDateTime?.ToString("HH\\:mm")</div>
     <div class="infobox"><label><i class="fas fa-map-marker-alt"></i>Where:</label> @eventConferenceRoom.Name</div>
+
+    @if (tryFeedback ?? false)
+    {
+        <div class="infobox warning">
+            <i class="fas fa-warning"></i> Please note that giving feedback on events is only possible via the app.
+        </div>
+    }
 </section>
 
 <section class="row">
     <div class="@(Model.PosterImage != null ? "one-half" : "three") column">
-        @Html.Raw(Markdig.Markdown.ToHtml(Model.Description))
+        @Html.Raw(Markdig.Markdown.ToHtml(Model.Description, markdownPipeline))
     </div>
 
     @if (Model.PosterImage != null)

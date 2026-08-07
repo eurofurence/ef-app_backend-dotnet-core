@@ -11,7 +11,7 @@ namespace Eurofurence.App.Domain.Model.Events
     public class EventRecord : EntityBase, IDtoRecordTransformable<EventRequest, EventResponse, EventRecord>
     {
         [JsonIgnore]
-        public int SourceEventId { get; set; }
+        public string SourceId { get; set; }
 
         [DataMember]
         public string Slug { get; set; }
@@ -39,12 +39,6 @@ namespace Eurofurence.App.Domain.Model.Events
 
         [DataMember]
         public TimeSpan Duration { get; set; }
-
-        [DataMember]
-        public TimeSpan StartTime { get; set; }
-
-        [DataMember]
-        public TimeSpan EndTime { get; set; }
 
         [DataMember]
         public DateTime StartDateTimeUtc { get; set; }
@@ -97,6 +91,16 @@ namespace Eurofurence.App.Domain.Model.Events
         public virtual EventConferenceRoomRecord ConferenceRoom { get; set; }
 
         [JsonIgnore]
-        public List<UserRecord> FavoredBy { get; set; } = new();
+        public List<UserRecord> FavoredBy { get; set; } = [];
+
+        /// <summary>
+        ///     List of counts of users for every registration status, who have favored this event.
+        /// </summary>
+        /// <remarks>
+        ///     Is filled around the start time of the event.
+        ///     Before, statistics data is calculated live on-demand.
+        /// </remarks>
+        [JsonIgnore]
+        public List<EventFavoriteStatisticsRecord> FavoriteStatistics { get; set; }
     }
 }

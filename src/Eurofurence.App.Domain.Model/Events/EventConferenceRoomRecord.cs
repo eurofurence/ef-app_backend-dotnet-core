@@ -7,11 +7,20 @@ namespace Eurofurence.App.Domain.Model.Events
 {
     public class EventConferenceRoomRecord : EntityBase, IDtoTransformable<EventConferenceRoomResponse>
     {
+        [JsonIgnore]
+        public int SourceId { get; set; }
+
         [DataMember]
         public string Name { get; set; }
 
         [DataMember]
+        public string Description { get; set; }
+
+        [DataMember]
         public string ShortName { get; set; }
+
+        [DataMember]
+        public int? Capacity { get; set; }
 
         [DataMember]
         public bool IsInternal { get; set; }

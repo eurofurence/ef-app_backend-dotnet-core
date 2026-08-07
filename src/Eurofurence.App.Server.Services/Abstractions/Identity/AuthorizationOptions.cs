@@ -10,6 +10,8 @@ public class AuthorizationOptions
 
     public HashSet<string> AttendeeCheckedIn { get; init; } = new();
 
+    public HashSet<string> EventFeedbackManager { get; init; } = new();
+
     public HashSet<string> Staff { get; init; } = new();
 
     public HashSet<string> KnowledgeBaseEditor { get; init; } = new();

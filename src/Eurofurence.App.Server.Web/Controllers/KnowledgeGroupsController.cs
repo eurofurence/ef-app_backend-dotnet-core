@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Web.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Eurofurence.App.Server.Web.Controllers
@@ -56,7 +57,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}")]
@@ -68,6 +69,9 @@ namespace Eurofurence.App.Server.Web.Controllers
             var existingRecord = await _knowledgeGroupService.FindOneAsync(id);
             if (existingRecord == null) return NotFound($"No record found with id {id}");
 
+            // Prevent `null` in `request.Id` from overwriting `existingRecord.Id` causing creation of a new 
+            // group instead of updating an existing one.
+            request.Id = id;
             existingRecord.Merge(request);
             existingRecord.Touch();
             await _knowledgeGroupService.ReplaceOneAsync(existingRecord);
@@ -80,7 +84,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Id of the newly created knowledge group</returns>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         [HttpPost("")]
@@ -88,6 +92,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             [EnsureNotNull][FromBody] KnowledgeGroupRequest request
         )
         {
+            if (request.Id is Guid id && await _knowledgeGroupService.HasOneAsync(id)) return Conflict($"Record with ID {id} already exists");
             KnowledgeGroupRecord record = request.Transform();
             record.Touch();
             await _knowledgeGroupService.InsertOneAsync(record);
@@ -98,7 +103,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         ///     Delete a knowledge group.
         /// </summary>
         /// <param name="id"></param>
-        [Authorize(Roles = "Admin,KnowledgeBaseEditor")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpDelete("{id}")]

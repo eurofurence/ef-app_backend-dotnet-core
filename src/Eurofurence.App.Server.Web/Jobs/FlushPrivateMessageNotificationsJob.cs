@@ -24,20 +24,21 @@ namespace Eurofurence.App.Server.Web.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _logger.LogDebug($"Starting job {context.JobDetail.Key.Name}");
+            _logger.LogDebug("Starting job {Name}", context.JobDetail.Key.Name);
 
             try
             {
                 var count = await _privateMessageService.FlushPrivateMessageQueueNotifications();
                 if (count > 0)
                 {
-                    _logger.LogInformation($"Flushed {count} messages");
+                    _logger.LogInformation("Flushed {count} messages", count);
+
                 }
             }
             catch (Exception e)
             {
                 SentrySdk.CaptureException(e);
-                _logger.LogError($"Job {context.JobDetail.Key.Name} failed with exception: {e.Message} {e.StackTrace}");
+                _logger.LogError(e, "Job {Name} failed with exception", context.JobDetail.Key.Name);
             }
         }
     }

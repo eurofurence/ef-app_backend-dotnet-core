@@ -36,12 +36,6 @@ public class EventRequest : IDtoTransformable<EventRecord>
     public TimeSpan? Duration { get; set; }
 
     [DataMember]
-    public TimeSpan? StartTime { get; set; }
-
-    [DataMember]
-    public TimeSpan? EndTime { get; set; }
-
-    [DataMember]
     public DateTime? StartDateTimeUtc { get; set; }
 
     [DataMember]
