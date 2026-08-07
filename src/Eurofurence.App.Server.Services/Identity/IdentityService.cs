@@ -156,16 +156,8 @@ namespace Eurofurence.App.Server.Services.Identity
 
             var registrationData = await GetRegistrationStatus(token, await GetRegistrationId(token));
 
-            if (registrationData is not null)
-            {
-                AddRegistrationToClaims(identity, registrationData);
-            }
-
-            if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
-                identity.FindFirst("name")?.Value is { Length: > 0 } nickname)
-            {
-                await UpdateRegistrationInDatabase(registrationData, identityId, nickname);
-            }
+            AddRegistrationToClaims(identity, registrationData);
+            await UpdateRegistrationInDatabase(registrationData, identity);
 
             var exp = identity.FindFirst(x => x.Type == "exp");
             if (exp is not null && long.TryParse(exp.Value, out var expiresAt))
@@ -232,6 +224,11 @@ namespace Eurofurence.App.Server.Services.Identity
 
         private void AddRegistrationToClaims(ClaimsIdentity identity, RegistrationData registrationData)
         {
+            if (registrationData.Id is null)
+            {
+                return;
+            }
+
             identity.AddClaim(new Claim(UserRegistrationClaims.Id, registrationData.Id));
             identity.AddClaim(new Claim(UserRegistrationClaims.Status(registrationData.Id), registrationData.Status.ToString()));
 
@@ -262,11 +259,17 @@ namespace Eurofurence.App.Server.Services.Identity
             return json.RootElement.TryGetStringArray("ids").FirstOrDefault();
         }
 
-        private async Task<RegistrationData?> GetRegistrationStatus(string token, string? id)
+        /// <summary>
+        /// Retrieve registration status for given ID from registration system.
+        /// </summary>
+        /// <param name="token">Used to authenticated against the registration system with user's permissions to view own registration.</param>
+        /// <param name="id">Registration ID to check status of.</param>
+        /// <returns>Status information for registration ID or <c>UserRegistrationStatus.Unknown</c> if request to fetch status for registration ID was unsuccessful.</returns>
+        private async Task<RegistrationData> GetRegistrationStatus(string token, string? id)
         {
             if (id is null)
             {
-                return null;
+                return new RegistrationData(null, UserRegistrationStatus.Unknown);
             }
 
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
@@ -279,7 +282,8 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (!statusResponse.IsSuccessStatusCode)
             {
-                return new RegistrationData(id, UserRegistrationStatus.Unknown);
+                _logger.LogWarning("Failed to get registration information from regsys for reg ID {id}: Status {httpStatus}", id, statusResponse.StatusCode);
+                return new RegistrationData(null, UserRegistrationStatus.Unknown);
             }
 
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
@@ -289,8 +293,17 @@ namespace Eurofurence.App.Server.Services.Identity
             return new RegistrationData(id, status);
         }
 
-        private async Task UpdateRegistrationInDatabase(RegistrationData? registrationData, string identityId, string nickname)
+        private async Task UpdateRegistrationInDatabase(RegistrationData registrationData, ClaimsIdentity identity)
         {
+            var identityId = identity.FindFirst("sub")?.Value;
+            var nickname = identity.FindFirst("name")?.Value;
+
+            if (string.IsNullOrEmpty(identityId) ||
+                string.IsNullOrEmpty(nickname))
+            {
+                return;
+            }
+
             var existingUsers = _appDbContext.Users
                 .SingleOrDefault(x => x.IdentityId == identityId);
 
@@ -319,9 +332,9 @@ namespace Eurofurence.App.Server.Services.Identity
             await _appDbContext.SaveChangesAsync();
         }
 
-        private sealed class RegistrationData(string id, UserRegistrationStatus status = UserRegistrationStatus.Unknown)
+        private sealed class RegistrationData(string? id, UserRegistrationStatus status = UserRegistrationStatus.Unknown)
         {
-            public string Id { get; init; } = id;
+            public string? Id { get; init; } = id;
             public UserRegistrationStatus Status { get; init; } = status;
         }
 
