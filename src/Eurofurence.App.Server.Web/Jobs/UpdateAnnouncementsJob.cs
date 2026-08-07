@@ -53,21 +53,32 @@ namespace Eurofurence.App.Server.Web.Jobs
             try
             {
                 string response;
-                using (var client = new HttpClient())
-                {
-                    var url = _announcementOptions.Url;
-                    if (string.IsNullOrWhiteSpace(url))
-                    {
-                        _logger.LogError(LogEvents.Import, "Empty source url; cancelling job");
-                        return;
-                    }
 
-                    _logger.LogDebug(LogEvents.Import, "Fetching data from {url}", url);
-                    response = await client.GetStringAsync(url);
+                try
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var url = _announcementOptions.Url;
+                        if (string.IsNullOrWhiteSpace(url))
+                        {
+                            _logger.LogError(LogEvents.Import, "Empty source url; cancelling job");
+                            return;
+                        }
+
+                        _logger.LogDebug(LogEvents.Import, "Fetching data from {url}", url);
+                        response = await client.GetStringAsync(url);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SentrySdk.CaptureException(ex);
+                    _logger.LogError(LogEvents.Import, "Failed to retrieve data from announcements API: {message}", ex.Message);
+                    return;
                 }
 
                 if (response == "null")
                 {
+                    SentrySdk.CaptureMessage("Received 'null' response from announcements API.", SentryLevel.Error);
                     _logger.LogDebug(LogEvents.Import, "Received null response");
                     return;
                 }
@@ -147,10 +158,10 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 _logger.LogInformation(LogEvents.Import, "Announcements import finished successfully.");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                SentrySdk.CaptureException(e);
-                _logger.LogError(LogEvents.Import, e, "Job {Name} failed with exception", context.JobDetail.Key.Name);
+                SentrySdk.CaptureException(ex);
+                _logger.LogError(LogEvents.Import, ex, "Job {Name} failed with exception", context.JobDetail.Key.Name);
             }
         }
 

@@ -22,6 +22,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sentry;
 
 namespace Eurofurence.App.Server.Services.Identity
 {
@@ -70,6 +71,8 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
+            var identityId = identity.FindFirst("sub")?.Value;
+
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
             var response = await client.GetUserInfoAsync(new UserInfoRequest
@@ -88,7 +91,8 @@ namespace Eurofurence.App.Server.Services.Identity
             );
             if (hasMissingNameBug)
             {
-                _logger.LogInformation("Response to userinfo request missing 'name' claim will not be cached.");
+                SentrySdk.CaptureMessage($"IDP response to userinfo request missing 'name' claim for identity {identityId}.", SentryLevel.Warning);
+                _logger.LogWarning("Response to userinfo request for identity {identityId} missing 'name' claim will not be cached.", identityId);
             }
 
             var exp = identity.FindFirst(x => x.Type == "exp");
@@ -103,7 +107,7 @@ namespace Eurofurence.App.Server.Services.Identity
                     }
                 );
 
-                if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
+                if (!string.IsNullOrEmpty(identityId) &&
                     GetUserGroups(identity).ToArray() is { Length: > 0 } groups)
                 {
                     var identityAnnouncementGroups = await _appDbContext.IdentityAnnouncementGroups.AsTracking().FirstOrDefaultAsync(iag => iag.IdentityId == identityId);
@@ -281,6 +285,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (!statusResponse.IsSuccessStatusCode)
             {
+                SentrySdk.CaptureMessage($"Failed to get registration information from regsys for reg ID {id}: Status {statusResponse.StatusCode}", SentryLevel.Warning);
                 _logger.LogWarning("Failed to get registration information from regsys for reg ID {id}: Status {httpStatus}", id, statusResponse.StatusCode);
                 return new RegistrationData(id, UserRegistrationStatus.Unknown);
             }
