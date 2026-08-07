@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -58,9 +59,10 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
-            if (await _cache.GetStringAsync($"{token}_userinfo") is { Length: > 0 } cached)
+            if (await _cache.GetStringAsync($"{token}_userinfo") is { Length: > 0 } cached &&
+                JsonSerializer.Deserialize<List<CachedClaim>>(cached) is { Count: > 0 } claims)
             {
-                foreach (var claim in JsonSerializer.Deserialize<List<CachedClaim>>(cached))
+                foreach (var claim in claims)
                 {
                     identity.AddClaim(new Claim(claim.Type, claim.Value));
                 }
@@ -139,86 +141,37 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (await _cache.GetStringAsync($"{token}_regsys") is { Length: > 0 } cached)
             {
-                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
-
-                var cachedRegistrations =
-                    JsonSerializer.Deserialize<Dictionary<string, UserRegistrationStatus>>(cached);
-
-                foreach (var registration in cachedRegistrations)
+                if (JsonSerializer.Deserialize<RegistrationData>(cached) is { } cachedRegistrationData)
                 {
-                    identity.AddClaim(new Claim(UserRegistrationClaims.Id, registration.Key));
-                    identity.AddClaim(new Claim(UserRegistrationClaims.Status(registration.Key),
-                        registration.Value.ToString()));
+                    AddRegistrationToClaims(identity, cachedRegistrationData);
+                    return;
                 }
-
-                if (cachedRegistrations.Any(registrationStatus =>
-                        registrationStatus.Value == UserRegistrationStatus.CheckedIn))
+                else
                 {
-                    identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
+                    // Prune invalid cache item
+                    await _cache.RemoveAsync($"{token}_regsys");
                 }
-
-                return;
             }
 
-            using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
+            var registrationData = await GetRegistrationStatus(token, await GetRegistrationId(token));
 
-            var request = new HttpRequestMessage(HttpMethod.Get,
-                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"),
-                    "attsrv/api/rest/v1/attendees"));
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            using var response = await client.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            var json = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-            var registrations = (await Task.WhenAll(
-                json.RootElement.TryGetStringArray("ids").ToDictionary(id => id, async id =>
-                {
-                    var status = await GetRegistrationStatus(token, id);
-
-                    identity.AddClaim(new Claim(UserRegistrationClaims.Id, id));
-                    identity.AddClaim(new Claim(UserRegistrationClaims.Status(id), status.ToString()));
-                    return status;
-                }).Select(
-                    async registration => new { Id = registration.Key, Status = await registration.Value }
-                )
-            )).ToDictionary(registration => registration.Id, registration => registration.Status);
-
-            if (registrations.Count == 0)
-            {
-                return;
-            }
-
-            identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
-
-            if (registrations.Any(registration => registration.Value == UserRegistrationStatus.CheckedIn))
-            {
-                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
-            }
-
-            if (identity.FindFirst("sub")?.Value is { Length: > 0 } identityId &&
-                identity.FindFirst("name")?.Value is { Length: > 0 } nickname)
-            {
-                await UpdateRegistrationsInDatabase(registrations, identityId, nickname);
-            }
+            AddRegistrationToClaims(identity, registrationData);
+            await UpdateRegistrationInDatabase(registrationData, identity);
 
             var exp = identity.FindFirst(x => x.Type == "exp");
-            if (exp is not null && long.TryParse(exp.Value, out var seconds))
+            if (exp is not null && long.TryParse(exp.Value, out var expiresAt))
             {
                 await _cache.SetStringAsync(
                     $"{token}_regsys",
-                    JsonSerializer.Serialize(registrations),
+                    JsonSerializer.Serialize(registrationData),
                     new DistributedCacheEntryOptions
                     {
-                        AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(seconds)
+                        AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(expiresAt)
                     }
                 );
             }
         }
+
         public IEnumerable<string> GetUserGroups(ClaimsIdentity identity)
         {
             return identity.Claims
@@ -244,17 +197,9 @@ namespace Eurofurence.App.Server.Services.Identity
 
             var result = await response.Content.ReadFromJsonAsync<GroupMembersResponse>();
 
-            return result.Data.Select(d => d.UserId);
+            return result?.Data?.Select(d => d.UserId).OfType<string>() ?? [];
         }
 
-        /// <summary>
-        /// Retrieve unexpired, cached identity IDs associated to given group ID.
-        /// Groups get cached every time userinfo is refreshed.
-        /// Caching is only active if reading group memberships from IDP is not configured.
-        /// </summary>
-        /// <param name="groupId">Group ID for which to fetch member identity IDs</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         public async Task<List<string>> GetCachedGroupMembers(string groupId,
         CancellationToken cancellationToken = default)
         {
@@ -271,13 +216,61 @@ namespace Eurofurence.App.Server.Services.Identity
                     .ToListAsync(cancellationToken);
         }
 
-        public IEnumerable<string> GetRegistrationsIds(ClaimsIdentity identity)
+        public string? GetRegistrationId(ClaimsIdentity identity)
         {
-            return identity.FindAll(UserRegistrationClaims.Id).Select(x => x.Value);
+            return identity.FindFirst(UserRegistrationClaims.Id)?.Value;
         }
 
-        private async Task<UserRegistrationStatus> GetRegistrationStatus(string token, string id)
+        private void AddRegistrationToClaims(ClaimsIdentity identity, RegistrationData registrationData)
         {
+            if (registrationData.Id is null)
+            {
+                return;
+            }
+
+            identity.AddClaim(new Claim(UserRegistrationClaims.Id, registrationData.Id));
+            identity.AddClaim(new Claim(UserRegistrationClaims.Status(registrationData.Id), registrationData.Status.ToString()));
+
+            identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.Attendee));
+
+            if (registrationData.Status == UserRegistrationStatus.CheckedIn)
+            {
+                identity.AddClaim(new Claim(identity.RoleClaimType, IdentityRoles.AttendeeCheckedIn));
+            }
+        }
+        private async Task<string?> GetRegistrationId(string token)
+        {
+            using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
+
+            var request = new HttpRequestMessage(HttpMethod.Get,
+                new Uri(new Uri($"{_identityOptionsMonitor.CurrentValue.RegSysUrl.TrimEnd('/')}/"),
+                    "attsrv/api/rest/v1/attendees"));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            using var response = await client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var json = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+            return json.RootElement.TryGetStringArray("ids").FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Retrieve registration status for given ID from registration system.
+        /// </summary>
+        /// <param name="token">Used to authenticated against the registration system with user's permissions to view own registration.</param>
+        /// <param name="id">Registration ID to check status of.</param>
+        /// <returns>Status information for registration ID or <c>UserRegistrationStatus.Unknown</c> if request to fetch status for registration ID was unsuccessful.</returns>
+        private async Task<RegistrationData> GetRegistrationStatus(string token, string? id)
+        {
+            if (id is null)
+            {
+                return new RegistrationData(null, UserRegistrationStatus.Unknown);
+            }
+
             using var client = _httpClientFactory.CreateClient(OAuth2IntrospectionDefaults.BackChannelHttpClientName);
 
             var statusRequest = new HttpRequestMessage(HttpMethod.Get,
@@ -288,47 +281,57 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (!statusResponse.IsSuccessStatusCode)
             {
-                return UserRegistrationStatus.Unknown;
+                _logger.LogWarning("Failed to get registration information from regsys for reg ID {id}: Status {httpStatus}", id, statusResponse.StatusCode);
+                return new RegistrationData(id, UserRegistrationStatus.Unknown);
             }
 
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
             Enum.TryParse(statusJson.RootElement.TryGetString("status")?.Replace(" ", ""), true,
                 out UserRegistrationStatus status);
-            return status;
+
+            return new RegistrationData(id, status);
         }
 
-        private async Task UpdateRegistrationsInDatabase(Dictionary<string, UserRegistrationStatus> registrations, string identityId, string nickname)
+        private async Task UpdateRegistrationInDatabase(RegistrationData registrationData, ClaimsIdentity identity)
         {
-            var newIds = new HashSet<string>(registrations.Keys);
+            var identityId = identity.FindFirst("sub")?.Value;
+            var nickname = identity.FindFirst("name")?.Value;
 
-            var existingUsers = _appDbContext.Users
-                .Where(x => newIds.Contains(x.RegSysId));
-
-            foreach (var existingUser in existingUsers)
+            if (string.IsNullOrEmpty(identityId) ||
+                string.IsNullOrEmpty(nickname))
             {
-                newIds.Remove(existingUser.RegSysId);
-
-                // Update registration status of existing user if it has changed
-                if (existingUser.RegistrationStatus != registrations[existingUser.RegSysId])
-                {
-                    existingUser.RegistrationStatus = registrations[existingUser.RegSysId];
-                    existingUser.Touch();
-                }
+                return;
             }
 
-            // Add new registration IDs 
-            if (newIds.Count > 0)
+            if (_appDbContext.Users
+                .SingleOrDefault(x => x.IdentityId == identityId) is { } user)
             {
-                await _appDbContext.Users.AddRangeAsync(newIds.Select(x => new UserRecord
+                if (user.RegSysId != registrationData?.Id ||
+                user.RegistrationStatus != registrationData?.Status)
                 {
-                    RegSysId = x,
+                    user.RegSysId = registrationData?.Id;
+                    user.RegistrationStatus = registrationData?.Status ?? UserRegistrationStatus.Unknown;
+                    user.Touch();
+                }
+            }
+            else
+            {
+                await _appDbContext.Users.AddAsync(new UserRecord
+                {
+                    RegSysId = registrationData?.Id,
                     IdentityId = identityId,
                     Nickname = nickname,
-                    RegistrationStatus = registrations[x]
-                }));
+                    RegistrationStatus = registrationData?.Status ?? UserRegistrationStatus.Unknown
+                });
             }
 
             await _appDbContext.SaveChangesAsync();
+        }
+
+        private sealed class RegistrationData(string? id, UserRegistrationStatus status = UserRegistrationStatus.Unknown)
+        {
+            public string? Id { get; init; } = id;
+            public UserRegistrationStatus Status { get; init; } = status;
         }
 
         private sealed class CachedClaim(string type, string value)
@@ -340,16 +343,16 @@ namespace Eurofurence.App.Server.Services.Identity
 
         private sealed class GroupMembersResponse : ProtocolResponse
         {
-            [JsonPropertyName("data")] public GroupMemberResponseData[] Data { get; set; }
+            [JsonPropertyName("data")] public GroupMemberResponseData[]? Data { get; set; }
         }
 
         private sealed class GroupMemberResponseData
         {
-            [JsonPropertyName("group_id")] public string GroupId { get; set; }
+            [JsonPropertyName("group_id")] public string? GroupId { get; set; }
 
-            [JsonPropertyName("user_id")] public string UserId { get; set; }
+            [JsonPropertyName("user_id")] public string? UserId { get; set; }
 
-            [JsonPropertyName("level")] public string Level { get; set; }
+            [JsonPropertyName("level")] public string? Level { get; set; }
         }
     }
 }
