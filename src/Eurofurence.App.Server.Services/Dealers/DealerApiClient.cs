@@ -15,7 +15,7 @@ namespace Eurofurence.App.Server.Services.Dealers
             _dealerOptions = dealerOptions.Value;
         }
 
-        public async Task<bool> DownloadDealersExportAsync(string path)
+        public async Task DownloadDealersExportAsync(string path)
         {
             using var handler = new HttpClientHandler();
             handler.Credentials = new NetworkCredential(_dealerOptions.User, _dealerOptions.Password);
@@ -23,7 +23,6 @@ namespace Eurofurence.App.Server.Services.Dealers
             var fileStream = await httpClient.GetStreamAsync(_dealerOptions.Url);
             await using var outputFileStream = new FileStream(path, FileMode.Create);
             await fileStream.CopyToAsync(outputFileStream);
-            return true;
         }
     }
 }
