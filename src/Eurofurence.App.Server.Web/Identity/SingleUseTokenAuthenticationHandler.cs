@@ -46,7 +46,7 @@ public class SingleUseTokenAuthenticationHandler : AuthenticationHandler<Authent
         }
 
         Logger.LogDebug("Matched token for {PrincipalName} with roles {Roles} valid until {ValidUntil}.",
-            tokenPayload,
+            tokenPayload.PrincipalName,
             string.Join(',', tokenPayload.Roles),
             tokenPayload.ValidUntil.ToString("u"));
 
