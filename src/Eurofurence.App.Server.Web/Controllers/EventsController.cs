@@ -199,11 +199,10 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             Calendar favoriteEvents = _eventService.GetFavoriteEventsFromUserAsIcal(userRecord);
             var serializer = new CalendarSerializer();
-            var ms = new MemoryStream();
-            serializer.Serialize(favoriteEvents, ms, Encoding.UTF8);
-            ms.Seek(0, SeekOrigin.Begin);
+            var icalString = serializer.SerializeToString(favoriteEvents);
+            var utf8WithoutBom = new UTF8Encoding(false);
 
-            return File(ms, "text/calendar", "calendar.ics");
+            return File(utf8WithoutBom.GetBytes(icalString), "text/calendar", "calendar.ics");
         }
 
         /// <summary>
