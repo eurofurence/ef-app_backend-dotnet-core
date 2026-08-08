@@ -25,7 +25,8 @@
         <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
         <TemplateColumn>
             <CellTemplate>
-                <MudButton Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OnClickEdit(context.Item))">Edit</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnClickEdit(context.Item))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnClickDelete(context.Item))"></MudIconButton>
             </CellTemplate>
         </TemplateColumn>
     </Columns>
@@ -40,6 +41,30 @@
     /// </summary>
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
 
+    private async Task OnClickDelete(AnnouncementResponse contextItem)
+    {
+        DialogParameters<ConfirmDialog> dialogUserban = new()
+        {
+            {
+                x => x.ContentText, "Are you sure you want to delete this announcement?"
+            },
+        };
+
+        var optionsUserBan = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
+
+        IDialogReference dialogRef = await DialogService.ShowAsync<ConfirmDialog>("Confirm", dialogUserban, optionsUserBan);
+        DialogResult? result = await dialogRef.Result;
+
+        if (result is { Canceled: false })
+        {
+            await AnnouncementService.DeleteAnnouncementAsync(contextItem.Id);
+        }
+    }
+    
     /// <summary>
     /// Is called when the "Edit" button is clicked.
     /// </summary>

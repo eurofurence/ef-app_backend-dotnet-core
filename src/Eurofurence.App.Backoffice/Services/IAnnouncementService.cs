@@ -18,7 +18,14 @@ namespace Eurofurence.App.Backoffice.Services
         /// </summary>
         /// <param name="id">The id of the announcement to be updated.</param>
         /// <param name="request">The request object containing the updated announcement details.</param>
-        /// <return>A task representing the asynchronous update operation.</return>
+        /// <return>An empty Task.</return>
         Task UpdateAnnouncementAsync(Guid id, AnnouncementRequest request);
+
+        /// <summary>
+        /// Deletes an announcement with the specified id.
+        /// </summary>
+        /// <param name="id">The id of the announcement to be deleted</param>
+        /// <returns>An empty Task.</returns>
+        Task DeleteAnnouncementAsync(Guid id);
     }
 }

@@ -22,5 +22,11 @@ namespace Eurofurence.App.Backoffice.Services
             using var response = await http.PutAsync($"Announcements/{id}", content);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task DeleteAnnouncementAsync(Guid id)
+        {
+            using var response = await http.DeleteAsync($"Announcements/{id}");
+            response.EnsureSuccessStatusCode();
+        }
     }
 }
