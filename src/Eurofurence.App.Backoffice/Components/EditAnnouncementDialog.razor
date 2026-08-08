@@ -312,25 +312,4 @@
             return "Image not found.";
         }
     }
-
-    // private async Task UploadImage(IBrowserFile? file)
-    // {
-    //     if (file == null)
-    //     {
-    //         return;
-    //     }
-    //
-    //     ImageResponse? image = await ImageService.PostImageAsync(file);
-    //
-    //     if (image == null)
-    //     {
-    //         Snackbar.Add("Error uploading image.", Severity.Error);
-    //         return;
-    //     }
-    //
-    //     _image = image.Id;
-    //     await FetchImage(image.Id);
-    //     Snackbar.Add("Image successfully uploaded.", Severity.Success);
-    // }
-
 }
