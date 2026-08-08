@@ -6,7 +6,6 @@
 
 <MudPaper Class="pa-4">
     <MudDialog>
-      
         <DialogContent>
         @if (Announcement != null)
         {
@@ -42,8 +41,6 @@
             </MudForm>
         }
         </DialogContent>
-       
-    
         <DialogActions>
             <MudButton Color="Color.Secondary" OnClick="@OnClickedCancel">Cancel</MudButton>
             <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
@@ -64,7 +61,10 @@
 
 @code {
     #region Attributes
-
+    
+    /// <summary>
+    /// The announcement to edit. 
+    /// </summary>
     [Parameter]
     public AnnouncementResponse? Announcement { get; set; }
     
@@ -101,14 +101,14 @@
     private MudForm? _form;
 
     /// <summary>
-    /// Specifies whether a submission is currently in progress.
+    /// Whether a submission is currently in progress.
     /// </summary>
     private bool _submissionInProgress;
-
+    
     #endregion
 
     #region Methods
-
+    
     protected override void OnInitialized()
     {
         _endDate = Announcement?.ValidUntilDateTimeUtc.Date;
@@ -198,5 +198,6 @@
             _submissionInProgress = false;
         }
     }
+    
     #endregion
 }

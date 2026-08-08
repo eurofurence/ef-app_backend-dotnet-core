@@ -13,7 +13,6 @@
     <MudSpacer />
 </MudToolBar>
 
-
 <MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
     FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
@@ -35,53 +34,32 @@
 </MudDataGrid>
 
 @code {
-
     /// <summary>
     /// A collection of the loaded announcements to display in the data grid.
     /// </summary>
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
 
-    public async Task OnClickEdit(AnnouncementResponse item)
+    /// <summary>
+    /// Is called when the "Edit" button is clicked.
+    /// </summary>
+    /// <param name="item">Item the user has clicked on.</param>
+    private async Task OnClickEdit(AnnouncementResponse item)
     {
-        
-        var options = new DialogOptions
+        DialogOptions options = new()
         {
             MaxWidth = MaxWidth.ExtraLarge,
             FullWidth = true,
             CloseButton = true
         };
 
-        var parameters = new DialogParameters<EditAnnouncementDialog>
+        DialogParameters<EditAnnouncementDialog> parameters = new()
         {
             {x => x.Announcement, item}
         };
         
-        var dialog = await DialogService.ShowAsync<EditAnnouncementDialog>("Edit Announcement", parameters, options);
-        var result = await dialog.Result;
+        IDialogReference dialog = await DialogService.ShowAsync<EditAnnouncementDialog>("Edit Announcement", parameters, options);
+        DialogResult? result = await dialog.Result;
 
-        if (result is { Canceled: false })
-        {
-            _items = await AnnouncementService.GetAnnouncementsAsync();
-            StateHasChanged();
-        }
-    }
-    
-    /// <summary>
-    /// Is called when the "Add New" button is clicked.
-    /// Opens a dialog to create a new announcement.
-    /// </summary>
-    public async Task OnClickNewAnnouncement()
-    {
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraLarge,
-            FullWidth = true,
-            CloseButton = true
-        };
-
-        var dialog = await DialogService.ShowAsync<EditAnnouncementDialog>("Create a new Announcement", options);
-
-        var result = await dialog.Result;
         if (result is { Canceled: false })
         {
             _items = await AnnouncementService.GetAnnouncementsAsync();

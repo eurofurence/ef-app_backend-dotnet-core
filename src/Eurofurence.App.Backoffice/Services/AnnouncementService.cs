@@ -2,13 +2,12 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Eurofurence.App.Domain.Model.Announcements;
-using Eurofurence.App.Domain.Model.ArtistsAlley;
 
 namespace Eurofurence.App.Backoffice.Services
 {
     public class AnnouncementService(HttpClient http) : IAnnouncementService
     {
-
+        /// <inheritdoc />
         public async Task<IEnumerable<AnnouncementResponse>> GetAnnouncementsAsync()
         {
             var options = new JsonSerializerOptions();
@@ -16,14 +15,7 @@ namespace Eurofurence.App.Backoffice.Services
             return (await http.GetFromJsonAsync<AnnouncementResponse[]>("Announcements", options))?.ToArray() ?? [];
         }
 
-        public async Task SubmitAnnouncementAsync(AnnouncementRequest request)
-        {
-            ArgumentNullException.ThrowIfNull(request);
-            JsonContent content = JsonContent.Create(request);
-            using var response = await http.PostAsync($"Announcements", content);
-            response.EnsureSuccessStatusCode();
-        }
-
+        /// <inheritdoc />
         public async Task UpdateAnnouncementAsync(Guid id, AnnouncementRequest request)
         {
             JsonContent content = JsonContent.Create(request);

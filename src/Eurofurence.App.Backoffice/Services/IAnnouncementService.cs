@@ -14,17 +14,11 @@ namespace Eurofurence.App.Backoffice.Services
         Task<IEnumerable<AnnouncementResponse>> GetAnnouncementsAsync();
 
         /// <summary>
-        /// Submits a new announcement by sending the provided request data to the server.
+        /// Updates an existing announcement with the specified data.
         /// </summary>
-        /// <param name="request">The announcement details to be submitted, including required fields such as validity period, area, author, title, and content.</param>
-        /// <return>A task representing the asynchronous operation.</return>
-        Task SubmitAnnouncementAsync(AnnouncementRequest request);
-
-        /// <summary>
-        /// Updates an existing announcement by sending the provided response data to the server.
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+        /// <param name="id">The id of the announcement to be updated.</param>
+        /// <param name="request">The request object containing the updated announcement details.</param>
+        /// <return>A task representing the asynchronous update operation.</return>
         Task UpdateAnnouncementAsync(Guid id, AnnouncementRequest request);
     }
 }
