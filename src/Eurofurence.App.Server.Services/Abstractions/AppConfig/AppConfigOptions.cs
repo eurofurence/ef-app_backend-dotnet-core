@@ -35,6 +35,12 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
         public string? PublicWifiSsid { get; init; }
 
         /// <summary>
+        /// URL the Weather button in the app will open.
+        /// Hides button if <c>null</c>.
+        /// </summary>
+        public string? WeatherUrl { get; init; }
+
+        /// <summary>
         /// Explicitly set feature flag values. All feature flags must have a working default
         /// in the app and not result in errors if not explicitly set in the backend.
         /// </summary>

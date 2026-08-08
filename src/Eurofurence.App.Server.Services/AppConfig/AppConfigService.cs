@@ -49,6 +49,12 @@ namespace Eurofurence.App.Server.Services.AppConfig
                 appConfig.Add("PublicWifiSsid", publicWifiSsid);
             }
 
+            if (appConfigOptions.WeatherUrl is string weatherUrl)
+            {
+                appConfig.Add("WeatherUrl", weatherUrl);
+            }
+
+
             foreach (var featureFlag in appConfigOptions.FeatureFlags)
             {
                 if (featureFlag.Value.Value is string featureFlagValue)
