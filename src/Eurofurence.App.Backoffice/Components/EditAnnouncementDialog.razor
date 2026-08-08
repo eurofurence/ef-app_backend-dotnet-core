@@ -5,7 +5,7 @@
 @inject IImageService ImageService
 @inject ISnackbar Snackbar
 
-<MudPaper Class="pa-4" >
+<MudPaper Class="pa-4">
     <MudDialog>
         <DialogContent>
             @if (Announcement != null)
@@ -42,8 +42,6 @@
                             <MudTimePicker Label="End Time" Required="true" @bind-Time="_endTime"/>
                         </MudItem>
                     </MudGrid>
-
-                    <MudTextField Label="Groups (comma separated)" @bind-Value="_groups"/>
                     <MudTextField Label="Image ID" Validation="@(new Func<string, Task<string>>(ValidateImageId))"
                                   @bind-Value="_imageId"/>
                 </MudForm>
@@ -120,11 +118,6 @@
     private TimeSpan? _endTime;
 
     /// <summary>
-    /// Groups (IDP groups) which the announcement should be sent to.
-    /// </summary>
-    private string _groups = "";
-
-    /// <summary>
     /// Specifies whether the form is valid or not.
     /// </summary>
     private bool _formIsValid;
@@ -157,7 +150,6 @@
         _startTime = Announcement?.ValidFromDateTimeUtc.TimeOfDay;
         _endDate = Announcement?.ValidUntilDateTimeUtc.Date;
         _endTime = Announcement?.ValidUntilDateTimeUtc.TimeOfDay;
-        _groups = string.Join(",", Announcement?.Roles ?? Array.Empty<string>());
     }
 
     /// <summary>
@@ -204,7 +196,7 @@
             Snackbar.Add("Start and end date/time are required.", Severity.Error);
             return;
         }
-        
+
         DateTime startDateTime = startDate + startTime;
         DateTime endDateTime = endDate + endTime;
 
@@ -213,7 +205,7 @@
             Snackbar.Add("Start date/time must be before end date/time.", Severity.Error);
             return;
         }
-        
+
         AnnouncementRequest request = new()
         {
             Title = _title,
@@ -223,11 +215,7 @@
             ImageId = Guid.TryParse(_imageId, out Guid parsedImageId) ? parsedImageId : null,
             ValidFromDateTimeUtc = startDateTime,
             ValidUntilDateTimeUtc = endDateTime,
-            Groups = _groups
-                .Split(",", StringSplitOptions.RemoveEmptyEntries)
-                .Select(role => role.Trim())
-                .Where(role => role.Length > 0)
-                .ToArray()
+            Groups = Announcement.Roles
         };
 
         try
