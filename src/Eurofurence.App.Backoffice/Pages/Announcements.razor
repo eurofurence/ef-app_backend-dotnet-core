@@ -63,8 +63,14 @@
 
         if (result is { Canceled: false })
         {
-            _items = await AnnouncementService.GetAnnouncementsAsync();
-            StateHasChanged();
+            try
+            {
+                await LoadAnnouncementsAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
+            }
         }
     }
 
@@ -79,15 +85,23 @@
 
         if (firstRender)
         {
-            try
-            {
-                _items = await AnnouncementService.GetAnnouncementsAsync();
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
-            }
+            await LoadAnnouncementsAsync();
+        }
+    }
+    
+    /// <summary>
+    /// Loads the announcements.
+    /// </summary>
+    private async Task LoadAnnouncementsAsync()
+    {
+        try
+        {
+            _items = await AnnouncementService.GetAnnouncementsAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
         }
     }
 }
