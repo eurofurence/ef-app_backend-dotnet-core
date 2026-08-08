@@ -61,10 +61,16 @@
 
         if (result is { Canceled: false })
         {
-            await AnnouncementService.DeleteAnnouncementAsync(contextItem.Id);
-            Snackbar.Add("Announcement deleted", Severity.Success);
-            await LoadAnnouncementsAsync();
-            StateHasChanged();
+            try
+            {
+                await AnnouncementService.DeleteAnnouncementAsync(contextItem.Id);
+                await LoadAnnouncementsAsync();
+                Snackbar.Add("Announcement deleted", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting announcement: {ex.Message}", Severity.Error);
+            }
         }
     }
     

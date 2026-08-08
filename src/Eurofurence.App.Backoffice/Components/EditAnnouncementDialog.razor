@@ -13,7 +13,7 @@
             {
                 <MudGrid>
                     <MudItem xs="12" md="5">
-                        <ImageField ImageResponse="@_image" ImageChanged="OnImageUploaded"/>
+                        <ImageField ImageResponse="@_image" ImageChanged="OnImageUploaded" ImageUploadError="OnImageUploadError"/>
                     </MudItem>
                     <MudItem xs="12" md="7">
                         <MudForm @ref="_form" @bind-IsValid="@_formIsValid" Class="">
@@ -146,7 +146,7 @@
 
     #region Methods
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         _title = Announcement?.Title;
         _author = Announcement?.Author;
@@ -162,12 +162,23 @@
             await FetchImage(imageId);
         }
     }
-
+    
+    /// <summary>
+    /// Fetches the image with the given ID from the server.
+    /// </summary>
+    /// <param name="imageId">The id of the image to fetch.</param>
     private async Task FetchImage(Guid imageId)
     {
-        ImageResponse? image = await ImageService.GetImageAsync(imageId);
-        _image = image;
-        StateHasChanged();
+        try
+        {
+            ImageResponse? image = await ImageService.GetImageAsync(imageId);
+            _image = image;
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Error fetching image.", Severity.Error);
+        }
     }
 
     /// <summary>
@@ -178,7 +189,19 @@
     {
         MudDialog?.Close(DialogResult.Cancel());
     }
-
+    
+    /// <summary>
+    /// Called when an error occurs while uploading an image.
+    /// </summary>
+    private void OnImageUploadError()
+    {
+        Snackbar.Add("Error uploading image.", Severity.Error);
+    }
+    
+    /// <summary>
+    /// Called when an image is uploaded.
+    /// </summary>
+    /// <param name="image">The uploaded image.</param>
     private void OnImageUploaded(ImageResponse image)
     {
         _image = image;
