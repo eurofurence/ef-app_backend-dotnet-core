@@ -62,6 +62,9 @@
         if (result is { Canceled: false })
         {
             await AnnouncementService.DeleteAnnouncementAsync(contextItem.Id);
+            Snackbar.Add("Announcement deleted", Severity.Success);
+            await LoadAnnouncementsAsync();
+            StateHasChanged();
         }
     }
     
