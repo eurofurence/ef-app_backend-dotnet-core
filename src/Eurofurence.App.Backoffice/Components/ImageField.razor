@@ -13,8 +13,8 @@
         else
         {
             <MudLink Href="@ImageResponse?.Url" Class="d-flex justify-center">
-                <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain"
-                          Src="@ImageResponse?.Url" Elevation="25" Class="rounded-lg"/>
+                <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@ImageResponse?.Url"
+                          Elevation="25" Class="rounded-lg"/>
             </MudLink>
         }
     }
@@ -54,24 +54,38 @@
     /// <param name="file">The file to upload.</param>
     private async Task UploadImage(IBrowserFile? file)
     {
-        IsUploading = true;
-        StateHasChanged();
         if (file == null)
         {
             return;
         }
 
-        ImageResponse? image = await ImageService.PostImageAsync(file);
+        IsUploading = true;
+        StateHasChanged();
 
-        if (image == null)
+        try
+        {
+            ImageResponse? image = await ImageService.PostImageAsync(file);
+
+            if (image == null)
+            {
+                await ImageUploadError.InvokeAsync();
+                return;
+            }
+
+            ImageResponse = image;
+            await ImageChanged.InvokeAsync(image);
+            IsUploading = false;
+            StateHasChanged();
+        }
+        catch
         {
             await ImageUploadError.InvokeAsync();
         }
-
-        ImageResponse = image;
-        await ImageChanged.InvokeAsync(image);
-        IsUploading = false;
-        StateHasChanged();
+        finally
+        {
+            IsUploading = false;
+            StateHasChanged();
+        }
     }
 
 }
