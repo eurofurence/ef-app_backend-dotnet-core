@@ -83,7 +83,7 @@ namespace Eurofurence.App.Server.Services.Announcements
                     _appDbContext.Announcements
                         .Where(entity =>
                             entity.IsDeleted == 0
-                            && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group))))
+                            && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group)) || _httpContext.User.IsInRole(IdentityRoles.AnnouncementManager)))
                         .Select(x => x.Transform()).ToArrayAsync(cancellationToken);
             }
             else
@@ -94,7 +94,7 @@ namespace Eurofurence.App.Server.Services.Announcements
                     .IgnoreQueryFilters()
                     .Where(entity =>
                         entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc
-                        && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group))));
+                        && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group)) || _httpContext.User.IsInRole(IdentityRoles.AnnouncementManager)));
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)
