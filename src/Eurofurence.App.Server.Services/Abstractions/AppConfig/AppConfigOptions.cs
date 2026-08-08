@@ -19,14 +19,26 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
 
         /// <summary>
         /// URL the Catch-Em-All (CMA) button in the app will open.
-        /// Disables button if <c>null</c>.
+        /// Hides button if <c>null</c>.
         /// </summary>
         public string? CmaUrl { get; init; }
+
+        /// <summary>
+        /// URL the Critter Management System (CMS) button in the app will open.
+        /// Hides button if <c>null</c>.
+        /// </summary>
+        public string? CritterUrl { get; init; }
 
         /// <summary>
         /// Overrides the default SSID for the public WiFi if needed.
         /// </summary>
         public string? PublicWifiSsid { get; init; }
+
+        /// <summary>
+        /// URL the Weather button in the app will open.
+        /// Hides button if <c>null</c>.
+        /// </summary>
+        public string? WeatherUrl { get; init; }
 
         /// <summary>
         /// Explicitly set feature flag values. All feature flags must have a working default
