@@ -40,6 +40,7 @@ namespace Eurofurence.App.Server.Services.Events
         private readonly IEventConferenceTrackService _eventConferenceTrackService;
         private readonly IEventFavoriteStatisticsService _eventFavoriteStatisticsService;
         private readonly EventOptions _eventOptions;
+        private readonly GlobalOptions _globalOptions;
         private readonly AppDbContext _appDbContext;
         private readonly IDistributedCache _cache;
         private readonly IHtmlSanitizer _htmlSanitizer;
@@ -69,6 +70,7 @@ namespace Eurofurence.App.Server.Services.Events
             IEventFavoriteStatisticsService eventFavoriteStatisticsService,
             ILoggerFactory loggerFactory,
             IOptions<EventOptions> eventOptions,
+            IOptions<GlobalOptions> globalOptions,
             IDistributedCache cache,
             IHtmlSanitizer htmlSanitizer
         )
@@ -80,6 +82,7 @@ namespace Eurofurence.App.Server.Services.Events
             _eventConferenceTrackService = eventConferenceTrackService;
             _eventFavoriteStatisticsService = eventFavoriteStatisticsService;
             _eventOptions = eventOptions.Value;
+            _globalOptions = globalOptions.Value;
             _logger = loggerFactory.CreateLogger(GetType());
             _cache = cache;
             _htmlSanitizer = htmlSanitizer;
@@ -126,13 +129,17 @@ namespace Eurofurence.App.Server.Services.Events
             {
                 // Include for each event the title, start time/end time and the description of the event including
                 // the organizer of the panel.
+                var summary = !string.IsNullOrEmpty(item.SubTitle) ? $"{item.Title} – {item.SubTitle}" : item.Title;
                 CalendarEvent calendarEvent = new()
                 {
-                    Summary = item.Title,
+                    Summary = summary,
                     Description = item.Description + "\n" + $"Held by: {item.PanelHosts ?? "unknown fluff"}",
                     Start = new CalDateTime(item.StartDateTimeUtc, "UTC"),
                     End = new CalDateTime(item.EndDateTimeUtc, "UTC"),
                     Location = item.ConferenceRoom?.Name,
+                    LastModified = new CalDateTime(item.LastChangeDateTimeUtc, "UTC"),
+                    Url = new Uri($"{_globalOptions.BaseUrl}/{_globalOptions.ConventionIdentifier}/Web/Events/{item.Id}"),
+                    Uid = item.Id.ToString(),
                 };
                 calendar.Events.Add(calendarEvent);
             }
