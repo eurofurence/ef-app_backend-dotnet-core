@@ -34,6 +34,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.22.0" />
     <PackageReference Include="Minio" Version="7.0.0" />
+    <PackageReference Include="Sentry.AspNetCore" Version="6.8.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />

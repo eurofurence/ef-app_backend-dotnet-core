@@ -57,7 +57,7 @@ namespace Eurofurence.App.Server.Services.Passes
 
         public PassFile GenerateSvg(ClaimsIdentity identity)
         {
-            var registrationId = _identityService.GetRegistrationsIds(identity).FirstOrDefault();
+            var registrationId = _identityService.GetRegistrationId(identity);
 
             if (string.IsNullOrEmpty(registrationId))
                 return null;
@@ -105,7 +105,7 @@ namespace Eurofurence.App.Server.Services.Passes
 
         public async Task<PassFile> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default)
         {
-            var registrationId = _identityService.GetRegistrationsIds(identity).FirstOrDefault();
+            var registrationId = _identityService.GetRegistrationId(identity);
 
             if (string.IsNullOrEmpty(registrationId))
                 return null;

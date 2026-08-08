@@ -15,10 +15,10 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Sentry;
 
 namespace Eurofurence.App.Server.Services.PushNotifications
 {
@@ -107,8 +107,8 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error when trying to get members of IDP group {groupId}: {ex.Message}");
-                    identityIds = [];
+                    SentrySdk.CaptureException(ex);
+                    _logger.LogError(ex, "Error when trying to get members of IDP group {groupId}.", groupId);
                 }
                 var cachedGroupMembers = await _identityService.GetCachedGroupMembers(groupId);
                 identityIds.AddRange(cachedGroupMembers);
@@ -493,6 +493,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             }
             catch (Exception ex)
             {
+                SentrySdk.CaptureException(ex);
                 _logger.LogError(ex, "Failed to send APNs push to {deviceIdentity} for type {pushEventType} with related ID {relatedId}", deviceIdentity, eventType, relatedId);
             }
 
@@ -542,6 +543,7 @@ namespace Eurofurence.App.Server.Services.PushNotifications
             };
 
             if (deviceIdentity != null)
+                //TODO: Migrate from Firebase registration tokens to installation IDs (https://firebase.google.com/docs/cloud-messaging/manage-tokens)
                 fcmMessage.Token = deviceIdentity.DeviceToken;
             else
                 fcmMessage.Topic = $"{_globalOptions.ConventionIdentifier}-android";
