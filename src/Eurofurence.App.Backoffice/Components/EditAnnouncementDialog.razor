@@ -146,7 +146,7 @@
         _imageId = Announcement?.ImageId.ToString();
         _endDate = Announcement?.ValidUntilDateTimeUtc.Date;
         _endTime = Announcement?.ValidUntilDateTimeUtc.TimeOfDay;
-        _groups = string.Join(",", Announcement?.Groups ?? Array.Empty<string>());
+        _groups = string.Join(",", Announcement?.Roles ?? Array.Empty<string>());
     }
 
     /// <summary>

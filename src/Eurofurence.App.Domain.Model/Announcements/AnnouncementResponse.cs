@@ -84,5 +84,5 @@ public class AnnouncementResponse : ResponseBase
     /// If provided, the announcement will only be sent to members of those roles.
     /// </summary>
     [DataMember]
-    public string[] Groups { get; set; }
+    public string[] Roles { get; set; }
 }
