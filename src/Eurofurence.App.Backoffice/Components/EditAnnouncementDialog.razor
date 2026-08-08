@@ -8,39 +8,40 @@
 <MudPaper Class="pa-4">
     <MudDialog>
         <DialogContent>
-        @if (Announcement != null)
-        {
-            <MudForm @ref="_form" @bind-IsValid="@_formIsValid" Class="">
-                <MudGrid>
-                    <MudItem xl="6" md="6" xs="12">
-                        <MudTextField Class="mt-2" T="string" @bind-Value="_title" Required="true"
-                                      RequiredError="Name is required." Label="Title"/>
-                    </MudItem>
-                    <MudItem xl="6" md="6" xs="12">
-                        <MudTextField Class="mt-2" T="string" @bind-Value="_author" Required="true"
-                                      RequiredError="Author is required." Label="Author"/>
-                    </MudItem>
-                    <MudItem xl="6" md="6" xs="12">
-                        <MudTextField Class="mt-2" T="string" @bind-Value="_area" Required="true"
-                                      RequiredError="Area is required." Label="Area"/>
-                    </MudItem>
-                    <MudItem xl="6" md="6" xs="12">
-                        <MudTextField Class="mt-2" T="string" @bind-Value="_content" Required="true"
-                                      RequiredError="Content is required." AutoGrow Label="Content"
-                                      HelperText="Supports multiple lines."/>
-                    </MudItem>
-                    <MudItem xl="6" md="6" xs="12">
-                        <MudDatePicker Label="End Date" Required="true" @bind-Date="_endDate"/>
-                    </MudItem>
-                    <MudItem xl="6" md="6" xs="12">
-                        <MudTimePicker Label="End Time" Required="true" @bind-Time="_endTime"/>
-                    </MudItem>
-                </MudGrid>
+            @if (Announcement != null)
+            {
+                <MudForm @ref="_form" @bind-IsValid="@_formIsValid" Class="">
+                    <MudGrid>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudTextField Class="mt-2" T="string" @bind-Value="_title" Required="true"
+                                          RequiredError="Name is required." Label="Title"/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudTextField Class="mt-2" T="string" @bind-Value="_author" Required="true"
+                                          RequiredError="Author is required." Label="Author"/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudTextField Class="mt-2" T="string" @bind-Value="_area" Required="true"
+                                          RequiredError="Area is required." Label="Area"/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudTextField Class="mt-2" T="string" @bind-Value="_content" Required="true"
+                                          RequiredError="Content is required." AutoGrow Label="Content"
+                                          HelperText="Supports multiple lines."/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudDatePicker Label="End Date" Required="true" @bind-Date="_endDate"/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudTimePicker Label="End Time" Required="true" @bind-Time="_endTime"/>
+                        </MudItem>
+                    </MudGrid>
 
-                <MudTextField Label="Groups (comma separated)" @bind-Value="_groups"/>
-                <MudTextField Label="Image ID" Validation="@(new Func<string, Task<string>>(ValidateImageId))" @bind-Value="_imageId"/>
-            </MudForm>
-        }
+                    <MudTextField Label="Groups (comma separated)" @bind-Value="_groups"/>
+                    <MudTextField Label="Image ID" Validation="@(new Func<string, Task<string>>(ValidateImageId))"
+                                  @bind-Value="_imageId"/>
+                </MudForm>
+            }
         </DialogContent>
         <DialogActions>
             <MudButton Color="Color.Secondary" OnClick="@OnClickedCancel">Cancel</MudButton>
@@ -61,46 +62,47 @@
 </MudPaper>
 
 @code {
+
     #region Attributes
-    
+
     /// <summary>
-    /// The announcement to edit. 
+    /// The announcement to edit.
     /// </summary>
     [Parameter]
     public AnnouncementResponse? Announcement { get; set; }
-    
+
     /// <summary>
     /// Dialog instance for MudBlazor dialog.
     /// </summary>
     ///
     [CascadingParameter]
     private IMudDialogInstance? MudDialog { get; set; }
-    
+
     /// <summary>
     /// The title of the announcement.
     /// </summary>
     private string? _title;
-    
+
     /// <summary>
     /// The author of the announcement.
     /// </summary>
     private string? _author;
-    
+
     /// <summary>
     /// The area of the announcement.
     /// </summary>
     private string? _area;
-    
+
     /// <summary>
     /// The content of the announcement.
     /// </summary>
     private string? _content;
-    
+
     /// <summary>
     /// The ID of the image.
     /// </summary>
     private string? _imageId;
-    
+
     /// <summary>
     /// The date until the announcement should be valid.
     /// </summary>
@@ -130,7 +132,7 @@
     /// Whether a submission is currently in progress.
     /// </summary>
     private bool _submissionInProgress;
-    
+
     #endregion
 
     #region Methods
@@ -162,7 +164,7 @@
     {
         MudDialog?.Close(DialogResult.Cancel());
     }
-    
+
     /// <summary>
     /// Called when the Submit button is clicked.
     /// This will send the announcement request to the server if valid.
@@ -175,42 +177,42 @@
             Snackbar.Add("Announcement is not loaded.", Severity.Error);
             return;
         }
-        
+
         if (_form is null)
         {
             Snackbar.Add("Form is not ready.", Severity.Error);
             return;
         }
-        
+
         await _form.ValidateAsync();
-        
+
         if (!_formIsValid)
         {
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
             return;
         }
-        
+
         if (_endTime == null)
         {
             Snackbar.Add("End time is required.", Severity.Error);
             return;
         }
-        
+
         DateTime? endDateTime = _endDate?.Date + _endTime.Value;
-        
+
         if (endDateTime == null)
         {
             Snackbar.Add("End time is required.", Severity.Error);
             return;
         }
-        
+
         AnnouncementRequest request = new()
         {
             Title = _title,
             Author = _author,
             Area = _area,
             Content = _content,
-            ImageId = new Guid(_imageId),
+            ImageId = Guid.TryParse(_imageId, out Guid parsedImageId) ? parsedImageId : null,
             ValidUntilDateTimeUtc = endDateTime.Value,
             Groups = _groups
                 .Split(",", StringSplitOptions.RemoveEmptyEntries)
@@ -218,7 +220,7 @@
                 .Where(role => role.Length > 0)
                 .ToArray()
         };
-        
+
         try
         {
             _submissionInProgress = true;
@@ -235,7 +237,7 @@
             _submissionInProgress = false;
         }
     }
-    
+
     #endregion
 
     /// <summary>
@@ -266,4 +268,5 @@
             return "Image not found.";
         }
     }
+
 }
