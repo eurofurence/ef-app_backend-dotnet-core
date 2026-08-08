@@ -39,6 +39,11 @@ namespace Eurofurence.App.Server.Services.AppConfig
                 appConfig.Add("CmaUrl", cmaUrl);
             }
 
+            if (appConfigOptions.CritterUrl is string critterUrl)
+            {
+                appConfig.Add("CritterUrl", critterUrl);
+            }
+
             if (appConfigOptions.PublicWifiSsid is string publicWifiSsid)
             {
                 appConfig.Add("PublicWifiSsid", publicWifiSsid);
