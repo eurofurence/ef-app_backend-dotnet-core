@@ -105,7 +105,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _announcementService.InsertOneAsync(record);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
-            if (request.Groups.Any())
+            if (request.Groups is { Length: > 0 })
             {
                 await _pushNotificationChannelManager.PushAnnouncementNotificationToGroupsAsync(record, request.Groups);
             }
