@@ -5,7 +5,7 @@
 @inject IImageService ImageService
 @inject ISnackbar Snackbar
 
-<MudPaper Class="pa-4">
+<MudPaper Class="pa-4" >
     <MudDialog>
         <DialogContent>
             @if (Announcement != null)
@@ -28,6 +28,12 @@
                             <MudTextField Class="mt-2" T="string" @bind-Value="_content" Required="true"
                                           RequiredError="Content is required." AutoGrow Label="Content"
                                           HelperText="Supports multiple lines."/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudDatePicker Label="Start Date" Required="true" @bind-Date="_startDate"/>
+                        </MudItem>
+                        <MudItem xl="6" md="6" xs="12">
+                            <MudTimePicker Label="Start Time" Required="true" @bind-Time="_startTime"/>
                         </MudItem>
                         <MudItem xl="6" md="6" xs="12">
                             <MudDatePicker Label="End Date" Required="true" @bind-Date="_endDate"/>
@@ -133,6 +139,9 @@
     /// </summary>
     private bool _submissionInProgress;
 
+    private DateTime? _startDate;
+    private TimeSpan? _startTime;
+
     #endregion
 
     #region Methods
@@ -144,6 +153,8 @@
         _area = Announcement?.Area;
         _content = Announcement?.Content;
         _imageId = Announcement?.ImageId.ToString();
+        _startDate = Announcement?.ValidFromDateTimeUtc.Date;
+        _startTime = Announcement?.ValidFromDateTimeUtc.TimeOfDay;
         _endDate = Announcement?.ValidUntilDateTimeUtc.Date;
         _endTime = Announcement?.ValidUntilDateTimeUtc.TimeOfDay;
         _groups = string.Join(",", Announcement?.Roles ?? Array.Empty<string>());
@@ -185,20 +196,24 @@
             return;
         }
 
-        if (_endTime == null)
+        if (_startDate is not { } startDate ||
+            _startTime is not { } startTime ||
+            _endDate is not { } endDate ||
+            _endTime is not { } endTime)
         {
-            Snackbar.Add("End time is required.", Severity.Error);
+            Snackbar.Add("Start and end date/time are required.", Severity.Error);
             return;
         }
+        
+        DateTime startDateTime = startDate + startTime;
+        DateTime endDateTime = endDate + endTime;
 
-        DateTime? endDateTime = _endDate?.Date + _endTime.Value;
-
-        if (endDateTime == null)
+        if (startDateTime > endDateTime)
         {
-            Snackbar.Add("End time is required.", Severity.Error);
+            Snackbar.Add("Start date/time must be before end date/time.", Severity.Error);
             return;
         }
-
+        
         AnnouncementRequest request = new()
         {
             Title = _title,
@@ -206,8 +221,8 @@
             Area = _area,
             Content = _content,
             ImageId = Guid.TryParse(_imageId, out Guid parsedImageId) ? parsedImageId : null,
-            ValidFromDateTimeUtc = Announcement.ValidFromDateTimeUtc,
-            ValidUntilDateTimeUtc = endDateTime.Value,
+            ValidFromDateTimeUtc = startDateTime,
+            ValidUntilDateTimeUtc = endDateTime,
             Groups = _groups
                 .Split(",", StringSplitOptions.RemoveEmptyEntries)
                 .Select(role => role.Trim())
