@@ -1,0 +1,107 @@
+@page "/Announcements"
+@using Eurofurence.App.Backoffice.Components
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Announcements
+@using Eurofurence.App.Domain.Model.Identity
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = IdentityRoles.Admin)]
+@inject IAnnouncementService AnnouncementService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudToolBar>
+    <MudText Typo="Typo.h6">Announcements</MudText>
+    <MudSpacer />
+</MudToolBar>
+
+<MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
+    FilterMode="@DataGridFilterMode.ColumnFilterMenu">
+    <Columns>
+        <PropertyColumn Title="Title" Property="arg => arg.Title"></PropertyColumn>
+        <PropertyColumn Title="Author" Property="arg => arg.Author"></PropertyColumn>
+        <PropertyColumn Title="Area" Property="arg => arg.Area"></PropertyColumn>
+        <PropertyColumn Title="Content" Property="arg => arg.Content"></PropertyColumn>
+        <PropertyColumn Title="ValidFromDateTimeUtc" Property="arg => arg.ValidFromDateTimeUtc"></PropertyColumn>
+        <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
+        <TemplateColumn>
+            <CellTemplate>
+                <MudButton Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OnClickEdit(context.Item))">Edit</MudButton>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="AnnouncementResponse" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    /// <summary>
+    /// A collection of the loaded announcements to display in the data grid.
+    /// </summary>
+    private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
+
+    /// <summary>
+    /// Is called when the "Edit" button is clicked.
+    /// </summary>
+    /// <param name="item">Item the user has clicked on.</param>
+    private async Task OnClickEdit(AnnouncementResponse item)
+    {
+        DialogOptions options = new()
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        DialogParameters<EditAnnouncementDialog> parameters = new()
+        {
+            {x => x.Announcement, item}
+        };
+        
+        IDialogReference dialog = await DialogService.ShowAsync<EditAnnouncementDialog>("Edit Announcement", parameters, options);
+        DialogResult? result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            try
+            {
+                await LoadAnnouncementsAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called after the component has rendered.
+    /// Will load the announcements from the service if this is the first render.
+    /// </summary>
+    /// <param name="firstRender">Specifies if the component is rendered for the first time.</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            await LoadAnnouncementsAsync();
+        }
+    }
+    
+    /// <summary>
+    /// Loads the announcements.
+    /// </summary>
+    private async Task LoadAnnouncementsAsync()
+    {
+        try
+        {
+            _items = await AnnouncementService.GetAnnouncementsAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
+        }
+    }
+}
