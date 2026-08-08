@@ -13,6 +13,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Identity;
 
 namespace Eurofurence.App.Server.Services.Announcements
 {
@@ -52,7 +53,7 @@ namespace Eurofurence.App.Server.Services.Announcements
             }
 
             return _appDbContext.Announcements
-                .Where(entity => entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group)))
+                .Where(entity => entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group) || _httpContext.User.IsInRole(IdentityRoles.AnnouncementManager)))
                 .AsNoTracking();
         }
 
