@@ -206,6 +206,7 @@
             Area = _area,
             Content = _content,
             ImageId = Guid.TryParse(_imageId, out Guid parsedImageId) ? parsedImageId : null,
+            ValidFromDateTimeUtc = Announcement.ValidFromDateTimeUtc,
             ValidUntilDateTimeUtc = endDateTime.Value,
             Groups = _groups
                 .Split(",", StringSplitOptions.RemoveEmptyEntries)
