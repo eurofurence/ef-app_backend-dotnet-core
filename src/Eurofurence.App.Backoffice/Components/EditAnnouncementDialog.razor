@@ -137,20 +137,13 @@
 
     #region Methods
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         _title = Announcement?.Title;
         _author = Announcement?.Author;
         _area = Announcement?.Area;
         _content = Announcement?.Content;
         _imageId = Announcement?.ImageId.ToString();
-        _endDate = Announcement?.ValidUntilDateTimeUtc.Date;
-        _endTime = Announcement?.ValidUntilDateTimeUtc.TimeOfDay;
-        _groups = string.Join(",", Announcement?.Groups ?? Array.Empty<string>());
-    }
-
-    protected override void OnInitialized()
-    {
         _endDate = Announcement?.ValidUntilDateTimeUtc.Date;
         _endTime = Announcement?.ValidUntilDateTimeUtc.TimeOfDay;
         _groups = string.Join(",", Announcement?.Groups ?? Array.Empty<string>());
