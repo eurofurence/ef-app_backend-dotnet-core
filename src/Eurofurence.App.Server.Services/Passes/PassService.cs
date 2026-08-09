@@ -55,8 +55,7 @@ namespace Eurofurence.App.Server.Services.Passes
             _logger = loggerFactory.CreateLogger(GetType());
 
             // Disable Passbook pass generation if certificates unavailable
-            if (!string.IsNullOrEmpty(_passOptions.PassbookX509CertificatePem) &&
-                !string.IsNullOrEmpty(_passOptions.AppleWwdrX509CertificatePem))
+            if (_passCertificateProvider.IsConfigured())
             {
                 _passGenerator = new PassGenerator();
             }
