@@ -22,17 +22,24 @@
     {
         <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
     }
-    <MudGrid>
-        <MudItem xl="6" md="6">
-            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;" />
-        </MudItem>
-        <MudItem xl="6" md="6">
-            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearImage" FullWidth="true" Style="margin-top: 10px;">
-                Remove
-            </MudButton>
-        </MudItem>
-    </MudGrid>
-    
+
+    @if(!HideRemoveButton)
+    {
+        <MudGrid>
+            <MudItem xl="6" md="6">
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;" />
+            </MudItem>
+            <MudItem xl="6" md="6">
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearImage" FullWidth="true" Style="margin-top: 10px;">
+                    Remove
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;" />
+    }
 </div>
 
 @code {
@@ -55,6 +62,12 @@
     /// </summary>
     [Parameter]
     public EventCallback ImageUploadError { get; set; }
+
+    /// <summary>
+    /// Determines whether the remove button should be hidden.
+    /// </summary>
+    [Parameter]
+    public bool HideRemoveButton { get; set; }
 
     private bool IsUploading;
 
