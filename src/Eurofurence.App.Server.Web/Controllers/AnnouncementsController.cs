@@ -87,7 +87,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
-            if (await _announcementService.FindOneAsync(id) == null) return NotFound();
+            if (await QueryRecordForIdAsync(id) == null) return NotFound();
 
             await _announcementService.DeleteOneAsync(id);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
@@ -146,7 +146,9 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return BadRequest("Error parsing request");
             }
 
-            if (await _announcementService.FindOneAsync(id) is not { } announcementRecord)
+            AnnouncementRecord record = await QueryRecordForIdAsync(id);
+
+            if (record is not { } announcementRecord)
             {
                 return NotFound();
             }
@@ -158,6 +160,29 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Returns the announcement record for the given id.
+        /// If the user is an admin or announcement manager, the record is returned regardless of whether
+        /// they are a member of the groups or not.
+        /// </summary>
+        /// <param name="id">The id to look up.</param>
+        /// <returns>Task with the record. Can be null.</returns>
+        private async Task<AnnouncementRecord> QueryRecordForIdAsync(Guid id)
+        {
+            AnnouncementRecord record;
+
+            if (User.IsInRole(IdentityRoles.Admin) ||
+                User.IsInRole(IdentityRoles.AnnouncementManager))
+            {
+                record = await _announcementService.FindOneInAllAsync(id);
+            }
+            else
+            {
+                record = await _announcementService.FindOneAsync(id);
+            }
+            return record;
         }
 
         /// <summary>

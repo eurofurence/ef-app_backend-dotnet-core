@@ -23,6 +23,7 @@ namespace Eurofurence.App.Backoffice.Services
             response.EnsureSuccessStatusCode();
         }
 
+        /// <inheritdoc />
         public async Task DeleteAnnouncementAsync(Guid id)
         {
             using var response = await http.DeleteAsync($"Announcements/{id}");
