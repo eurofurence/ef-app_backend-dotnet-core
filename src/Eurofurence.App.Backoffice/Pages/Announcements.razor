@@ -14,7 +14,7 @@
     <MudSpacer />
 </MudToolBar>
 
-<MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
+<MudDataGrid T="AnnouncementResponse" @ref="_dataGrid" Items="_items" Filterable="true"
     FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
         <PropertyColumn Title="Title" Property="arg => arg.Title"></PropertyColumn>
@@ -23,6 +23,7 @@
         <PropertyColumn Title="Content" Property="arg => arg.Content"></PropertyColumn>
         <PropertyColumn Title="ValidFromDateTimeUtc" Property="arg => arg.ValidFromDateTimeUtc"></PropertyColumn>
         <PropertyColumn Title="ValidUntilDateTimeUtc" Property="arg => arg.ValidUntilDateTimeUtc"></PropertyColumn>
+        <PropertyColumn Title="LastChangeDateTimeUtc" Property="arg => arg.LastChangeDateTimeUtc"></PropertyColumn>
         <TemplateColumn>
             <CellTemplate>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnClickEdit(context.Item))" />
@@ -36,6 +37,9 @@
 </MudDataGrid>
 
 @code {
+    
+    private MudDataGrid<AnnouncementResponse> _dataGrid = null!;
+    
     /// <summary>
     /// A collection of the loaded announcements to display in the data grid.
     /// </summary>
@@ -120,6 +124,7 @@
         if (firstRender)
         {
             await LoadAnnouncementsAsync();
+            await _dataGrid.SetSortAsync(nameof(AnnouncementResponse.ValidFromDateTimeUtc), SortDirection.Descending, x => x.ValidFromDateTimeUtc);
         }
     }
     
