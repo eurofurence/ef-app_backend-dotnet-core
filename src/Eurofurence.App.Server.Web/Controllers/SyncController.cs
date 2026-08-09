@@ -93,7 +93,6 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize]
         [AllowAnonymous]
         [HttpGet]
-        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
             var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
