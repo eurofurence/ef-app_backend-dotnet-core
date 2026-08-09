@@ -4,16 +4,11 @@ using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Infrastructure.EntityFramework;
 using Eurofurence.App.Server.Services.Abstractions;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
-using Eurofurence.App.Server.Services.Abstractions.Identity;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Eurofurence.App.Domain.Model.Identity;
 
 namespace Eurofurence.App.Server.Services.Announcements
 {
@@ -21,66 +16,20 @@ namespace Eurofurence.App.Server.Services.Announcements
         IAnnouncementService
     {
         private readonly AppDbContext _appDbContext;
-        private readonly HttpContext _httpContext;
-        private readonly IIdentityService _identityService;
 
         public AnnouncementService(
             AppDbContext appDbContext,
-            IStorageServiceFactory storageServiceFactory,
-            IHttpContextAccessor httpContextAccessor,
-            IIdentityService identityService
+            IStorageServiceFactory storageServiceFactory
         )
             : base(appDbContext, storageServiceFactory)
         {
             _appDbContext = appDbContext;
-            _httpContext = httpContextAccessor.HttpContext;
-            _identityService = identityService;
-        }
-
-        /// <inheritdoc />
-        public IQueryable<AnnouncementRecord> FetchAll()
-        {
-            return _appDbContext.Announcements.AsNoTracking();
-        }
-
-        /// <inheritdoc />
-        public async Task<AnnouncementRecord> FindOneInAllAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await _appDbContext.Announcements.AsNoTracking().FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public override async Task<AnnouncementRecord> FindOneAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await FindAll()
-                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
-        }
-
-
-        public override IQueryable<AnnouncementRecord> FindAll()
-        {
-            IEnumerable<string> userGroups = new List<string>();
-
-            if (_httpContext?.User.Identity is ClaimsIdentity identity)
-            {
-                userGroups = _identityService.GetUserGroups(identity);
-            }
-
-            return _appDbContext.Announcements
-                .Where(entity => entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group)))
-                .AsNoTracking();
         }
 
         public override async Task<DeltaResponse<AnnouncementResponse>> GetDeltaResponseAsync(
             DateTime? minLastDateTimeChangedUtc = null,
             CancellationToken cancellationToken = default)
         {
-            IEnumerable<string> userGroups = new List<string>();
-
-            if (_httpContext.User.Identity is ClaimsIdentity identity)
-            {
-                userGroups = _identityService.GetUserGroups(identity);
-            }
 
             var storageInfo = await GetStorageInfoAsync(cancellationToken);
             var response = new DeltaResponse<AnnouncementResponse>
@@ -96,8 +45,7 @@ namespace Eurofurence.App.Server.Services.Announcements
                 response.ChangedEntities = await
                     _appDbContext.Announcements
                         .Where(entity =>
-                            entity.IsDeleted == 0
-                            && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group))))
+                            entity.IsDeleted == 0)
                         .Select(x => x.Transform()).ToArrayAsync(cancellationToken);
             }
             else
@@ -106,9 +54,7 @@ namespace Eurofurence.App.Server.Services.Announcements
 
                 var entities = _appDbContext.Announcements
                     .IgnoreQueryFilters()
-                    .Where(entity =>
-                        entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc
-                        && (entity.Groups == null || !entity.Groups.Any() || entity.Groups.Any(group => userGroups.Contains(group))));
+                    .Where(entity => entity.LastChangeDateTimeUtc > minLastDateTimeChangedUtc);
 
                 response.ChangedEntities = await entities
                     .Where(a => a.IsDeleted == 0)

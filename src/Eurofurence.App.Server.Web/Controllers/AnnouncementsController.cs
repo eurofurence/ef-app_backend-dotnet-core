@@ -1,16 +1,18 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Announcements;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -19,13 +21,19 @@ namespace Eurofurence.App.Server.Web.Controllers
     {
         private readonly IAnnouncementService _announcementService;
         private readonly IImageService _imageService;
+        private readonly IIdentityService _identityService;
         private readonly IPushNotificationChannelManager _pushNotificationChannelManager;
 
-        public AnnouncementsController(IAnnouncementService announcementService, IImageService imageService,
-            IPushNotificationChannelManager pushNotificationChannelManager)
+        public AnnouncementsController(
+            IAnnouncementService announcementService,
+            IImageService imageService,
+            IIdentityService identityService,
+            IPushNotificationChannelManager pushNotificationChannelManager
+        )
         {
             _announcementService = announcementService;
             _imageService = imageService;
+            _identityService = identityService;
             _pushNotificationChannelManager = pushNotificationChannelManager;
         }
 
@@ -45,7 +53,13 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<AnnouncementResponse>), 200)]
         public IEnumerable<AnnouncementResponse> GetAnnouncementEntries()
         {
-            return _announcementService.FindAll().Select(x => x.Transform());
+            IEnumerable<string> userGroups = new List<string>();
+            if (User?.Identity is ClaimsIdentity identity)
+            {
+                userGroups = _identityService.GetUserGroups(identity);
+            }
+
+            return _announcementService.FindAll(announcement => announcement.Groups == null || !announcement.Groups.Any() || announcement.Groups.Any(group => userGroups.Contains(group))).Select(x => x.Transform());
         }
 
         [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
@@ -54,7 +68,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(IEnumerable<AnnouncementResponse>), 200)]
         public IEnumerable<AnnouncementResponse> GetAllAnnouncements()
         {
-            return _announcementService.FetchAll().Select(x => x.Transform());
+            return _announcementService.FindAll().Select(x => x.Transform());
         }
 
         /// <summary>
@@ -71,9 +85,23 @@ namespace Eurofurence.App.Server.Web.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(AnnouncementResponse), 200)]
-        public async Task<AnnouncementResponse> GetAnnouncementAsync([FromRoute] Guid id)
+        public AnnouncementResponse GetAnnouncement([FromRoute] Guid id)
         {
-            return (await _announcementService.FindOneAsync(id)).Transient404(HttpContext)?.Transform();
+            IEnumerable<string> userGroups = new List<string>();
+            if (User?.Identity is ClaimsIdentity identity)
+            {
+                userGroups = _identityService.GetUserGroups(identity);
+            }
+
+            var announcement = _announcementService.FindAll(
+                announcement => announcement.Id == id &&
+                (
+                    announcement.Groups == null ||
+                    !announcement.Groups.Any() ||
+                    announcement.Groups.Any(group => userGroups.Contains(group))
+                )).SingleOrDefault();
+
+            return announcement.Transient404(HttpContext)?.Transform();
         }
 
         /// <summary>
@@ -87,7 +115,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
         {
-            if (await QueryRecordForIdAsync(id) == null) return NotFound();
+            if (await _announcementService.FindOneAsync(id) is null) return NotFound();
 
             await _announcementService.DeleteOneAsync(id);
             await _pushNotificationChannelManager.PushSyncRequestAsync();
@@ -146,9 +174,7 @@ namespace Eurofurence.App.Server.Web.Controllers
                 return BadRequest("Error parsing request");
             }
 
-            AnnouncementRecord record = await QueryRecordForIdAsync(id);
-
-            if (record is not { } announcementRecord)
+            if (await _announcementService.FindOneAsync(id) is not { } announcementRecord)
             {
                 return NotFound();
             }
@@ -157,44 +183,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             announcementRecord.Touch();
 
             await _announcementService.ReplaceOneAsync(announcementRecord);
-            await _pushNotificationChannelManager.PushSyncRequestAsync();
-
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Returns the announcement record for the given id.
-        /// If the user is an admin or announcement manager, the record is returned regardless of whether
-        /// they are a member of the groups or not.
-        /// </summary>
-        /// <param name="id">The id to look up.</param>
-        /// <returns>Task with the record. Can be null.</returns>
-        private async Task<AnnouncementRecord> QueryRecordForIdAsync(Guid id)
-        {
-            AnnouncementRecord record;
-
-            if (User.IsInRole(IdentityRoles.Admin) ||
-                User.IsInRole(IdentityRoles.AnnouncementManager))
-            {
-                record = await _announcementService.FindOneInAllAsync(id);
-            }
-            else
-            {
-                record = await _announcementService.FindOneAsync(id);
-            }
-            return record;
-        }
-
-        /// <summary>
-        /// !DANGER! – Deletes all announcements from the database!
-        /// </summary>
-        /// <returns></returns>
-        [HttpDelete]
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
-        [ProducesResponseType(204)]
-        public async Task<ActionResult> ClearAnnouncementAsync()
-        {
-            await _announcementService.DeleteAllAsync();
             await _pushNotificationChannelManager.PushSyncRequestAsync();
 
             return NoContent();
