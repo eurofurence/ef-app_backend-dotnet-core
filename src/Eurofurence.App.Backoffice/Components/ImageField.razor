@@ -22,8 +22,17 @@
     {
         <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
     }
-    <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;"/>
-
+    <MudGrid>
+        <MudItem xl="6" md="6">
+            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;" />
+        </MudItem>
+        <MudItem xl="6" md="6">
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearImage" FullWidth="true" Style="margin-top: 10px;">
+                Remove
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    
 </div>
 
 @code {
@@ -38,7 +47,7 @@
     /// Event raised when the image is changed.
     /// </summary>
     [Parameter]
-    public EventCallback<ImageResponse> ImageChanged { get; set; }
+    public EventCallback<ImageResponse?> ImageChanged { get; set; }
 
     /// <summary>
     /// Event raised when the image upload fails.
@@ -55,7 +64,7 @@
     /// <param name="file">The file to upload.</param>
     private async Task UploadImage(IBrowserFile? file)
     {
-        if (file == null)
+        if (file is null)
         {
             return;
         }
@@ -67,7 +76,7 @@
         {
             ImageResponse? image = await ImageService.PostImageAsync(file);
 
-            if (image == null)
+            if (image is null)
             {
                 await ImageUploadError.InvokeAsync();
                 return;
@@ -89,4 +98,18 @@
         }
     }
 
+    /// <summary>
+    /// Removes the image.
+    /// </summary>
+    private async Task ClearImage()
+    {
+        if (ImageResponse is null)
+        {
+            return;
+        }
+
+        ImageResponse = null;
+        await ImageChanged.InvokeAsync(null);
+        StateHasChanged();
+    }
 }
