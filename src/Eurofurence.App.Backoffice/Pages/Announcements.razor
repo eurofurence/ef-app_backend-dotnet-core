@@ -4,7 +4,7 @@
 @using Eurofurence.App.Domain.Model.Announcements
 @using Eurofurence.App.Domain.Model.Identity
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Roles = IdentityRoles.AnnouncementManager)]
+@attribute [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
 @inject IAnnouncementService AnnouncementService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
