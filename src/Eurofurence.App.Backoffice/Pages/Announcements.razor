@@ -14,7 +14,7 @@
     <MudSpacer />
 </MudToolBar>
 
-<MudDataGrid T="AnnouncementResponse" Items="_items" Filterable="true"
+<MudDataGrid T="AnnouncementResponse" @ref="_dataGrid" Items="_items" Filterable="true"
     FilterMode="@DataGridFilterMode.ColumnFilterMenu">
     <Columns>
         <PropertyColumn Title="Title" Property="arg => arg.Title"></PropertyColumn>
@@ -36,11 +36,13 @@
 </MudDataGrid>
 
 @code {
+    
+    private MudDataGrid<AnnouncementResponse> _dataGrid = null!;
+    
     /// <summary>
     /// A collection of the loaded announcements to display in the data grid.
     /// </summary>
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
-
     private async Task OnClickDelete(AnnouncementResponse contextItem)
     {
         DialogParameters<ConfirmDialog> dialogUserban = new()
@@ -106,6 +108,11 @@
                 Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
             }
         }
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        _dataGrid?.SetSortAsync(nameof(AnnouncementRecord.ValidFromDateTimeUtc), SortDirection.Descending, x => x.ValidFromDateTimeUtc);
     }
 
     /// <summary>
