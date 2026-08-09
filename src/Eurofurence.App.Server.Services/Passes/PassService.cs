@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -29,7 +30,7 @@ namespace Eurofurence.App.Server.Services.Passes
         private readonly IPassCertificateProvider _passCertificateProvider;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly HybridCache _cache;
-        private readonly PassGenerator _passGenerator;
+        private readonly PassGenerator? _passGenerator;
         private readonly ILogger _logger;
 
         private const double AvatarHttpClientTimeout = 10.0;
@@ -51,11 +52,16 @@ namespace Eurofurence.App.Server.Services.Passes
             _passCertificateProvider = passCertificateProvider;
             _httpClientFactory = httpClientFactory;
             _cache = cache;
-            _passGenerator = new PassGenerator();
             _logger = loggerFactory.CreateLogger(GetType());
+
+            // Disable Passbook pass generation if certificates unavailable
+            if (_passCertificateProvider.IsConfigured())
+            {
+                _passGenerator = new PassGenerator();
+            }
         }
 
-        public PassFile GenerateSvg(ClaimsIdentity identity)
+        public PassFile? GenerateSvg(ClaimsIdentity identity)
         {
             var registrationId = _identityService.GetRegistrationId(identity);
 
@@ -103,14 +109,21 @@ namespace Eurofurence.App.Server.Services.Passes
         /// </param>
         private class VenueRegionName(string value) : SemanticTagBaseValue("venueRegionName", value);
 
-        public async Task<PassFile> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default)
+        public async Task<PassFile?> GeneratePkpassAsync(ClaimsIdentity identity, CancellationToken cancellationToken = default)
         {
+            if (_passGenerator is null)
+                return null;
+
             var registrationId = _identityService.GetRegistrationId(identity);
 
             if (string.IsNullOrEmpty(registrationId))
                 return null;
 
             var serialNumber = $"{_globalOptions.ConventionIdentifier}-{registrationId}";
+
+            /*
+             * Setup basic pass information & semantic tags
+             */
 
             var request = new PassGeneratorRequest
             {
@@ -133,11 +146,36 @@ namespace Eurofurence.App.Server.Services.Passes
                 //RelevantDate = _globalOptions.ConventionStartDateTime,
             };
 
-            request.RelevantLocations.Add(new RelevantLocation
+            request.SemanticTags.Add(new EventName($"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}"));
+            request.SemanticTags.Add(new EventType(EventTypes.PKEventTypeConvention));
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionVenueName))
+                request.SemanticTags.Add(new VenueName(_globalOptions.ConventionVenueName));
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionVenueRegion))
+                request.SemanticTags.Add(new VenueRegionName(_globalOptions.ConventionVenueRegion));
+            if (!string.IsNullOrWhiteSpace(_passOptions.VenueRoom))
+                request.SemanticTags.Add(new VenueRoom(_passOptions.VenueRoom));
+
+            // TODO: Get Admission Level (attendee/staff/director & regular/sponsor/super sponsor)
+            // from Claims and Registration System
+            //request.SemanticTags.Add(new AdmissionLevel("Cookie Connoisseur"));
+
+            if (_globalOptions.ConventionVenueLocationLatitude is { } conventionVenueLocationLatitude &&
+                    _globalOptions.ConventionVenueLocationLongitude is { } conventionVenueLocationLongitude)
             {
-                Latitude = _globalOptions.ConventionVenueLocationLatitude,
-                Longitude = _globalOptions.ConventionVenueLocationLongitude
-            });
+                request.RelevantLocations.Add(new RelevantLocation
+                {
+                    Latitude = conventionVenueLocationLatitude,
+                    Longitude = conventionVenueLocationLongitude
+                });
+                request.SemanticTags.Add(new VenueLocation(
+                    conventionVenueLocationLatitude,
+                    conventionVenueLocationLongitude
+                ));
+            }
+
+            /*
+             * Add information to front of pass
+             */
 
             request.AddPrimaryField(new StandardField
             {
@@ -170,6 +208,8 @@ namespace Eurofurence.App.Server.Services.Passes
                 Value = _globalOptions.ConventionStartDateTime.ToString("yyyy-MM-dd HH:mm"),
                 TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
             });
+            request.SemanticTags.Add(new EventStartDate(_globalOptions.ConventionStartDateTime.ToString("o", System.Globalization.CultureInfo.InvariantCulture)));
+
             request.AddAuxiliaryField(new StandardField
             {
                 Key = "closing",
@@ -177,14 +217,24 @@ namespace Eurofurence.App.Server.Services.Passes
                 Value = _globalOptions.ConventionEndDateTime.ToString("yyyy-MM-dd HH:mm"),
                 TextAlignment = FieldTextAlignment.PKTextAlignmentRight
             });
+            request.SemanticTags.Add(new EventEndDate(_globalOptions.ConventionEndDateTime.ToString("o", System.Globalization.CultureInfo.InvariantCulture)));
 
-            request.AddBackField(new StandardField
+            /*
+             * Add additional information to back of pass
+             */
+
+            if (!string.IsNullOrWhiteSpace(identity.Name))
             {
-                Key = "attendee",
-                Label = "Nickname",
-                Value = identity.Name,
-                TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
-            });
+                request.AddBackField(new StandardField
+                {
+                    Key = "attendee",
+                    Label = "Nickname",
+                    Value = identity.Name,
+                    TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
+                });
+                request.SemanticTags.Add(new AttendeeName(identity.Name));
+            }
+
             request.AddBackField(new StandardField
             {
                 Key = "registration-id",
@@ -192,56 +242,67 @@ namespace Eurofurence.App.Server.Services.Passes
                 Value = registrationId,
                 TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
             });
-            request.AddBackField(new StandardField
-            {
-                Key = "organizer",
-                Label = "Organizer",
-                Value = _globalOptions.ConventionOrganization,
-                TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
-            });
-            request.AddBackField(new StandardField
-            {
-                Key = "website",
-                Label = "Website",
-                Value = _globalOptions.ConventionWebsite,
-                TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
-            });
-            request.AddBackField(new StandardField
-            {
-                Key = "contact",
-                Label = "Contact",
-                Value = _globalOptions.ConventionContact,
-                TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
-            });
-            request.AddBackField(new StandardField
-            {
-                Key = "information",
-                Label = "Information",
-                Value = _passOptions.Information,
-                TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
-            });
 
-            request.Images.Add(PassbookImage.Icon,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Icon", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.IconImageId, cancel), cancellationToken: cancellationToken)
-            );
-            request.Images.Add(PassbookImage.Icon2X,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Icon2X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Icon2XImageId, cancel), cancellationToken: cancellationToken)
-            );
-            request.Images.Add(PassbookImage.Icon3X,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Icon3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Icon3XImageId, cancel), cancellationToken: cancellationToken)
-            );
-            request.Images.Add(PassbookImage.Logo,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Logo", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.LogoImageId, cancel), cancellationToken: cancellationToken)
-            );
-            request.Images.Add(PassbookImage.Logo2X,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Logo2X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Logo2XImageId, cancel), cancellationToken: cancellationToken)
-            );
-            request.Images.Add(PassbookImage.Logo3X,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Logo3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Logo3XImageId, cancel), cancellationToken: cancellationToken)
-            );
-            request.Images.Add(PassbookImage.Background,
-                await _cache.GetOrCreateAsync("PassService.Pkpass.Background", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.BackgroundImageId, cancel), cancellationToken: cancellationToken)
-            );
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionOrganization))
+                request.AddBackField(new StandardField
+                {
+                    Key = "organizer",
+                    Label = "Organizer",
+                    Value = _globalOptions.ConventionOrganization,
+                    TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
+                });
+
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionWebsite))
+                request.AddBackField(new StandardField
+                {
+                    Key = "website",
+                    Label = "Website",
+                    Value = _globalOptions.ConventionWebsite,
+                    TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
+                });
+
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionContact))
+                request.AddBackField(new StandardField
+                {
+                    Key = "contact",
+                    Label = "Contact",
+                    Value = _globalOptions.ConventionContact,
+                    TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
+                });
+
+            if (!string.IsNullOrWhiteSpace(_passOptions.Information))
+                request.AddBackField(new StandardField
+                {
+                    Key = "information",
+                    Label = "Information",
+                    Value = _passOptions.Information,
+                    TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
+                });
+
+            /*
+             * Add optional images to pass
+             */
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Icon", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.IconImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageIcon)
+                request.Images.Add(PassbookImage.Icon, imageIcon);
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Icon2X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Icon2XImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageIcon2X)
+                request.Images.Add(PassbookImage.Icon2X, imageIcon2X);
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Icon3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Icon3XImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageIcon3X)
+                request.Images.Add(PassbookImage.Icon3X, imageIcon3X);
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Logo", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.LogoImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageLogo)
+                request.Images.Add(PassbookImage.Logo, imageLogo);
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Logo2X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Logo2XImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageLogo2X)
+                request.Images.Add(PassbookImage.Logo2X, imageLogo2X);
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Logo3X", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.Logo3XImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageLogo3X)
+                request.Images.Add(PassbookImage.Logo3X, imageLogo3X);
+
+            if (await _cache.GetOrCreateAsync("PassService.Pkpass.Background", async cancel => await _imageService.GetImageContentByImageIdAsync(_passOptions.BackgroundImageId, cancel), cancellationToken: cancellationToken) is { Length: > 0 } imageBackground)
+                request.Images.Add(PassbookImage.Background, imageBackground);
 
             if (identity.Claims.FirstOrDefault(c => c.Type == "avatar")?.Value is { } avatarUrl && avatarUrl.StartsWith("https://"))
             {
@@ -260,24 +321,6 @@ namespace Eurofurence.App.Server.Services.Passes
                     _logger.LogWarning($"Failed to load avatar image at {avatarUrl} for user {identity.Name}");
                 }
             }
-
-            request.SemanticTags.Add(new EventType(EventTypes.PKEventTypeConvention));
-            request.SemanticTags.Add(new EventName($"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}"));
-            request.SemanticTags.Add(new EventStartDate(_globalOptions.ConventionStartDateTime.ToString("o", System.Globalization.CultureInfo.InvariantCulture)));
-            request.SemanticTags.Add(new EventEndDate(_globalOptions.ConventionEndDateTime.ToString("o", System.Globalization.CultureInfo.InvariantCulture)));
-            request.SemanticTags.Add(new VenueName(_globalOptions.ConventionVenueName));
-            request.SemanticTags.Add(new VenueRegionName(_globalOptions.ConventionVenueRegion));
-            request.SemanticTags.Add(new VenueRoom(_passOptions.VenueRoom));
-            request.SemanticTags.Add(new VenueLocation(
-                _globalOptions.ConventionVenueLocationLatitude,
-                _globalOptions.ConventionVenueLocationLongitude
-                )
-            );
-
-            request.SemanticTags.Add(new AttendeeName(identity.Name));
-            // TODO: Get Admission Level (attendee/staff/director & regular/sponsor/super sponsor)
-            // from Claims and Registration System
-            //request.SemanticTags.Add(new AdmissionLevel("Cookie Connoisseur"));
 
             request.AddBarcode(BarcodeType.PKBarcodeFormatAztec, registrationId, "UTF-8", registrationId);
 

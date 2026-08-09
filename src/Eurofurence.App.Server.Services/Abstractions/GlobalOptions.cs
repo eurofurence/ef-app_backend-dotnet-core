@@ -47,11 +47,11 @@ namespace Eurofurence.App.Server.Services.Abstractions
         /// <summary>
         /// Geographic latitude of the convention venue centroid.
         /// </summary>
-        public double ConventionVenueLocationLatitude { get; init; }
+        public double? ConventionVenueLocationLatitude { get; init; }
         /// <summary>
         /// Geographic longitude of the convention venue centroid.
         /// </summary>
-        public double ConventionVenueLocationLongitude { get; init; }
+        public double? ConventionVenueLocationLongitude { get; init; }
         /// <summary>
         /// URL of the convention's main website.
         /// </summary>
