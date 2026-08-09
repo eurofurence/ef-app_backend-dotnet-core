@@ -55,9 +55,9 @@
             }
         </DialogContent>
         <DialogActions>
-            <MudButton Color="Color.Secondary" OnClick="@OnClickedCancel">Cancel</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="@CancelAsync">Cancel</MudButton>
             <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
-                       OnClick="@OnClickedSubmit">
+                       OnClick="@SubmitAsync">
                 @if (_submissionInProgress)
                 {
                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
@@ -181,15 +181,6 @@
     }
 
     /// <summary>
-    /// Is called when the cancel button is clicked.
-    /// This will close the dialog.
-    /// </summary>
-    private void OnClickedCancel()
-    {
-        MudDialog?.Close(DialogResult.Cancel());
-    }
-    
-    /// <summary>
     /// Called when an error occurs while uploading an image.
     /// </summary>
     private void OnImageUploadError()
@@ -207,12 +198,28 @@
         Snackbar.Add("Image successfully uploaded.", Severity.Success);
     }
 
+    
+    /// <summary>
+    /// Is called when the cancel button is clicked.
+    /// This will close the dialog.
+    /// </summary>
+    private async Task CancelAsync()
+    {
+        // If the user cancels the dialog and an image was uploaded but not submitted, it can be safely deleted.
+        if (_image?.Id is not null && Announcement?.ImageId != _image?.Id)
+        {
+            await ImageService.DeleteImageAsync(_image!.Id);
+        }
+
+        MudDialog?.Close(DialogResult.Cancel());
+    }
+
     /// <summary>
     /// Called when the Submit button is clicked.
     /// This will send the announcement request to the server if valid.
     /// </summary>
     /// <param name="obj">Event object. Not used here.</param>
-    private async Task OnClickedSubmit(MouseEventArgs obj)
+    private async Task SubmitAsync(MouseEventArgs obj)
     {
         if (Announcement is null)
         {

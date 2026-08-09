@@ -61,9 +61,9 @@
             }
         </DialogContent>
         <DialogActions>
-            <MudButton Color="Color.Secondary" OnClick="@OnClickedCancel">Cancel</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="@CancelAsync">Cancel</MudButton>
             <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
-                       OnClick="@OnClickedSubmit">
+                       OnClick="@SubmitAsync">
                 @if (_submissionInProgress)
                 {
                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -140,15 +140,6 @@
     }
 
     /// <summary>
-    /// Is called when the cancel button is clicked.
-    /// This will close the dialog.
-    /// </summary>
-    private void OnClickedCancel()
-    {
-        MudDialog?.Close(DialogResult.Cancel());
-    }
-
-    /// <summary>
     /// Called when an error occurs while uploading an image.
     /// </summary>
     private void OnImageUploadError()
@@ -177,11 +168,31 @@
     }
 
     /// <summary>
+    /// Is called when the cancel button is clicked.
+    /// This will close the dialog.
+    /// </summary>
+    private async Task CancelAsync()
+    {
+        // If the user cancels the dialog, any images that were uploaded but not submitted can be safely deleted.
+        if (_bannerImage?.Id is not null && Event?.BannerImageId != _bannerImage?.Id)
+        {
+            await ImageService.DeleteImageAsync(_bannerImage!.Id);
+        }
+
+        if (_posterImage?.Id is not null && Event?.PosterImageId != _posterImage?.Id)
+        {
+            await ImageService.DeleteImageAsync(_posterImage!.Id);
+        }
+
+        MudDialog?.Close(DialogResult.Cancel());
+    }
+
+    /// <summary>
     /// Called when the Submit button is clicked.
     /// This will send the event request to the server if valid.
     /// </summary>
     /// <param name="obj">Event object. Not used here.</param>
-    private async Task OnClickedSubmit(MouseEventArgs obj)
+    private async Task SubmitAsync(MouseEventArgs obj)
     {
         if (Event is null)
         {

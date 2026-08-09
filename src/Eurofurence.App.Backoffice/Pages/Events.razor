@@ -186,12 +186,12 @@
             CloseButton = true
         };
 
-        DialogParameters<EditEventDialog> parameters = new()
+        DialogParameters<EventDialog> parameters = new()
         {
             {x => x.Event, item}
         };
 
-        IDialogReference dialog = await DialogService.ShowAsync<EditEventDialog>("Edit Event", parameters, options);
+        IDialogReference dialog = await DialogService.ShowAsync<EventDialog>("Edit Event", parameters, options);
         DialogResult? result = await dialog.Result;
 
         if (result is { Canceled: false })

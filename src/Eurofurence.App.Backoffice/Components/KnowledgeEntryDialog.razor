@@ -100,8 +100,8 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        <MudButton OnClick="CancelAsync">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SubmitAsync">Save</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -162,7 +162,6 @@
         var image = await ImageService.PostImageAsync(file);
         if (image != null)
         {
-            Record?.ImageIds.Add(image.Id);
             _images.Add(image);
             Snackbar.Add("Image uploaded.", Severity.Success);
         }
@@ -174,7 +173,10 @@
 
     private void DeleteImage(Guid id)
     {
-        Record?.ImageIds.Remove(id);
+        if (Record is not null && Record.ImageIds.Any(imageId => imageId == id))
+        {
+            Record?.ImageIds.Remove(id);
+        }
 
         var imageToRemove = _images.FirstOrDefault(image => image.Id == id);
         if (imageToRemove == null)
@@ -225,11 +227,24 @@
         Record?.Links.Remove(Record.Links.FirstOrDefault(link => link.Id == id));
     }
 
-    private void Cancel() => MudDialog?.Cancel();
-
-    private async void Save()
+    private async Task CancelAsync()
     {
-        if (_form != null) await _form.Validate();
+        // If the user cancels the dialog, any images that were uploaded but not submitted can be safely deleted.
+        foreach (var image in _images)
+        {
+            if (Record?.ImageIds == null || !Record.ImageIds.Any(imageId => imageId == image.Id))
+            {
+                await ImageService.DeleteImageAsync(image.Id);
+            }
+        }
+
+        MudDialog?.Cancel();
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_form != null) 
+            await _form.ValidateAsync();
 
         if (_formIsValid != true)
         {
@@ -252,6 +267,14 @@
         if (Published)
         {
             publishedAt = Record.Published ?? DateTime.Now;
+        }
+
+        foreach (var image in _images)
+        {
+            if (!Record.ImageIds.Any(imageId => imageId == image.Id))
+            {
+                Record.ImageIds.Add(image.Id);
+            }
         }
 
         var request = new KnowledgeEntryRequest()
