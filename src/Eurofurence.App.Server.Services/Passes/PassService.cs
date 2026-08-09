@@ -168,8 +168,8 @@ namespace Eurofurence.App.Server.Services.Passes
                     Longitude = conventionVenueLocationLongitude
                 });
                 request.SemanticTags.Add(new VenueLocation(
-                    _globalOptions.ConventionVenueLocationLatitude,
-                    _globalOptions.ConventionVenueLocationLongitude
+                    conventionVenueLocationLatitude,
+                    conventionVenueLocationLongitude
                 ));
             }
 
