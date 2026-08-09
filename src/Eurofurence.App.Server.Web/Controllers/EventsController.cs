@@ -255,9 +255,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull]
         [HttpPut("{id}/:bannerImageId")]
-        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
+        public async Task<ActionResult> PutEventBannerImageIdAsync([FromBody] Guid? imageId,
             [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
@@ -283,9 +282,8 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize(Roles = IdentityRoles.Admin)]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull]
         [HttpPut("{id}/:posterImageId")]
-        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
+        public async Task<ActionResult> PutEventPosterImageIdAsync([FromBody] Guid? imageId,
             [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
