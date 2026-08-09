@@ -1,4 +1,9 @@
-﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
@@ -17,11 +22,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -143,7 +143,17 @@ namespace Eurofurence.App.Server.Web.Controllers
             response.EventConferenceTracks.ChangedEntities = response.EventConferenceTracks.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
 
             // Filter announcements intended for specific group audience the user is not part of
-            response.Announcements.ChangedEntities = response.Announcements.ChangedEntities.Where(announcement => announcement.Groups == null || !announcement.Groups.Any() || announcement.Groups.Any(group => userGroups.Contains(group))).ToArray();
+            response.Announcements.ChangedEntities = response.Announcements.ChangedEntities.Where(
+                    announcement => announcement.Groups == null ||
+                    !announcement.Groups.Any() ||
+                    announcement.Groups.Any(group => userGroups.Contains(group))
+                ).ToArray();
+            response.Announcements.DeletedEntities = response.Announcements.ChangedEntities.Where(
+                    announcement => announcement.Groups != null &&
+                    announcement.Groups.Any() &&
+                    !announcement.Groups.Any(group => userGroups.Contains(group)
+                )).Select(announcement => announcement.Id)
+                .Concat(response.Announcements.DeletedEntities).ToArray();
 
             return response;
         }
