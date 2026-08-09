@@ -12,9 +12,9 @@ namespace Eurofurence.App.Server.Services.Passes
         public PassCertificateProvider(
             IOptions<PassOptions> passOptions)
         {
-            if (string.IsNullOrWhiteSpace(passOptions.Value.AppleWwdrX509CertificatePem) &&
-            string.IsNullOrWhiteSpace(passOptions.Value.PassbookX509CertificatePem) &&
-            string.IsNullOrWhiteSpace(passOptions.Value.PassbookX509KeyPem))
+            if (!string.IsNullOrWhiteSpace(passOptions.Value.AppleWwdrX509CertificatePem) &&
+            !string.IsNullOrWhiteSpace(passOptions.Value.PassbookX509CertificatePem) &&
+            !string.IsNullOrWhiteSpace(passOptions.Value.PassbookX509KeyPem))
             {
                 AppleWwdrCertificate = X509Certificate2.CreateFromPem(passOptions.Value.AppleWwdrX509CertificatePem);
                 PassbookCertificate = X509Certificate2.CreateFromPem(passOptions.Value.PassbookX509CertificatePem, passOptions.Value.PassbookX509KeyPem);
