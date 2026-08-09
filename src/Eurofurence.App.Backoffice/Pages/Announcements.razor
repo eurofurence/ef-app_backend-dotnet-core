@@ -44,6 +44,7 @@
     /// A collection of the loaded announcements to display in the data grid.
     /// </summary>
     private IEnumerable<AnnouncementResponse> _items = new List<AnnouncementResponse>();
+    
     private async Task OnClickDelete(AnnouncementResponse contextItem)
     {
         DialogParameters<ConfirmDialog> dialogUserban = new()
