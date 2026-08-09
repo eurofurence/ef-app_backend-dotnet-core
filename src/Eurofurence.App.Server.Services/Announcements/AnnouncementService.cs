@@ -37,11 +37,17 @@ namespace Eurofurence.App.Server.Services.Announcements
             _identityService = identityService;
         }
 
+        public IQueryable<AnnouncementRecord> FetchAll()
+        {
+            return _appDbContext.Announcements.AsNoTracking();
+        }
+
         public override async Task<AnnouncementRecord> FindOneAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await FindAll()
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
         }
+
 
         public override IQueryable<AnnouncementRecord> FindAll()
         {

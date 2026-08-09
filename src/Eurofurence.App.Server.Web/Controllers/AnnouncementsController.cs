@@ -48,6 +48,15 @@ namespace Eurofurence.App.Server.Web.Controllers
             return _announcementService.FindAll().Select(x => x.Transform());
         }
 
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
+        [HttpGet(":all")]
+        [ProducesResponseType(typeof(string), 404)]
+        [ProducesResponseType(typeof(IEnumerable<AnnouncementResponse>), 200)]
+        public IEnumerable<AnnouncementResponse> GetAllAnnouncements()
+        {
+            return _announcementService.FetchAll().Select(x => x.Transform());
+        }
+
         /// <summary>
         ///     Retrieve a single announcement.
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using Eurofurence.App.Domain.Model.Announcements;
+﻿using System.Linq;
+using Eurofurence.App.Domain.Model.Announcements;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Announcements
 {
@@ -6,5 +7,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.Announcements
         IEntityServiceOperations<AnnouncementRecord, AnnouncementResponse>,
         IPatchOperationProcessor<AnnouncementRecord>
     {
+        public IQueryable<AnnouncementRecord> FetchAll();
     }
 }
