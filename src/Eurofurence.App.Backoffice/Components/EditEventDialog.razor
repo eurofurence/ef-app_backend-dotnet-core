@@ -1,0 +1,219 @@
+﻿@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Events
+@using Eurofurence.App.Domain.Model.Images
+@inject IEventService EventService
+@inject IImageService ImageService
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4">
+    <MudDialog>
+        <DialogContent>
+            @if (Event != null)
+            {
+                <MudGrid>
+                    <MudItem xl="6" md="6" xs="12">
+                        <MudTextField Class="mt-2" T="string" Value="Event.Title" ReadOnly="true"
+                                        Label="Title" />
+                    </MudItem>
+                    <MudItem xl="6" md="6" xs="12">
+                        <MudTextField Class="mt-2" T="string" Value="Event.SubTitle" ReadOnly="true"
+                                        Label="Subtitle" />
+                    </MudItem>
+                    <MudItem xl="12">
+                        <MudTextField Class="mt-2" T="string" Value="Event.Slug" ReadOnly="true"
+                                        Label="Slug" />
+                    </MudItem>
+                    <MudItem xl="4" md="4" xs="12">
+                        <MudTextField Class="mt-2" T="DateTime?" Value="Event.StartDateTimeUtc" 
+                        Format="yyyy-MM-dd HH:mm (ddd) zzz" ReadOnly="true"
+                                        Label="Start Time" />
+                    </MudItem>
+                    <MudItem xl="4" md="4" xs="12">
+                        <MudTextField Class="mt-2" T="DateTime?" Value="Event.EndDateTimeUtc"
+                                        Format="yyyy-MM-dd HH:mm (ddd) zzz" ReadOnly="true"
+                                        Label="End Time" />
+                    </MudItem>
+                    <MudItem xl="2" md="2" xs="12">
+                        <MudTextField Class="mt-2" T="TimeSpan?" Value="Event.Duration"
+                                        Format="hh\:mm" ReadOnly="true"
+                                        Label="Duration" />
+                    </MudItem>
+                    <MudItem xl="6" md="6" xs="12">
+                        <MudTextField Class="mt-2" T="string" @bind-Value="Event.Abstract" ReadOnly="true"
+                                        Label="Abstract"
+                                        Sizing="InputSizing.Auto" MaxLines="5" />
+                    </MudItem>
+                    <MudItem xl="6" md="6" xs="12">
+                        <MudTextField Class="mt-2" T="string" @bind-Value="Event.Description" ReadOnly="true"
+                                        Label="Description"
+                                        Sizing="InputSizing.Auto" MaxLines="5" />
+                    </MudItem>
+
+                    <MudItem xl="6" md="6" xs="12">
+                        <MudInputLabel>Banner Image</MudInputLabel>
+                        <ImageField ImageResponse="@_bannerImage" ImageChanged="OnBannerImageUploaded" ImageUploadError="OnImageUploadError" />
+                    </MudItem>
+                    <MudItem xl="6" md="6" xs="12">
+                        <MudInputLabel>Poster Image</MudInputLabel>
+                        <ImageField ImageResponse="@_posterImage" ImageChanged="OnPosterImageUploaded" ImageUploadError="OnImageUploadError" />
+                    </MudItem>
+                </MudGrid>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="@OnClickedCancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
+                       OnClick="@OnClickedSubmit">
+                @if (_submissionInProgress)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Processing</MudText>
+                }
+                else
+                {
+                    <MudText>Submit</MudText>
+                }
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudPaper>
+
+@code {
+
+    #region Attributes
+
+    /// <summary>
+    /// The event to edit.
+    /// </summary>
+    [Parameter]
+    public EventWithStatisticsResponse? Event { get; set; }
+
+    /// <summary>
+    /// Dialog instance for MudBlazor dialog.
+    /// </summary>
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    /// <summary>
+    /// The banner image of the event.
+    /// </summary>
+    private ImageResponse? _bannerImage;
+
+    /// <summary>
+    /// The poster image of the event.
+    /// </summary>
+    private ImageResponse? _posterImage;
+
+    /// <summary>
+    /// Whether a submission is currently in progress.
+    /// </summary>
+    private bool _submissionInProgress;
+
+    #endregion
+
+    #region Methods
+
+    protected override async Task OnInitializedAsync()
+    {
+        _bannerImage = Event?.BannerImageId is { } bannerImageId ? await FetchImage(bannerImageId) : null;
+        _posterImage = Event?.PosterImageId is { } posterImageId ? await FetchImage(posterImageId) : null;
+    }
+
+    /// <summary>
+    /// Fetches the image with the given ID from the server.
+    /// </summary>
+    /// <param name="imageId">The id of the image to fetch.</param>
+    private async Task<ImageResponse?> FetchImage(Guid imageId)
+    {
+        try
+        {
+            ImageResponse? image = await ImageService.GetImageAsync(imageId);
+            StateHasChanged();
+            return image;
+        }
+        catch
+        {
+            Snackbar.Add("Error fetching image.", Severity.Error);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Is called when the cancel button is clicked.
+    /// This will close the dialog.
+    /// </summary>
+    private void OnClickedCancel()
+    {
+        MudDialog?.Close(DialogResult.Cancel());
+    }
+
+    /// <summary>
+    /// Called when an error occurs while uploading an image.
+    /// </summary>
+    private void OnImageUploadError()
+    {
+        Snackbar.Add("Error uploading image.", Severity.Error);
+    }
+
+    /// <summary>
+    /// Called when a banner image is uploaded.
+    /// </summary>
+    /// <param name="image">The uploaded image.</param>
+    private void OnBannerImageUploaded(ImageResponse image)
+    {
+        _bannerImage = image;
+        Snackbar.Add("Banner image successfully uploaded.", Severity.Success);
+    }
+
+    /// <summary>
+    /// Called when a poster image is uploaded.
+    /// </summary>
+    /// <param name="image">The uploaded image.</param>
+    private void OnPosterImageUploaded(ImageResponse image)
+    {
+        _posterImage = image;
+        Snackbar.Add("Poster image successfully uploaded.", Severity.Success);
+    }
+
+    /// <summary>
+    /// Called when the Submit button is clicked.
+    /// This will send the event request to the server if valid.
+    /// </summary>
+    /// <param name="obj">Event object. Not used here.</param>
+    private async Task OnClickedSubmit(MouseEventArgs obj)
+    {
+        if (Event is null)
+        {
+            Snackbar.Add("Event is not loaded.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            _submissionInProgress = true;
+            if (Event.BannerImageId != _bannerImage?.Id)
+            {
+                await EventService.UpdateEventBannerImageAsync(Event.Id, _bannerImage?.Id);
+            }
+
+            if (Event.PosterImageId != _posterImage?.Id)
+            {
+                await EventService.UpdateEventPosterImageAsync(Event.Id, _posterImage?.Id);
+            }
+
+            Snackbar.Add("Event successfully submitted", Severity.Success);
+            MudDialog?.Close(DialogResult.Ok(Event));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting event: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _submissionInProgress = false;
+        }
+    }
+
+    #endregion
+}

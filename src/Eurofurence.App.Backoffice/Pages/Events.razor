@@ -1,10 +1,13 @@
 ﻿@page "/events"
 @attribute [Authorize(Roles = "Admin,EventFeedbackManager")]
+@using Eurofurence.App.Backoffice.Components
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
 @using Eurofurence.App.Domain.Model.Events
 @using Eurofurence.App.Domain.Model.Users
 @inject IEventService EventService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Events</MudText>
@@ -97,6 +100,11 @@
                 </div>
             </CellTemplate>
         </TemplateColumn>
+        <TemplateColumn>
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnClickEdit(context.Item))" />
+            </CellTemplate>
+        </TemplateColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="EventWithStatisticsResponse" />
@@ -112,14 +120,23 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _events = await GetEvents();
+        _events = await GetEventsAsync();
         _eventConferenceDays = await GetEventConferenceDays();
     }
 
-    private async Task<List<EventWithStatisticsResponse>> GetEvents()
+    private async Task<List<EventWithStatisticsResponse>> GetEventsAsync()
     {
-        var response = (await EventService.GetEventsWithStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
-        return FilterEvents(response, _eventSearch).ToList();
+        try
+        {
+            var response = (await EventService.GetEventsWithStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
+            return FilterEvents(response, _eventSearch).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading events: {ex.Message}", Severity.Error);
+        }
+
+        return [];
     }
 
     private async Task<List<EventConferenceDayResponse>> GetEventConferenceDays()
@@ -128,13 +145,13 @@
     private async Task Search(string? searchString)
     {
         _eventSearch = searchString;
-        _events = await GetEvents();
+        _events = await GetEventsAsync();
     }
 
     private async Task EventConferenceDayChanged(Guid? selectedDayId)
     {
         _selectedEventConferenceDayId = selectedDayId;
-        _events = await GetEvents();
+        _events = await GetEventsAsync();
     }
 
     private IEnumerable<EventWithStatisticsResponse> FilterEvents(IEnumerable<EventWithStatisticsResponse> entries, string?
@@ -154,5 +171,32 @@
                 || (entry.Abstract is not null && entry.Abstract.ToLower().Contains(searchString.ToLower()))
                 || (entry.Slug is not null && entry.Slug.ToLower().Contains(searchString.ToLower()))
                 || (entry.Description is not null && entry.Description.ToLower().Contains(searchString.ToLower())));
+    }
+
+    /// <summary>
+    /// Is called when the "Edit" button is clicked.
+    /// </summary>
+    /// <param name="item">Item the user has clicked on.</param>
+    private async Task OnClickEdit(EventWithStatisticsResponse item)
+    {
+        DialogOptions options = new()
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        DialogParameters<EditEventDialog> parameters = new()
+        {
+            {x => x.Event, item}
+        };
+
+        IDialogReference dialog = await DialogService.ShowAsync<EditEventDialog>("Edit Event", parameters, options);
+        DialogResult? result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            _events = await GetEventsAsync();
+        }
     }
 }

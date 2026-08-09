@@ -85,7 +85,6 @@
     /// <summary>
     /// Dialog instance for MudBlazor dialog.
     /// </summary>
-    ///
     [CascadingParameter]
     private IMudDialogInstance? MudDialog { get; set; }
 
@@ -283,33 +282,4 @@
     }
 
     #endregion
-
-    /// <summary>
-    /// Validates the image ID.
-    /// ID must be a valid GUID when set, and the image must exist in the database.
-    /// </summary>
-    /// <param name="arg">The image id to validate.</param>
-    /// <returns>Optional error message.</returns>
-    private async Task<string?> ValidateImageId(string? arg)
-    {
-        if (string.IsNullOrWhiteSpace(arg))
-        {
-            return null; // ImageId is optional
-        }
-
-        if (!Guid.TryParse(arg, out var imageId))
-        {
-            return "Image ID must be a valid GUID.";
-        }
-
-        try
-        {
-            var image = await ImageService.GetImageAsync(imageId);
-            return image is null ? "Image not found." : null;
-        }
-        catch (HttpRequestException)
-        {
-            return "Image not found.";
-        }
-    }
 }

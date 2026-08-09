@@ -97,14 +97,7 @@
 
         if (result is { Canceled: false })
         {
-            try
-            {
-                await LoadAnnouncementsAsync();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Error loading announcements: {ex.Message}", Severity.Error);
-            }
+            await LoadAnnouncementsAsync();
         }
     }
 
