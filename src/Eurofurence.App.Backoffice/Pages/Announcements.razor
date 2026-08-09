@@ -110,12 +110,7 @@
             }
         }
     }
-
-    protected override async void OnAfterRender(bool firstRender)
-    {
-        _dataGrid?.SetSortAsync(nameof(AnnouncementResponse.ValidFromDateTimeUtc), SortDirection.Descending, x => x.ValidFromDateTimeUtc);
-    }
-
+    
     /// <summary>
     /// Called after the component has rendered.
     /// Will load the announcements from the service if this is the first render.
@@ -128,6 +123,7 @@
         if (firstRender)
         {
             await LoadAnnouncementsAsync();
+            await _dataGrid.SetSortAsync(nameof(AnnouncementResponse.ValidFromDateTimeUtc), SortDirection.Descending, x => x.ValidFromDateTimeUtc);
         }
     }
     
