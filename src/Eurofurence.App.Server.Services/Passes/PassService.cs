@@ -148,12 +148,12 @@ namespace Eurofurence.App.Server.Services.Passes
 
             request.SemanticTags.Add(new EventName($"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber}"));
             request.SemanticTags.Add(new EventType(EventTypes.PKEventTypeConvention));
-            if (_globalOptions.ConventionVenueName is { Length: > 0 } conventionVenueName)
-                request.SemanticTags.Add(new VenueName(conventionVenueName));
-            if (_globalOptions.ConventionVenueRegion is { Length: > 0 } conventionVenueRegion)
-                request.SemanticTags.Add(new VenueRegionName(conventionVenueRegion));
-            if (_passOptions.VenueRoom is { Length: > 0 } venueRoom)
-                request.SemanticTags.Add(new VenueRoom(venueRoom));
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionVenueName))
+                request.SemanticTags.Add(new VenueName(_globalOptions.ConventionVenueName));
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionVenueRegion))
+                request.SemanticTags.Add(new VenueRegionName(_globalOptions.ConventionVenueRegion));
+            if (!string.IsNullOrWhiteSpace(_passOptions.VenueRoom))
+                request.SemanticTags.Add(new VenueRoom(_passOptions.VenueRoom));
 
             // TODO: Get Admission Level (attendee/staff/director & regular/sponsor/super sponsor)
             // from Claims and Registration System
@@ -223,16 +223,16 @@ namespace Eurofurence.App.Server.Services.Passes
              * Add additional information to back of pass
              */
 
-            if (identity.Name is { Length: > 0 } attendeeName)
+            if (!string.IsNullOrWhiteSpace(identity.Name))
             {
                 request.AddBackField(new StandardField
                 {
                     Key = "attendee",
                     Label = "Nickname",
-                    Value = attendeeName,
+                    Value = identity.Name,
                     TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
                 });
-                request.SemanticTags.Add(new AttendeeName(attendeeName));
+                request.SemanticTags.Add(new AttendeeName(identity.Name));
             }
 
             request.AddBackField(new StandardField
@@ -243,39 +243,39 @@ namespace Eurofurence.App.Server.Services.Passes
                 TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
             });
 
-            if (_globalOptions.ConventionOrganization is { Length: > 0 } conventionOrganization)
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionOrganization))
                 request.AddBackField(new StandardField
                 {
                     Key = "organizer",
                     Label = "Organizer",
-                    Value = conventionOrganization,
+                    Value = _globalOptions.ConventionOrganization,
                     TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
                 });
 
-            if (_globalOptions.ConventionWebsite is { Length: > 0 } conventionWebsite)
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionWebsite))
                 request.AddBackField(new StandardField
                 {
                     Key = "website",
                     Label = "Website",
-                    Value = conventionWebsite,
+                    Value = _globalOptions.ConventionWebsite,
                     TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
                 });
 
-            if (_globalOptions.ConventionContact is { Length: > 0 } conventionContact)
+            if (!string.IsNullOrWhiteSpace(_globalOptions.ConventionContact))
                 request.AddBackField(new StandardField
                 {
                     Key = "contact",
                     Label = "Contact",
-                    Value = conventionContact,
+                    Value = _globalOptions.ConventionContact,
                     TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
                 });
 
-            if (_passOptions.Information is { Length: > 0 } passInformation)
+            if (!string.IsNullOrWhiteSpace(_passOptions.Information))
                 request.AddBackField(new StandardField
                 {
                     Key = "information",
                     Label = "Information",
-                    Value = passInformation,
+                    Value = _passOptions.Information,
                     TextAlignment = FieldTextAlignment.PKTextAlignmentLeft
                 });
 
