@@ -1,0 +1,92 @@
+@using Eurofurence.App.Backoffice.Services
+@using Eurofurence.App.Domain.Model.Images
+
+@inject IImageService ImageService
+
+<div>
+    @if (!IsUploading)
+    {
+        @if (string.IsNullOrEmpty(ImageResponse?.Url))
+        {
+            <MudText>Upload Image here</MudText>
+        }
+        else
+        {
+            <MudLink Href="@ImageResponse?.Url" Class="d-flex justify-center">
+                <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@ImageResponse?.Url"
+                          Elevation="25" Class="rounded-lg"/>
+            </MudLink>
+        }
+    }
+    else
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;"/>
+
+</div>
+
+@code {
+
+    /// <summary>
+    /// The image that is currently being displayed.
+    /// </summary>
+    [Parameter]
+    public ImageResponse? ImageResponse { get; set; }
+
+    /// <summary>
+    /// Event raised when the image is changed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<ImageResponse> ImageChanged { get; set; }
+
+    /// <summary>
+    /// Event raised when the image upload fails.
+    /// TODO: pass error message
+    /// </summary>
+    [Parameter]
+    public EventCallback ImageUploadError { get; set; }
+
+    private bool IsUploading;
+
+    /// <summary>
+    /// Uploads the image to the server.
+    /// </summary>
+    /// <param name="file">The file to upload.</param>
+    private async Task UploadImage(IBrowserFile? file)
+    {
+        if (file == null)
+        {
+            return;
+        }
+
+        IsUploading = true;
+        StateHasChanged();
+
+        try
+        {
+            ImageResponse? image = await ImageService.PostImageAsync(file);
+
+            if (image == null)
+            {
+                await ImageUploadError.InvokeAsync();
+                return;
+            }
+
+            ImageResponse = image;
+            await ImageChanged.InvokeAsync(image);
+            IsUploading = false;
+            StateHasChanged();
+        }
+        catch
+        {
+            await ImageUploadError.InvokeAsync();
+        }
+        finally
+        {
+            IsUploading = false;
+            StateHasChanged();
+        }
+    }
+
+}

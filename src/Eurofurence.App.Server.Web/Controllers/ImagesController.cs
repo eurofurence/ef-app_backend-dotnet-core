@@ -89,7 +89,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _imageService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<ImageResponse>();
         }
 
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor}")]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor},{IdentityRoles.AnnouncementManager}")]
         [HttpPost]
         public async Task<ActionResult> PostImageAsync(IFormFile file)
         {

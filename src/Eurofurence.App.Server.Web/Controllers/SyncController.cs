@@ -1,4 +1,9 @@
-﻿using Eurofurence.App.Domain.Model.ArtistsAlley;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.ArtistsAlley;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Knowledge;
 using Eurofurence.App.Domain.Model.Sync;
@@ -8,6 +13,7 @@ using Eurofurence.App.Server.Services.Abstractions.AppConfig;
 using Eurofurence.App.Server.Services.Abstractions.ArtistsAlley;
 using Eurofurence.App.Server.Services.Abstractions.Dealers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
+using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.Knowledge;
 using Eurofurence.App.Server.Services.Abstractions.Maps;
@@ -16,9 +22,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -39,6 +42,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         private readonly ITableRegistrationService _tableRegistrationService;
         private readonly GlobalOptions _globalOptions;
         private readonly IAppConfigService _appConfigService;
+        private readonly IIdentityService _identityService;
         private readonly IMapper _mapper;
         public SyncController(
             ILoggerFactory loggerFactory,
@@ -54,6 +58,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             IMapService mapService,
             ITableRegistrationService tableRegistrationService,
             IAppConfigService appConfigService,
+            IIdentityService identityService,
             IOptions<GlobalOptions> globalOptions,
             IMapper mapper
         )
@@ -71,6 +76,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             _mapService = mapService;
             _tableRegistrationService = tableRegistrationService;
             _appConfigService = appConfigService;
+            _identityService = identityService;
             _globalOptions = globalOptions.Value;
             _mapper = mapper;
         }
@@ -87,11 +93,16 @@ namespace Eurofurence.App.Server.Web.Controllers
         [Authorize]
         [AllowAnonymous]
         [HttpGet]
-        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any)]
         public async Task<AggregatedDeltaResponse> GetDeltaAsync([FromQuery] DateTime? since = null)
         {
             var isStaff = User?.IsInRole(IdentityRoles.Staff) ?? false;
             _logger.LogDebug($"Execute=Sync, Since={since}, IsStaff={isStaff}");
+
+            IEnumerable<string> userGroups = new List<string>();
+            if (User?.Identity is ClaimsIdentity identity)
+            {
+                userGroups = _identityService.GetUserGroups(identity);
+            }
 
             var tableRegistrations =
                 (User.IsInRole(IdentityRoles.AttendeeCheckedIn) || User.IsInRole(IdentityRoles.ArtistAlleyModerator) || User.IsInRole(IdentityRoles.ArtistAlleyAdmin) || User.IsInRole(IdentityRoles.Admin)) ?
@@ -129,6 +140,19 @@ namespace Eurofurence.App.Server.Web.Controllers
             response.EventConferenceDays.ChangedEntities = response.EventConferenceDays.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
             response.EventConferenceRooms.ChangedEntities = response.EventConferenceRooms.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
             response.EventConferenceTracks.ChangedEntities = response.EventConferenceTracks.ChangedEntities.Where(x => isStaff || !x.IsInternal).ToArray();
+
+            // Filter announcements intended for specific group audience the user is not part of
+            response.Announcements.ChangedEntities = response.Announcements.ChangedEntities.Where(
+                    announcement => announcement.Groups == null ||
+                    !announcement.Groups.Any() ||
+                    announcement.Groups.Any(group => userGroups.Contains(group))
+                ).ToArray();
+            response.Announcements.DeletedEntities = response.Announcements.ChangedEntities.Where(
+                    announcement => announcement.Groups != null &&
+                    announcement.Groups.Any() &&
+                    !announcement.Groups.Any(group => userGroups.Contains(group)
+                )).Select(announcement => announcement.Id)
+                .Concat(response.Announcements.DeletedEntities).ToArray();
 
             return response;
         }

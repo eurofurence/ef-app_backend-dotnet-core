@@ -39,6 +39,11 @@ public class RolesClaimsTransformation(
                 roles.Add(IdentityRoles.Admin);
             }
 
+            if (authorizationOptions.Value.AnnouncementManager.Contains(claim.Value))
+            {
+                roles.Add(IdentityRoles.AnnouncementManager);
+            }
+
             if (authorizationOptions.Value.ArtistAlleyAdmin.Contains(claim.Value))
             {
                 roles.Add(IdentityRoles.ArtistAlleyAdmin);

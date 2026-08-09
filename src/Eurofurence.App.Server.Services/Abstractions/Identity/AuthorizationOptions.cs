@@ -6,6 +6,8 @@ public class AuthorizationOptions
 {
     public HashSet<string> Admin { get; init; } = new();
 
+    public HashSet<string> AnnouncementManager { get; init; } = new();
+
     public HashSet<string> Attendee { get; init; } = new();
 
     public HashSet<string> AttendeeCheckedIn { get; init; } = new();
