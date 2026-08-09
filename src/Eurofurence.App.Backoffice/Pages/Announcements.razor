@@ -113,7 +113,7 @@
 
     protected override async void OnAfterRender(bool firstRender)
     {
-        _dataGrid?.SetSortAsync(nameof(AnnouncementRecord.ValidFromDateTimeUtc), SortDirection.Descending, x => x.ValidFromDateTimeUtc);
+        _dataGrid?.SetSortAsync(nameof(AnnouncementResponse.ValidFromDateTimeUtc), SortDirection.Descending, x => x.ValidFromDateTimeUtc);
     }
 
     /// <summary>
