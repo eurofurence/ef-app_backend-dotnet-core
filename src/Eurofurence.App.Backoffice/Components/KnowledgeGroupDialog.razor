@@ -113,6 +113,8 @@
             else
             {
                 Snackbar.Add("Error updating knowledge base group.", Severity.Error);
+                _busy = false;
+                return;
             }
         }
         else
@@ -125,6 +127,8 @@
             else
             {
                 Snackbar.Add("Error adding knowledge base group.", Severity.Error);
+                _busy = false;
+                return;
             }
         }
 

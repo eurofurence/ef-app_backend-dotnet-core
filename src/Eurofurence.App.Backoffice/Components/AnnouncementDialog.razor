@@ -161,7 +161,7 @@
             await FetchImage(imageId);
         }
     }
-    
+
     /// <summary>
     /// Fetches the image with the given ID from the server.
     /// </summary>
@@ -187,7 +187,7 @@
     {
         Snackbar.Add("Error uploading image.", Severity.Error);
     }
-    
+
     /// <summary>
     /// Called when an image is uploaded.
     /// </summary>
@@ -198,7 +198,7 @@
         Snackbar.Add("Image successfully uploaded.", Severity.Success);
     }
 
-    
+
     /// <summary>
     /// Is called when the cancel button is clicked.
     /// This will close the dialog.
@@ -271,6 +271,8 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
+            _busy = false;
+            return;
         }
 
         MudDialog?.Close(DialogResult.Ok(request));

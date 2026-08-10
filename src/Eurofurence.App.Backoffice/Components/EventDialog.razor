@@ -206,6 +206,8 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error submitting event: {ex.Message}", Severity.Error);
+            _busy = false;
+            return;
         }
 
         MudDialog?.Close(DialogResult.Ok(Event));

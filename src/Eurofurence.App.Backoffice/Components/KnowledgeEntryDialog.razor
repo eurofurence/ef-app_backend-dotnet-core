@@ -319,6 +319,8 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
+            _busy = false;
+            return;
         }
 
         MudDialog?.Close(DialogResult.Ok(true));
