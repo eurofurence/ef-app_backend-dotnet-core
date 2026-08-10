@@ -6,6 +6,12 @@ namespace Eurofurence.App.Backoffice.Services
     public interface IEventService
     {
         /// <summary>
+        /// Retrieves a list of events from the server.
+        /// </summary>
+        /// <return>A collection of events.</return>
+        public Task<EventResponse[]> GetEventsAsync();
+
+        /// <summary>
         /// Retrieves a list of events with statistics from the server.
         /// </summary>
         /// <return>A collection of events with statistics.</return>

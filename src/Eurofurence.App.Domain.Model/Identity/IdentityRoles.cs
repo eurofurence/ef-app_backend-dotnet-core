@@ -9,6 +9,7 @@ namespace Eurofurence.App.Domain.Model.Identity
         public const string ArtShow = "ArtShow";
         public const string Attendee = "Attendee";
         public const string AttendeeCheckedIn = "AttendeeCheckedIn";
+        public const string EventArtworkManager = "EventArtworkManager";
         public const string EventFeedbackManager = "EventFeedbackManager";
         public const string KnowledgeBaseEditor = "KnowledgeBaseEditor";
         public const string MapEditor = "MapEditor";

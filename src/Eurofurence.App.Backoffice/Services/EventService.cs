@@ -8,6 +8,14 @@ namespace Eurofurence.App.Backoffice.Services
     public class EventService(HttpClient http) : IEventService
     {
         /// <inheritdoc />
+        public async Task<EventResponse[]> GetEventsAsync()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonStringEnumConverter());
+            return (await http.GetFromJsonAsync<EventResponse[]>("events", options))?.ToArray() ?? [];
+        }
+
+        /// <inheritdoc />
         public async Task<EventWithStatisticsResponse[]> GetEventsWithStatisticsAsync()
         {
             var options = new JsonSerializerOptions();

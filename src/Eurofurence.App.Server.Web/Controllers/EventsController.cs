@@ -252,7 +252,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = IdentityRoles.Admin)]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}/:bannerImageId")]
@@ -279,7 +279,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = IdentityRoles.Admin)]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}/:posterImageId")]

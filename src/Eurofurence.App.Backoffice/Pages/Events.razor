@@ -1,5 +1,6 @@
 ﻿@page "/events"
-@attribute [Authorize(Roles = "Admin,EventFeedbackManager")]
+@attribute [Authorize(Roles = "Admin,EventArtworkManager,EventFeedbackManager")]
+@using System.Security.Claims;
 @using Eurofurence.App.Backoffice.Components
 @using Eurofurence.App.Backoffice.Services
 @using Microsoft.AspNetCore.Authorization
@@ -8,6 +9,7 @@
 @inject IEventService EventService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudToolBar>
     <MudText Typo="Typo.h6">Events</MudText>
@@ -23,7 +25,7 @@
                   Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
 </MudToolBar>
 
-<MudDataGrid T="EventWithStatisticsResponse" Items="@_events" LoadingProgressColor="Color.Primary"
+<MudDataGrid T="EventResponse" Items="@_events" LoadingProgressColor="Color.Primary"
              SortMode="@SortMode.Multiple" Groupable="false">
     <Columns>
         <PropertyColumn Title="ID" Property="e => e.Id" />
@@ -49,93 +51,126 @@
         <PropertyColumn Title="Slug" Property="e => e.Slug" />
         <PropertyColumn Title="Start Time" Property="e => e.StartDateTimeUtc" Format="yyyy-MM-dd HH:mm (ddd) zzz" />
         <PropertyColumn Title="Duration" Property="e => e.Duration" Format="hh\:mm" />
-        <TemplateColumn Sortable="true" SortBy="e => e.FavoriteStatistics.Sum(s => s.Count)">
-            <HeaderTemplate>
-                <div class="d-flex align-center gap-2">
-                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
-                    <MudText>
-                        Total
-                    </MudText>
-                </div>
-            </HeaderTemplate>
-            <CellTemplate>
-                <div class="d-flex align-center gap-2">
-                    <MudText>
-                        @context.Item.FavoriteStatistics.Sum(s => s.Count)
-                    </MudText>
 
-                    @if (context.Item.StartDateTimeUtc < DateTime.UtcNow)
-                    {
-                        <MudTooltip Text="Event has started. Favorite counter is locked since the start time." Class="mt-1">
-                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Secondary" />
-                        </MudTooltip>
-                    }
-                </div>
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn HeaderStyle="min-width: 150px;" Sortable="true" SortBy="e => e.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == UserRegistrationStatus.CheckedIn)?.Count ?? 0">
-            <HeaderTemplate>
-                <div class="d-flex align-center gap-2">
-                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
-                    <MudSelect Required="true" T="UserRegistrationStatus" @bind-Value="_selectedUserRegistrationStatus" FullWidth="true">
-                        @foreach (var status in Enum.GetValues<UserRegistrationStatus>())
+        <AuthorizeView Roles="Admin,EventFeedbackManager">
+            <Authorized>
+                <TemplateColumn Context="favoritesTotalContext" Sortable="true" SortBy="e => (e as EventWithStatisticsResponse)?.FavoriteStatistics?.Sum(s => s.Count) ?? 0">
+                    <HeaderTemplate>
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                            <MudText>
+                                Total
+                            </MudText>
+                        </div>
+                    </HeaderTemplate>
+                    <CellTemplate>
+                        <div class="d-flex align-center gap-2">
+                            <MudText>
+                                @if (favoritesTotalContext.Item is EventWithStatisticsResponse eventWithStats)
+                                {
+                                    @eventWithStats.FavoriteStatistics.Sum(s => s.Count)
+                                }
+                                else
+                                {
+                                    @(0)
+                                }
+                            </MudText>
+
+                            @if (favoritesTotalContext.Item.StartDateTimeUtc < DateTime.UtcNow)
+                            {
+                                <MudTooltip Text="Event has started. Favorite counter is locked since the start time." Class="mt-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Secondary" />
+                                </MudTooltip>
+                            }
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+        
+                <TemplateColumn Context="favoritesByStatusContext" HeaderStyle="min-width: 150px;" Sortable="true" SortBy="e => (e as EventWithStatisticsResponse)?.FavoriteStatistics?.FirstOrDefault(s => s.UserRegistrationStatus == UserRegistrationStatus.CheckedIn)?.Count ?? 0">
+                    <HeaderTemplate>
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                            <MudSelect Required="true" T="UserRegistrationStatus" @bind-Value="_selectedUserRegistrationStatus" FullWidth="true">
+                                @foreach (var status in Enum.GetValues<UserRegistrationStatus>())
+                                {
+                                    <MudSelectItem T="UserRegistrationStatus" Value="@status"></MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                    </HeaderTemplate>
+                    <CellTemplate>
+                        <div class="d-flex align-center gap-2">
+                        <MudText>
+                                @if (favoritesByStatusContext.Item is EventWithStatisticsResponse eventWithStats)
+                                {
+                                    @eventWithStats.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == _selectedUserRegistrationStatus)?.Count
+                                }
+                        </MudText>
+
+                            @if (favoritesByStatusContext.Item.StartDateTimeUtc < DateTime.UtcNow)
                         {
-                            <MudSelectItem T="UserRegistrationStatus" Value="@status"></MudSelectItem>
+                            <MudTooltip Text="Event has started. Favorite count is locked since the start time." Class="mt-1">
+                                <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Secondary" />
+                            </MudTooltip>
                         }
-                    </MudSelect>
-                </div>
-            </HeaderTemplate>
-            <CellTemplate>
-                <div class="d-flex align-center gap-2">
-                    <MudText>
-                        @context.Item.FavoriteStatistics.FirstOrDefault(s => s.UserRegistrationStatus == _selectedUserRegistrationStatus)?.Count
-                    </MudText>
+                    </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Authorized>
+        </AuthorizeView>
 
-                    @if (context.Item.StartDateTimeUtc < DateTime.UtcNow)
-                    {
-                        <MudTooltip Text="Event has started. Favorite count is locked since the start time." Class="mt-1">
-                            <MudIcon Icon="@Icons.Material.Filled.LockClock" Size="Size.Small" Color="Color.Secondary" />
-                        </MudTooltip>
-                    }
-                </div>
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Context="context2">
-            <CellTemplate>
-                <MudButtonGroup>
-                    <AuthorizeView Roles="Admin">
-                        <Authorized>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OnClickEdit(context2.Item)" />
-                        </Authorized>
-                    </AuthorizeView>
-                </MudButtonGroup>
-            </CellTemplate>
-        </TemplateColumn>
+        <AuthorizeView Roles="Admin,EventArtworkManager">
+            <Authorized>
+                <TemplateColumn Context="actionsContext">
+                    <CellTemplate>
+                        <MudButtonGroup>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OnClickEdit(actionsContext.Item)" />
+                        </MudButtonGroup>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Authorized>
+        </AuthorizeView>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="EventWithStatisticsResponse" />
+        <MudDataGridPager T="EventResponse" />
     </PagerContent>
 </MudDataGrid>
 
 @code {
     private string? _eventSearch;
-    private List<EventWithStatisticsResponse> _events = new();
+    private List<EventResponse> _events = new();
     private List<EventConferenceDayResponse> _eventConferenceDays = new();
     private Guid? _selectedEventConferenceDayId;
     private UserRegistrationStatus _selectedUserRegistrationStatus = UserRegistrationStatus.CheckedIn;
 
+    private ClaimsPrincipal? User;
+
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        User = authState.User;
+
         _events = await GetEventsAsync();
         _eventConferenceDays = await GetEventConferenceDays();
     }
 
-    private async Task<List<EventWithStatisticsResponse>> GetEventsAsync()
+    private async Task<List<EventResponse>> GetEventsAsync()
     {
         try
         {
-            var response = (await EventService.GetEventsWithStatisticsAsync()).OrderBy(e => e.StartDateTimeUtc).ToList();
-            return FilterEvents(response, _eventSearch).ToList();
+            EventResponse[] response = [];
+
+            if (User is not null && User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("EventFeedbackManager")))
+            {
+                response = await EventService.GetEventsWithStatisticsAsync();
+            }
+            else
+            {
+                response = await EventService.GetEventsAsync();
+            }
+
+            var responseOrdered = response.OrderBy(e => e.StartDateTimeUtc).ToList();
+            return FilterEvents(responseOrdered, _eventSearch).ToList();
         }
         catch (Exception ex)
         {
@@ -160,7 +195,7 @@
         _events = await GetEventsAsync();
     }
 
-    private IEnumerable<EventWithStatisticsResponse> FilterEvents(IEnumerable<EventWithStatisticsResponse> entries, string?
+    private IEnumerable<EventResponse> FilterEvents(IEnumerable<EventResponse> entries, string?
     searchString)
     {
         if (_selectedEventConferenceDayId is not null)
@@ -183,7 +218,7 @@
     /// Is called when the "Edit" button is clicked.
     /// </summary>
     /// <param name="item">Item the user has clicked on.</param>
-    private async Task OnClickEdit(EventWithStatisticsResponse item)
+    private async Task OnClickEdit(EventResponse item)
     {
         DialogOptions options = new()
         {
