@@ -252,12 +252,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = IdentityRoles.Admin)]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull]
         [HttpPut("{id}/:bannerImageId")]
-        public async Task<ActionResult> PutEventBannerImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
+        public async Task<ActionResult> PutEventBannerImageIdAsync([FromBody] Guid? imageId,
             [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);
@@ -280,12 +279,11 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = IdentityRoles.Admin)]
+        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
-        [EnsureNotNull]
         [HttpPut("{id}/:posterImageId")]
-        public async Task<ActionResult> PutEventPosterImageIdAsync([EnsureNotNull][FromBody] Guid? imageId,
+        public async Task<ActionResult> PutEventPosterImageIdAsync([FromBody] Guid? imageId,
             [FromRoute] Guid id)
         {
             var eventRecord = await _eventService.FindOneAsync(id);

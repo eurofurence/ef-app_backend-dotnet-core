@@ -8,26 +8,21 @@
         @if (Record != null)
         {
             <MudGrid>
-                <MudItem xs="12" md="8" Class="d-flex justify-center align-center" Style="height: 500px;">
-                    <MudLink Href="@Record.Url">
-                        <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Url" Elevation="25" Class="rounded-lg">
-                            @if (string.IsNullOrEmpty(@Record.Url))
-                            {
-                                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-                            }
-                        </MudImage>
-                    </MudLink>
+                <MudItem xs="12" md="8" Class="d-flex justify-center align-center">
+                    <div>
+                        <MudLink Href="@Record.Url">
+                            <MudImage Fluid="true" Width="500" Height="500" ObjectFit="ObjectFit.Contain" Src="@Record.Url" Elevation="25" Class="rounded-lg">
+                                @if (string.IsNullOrEmpty(@Record.Url))
+                                {
+                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                                }
+                            </MudImage>
+                        </MudLink>
+                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" />
+                    </div>
                 </MudItem>
                 <MudItem xs="12" md="4">
                     <MudPaper Elevation="0">
-                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
-                            <ActivatorContent>
-                                <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.CloudUpload">
-                                    Upload Image
-                                </MudButton>
-                            </ActivatorContent>
-                        </MudFileUpload>
                         <MudTextField Value="Record.Id" Label="ID" ReadOnly="true" Class="mt-2"/>
                         <MudTextField T="string" Value="Record.InternalReference" Label="Name" ReadOnly="true" Class="mt-2"/>
                         <MudTextField Value="Record.SizeInBytes" Label="Size (Bytes)" ReadOnly="true" Class="mt-2"/>

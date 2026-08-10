@@ -69,6 +69,11 @@ public class RolesClaimsTransformation(
                 roles.Add(IdentityRoles.AttendeeCheckedIn);
             }
 
+            if (authorizationOptions.Value.EventArtworkManager.Contains(claim.Value))
+            {
+                roles.Add(IdentityRoles.EventArtworkManager);
+            }
+
             if (authorizationOptions.Value.EventFeedbackManager.Contains(claim.Value))
             {
                 roles.Add(IdentityRoles.EventFeedbackManager);

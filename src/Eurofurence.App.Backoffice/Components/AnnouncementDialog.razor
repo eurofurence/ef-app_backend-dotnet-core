@@ -13,7 +13,7 @@
             {
                 <MudGrid>
                     <MudItem xs="12" md="5">
-                        <ImageField ImageResponse="@_image" ImageChanged="OnImageUploaded" ImageUploadError="OnImageUploadError"/>
+                        <ImageField ImageResponse="@_image" UploadStarted="OnImageUploadStarted" ImageChanged="OnImageUploaded" ImageUploadError="OnImageUploadError"/>
                     </MudItem>
                     <MudItem xs="12" md="7">
                         <MudForm @ref="_form" @bind-IsValid="@_formIsValid" Class="">
@@ -55,10 +55,10 @@
             }
         </DialogContent>
         <DialogActions>
-            <MudButton Color="Color.Secondary" OnClick="@OnClickedCancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
-                       OnClick="@OnClickedSubmit">
-                @if (_submissionInProgress)
+            <MudButton Color="Color.Secondary" OnClick="@Cancel" Disabled="@_busy">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_busy"
+                       OnClick="@SubmitAsync">
+                @if (_busy)
                 {
                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
                     <MudText Class="ms-2">Processing</MudText>
@@ -85,7 +85,6 @@
     /// <summary>
     /// Dialog instance for MudBlazor dialog.
     /// </summary>
-    ///
     [CascadingParameter]
     private IMudDialogInstance? MudDialog { get; set; }
 
@@ -135,9 +134,9 @@
     private MudForm? _form;
 
     /// <summary>
-    /// Whether a submission is currently in progress.
+    /// Whether an async process is running, for example the announcement being submitted.
     /// </summary>
-    private bool _submissionInProgress;
+    private bool _busy;
 
     private DateTime? _startDate;
     private TimeSpan? _startTime;
@@ -162,7 +161,7 @@
             await FetchImage(imageId);
         }
     }
-    
+
     /// <summary>
     /// Fetches the image with the given ID from the server.
     /// </summary>
@@ -182,38 +181,51 @@
     }
 
     /// <summary>
-    /// Is called when the cancel button is clicked.
-    /// This will close the dialog.
+    /// Called when an image uploaded is started.
     /// </summary>
-    private void OnClickedCancel()
+    private void OnImageUploadStarted()
     {
-        MudDialog?.Close(DialogResult.Cancel());
+        _busy = true;
     }
-    
+
     /// <summary>
     /// Called when an error occurs while uploading an image.
     /// </summary>
     private void OnImageUploadError()
     {
+        _busy = false;
         Snackbar.Add("Error uploading image.", Severity.Error);
     }
-    
+
     /// <summary>
     /// Called when an image is uploaded.
     /// </summary>
     /// <param name="image">The uploaded image.</param>
-    private void OnImageUploaded(ImageResponse image)
+    private void OnImageUploaded(ImageResponse? image)
     {
+        _busy = false;
         _image = image;
-        Snackbar.Add("Image successfully uploaded.", Severity.Success);
+
+        if (image is not null)
+        {
+            Snackbar.Add("Image successfully uploaded.", Severity.Success);
+        }
     }
+
+
+    /// <summary>
+    /// Is called when the cancel button is clicked.
+    /// This will close the dialog.
+    /// </summary>
+    private void Cancel()
+        => MudDialog?.Cancel();
 
     /// <summary>
     /// Called when the Submit button is clicked.
     /// This will send the announcement request to the server if valid.
     /// </summary>
     /// <param name="obj">Event object. Not used here.</param>
-    private async Task OnClickedSubmit(MouseEventArgs obj)
+    private async Task SubmitAsync(MouseEventArgs obj)
     {
         if (Announcement is null)
         {
@@ -221,17 +233,15 @@
             return;
         }
 
-        if (_form is null)
-        {
-            Snackbar.Add("Form is not ready.", Severity.Error);
-            return;
-        }
+        _busy = true;
 
-        await _form.ValidateAsync();
+        if (_form is not null)
+            await _form.ValidateAsync();
 
         if (!_formIsValid)
         {
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            _busy = false;
             return;
         }
 
@@ -241,6 +251,7 @@
             _endTime is not { } endTime)
         {
             Snackbar.Add("Start and end date/time are required.", Severity.Error);
+            _busy = false;
             return;
         }
 
@@ -250,6 +261,7 @@
         if (startDateTime > endDateTime)
         {
             Snackbar.Add("Start date/time must be before end date/time.", Severity.Error);
+            _busy = false;
             return;
         }
 
@@ -267,49 +279,18 @@
 
         try
         {
-            _submissionInProgress = true;
             await AnnouncementService.UpdateAnnouncementAsync(Announcement.Id, request);
             Snackbar.Add("Announcement successfully submitted", Severity.Success);
-            MudDialog?.Close(DialogResult.Ok(request));
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
+            _busy = false;
+            return;
         }
-        finally
-        {
-            _submissionInProgress = false;
-        }
+
+        MudDialog?.Close(DialogResult.Ok(request));
     }
 
     #endregion
-
-    /// <summary>
-    /// Validates the image ID.
-    /// ID must be a valid GUID when set, and the image must exist in the database.
-    /// </summary>
-    /// <param name="arg">The image id to validate.</param>
-    /// <returns>Optional error message.</returns>
-    private async Task<string?> ValidateImageId(string? arg)
-    {
-        if (string.IsNullOrWhiteSpace(arg))
-        {
-            return null; // ImageId is optional
-        }
-
-        if (!Guid.TryParse(arg, out var imageId))
-        {
-            return "Image ID must be a valid GUID.";
-        }
-
-        try
-        {
-            var image = await ImageService.GetImageAsync(imageId);
-            return image is null ? "Image not found." : null;
-        }
-        catch (HttpRequestException)
-        {
-            return "Image not found.";
-        }
-    }
 }

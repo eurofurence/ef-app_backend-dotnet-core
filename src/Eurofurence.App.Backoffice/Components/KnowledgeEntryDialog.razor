@@ -34,14 +34,7 @@
                     <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
                         <MudToolBar>
                             <MudSpacer/>
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
-                                <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                               StartIcon="@Icons.Material.Filled.CloudUpload">
-                                        Upload Image
-                                    </MudButton>
-                                </ActivatorContent>
-                            </MudFileUpload>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage"/>
                         </MudToolBar>
                         @if (Record.ImageIds != null)
                         {
@@ -100,8 +93,18 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        <MudButton OnClick="Cancel" Disabled="@_busy">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" Disabled="@_busy">
+            @if (_busy)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Submit</MudText>
+            }
+            </MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -120,6 +123,11 @@
     private MudForm? _form;
 
     private bool Published { get; set; }
+
+    /// <summary>
+    /// Whether an async process is running, for example the knowledge base entry being submitted.
+    /// </summary>
+    private bool _busy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,7 +182,10 @@
 
     private void DeleteImage(Guid id)
     {
-        Record?.ImageIds.Remove(id);
+        if (Record is not null && Record.ImageIds.Any(imageId => imageId == id))
+        {
+            Record?.ImageIds.Remove(id);
+        }
 
         var imageToRemove = _images.FirstOrDefault(image => image.Id == id);
         if (imageToRemove == null)
@@ -225,20 +236,26 @@
         Record?.Links.Remove(Record.Links.FirstOrDefault(link => link.Id == id));
     }
 
-    private void Cancel() => MudDialog?.Cancel();
+    private void Cancel()
+        => MudDialog?.Cancel();
 
-    private async void Save()
+    private async Task SubmitAsync()
     {
-        if (_form != null) await _form.Validate();
+        _busy = true;
 
-        if (_formIsValid != true)
+        if (_form != null) 
+            await _form.ValidateAsync();
+
+        if (!_formIsValid)
         {
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            _busy = false;
             return;
         }
 
         if (Record == null)
         {
+            _busy = false;
             return;
         }
 
@@ -265,29 +282,38 @@
             ImageIds = Record.ImageIds
         };
 
-        if (Update)
+        try
         {
-            var result = await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
-            if (result)
+            if (Update)
             {
-                Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+                var result = await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
+                if (result)
+                {
+                    Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Error updating knowledge base entry.", Severity.Error);
+                }
             }
             else
             {
-                Snackbar.Add("Error updating knowledge base entry.", Severity.Error);
+                var result = await KnowledgeService.PostKnowledgeEntryAsync(request);
+                if (result)
+                {
+                    Snackbar.Add("Knowledge base entry added.", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Error adding knowledge base entry.", Severity.Error);
+                }
             }
         }
-        else
+        catch (Exception ex)
         {
-            var result = await KnowledgeService.PostKnowledgeEntryAsync(request);
-            if (result)
-            {
-                Snackbar.Add("Knowledge base entry added.", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add("Error adding knowledge base entry.", Severity.Error);
-            }
+            Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
+            _busy = false;
+            return;
         }
 
         MudDialog?.Close(DialogResult.Ok(true));
