@@ -54,7 +54,7 @@
                         <MudTooltip>
                             <ChildContent>
                                 <div style="width: 500px;">
-                                    <ImageField ImageResponse="@_bannerImage" ImageChanged="OnBannerImageUploaded" ImageUploadError="OnImageUploadError" />
+                                    <ImageField ImageResponse="@_bannerImage" UploadStarted="OnImageUploadStarted" ImageChanged="OnBannerImageUploaded" ImageUploadError="OnImageUploadError" Disabled="_busy" />
                                 </div>
                             </ChildContent>
                             <TooltipContent>
@@ -69,7 +69,7 @@
                         <MudTooltip>
                             <ChildContent>
                                 <div style="width: 500px;">
-                                    <ImageField ImageResponse="@_posterImage" ImageChanged="OnPosterImageUploaded" ImageUploadError="OnImageUploadError" />
+                                    <ImageField ImageResponse="@_posterImage" UploadStarted="OnImageUploadStarted" ImageChanged="OnPosterImageUploaded" ImageUploadError="OnImageUploadError" Disabled="_busy" />
                                 </div>
                             </ChildContent>
                             <TooltipContent>
@@ -177,29 +177,40 @@
     }
 
     /// <summary>
+    /// Called when an image uploaded is started.
+    /// </summary>
+    private void OnImageUploadStarted()
+    {
+        _busy = true;
+    }
+
+    /// <summary>
     /// Called when an error occurs while uploading an image.
     /// </summary>
     private void OnImageUploadError()
     {
+        _busy = false;
         Snackbar.Add("Error uploading image.", Severity.Error);
     }
 
     /// <summary>
-    /// Called when a banner image is uploaded.
+    /// Called when a banner image has been uploaded.
     /// </summary>
     /// <param name="image">The uploaded image.</param>
     private void OnBannerImageUploaded(ImageResponse? image)
     {
+        _busy = false;
         _bannerImage = image;
         Snackbar.Add("Banner image successfully uploaded.", Severity.Success);
     }
 
     /// <summary>
-    /// Called when a poster image is uploaded.
+    /// Called when a poster image has been uploaded.
     /// </summary>
     /// <param name="image">The uploaded image.</param>
     private void OnPosterImageUploaded(ImageResponse? image)
     {
+        _busy = false;
         _posterImage = image;
         Snackbar.Add("Poster image successfully uploaded.", Severity.Success);
     }

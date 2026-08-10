@@ -27,10 +27,10 @@
     {
         <MudGrid>
             <MudItem xl="6" md="6">
-                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;" />
+                <MudFileUpload T="IBrowserFile" Disabled="IsUploading || Disabled" FilesChanged="UploadImage" Style="margin-top: 10px;" />
             </MudItem>
             <MudItem xl="6" md="6">
-                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearImage" FullWidth="true" Style="margin-top: 10px;">
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="IsUploading || Disabled" OnClick="ClearImage" FullWidth="true" Style="margin-top: 10px;">
                     Remove
                 </MudButton>
             </MudItem>
@@ -38,7 +38,7 @@
     }
     else
     {
-        <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Style="margin-top: 10px;" />
+        <MudFileUpload T="IBrowserFile" Disabled="IsUploading || Disabled" FilesChanged="UploadImage" Style="margin-top: 10px;" />
     }
 </div>
 
@@ -49,6 +49,12 @@
     /// </summary>
     [Parameter]
     public ImageResponse? ImageResponse { get; set; }
+
+    /// <summary>
+    /// Event raised when the image upload is started.
+    /// </summary>
+    [Parameter]
+    public EventCallback UploadStarted { get; set; }
 
     /// <summary>
     /// Event raised when the image is changed.
@@ -62,6 +68,12 @@
     /// </summary>
     [Parameter]
     public EventCallback ImageUploadError { get; set; }
+
+    /// <summary>
+    /// Disables upload and remove buttons.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
 
     /// <summary>
     /// Determines whether the remove button should be hidden.
@@ -83,6 +95,8 @@
         }
 
         IsUploading = true;
+        await UploadStarted.InvokeAsync();
+
         StateHasChanged();
 
         try
