@@ -185,7 +185,11 @@
     {
         _busy = false;
         _bannerImage = image;
-        Snackbar.Add("Banner image successfully uploaded.", Severity.Success);
+
+        if (image is not null)
+        {
+            Snackbar.Add("Banner image successfully uploaded.", Severity.Success);
+        }
     }
 
     /// <summary>
@@ -196,7 +200,11 @@
     {
         _busy = false;
         _posterImage = image;
-        Snackbar.Add("Poster image successfully uploaded.", Severity.Success);
+
+        if (image is not null)
+        {
+            Snackbar.Add("Poster image successfully uploaded.", Severity.Success);
+        }
     }
 
     /// <summary>

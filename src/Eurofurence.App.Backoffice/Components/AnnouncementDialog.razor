@@ -201,11 +201,15 @@
     /// Called when an image is uploaded.
     /// </summary>
     /// <param name="image">The uploaded image.</param>
-    private void OnImageUploaded(ImageResponse image)
+    private void OnImageUploaded(ImageResponse? image)
     {
         _busy = false;
         _image = image;
-        Snackbar.Add("Image successfully uploaded.", Severity.Success);
+
+        if (image is not null)
+        {
+            Snackbar.Add("Image successfully uploaded.", Severity.Success);
+        }
     }
 
 
