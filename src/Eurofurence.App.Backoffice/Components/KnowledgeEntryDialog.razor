@@ -100,8 +100,18 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="CancelAsync">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="SubmitAsync">Save</MudButton>
+        <MudButton OnClick="Cancel" Disabled="@_busy">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" Disabled="@_busy">
+            @if (_busy)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Submit</MudText>
+            }
+            </MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -120,6 +130,11 @@
     private MudForm? _form;
 
     private bool Published { get; set; }
+
+    /// <summary>
+    /// Whether an async process is running, for example the knowledge base entry being submitted.
+    /// </summary>
+    private bool _busy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,6 +177,7 @@
         var image = await ImageService.PostImageAsync(file);
         if (image != null)
         {
+            Record?.ImageIds.Add(image.Id);
             _images.Add(image);
             Snackbar.Add("Image uploaded.", Severity.Success);
         }
@@ -227,33 +243,26 @@
         Record?.Links.Remove(Record.Links.FirstOrDefault(link => link.Id == id));
     }
 
-    private async Task CancelAsync()
-    {
-        // If the user cancels the dialog, any images that were uploaded but not submitted can be safely deleted.
-        foreach (var image in _images)
-        {
-            if (Record?.ImageIds == null || !Record.ImageIds.Any(imageId => imageId == image.Id))
-            {
-                await ImageService.DeleteImageAsync(image.Id);
-            }
-        }
-
-        MudDialog?.Cancel();
-    }
+    private void Cancel()
+        => MudDialog?.Cancel();
 
     private async Task SubmitAsync()
     {
+        _busy = true;
+
         if (_form != null) 
             await _form.ValidateAsync();
 
-        if (_formIsValid != true)
+        if (!_formIsValid)
         {
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            _busy = false;
             return;
         }
 
         if (Record == null)
         {
+            _busy = false;
             return;
         }
 
@@ -269,14 +278,6 @@
             publishedAt = Record.Published ?? DateTime.Now;
         }
 
-        foreach (var image in _images)
-        {
-            if (!Record.ImageIds.Any(imageId => imageId == image.Id))
-            {
-                Record.ImageIds.Add(image.Id);
-            }
-        }
-
         var request = new KnowledgeEntryRequest()
         {
             Title = Record.Title,
@@ -288,29 +289,36 @@
             ImageIds = Record.ImageIds
         };
 
-        if (Update)
+        try
         {
-            var result = await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
-            if (result)
+            if (Update)
             {
-                Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+                var result = await KnowledgeService.PutKnowledgeEntryAsync(Record.Id, request);
+                if (result)
+                {
+                    Snackbar.Add("Knowledge base entry updated.", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Error updating knowledge base entry.", Severity.Error);
+                }
             }
             else
             {
-                Snackbar.Add("Error updating knowledge base entry.", Severity.Error);
+                var result = await KnowledgeService.PostKnowledgeEntryAsync(request);
+                if (result)
+                {
+                    Snackbar.Add("Knowledge base entry added.", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Error adding knowledge base entry.", Severity.Error);
+                }
             }
         }
-        else
+        catch (Exception ex)
         {
-            var result = await KnowledgeService.PostKnowledgeEntryAsync(request);
-            if (result)
-            {
-                Snackbar.Add("Knowledge base entry added.", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add("Error adding knowledge base entry.", Severity.Error);
-            }
+            Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
         }
 
         MudDialog?.Close(DialogResult.Ok(true));

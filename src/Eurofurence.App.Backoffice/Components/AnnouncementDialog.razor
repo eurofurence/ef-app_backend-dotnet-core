@@ -55,10 +55,10 @@
             }
         </DialogContent>
         <DialogActions>
-            <MudButton Color="Color.Secondary" OnClick="@CancelAsync">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
+            <MudButton Color="Color.Secondary" OnClick="@Cancel" Disabled="@_busy">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_busy"
                        OnClick="@SubmitAsync">
-                @if (_submissionInProgress)
+                @if (_busy)
                 {
                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
                     <MudText Class="ms-2">Processing</MudText>
@@ -134,9 +134,9 @@
     private MudForm? _form;
 
     /// <summary>
-    /// Whether a submission is currently in progress.
+    /// Whether an async process is running, for example the announcement being submitted.
     /// </summary>
-    private bool _submissionInProgress;
+    private bool _busy;
 
     private DateTime? _startDate;
     private TimeSpan? _startTime;
@@ -203,16 +203,8 @@
     /// Is called when the cancel button is clicked.
     /// This will close the dialog.
     /// </summary>
-    private async Task CancelAsync()
-    {
-        // If the user cancels the dialog and an image was uploaded but not submitted, it can be safely deleted.
-        if (_image?.Id is not null && Announcement?.ImageId != _image?.Id)
-        {
-            await ImageService.DeleteImageAsync(_image!.Id);
-        }
-
-        MudDialog?.Close(DialogResult.Cancel());
-    }
+    private void Cancel()
+        => MudDialog?.Cancel();
 
     /// <summary>
     /// Called when the Submit button is clicked.
@@ -227,17 +219,15 @@
             return;
         }
 
-        if (_form is null)
-        {
-            Snackbar.Add("Form is not ready.", Severity.Error);
-            return;
-        }
+        _busy = true;
 
-        await _form.ValidateAsync();
+        if (_form is not null)
+            await _form.ValidateAsync();
 
         if (!_formIsValid)
         {
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            _busy = false;
             return;
         }
 
@@ -247,6 +237,7 @@
             _endTime is not { } endTime)
         {
             Snackbar.Add("Start and end date/time are required.", Severity.Error);
+            _busy = false;
             return;
         }
 
@@ -256,6 +247,7 @@
         if (startDateTime > endDateTime)
         {
             Snackbar.Add("Start date/time must be before end date/time.", Severity.Error);
+            _busy = false;
             return;
         }
 
@@ -273,19 +265,15 @@
 
         try
         {
-            _submissionInProgress = true;
             await AnnouncementService.UpdateAnnouncementAsync(Announcement.Id, request);
             Snackbar.Add("Announcement successfully submitted", Severity.Success);
-            MudDialog?.Close(DialogResult.Ok(request));
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error submitting announcement: {ex.Message}", Severity.Error);
         }
-        finally
-        {
-            _submissionInProgress = false;
-        }
+
+        MudDialog?.Close(DialogResult.Ok(request));
     }
 
     #endregion

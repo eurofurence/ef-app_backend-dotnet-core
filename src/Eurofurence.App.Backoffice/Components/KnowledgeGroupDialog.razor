@@ -26,8 +26,18 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        <MudButton OnClick="Cancel" Disabled="@_busy">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" Disabled="@_busy">
+            @if (_busy)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Submit</MudText>
+            }
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -40,6 +50,11 @@
 
     private bool _formIsValid;
     private MudForm? _form;
+
+    /// <summary>
+    /// Whether an async process is running, for example the knowledge base group is being submitted.
+    /// </summary>
+    private bool _busy;
 
     protected override void OnInitialized()
     {
@@ -56,20 +71,26 @@
         }
     }
 
-    private void Cancel() => MudDialog?.Cancel();
+    private void Cancel() 
+    => MudDialog?.Cancel();
 
-    private async void Save()
+    private async Task SubmitAsync()
     {
-        if (_form != null) await _form.Validate();
+        _busy = true;
+
+        if (_form != null) 
+            await _form.ValidateAsync();
 
         if (_formIsValid != true)
         {
             Snackbar.Add("Form is invalid. Please check the validation errors.", Severity.Error);
+            _busy = false;
             return;
         }
 
         if (Record == null)
         {
+            _busy = false;
             return;
         }
 

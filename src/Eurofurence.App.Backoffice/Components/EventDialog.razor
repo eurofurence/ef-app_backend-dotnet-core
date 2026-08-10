@@ -61,10 +61,10 @@
             }
         </DialogContent>
         <DialogActions>
-            <MudButton Color="Color.Secondary" OnClick="@CancelAsync">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_submissionInProgress"
+            <MudButton Color="Color.Secondary" OnClick="@Cancel" Disabled="@_busy">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@_busy"
                        OnClick="@SubmitAsync">
-                @if (_submissionInProgress)
+                @if (_busy)
                 {
                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
                     <MudText Class="ms-2">Processing</MudText>
@@ -105,9 +105,9 @@
     private ImageResponse? _posterImage;
 
     /// <summary>
-    /// Whether a submission is currently in progress.
+    /// Whether an async process is running, for example the images being uploaded.
     /// </summary>
-    private bool _submissionInProgress;
+    private bool _busy;
 
     #endregion
 
@@ -171,21 +171,8 @@
     /// Is called when the cancel button is clicked.
     /// This will close the dialog.
     /// </summary>
-    private async Task CancelAsync()
-    {
-        // If the user cancels the dialog, any images that were uploaded but not submitted can be safely deleted.
-        if (_bannerImage?.Id is not null && Event?.BannerImageId != _bannerImage?.Id)
-        {
-            await ImageService.DeleteImageAsync(_bannerImage!.Id);
-        }
-
-        if (_posterImage?.Id is not null && Event?.PosterImageId != _posterImage?.Id)
-        {
-            await ImageService.DeleteImageAsync(_posterImage!.Id);
-        }
-
-        MudDialog?.Close(DialogResult.Cancel());
-    }
+    private void Cancel()
+        => MudDialog?.Cancel();
 
     /// <summary>
     /// Called when the Submit button is clicked.
@@ -200,9 +187,10 @@
             return;
         }
 
+        _busy = true;
+
         try
         {
-            _submissionInProgress = true;
             if (Event.BannerImageId != _bannerImage?.Id)
             {
                 await EventService.UpdateEventBannerImageAsync(Event.Id, _bannerImage?.Id);
@@ -214,16 +202,13 @@
             }
 
             Snackbar.Add("Event successfully submitted", Severity.Success);
-            MudDialog?.Close(DialogResult.Ok(Event));
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error submitting event: {ex.Message}", Severity.Error);
         }
-        finally
-        {
-            _submissionInProgress = false;
-        }
+
+        MudDialog?.Close(DialogResult.Ok(Event));
     }
 
     #endregion
