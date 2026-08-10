@@ -13,7 +13,7 @@
             {
                 <MudGrid>
                     <MudItem xs="12" md="5">
-                        <ImageField ImageResponse="@_image" ImageChanged="OnImageUploaded" ImageUploadError="OnImageUploadError"/>
+                        <ImageField ImageResponse="@_image" UploadStarted="OnImageUploadStarted" ImageChanged="OnImageUploaded" ImageUploadError="OnImageUploadError"/>
                     </MudItem>
                     <MudItem xs="12" md="7">
                         <MudForm @ref="_form" @bind-IsValid="@_formIsValid" Class="">
@@ -181,10 +181,19 @@
     }
 
     /// <summary>
+    /// Called when an image uploaded is started.
+    /// </summary>
+    private void OnImageUploadStarted()
+    {
+        _busy = true;
+    }
+
+    /// <summary>
     /// Called when an error occurs while uploading an image.
     /// </summary>
     private void OnImageUploadError()
     {
+        _busy = false;
         Snackbar.Add("Error uploading image.", Severity.Error);
     }
 
@@ -194,6 +203,7 @@
     /// <param name="image">The uploaded image.</param>
     private void OnImageUploaded(ImageResponse image)
     {
+        _busy = false;
         _image = image;
         Snackbar.Add("Image successfully uploaded.", Severity.Success);
     }

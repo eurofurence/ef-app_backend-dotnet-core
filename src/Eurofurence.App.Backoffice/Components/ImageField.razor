@@ -3,12 +3,14 @@
 
 @inject IImageService ImageService
 
-<div>
+<MudPaper Class="d-flex flex-column align-center">
     @if (!IsUploading)
     {
         @if (string.IsNullOrEmpty(ImageResponse?.Url))
         {
-            <MudText>Upload Image here</MudText>
+            <MudPaper Class="d-flex align-center justify-center" Style="width: 500px; height: 500px;">
+                <MudText>Upload Image here</MudText>
+            </MudPaper>
         }
         else
         {
@@ -20,7 +22,10 @@
     }
     else
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="500px" Height="500px" Class="d-flex justify-center rounded-lg" >
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="d-flex align-center justify-center" />
+        </MudSkeleton>
+
     }
 
     @if(!HideRemoveButton)
@@ -40,7 +45,7 @@
     {
         <MudFileUpload T="IBrowserFile" Disabled="IsUploading || Disabled" FilesChanged="UploadImage" Style="margin-top: 10px;" />
     }
-</div>
+</MudPaper>
 
 @code {
 
