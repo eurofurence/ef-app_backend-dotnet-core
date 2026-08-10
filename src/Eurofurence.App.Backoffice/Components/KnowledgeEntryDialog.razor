@@ -34,14 +34,7 @@
                     <MudTabPanel Icon="@Icons.Material.Outlined.Image" Text="Images">
                         <MudToolBar>
                             <MudSpacer/>
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage">
-                                <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                               StartIcon="@Icons.Material.Filled.CloudUpload">
-                                        Upload Image
-                                    </MudButton>
-                                </ActivatorContent>
-                            </MudFileUpload>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage"/>
                         </MudToolBar>
                         @if (Record.ImageIds != null)
                         {
