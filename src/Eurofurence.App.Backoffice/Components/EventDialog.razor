@@ -115,8 +115,23 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _bannerImage = Event?.BannerImageId is { } bannerImageId ? await FetchImage(bannerImageId) : null;
-        _posterImage = Event?.PosterImageId is { } posterImageId ? await FetchImage(posterImageId) : null;
+        _busy = true;
+
+        if (Event?.BannerImageId is not null)
+        {
+            var bannerImage = await FetchImage(Event.BannerImageId.Value);
+
+            _bannerImage = bannerImage is not null ? bannerImage : new ImageResponse() { Id = Event.BannerImageId.Value };
+        }
+        
+        if (Event?.PosterImageId is not null)
+        {
+            var posterImage = await FetchImage(Event.PosterImageId.Value);
+
+            _posterImage = posterImage is not null ? posterImage : new ImageResponse() { Id = Event.PosterImageId.Value };
+        }
+
+        _busy = false;
     }
 
     /// <summary>
@@ -151,7 +166,7 @@
     /// Called when a banner image is uploaded.
     /// </summary>
     /// <param name="image">The uploaded image.</param>
-    private void OnBannerImageUploaded(ImageResponse image)
+    private void OnBannerImageUploaded(ImageResponse? image)
     {
         _bannerImage = image;
         Snackbar.Add("Banner image successfully uploaded.", Severity.Success);
@@ -161,7 +176,7 @@
     /// Called when a poster image is uploaded.
     /// </summary>
     /// <param name="image">The uploaded image.</param>
-    private void OnPosterImageUploaded(ImageResponse image)
+    private void OnPosterImageUploaded(ImageResponse? image)
     {
         _posterImage = image;
         Snackbar.Add("Poster image successfully uploaded.", Severity.Success);
