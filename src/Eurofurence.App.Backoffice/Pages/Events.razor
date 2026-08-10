@@ -100,9 +100,15 @@
                 </div>
             </CellTemplate>
         </TemplateColumn>
-        <TemplateColumn>
+        <TemplateColumn Context="context2">
             <CellTemplate>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnClickEdit(context.Item))" />
+                <MudButtonGroup>
+                    <AuthorizeView Roles="Admin">
+                        <Authorized>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OnClickEdit(context2.Item)" />
+                        </Authorized>
+                    </AuthorizeView>
+                </MudButtonGroup>
             </CellTemplate>
         </TemplateColumn>
     </Columns>
