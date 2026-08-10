@@ -41,21 +41,43 @@
                     <MudItem xl="6" md="6" xs="12">
                         <MudTextField Class="mt-2" T="string" @bind-Value="Event.Abstract" ReadOnly="true"
                                         Label="Abstract"
-                                        Sizing="InputSizing.Auto" MaxLines="5" />
+                                        Sizing="InputSizing.Auto" Lines="5" MaxLines="5" />
                     </MudItem>
                     <MudItem xl="6" md="6" xs="12">
                         <MudTextField Class="mt-2" T="string" @bind-Value="Event.Description" ReadOnly="true"
                                         Label="Description"
-                                        Sizing="InputSizing.Auto" MaxLines="5" />
+                                        Sizing="InputSizing.Auto" Lines="5" MaxLines="5" />
                     </MudItem>
 
                     <MudItem xl="6" md="6" xs="12">
                         <MudInputLabel>Banner Image</MudInputLabel>
-                        <ImageField ImageResponse="@_bannerImage" ImageChanged="OnBannerImageUploaded" ImageUploadError="OnImageUploadError" />
+                        <MudTooltip>
+                            <ChildContent>
+                                <div style="width: 500px;">
+                                    <ImageField ImageResponse="@_bannerImage" ImageChanged="OnBannerImageUploaded" ImageUploadError="OnImageUploadError" />
+                                </div>
+                            </ChildContent>
+                            <TooltipContent>
+                                <div style="max-width:300px;">
+                                    Format: PNG or JPEG | Aspect ratio: 3:1 | Minimum width: 1280 px | Recommended size: 1280 x 427 px | Please try to keep image sizes as small as possible while looking reasonably good on a phone to reduce download size.
+                                </div>
+                            </TooltipContent>
+                        </MudTooltip>
                     </MudItem>
                     <MudItem xl="6" md="6" xs="12">
                         <MudInputLabel>Poster Image</MudInputLabel>
-                        <ImageField ImageResponse="@_posterImage" ImageChanged="OnPosterImageUploaded" ImageUploadError="OnImageUploadError" />
+                        <MudTooltip>
+                            <ChildContent>
+                                <div style="width: 500px;">
+                                    <ImageField ImageResponse="@_posterImage" ImageChanged="OnPosterImageUploaded" ImageUploadError="OnImageUploadError" />
+                                </div>
+                            </ChildContent>
+                            <TooltipContent>
+                                <div style="max-width:300px;">
+                                    Format: PNG or JPEG | Aspect ratio: any portrait (e.g. 4:5) | Minimum width: 1280 px | Recommended size: 1280 x 1600 px | Please try to keep image sizes as small as possible while looking reasonably good on a phone to reduce download size.
+                                </div>
+                            </TooltipContent>
+                        </MudTooltip>
                     </MudItem>
                 </MudGrid>
             }

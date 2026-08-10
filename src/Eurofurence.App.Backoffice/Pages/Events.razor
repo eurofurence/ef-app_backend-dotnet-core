@@ -31,14 +31,14 @@
         <TemplateColumn Title="Description">
             <CellTemplate>
                 <div class="d-flex align-center gap-2">
-                    <MudTooltip Text="@context.Item.Description" Disabled="@(string.IsNullOrEmpty(context.Item.Description))" TooltipClass="multiline-tooltip">
+                    <MudTooltip Text="@context.Item.Description" Disabled="@(string.IsNullOrEmpty(context.Item.Description))">
                         <ChildContent>
                             <div style="max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                 @context.Item.Description
                             </div>
                         </ChildContent>
                         <TooltipContent>
-                            <div style="max-width:150px;">
+                            <div style="max-width:300px;">
                                 @context.Item.Description
                             </div>
                         </TooltipContent>
