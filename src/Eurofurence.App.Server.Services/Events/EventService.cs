@@ -124,6 +124,7 @@ namespace Eurofurence.App.Server.Services.Events
 
             Calendar calendar = new();
             calendar.AddTimeZone(new VTimeZone("UTC"));
+            calendar.AddProperty("NAME", $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber} ({user.Id})");
             calendar.AddProperty("X-WR-CALNAME", $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber} ({user.Id})");
             calendar.AddProperty("X-WR-RELCALID", $"{_globalOptions.ConventionIdentifier}-{user.Id}");
 
