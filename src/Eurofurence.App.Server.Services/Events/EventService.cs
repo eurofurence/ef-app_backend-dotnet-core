@@ -124,6 +124,7 @@ namespace Eurofurence.App.Server.Services.Events
 
             Calendar calendar = new();
             calendar.AddTimeZone(new VTimeZone("UTC"));
+            calendar.Name = $"{_globalOptions.ConventionName} {_globalOptions.ConventionNumber} ({user.Id})";
 
             foreach (var item in favoriteEvents)
             {
