@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Images;
+using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Web.Extensions;
-using Microsoft.AspNetCore.Mvc;
+using Eurofurence.App.Server.Web.Identity;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using System.IO;
-using Eurofurence.App.Domain.Model.Transformers;
-using MapsterMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Eurofurence.App.Domain.Model.Identity;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -89,7 +91,7 @@ namespace Eurofurence.App.Server.Web.Controllers
             return (await _imageService.FindOneAsync(id)).Transient404(HttpContext)?.Transform<ImageResponse>();
         }
 
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor},{IdentityRoles.AnnouncementManager},{IdentityRoles.EventArtworkManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.KnowledgeBaseEditor},{IdentityRoles.AnnouncementManager},{IdentityRoles.EventArtworkManager}")]
         [HttpPost]
         public async Task<ActionResult> PostImageAsync(IFormFile file)
         {
