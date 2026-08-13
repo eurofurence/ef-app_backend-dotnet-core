@@ -1,10 +1,12 @@
-﻿using Eurofurence.App.Domain.Model.Events;
+﻿using Duende.AspNetCore.Authentication.OAuth2Introspection;
+using Eurofurence.App.Domain.Model.Events;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
 using Eurofurence.App.Server.Services.Abstractions.Events;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
+using Eurofurence.App.Server.Web.Identity;
 using Ical.Net;
 using Ical.Net.Serialization;
 using MapsterMapper;
@@ -165,7 +167,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <returns>
         /// All events in the event schedule, including statistics on favorite counts.
         /// </returns>
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventFeedbackManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventFeedbackManager}")]
         [HttpGet("Statistics")]
         [ProducesResponseType(typeof(string), 404)]
         [ProducesResponseType(typeof(IEnumerable<EventWithStatisticsResponse>), 200)]
@@ -252,7 +254,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}/:bannerImageId")]
@@ -279,7 +281,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// </summary>
         /// <param name="imageId">id of the image to be used</param>
         /// <param name="id">id of the event entity</param>
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.EventArtworkManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         [HttpPut("{id}/:posterImageId")]

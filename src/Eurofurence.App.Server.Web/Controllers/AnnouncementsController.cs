@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Duende.AspNetCore.Authentication.OAuth2Introspection;
 using Eurofurence.App.Domain.Model.Announcements;
 using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.Transformers;
@@ -11,6 +12,7 @@ using Eurofurence.App.Server.Services.Abstractions.Identity;
 using Eurofurence.App.Server.Services.Abstractions.Images;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Web.Extensions;
+using Eurofurence.App.Server.Web.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -110,7 +112,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="id">ID of the announcement to be deleted</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> DeleteAnnouncementAsync([FromRoute] Guid id)
@@ -130,7 +132,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="request">New announcement to be pushed</param>
         /// <returns></returns>
         [HttpPost]
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(string), 409)]
         public async Task<ActionResult> PostAnnouncementAsync([EnsureNotNull][FromBody] AnnouncementRequest request)
@@ -163,7 +165,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         /// <param name="request">Updated announcement record</param>
         /// <returns></returns>
         [HttpPut("{id}")]
-        [Authorize(Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
+        [Authorize(AuthenticationSchemes = $"{ApiKeyAuthenticationDefaults.AuthenticationScheme},{OAuth2IntrospectionDefaults.AuthenticationScheme}", Roles = $"{IdentityRoles.Admin},{IdentityRoles.AnnouncementManager}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(string), 404)]
         public async Task<ActionResult> PutAnnouncementAsync([FromRoute] Guid id,
