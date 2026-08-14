@@ -88,29 +88,27 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 var unixReference = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
-                var mapping = records.Select(j => new
+                var mapping = records.Select(j =>
                 {
-                    Record = new AnnouncementRecord()
+                    var validFromDateTimeUtc = unixReference.AddSeconds(double.Parse(j.GetProperty("date").ToString())).ToUniversalTime();
+                    return new
                     {
-                        ExternalReference = j.GetProperty("id").GetString(),
-                        Area = j.GetProperty("news").GetProperty("type").GetString().UppercaseFirst(),
-                        Author = j.GetProperty("news").GetProperty("department").GetString().UppercaseFirst() ??
+                        Record = new AnnouncementRecord()
+                        {
+                            ExternalReference = j.GetProperty("id").GetString(),
+                            Area = j.GetProperty("news").GetProperty("type").GetString().UppercaseFirst(),
+                            Author = j.GetProperty("news").GetProperty("department").GetString().UppercaseFirst() ??
                                  "Eurofurence",
-                        Title = j.GetProperty("news").GetProperty("title").GetString(),
-                        Content = j.GetProperty("news").GetProperty("message").GetString(),
-                        ValidFromDateTimeUtc =
-                            unixReference.AddSeconds(double.Parse(j.GetProperty("date").ToString())).ToUniversalTime(),
-                        ValidUntilDateTimeUtc = unixReference
-                            .AddSeconds(double.Parse(j.GetProperty("news").GetProperty("valid_until").ToString())).ToUniversalTime(),
-                        ImageId = j.GetProperty("data").TryGetProperty("imagedata", out var _) == true ? GetImageIdForEntryAsync(j.GetProperty("id").GetString(),
+                            Title = j.GetProperty("news").GetProperty("title").GetString(),
+                            Content = j.GetProperty("news").GetProperty("message").GetString(),
+                            ValidFromDateTimeUtc = validFromDateTimeUtc,
+                            ValidUntilDateTimeUtc = validFromDateTimeUtc.AddHours(_announcementOptions.AnnouncementValidityHours),
+                            ImageId = j.GetProperty("data").TryGetProperty("imagedata", out var _) == true ? GetImageIdForEntryAsync(j.GetProperty("id").GetString(),
                             j.GetProperty("data").GetProperty("imagedata").GetString()).Result : null
-                    },
-                    Type = j.GetProperty("news").GetProperty("type").GetString()
+                        },
+                        Type = j.GetProperty("news").GetProperty("type").GetString()
+                    };
                 }).ToList();
-
-                foreach (var item in mapping)
-                    if (new[] { "new", "reschedule" }.Contains(item.Type))
-                        item.Record.ValidUntilDateTimeUtc = item.Record.ValidFromDateTimeUtc.AddHours(48);
 
                 var existingRecords = _announcementService.FindAll();
 
