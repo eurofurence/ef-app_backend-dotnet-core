@@ -126,7 +126,15 @@ namespace Eurofurence.App.Server.Web.Jobs
                     .Map(s => s.ValidFromDateTimeUtc, t => t.ValidFromDateTimeUtc);
 
                 var diff = patch.Patch(mapping.Select(a => a.Record), existingRecords)
-                    .Where(a => !string.IsNullOrEmpty(a.Entity.ExternalReference) && a.Action != ActionEnum.NotModified)
+                    .Where(a =>
+                        !string.IsNullOrEmpty(a.Entity.ExternalReference) &&
+                        a.Action != ActionEnum.NotModified &&
+                        (
+                            // Only delete announcements that are no longer valid.
+                            a.Action == ActionEnum.Delete &&
+                            a.Entity.ValidUntilDateTimeUtc.CompareTo(DateTime.UtcNow) < 0
+                        )
+                    )
                     .ToList();
 
                 _logger.LogDebug(LogEvents.Import, "Diff results in {count} new/modified records", diff.Count);
