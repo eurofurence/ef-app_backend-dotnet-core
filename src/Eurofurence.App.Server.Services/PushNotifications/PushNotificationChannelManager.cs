@@ -238,7 +238,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
         public async Task RegisterDeviceAsync(
             string deviceToken,
             string identityId,
-            string[] regSysIds,
             DeviceType type,
             CancellationToken cancellationToken = default)
         {
@@ -274,27 +273,6 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                     DeviceType = type
                 }, cancellationToken);
             }
-
-            if (regSysIds.Length == 0)
-            {
-                return;
-            }
-
-            var set = new HashSet<string>(regSysIds);
-
-            foreach (var id in await _userService
-                         .FindAll(x => set.Contains(x.RegSysId))
-                         .Select(x => x.RegSysId)
-                         .ToListAsync(cancellationToken))
-            {
-                set.Remove(id);
-            }
-
-            await _userService.InsertMultipleAsync(set.Select(x => new UserRecord
-            {
-                RegSysId = x,
-                IdentityId = identityId
-            }).ToList(), cancellationToken);
         }
 
         /// <summary>

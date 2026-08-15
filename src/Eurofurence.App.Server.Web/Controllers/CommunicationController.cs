@@ -40,7 +40,7 @@ namespace Eurofurence.App.Server.Web.Controllers
         public async Task<IEnumerable<PrivateMessageResponse>> GetMyPrivateMessagesAsync(CancellationToken cancellationToken = default)
         {
             return (await _privateMessageService.GetPrivateMessagesForRecipientAsync(
-                User.GetRegSysIds(),
+                User.GetRegSysId(),
                 User.GetSubject(),
                 cancellationToken
             )).Select(x => x.Transform());
@@ -72,7 +72,7 @@ namespace Eurofurence.App.Server.Web.Controllers
 
             var result = await _privateMessageService.MarkPrivateMessageAsReadAsync(
                 messageId,
-                User.GetRegSysIds(),
+                User.GetRegSysId(),
                 User.GetSubject(),
                 cancellationToken
             );
