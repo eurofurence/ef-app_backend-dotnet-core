@@ -137,12 +137,6 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 await _announcementService.ApplyPatchOperationAsync(diff);
 
-                if (diff.Any(p => p.Action is ActionEnum.Add or ActionEnum.Update && p.Entity.Area is "New" or "Deleted" or "Rescheduled"))
-                {
-                    _logger.LogInformation(LogEvents.Import, "Found new/modified Announcements affecting events; performing event import.");
-                    await _eventService.RunImportAsync();
-                }
-
                 await _pushNotificationChannelManager.PushSyncRequestAsync();
 
                 foreach (var record in diff.Where(a => a.Action == ActionEnum.Add))
