@@ -126,7 +126,18 @@ namespace Eurofurence.App.Server.Web.Jobs
                     .Map(s => s.ValidFromDateTimeUtc, t => t.ValidFromDateTimeUtc);
 
                 var diff = patch.Patch(mapping.Select(a => a.Record), existingRecords)
-                    .Where(a => !string.IsNullOrEmpty(a.Entity.ExternalReference) && a.Action != ActionEnum.NotModified)
+                    .Where(a =>
+                        // Only events from this job should have an ExternalReference.
+                        !string.IsNullOrEmpty(a.Entity.ExternalReference) &&
+                        // Anything that has not been modified can be ignored.
+                        a.Action != ActionEnum.NotModified &&
+                        (
+                            // Anything that is not a deletion must be kept…
+                            a.Action != ActionEnum.Delete ||
+                            // … as well as deletions if they affect an expired announcement.
+                            a.Entity.ValidUntilDateTimeUtc.CompareTo(DateTime.UtcNow) < 0
+                        )
+                    )
                     .ToList();
 
                 _logger.LogDebug(LogEvents.Import, "Diff results in {count} new/modified records", diff.Count);
@@ -136,12 +147,6 @@ namespace Eurofurence.App.Server.Web.Jobs
                 _logger.LogInformation(LogEvents.Import, "Processing {count} new/modified records", diff.Count);
 
                 await _announcementService.ApplyPatchOperationAsync(diff);
-
-                if (diff.Any(p => p.Action is ActionEnum.Add or ActionEnum.Update && p.Entity.Area is "New" or "Deleted" or "Rescheduled"))
-                {
-                    _logger.LogInformation(LogEvents.Import, "Found new/modified Announcements affecting events; performing event import.");
-                    await _eventService.RunImportAsync();
-                }
 
                 await _pushNotificationChannelManager.PushSyncRequestAsync();
 
