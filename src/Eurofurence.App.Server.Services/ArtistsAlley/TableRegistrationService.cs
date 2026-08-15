@@ -132,7 +132,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
             record.Merge(request);
 
             ImageRecord image = await _imageService
-                .InsertImageAsync($"artistalley:{subject}:{user.GetRegSysIds().FirstOrDefault("none")}", imageStream,
+                .InsertImageAsync($"artistalley:{subject}:{user.GetRegSysId() ?? "none"}", imageStream,
                     true, 1500, 1500);
             record.ImageId = image.Id;
 
@@ -161,7 +161,7 @@ namespace Eurofurence.App.Server.Services.ArtistsAlley
                 await DeleteOneAsync(registration.Id);
             }
 
-            var regSysId = user.GetRegSysIds().FirstOrDefault("none");
+            var regSysId = user.GetRegSysId() ?? "none";
 
             var image = await _imageService.InsertImageAsync(
                 $"artistalley:{subject}:{regSysId}", imageStream, true, 1500, 1500);

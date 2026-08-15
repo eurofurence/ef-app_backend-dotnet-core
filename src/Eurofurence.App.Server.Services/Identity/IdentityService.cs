@@ -156,22 +156,36 @@ namespace Eurofurence.App.Server.Services.Identity
                 }
             }
 
-            var registrationData = await GetRegistrationStatus(token, await GetRegistrationId(token));
-
-            AddRegistrationToClaims(identity, registrationData);
-            await UpdateRegistrationInDatabase(registrationData, identity);
-
-            var exp = identity.FindFirst(x => x.Type == "exp");
-            if (exp is not null && long.TryParse(exp.Value, out var expiresAt))
+            try
             {
-                await _cache.SetStringAsync(
-                    $"{token}_regsys",
-                    JsonSerializer.Serialize(registrationData),
-                    new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(expiresAt)
-                    }
-                );
+                var registrationId = await GetRegistrationId(token);
+                var registrationData = await GetRegistrationStatus(token, registrationId);
+
+                AddRegistrationToClaims(identity, registrationData);
+                await UpdateRegistrationInDatabase(registrationData, identity);
+
+                var exp = identity.FindFirst(x => x.Type == "exp");
+                if (exp is not null && long.TryParse(exp.Value, out var expiresAt))
+                {
+                    await _cache.SetStringAsync(
+                        $"{token}_regsys",
+                        JsonSerializer.Serialize(registrationData),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpiration = DateTimeOffset.FromUnixTimeSeconds(expiresAt)
+                        }
+                    );
+                }
+            }
+            catch (RegistrationSystemClientException ex)
+            {
+                SentrySdk.CaptureException(ex);
+                _logger.LogWarning(ex, "Registration data not persisted due to failed read from regsys.");
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+                _logger.LogError(ex, "Unexpected error when processing registration data for user from regsys.");
             }
         }
 
@@ -252,9 +266,18 @@ namespace Eurofurence.App.Server.Services.Identity
 
             using var response = await client.SendAsync(request);
 
+            // 404 Not found -> no registration for user
+            // see: https://github.com/eurofurence/reg-attendee-service/blob/07c1444f70d7afbb9cbd61780f2ecdd801e0c23a/api/openapi-spec/openapi.yaml#L91
             if (!response.IsSuccessStatusCode)
             {
-                return null;
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+                else
+                {
+                    throw new RegistrationSystemClientException($"Failed to get registration ID from regsys with status code {response.StatusCode}.");
+                }
             }
 
             var json = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
@@ -266,10 +289,13 @@ namespace Eurofurence.App.Server.Services.Identity
         /// </summary>
         /// <param name="token">Used to authenticated against the registration system with user's permissions to view own registration.</param>
         /// <param name="id">Registration ID to check status of.</param>
-        /// <returns>Status information for registration ID or <c>UserRegistrationStatus.Unknown</c> if request to fetch status for registration ID was unsuccessful.</returns>
+        /// <returns>Status information for registration ID, <c>UserRegistrationStatus.Unknown</c> if provided <c>id</c> is null or throws if request to fetch status for registration ID was unsuccessful.</returns>
+        /// <exception cref="RegistrationSystemClientException">
+        /// Thrown when an error is encountered while fetching registration status from the regsys backend.
+        /// </exception>
         private async Task<RegistrationData> GetRegistrationStatus(string token, string? id)
         {
-            if (id is null)
+            if (string.IsNullOrWhiteSpace(id))
             {
                 return new RegistrationData(null, UserRegistrationStatus.Unknown);
             }
@@ -284,12 +310,7 @@ namespace Eurofurence.App.Server.Services.Identity
 
             if (!statusResponse.IsSuccessStatusCode)
             {
-                SentrySdk.CaptureMessage("Failed to get registration information from regsys for reg ID.", scope =>
-                {
-                    scope.SetTag("http_status", statusResponse.StatusCode.ToString());
-                }, SentryLevel.Warning);
-                _logger.LogWarning("Failed to get registration information from regsys for reg ID: Status {httpStatus}", statusResponse.StatusCode);
-                return new RegistrationData(id, UserRegistrationStatus.Unknown);
+                throw new RegistrationSystemClientException($"Failed to get registration information from regsys with status code {statusResponse.StatusCode}.");
             }
 
             var statusJson = await JsonDocument.ParseAsync(await statusResponse.Content.ReadAsStreamAsync());
@@ -310,8 +331,8 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
-            if (_appDbContext.Users
-                .SingleOrDefault(x => x.IdentityId == identityId) is { } user)
+            if (await _appDbContext.Users
+                .FirstOrDefaultAsync(x => x.IdentityId == identityId) is { } user)
             {
                 if (user.RegSysId != registrationData?.Id ||
                 user.RegistrationStatus != registrationData?.Status)
@@ -323,7 +344,7 @@ namespace Eurofurence.App.Server.Services.Identity
             }
             else
             {
-                await _appDbContext.Users.AddAsync(new UserRecord
+                _appDbContext.Users.Add(new UserRecord
                 {
                     RegSysId = registrationData?.Id,
                     IdentityId = identityId,
@@ -360,6 +381,14 @@ namespace Eurofurence.App.Server.Services.Identity
             [JsonPropertyName("user_id")] public string? UserId { get; set; }
 
             [JsonPropertyName("level")] public string? Level { get; set; }
+        }
+
+        [Serializable]
+        public class RegistrationSystemClientException : Exception
+        {
+            public RegistrationSystemClientException() { }
+            public RegistrationSystemClientException(string message) : base(message) { }
+            public RegistrationSystemClientException(string message, Exception inner) : base(message, inner) { }
         }
     }
 }
