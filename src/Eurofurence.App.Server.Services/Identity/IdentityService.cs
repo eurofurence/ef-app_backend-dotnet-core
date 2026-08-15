@@ -289,7 +289,10 @@ namespace Eurofurence.App.Server.Services.Identity
         /// </summary>
         /// <param name="token">Used to authenticated against the registration system with user's permissions to view own registration.</param>
         /// <param name="id">Registration ID to check status of.</param>
-        /// <returns>Status information for registration ID or <c>UserRegistrationStatus.Unknown</c> if request to fetch status for registration ID was unsuccessful.</returns>
+        /// <returns>Status information for registration ID, <c>UserRegistrationStatus.Unknown</c> if provided <c>id</c> is null or throws if request to fetch status for registration ID was unsuccessful.</returns>
+        /// <exception cref="RegistrationSystemClientException">
+        /// Thrown when an error is encountered while fetching registration status from the regsys backend.
+        /// </exception>
         private async Task<RegistrationData> GetRegistrationStatus(string token, string? id)
         {
             if (string.IsNullOrWhiteSpace(id))
