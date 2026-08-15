@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Security.Claims;
 
 namespace Eurofurence.App.Server.Services.Abstractions.Security;
@@ -7,16 +6,16 @@ public static class PrincipalExtensions
 {
     public static string GetSubject(this ClaimsPrincipal principal)
     {
-        return principal.FindFirst("sub")?.Value;
+        return principal.FindFirstValue("sub");
     }
 
-    public static string[] GetRegSysIds(this ClaimsPrincipal principal)
+    public static string GetRegSysId(this ClaimsPrincipal principal)
     {
-        return principal.FindAll("RegSysId").Select(x => x.Value).ToArray();
+        return principal.FindFirstValue("RegSysId");
     }
 
     public static string GetName(this ClaimsPrincipal principal)
     {
-        return principal.FindFirst("name")?.Value;
+        return principal.FindFirstValue("name");
     }
 }

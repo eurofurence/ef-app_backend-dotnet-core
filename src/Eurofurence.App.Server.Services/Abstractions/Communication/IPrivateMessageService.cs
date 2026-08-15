@@ -9,13 +9,13 @@ namespace Eurofurence.App.Server.Services.Abstractions.Communication
     public interface IPrivateMessageService
     {
         Task<List<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(
-            string[] regSysId,
+            string regSysId,
             string identityId,
             CancellationToken cancellationToken = default);
 
         Task<DateTime?> MarkPrivateMessageAsReadAsync(
             Guid messageId,
-            string[] regSysIds = null,
+            string regSysId = null,
             string identityId = null,
             CancellationToken cancellationToken = default);
 

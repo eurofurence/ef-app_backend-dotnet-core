@@ -11,7 +11,6 @@ namespace Eurofurence.App.Server.Services.Abstractions.PushNotifications
         Task RegisterDeviceAsync(
             string deviceToken,
             string identityId,
-            string[] regSysIds,
             DeviceType type,
             CancellationToken cancellationToken = default);
 

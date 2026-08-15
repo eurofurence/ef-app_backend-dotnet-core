@@ -32,14 +32,18 @@ namespace Eurofurence.App.Server.Services.Communication
         }
 
         public async Task<List<PrivateMessageRecord>> GetPrivateMessagesForRecipientAsync(
-            string[] regSysIds,
+            string regSysId,
             string identityId,
             CancellationToken cancellationToken = default)
         {
             var messages = await _appDbContext.PrivateMessages
                 .Where(msg =>
-                    (regSysIds.Contains(msg.RecipientRegSysId) || msg.RecipientIdentityId == identityId) &&
-                    msg.IsDeleted == 0)
+                    (
+                        // Message sent to RegSysId
+                        (!string.IsNullOrWhiteSpace(msg.RecipientRegSysId) && msg.RecipientRegSysId == regSysId) ||
+                        // Message sent to IdentityId
+                        (!string.IsNullOrWhiteSpace(msg.RecipientIdentityId) && msg.RecipientIdentityId == identityId)
+                    ) && msg.IsDeleted == 0)
                 .ToListAsync(cancellationToken);
 
             if (messages.Count == 0)
@@ -60,17 +64,18 @@ namespace Eurofurence.App.Server.Services.Communication
 
         public async Task<DateTime?> MarkPrivateMessageAsReadAsync(
             Guid messageId,
-            string[] regSysIds = null,
+            string regSysId = null,
             string identityId = null,
             CancellationToken cancellationToken = default)
         {
             var message = await _appDbContext.PrivateMessages
-                .Where(pm => pm.Id == messageId && pm.ReadDateTimeUtc == null
+                .Where(pm => pm.Id == messageId && pm.ReadDateTimeUtc == null &&
+                (
                     // Message sent to RegSysId
-                    && (string.IsNullOrWhiteSpace(pm.RecipientRegSysId) || (regSysIds != null && regSysIds.Contains(pm.RecipientRegSysId)))
+                    (!string.IsNullOrWhiteSpace(pm.RecipientRegSysId) && pm.RecipientRegSysId == regSysId) ||
                     // Message sent to IdentityId
-                    && (string.IsNullOrWhiteSpace(pm.RecipientIdentityId) || identityId == pm.RecipientIdentityId)
-                ).FirstOrDefaultAsync(cancellationToken);
+                    (!string.IsNullOrWhiteSpace(pm.RecipientIdentityId) && pm.RecipientIdentityId == identityId)
+                )).FirstOrDefaultAsync(cancellationToken);
             if (message == null) return null;
 
             message.ReadDateTimeUtc = DateTime.UtcNow;

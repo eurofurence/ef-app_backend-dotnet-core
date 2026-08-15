@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Threading;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Eurofurence.App.Domain.Model.Identity;
 using Eurofurence.App.Domain.Model.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.PushNotifications;
 using Eurofurence.App.Server.Services.Abstractions.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Eurofurence.App.Domain.Model.Identity;
 
 namespace Eurofurence.App.Server.Web.Controllers
 {
@@ -47,7 +47,6 @@ namespace Eurofurence.App.Server.Web.Controllers
             await _pushNotificationChannelManager.RegisterDeviceAsync(
                 request.DeviceId,
                 User.GetSubject(),
-            ids,
                 request.DeviceType,
                 cancellationToken
             );
