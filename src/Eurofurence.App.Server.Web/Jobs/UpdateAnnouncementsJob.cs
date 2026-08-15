@@ -134,7 +134,7 @@ namespace Eurofurence.App.Server.Web.Jobs
                         (
                             // Anything that is not a deletion must be kept…
                             a.Action != ActionEnum.Delete ||
-                            // … unless it is an expired announcement, which must be deleted.
+                            // … as well as deletions if they affect an expired announcement.
                             a.Entity.ValidUntilDateTimeUtc.CompareTo(DateTime.UtcNow) < 0
                         )
                     )
