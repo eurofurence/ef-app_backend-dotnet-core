@@ -310,8 +310,8 @@ namespace Eurofurence.App.Server.Services.Identity
                 return;
             }
 
-            if (_appDbContext.Users
-                .SingleOrDefault(x => x.IdentityId == identityId) is { } user)
+            if (await _appDbContext.Users
+                .FirstOrDefaultAsync(x => x.IdentityId == identityId) is { } user)
             {
                 if (user.RegSysId != registrationData?.Id ||
                 user.RegistrationStatus != registrationData?.Status)
@@ -323,7 +323,7 @@ namespace Eurofurence.App.Server.Services.Identity
             }
             else
             {
-                await _appDbContext.Users.AddAsync(new UserRecord
+                _appDbContext.Users.Add(new UserRecord
                 {
                     RegSysId = registrationData?.Id,
                     IdentityId = identityId,
