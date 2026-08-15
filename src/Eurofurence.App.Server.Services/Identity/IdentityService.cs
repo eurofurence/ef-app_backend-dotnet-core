@@ -185,7 +185,7 @@ namespace Eurofurence.App.Server.Services.Identity
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
-                _logger.LogError(ex, "Unexpected error when retrieving registration data for user from regsys.");
+                _logger.LogError(ex, "Unexpected error when processing registration data for user from regsys.");
             }
         }
 
@@ -350,16 +350,7 @@ namespace Eurofurence.App.Server.Services.Identity
                 });
             }
 
-            try
-            {
-                await _appDbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                SentrySdk.CaptureException(ex);
-                _logger.LogError(ex, "Failed store registration data for user in database.");
-                return;
-            }
+            await _appDbContext.SaveChangesAsync();
         }
 
         private sealed class RegistrationData(string? id, UserRegistrationStatus status = UserRegistrationStatus.Unknown)
