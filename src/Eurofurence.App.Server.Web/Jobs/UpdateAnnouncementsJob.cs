@@ -127,11 +127,14 @@ namespace Eurofurence.App.Server.Web.Jobs
 
                 var diff = patch.Patch(mapping.Select(a => a.Record), existingRecords)
                     .Where(a =>
+                        // Only events from this job should have an ExternalReference.
                         !string.IsNullOrEmpty(a.Entity.ExternalReference) &&
+                        // Anything that has not been modified can be ignored.
                         a.Action != ActionEnum.NotModified &&
                         (
-                            // Only delete announcements that are no longer valid.
-                            a.Action == ActionEnum.Delete &&
+                            // Anything that is not a deletion must be kept…
+                            a.Action != ActionEnum.Delete ||
+                            // … unless it is an expired announcement, which must be deleted.
                             a.Entity.ValidUntilDateTimeUtc.CompareTo(DateTime.UtcNow) < 0
                         )
                     )
