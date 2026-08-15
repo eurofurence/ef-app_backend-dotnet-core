@@ -332,7 +332,16 @@ namespace Eurofurence.App.Server.Services.Identity
                 });
             }
 
-            await _appDbContext.SaveChangesAsync();
+            try
+            {
+                await _appDbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+                _logger.LogError(ex, "Failed store registration data for user in database.");
+                return;
+            }
         }
 
         private sealed class RegistrationData(string? id, UserRegistrationStatus status = UserRegistrationStatus.Unknown)
