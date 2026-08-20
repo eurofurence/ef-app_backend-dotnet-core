@@ -41,6 +41,11 @@ namespace Eurofurence.App.Server.Services.Abstractions.AppConfig
         public string? WeatherUrl { get; init; }
 
         /// <summary>
+        /// URL to the public support resource linked to by the app.
+        /// </summary>
+        public string? SupportUrl { get; init; }
+
+        /// <summary>
         /// Explicitly set feature flag values. All feature flags must have a working default
         /// in the app and not result in errors if not explicitly set in the backend.
         /// </summary>

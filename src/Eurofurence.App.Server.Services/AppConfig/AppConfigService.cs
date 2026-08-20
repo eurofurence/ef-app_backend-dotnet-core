@@ -54,6 +54,11 @@ namespace Eurofurence.App.Server.Services.AppConfig
                 appConfig.Add("WeatherUrl", weatherUrl);
             }
 
+            if (appConfigOptions.SupportUrl is string supportUrl)
+            {
+                appConfig.Add("SupportUrl", supportUrl);
+            }
+
 
             foreach (var featureFlag in appConfigOptions.FeatureFlags)
             {
