@@ -129,7 +129,15 @@ namespace Eurofurence.App.Server.Services.PushNotifications
                             PushEventType.Announcement, announcement.Title.RemoveMarkdown(),
                             announcement.Content.RemoveMarkdown(), announcement.Id);
 
-                        await _firebaseMessaging.SendAsync(androidMessage, cancellationToken);
+                        try
+                        {
+                            await _firebaseMessaging.SendAsync(androidMessage, cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            SentrySdk.CaptureException(ex);
+                            _logger.LogError(ex, "Failed to send Firebase push to {deviceIdentity} for group-scoped announcement {announcementId}.", firebaseDeviceIdentity, announcement.Id);
+                        }
                     });
                     await Task.WhenAll(firebaseTasks);
                 }
